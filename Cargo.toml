@@ -1,0 +1,8 @@
+[package]
+name = "xmpp"
+version = "0.1.0"
+authors = ["lumi <lumi@pew.im>"]
+
+[dependencies]
+xml-rs = "*"
+openssl = "*"
