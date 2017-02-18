@@ -13,9 +13,9 @@ pub enum JidParseError {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Jid {
-    node: Option<String>,
-    domain: String,
-    resource: Option<String>,
+    pub node: Option<String>,
+    pub domain: String,
+    pub resource: Option<String>,
 }
 
 impl fmt::Display for Jid {
