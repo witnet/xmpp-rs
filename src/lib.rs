@@ -4,7 +4,7 @@ pub mod error;
 
 use std::io::prelude::*;
 
-use std::convert::From;
+use std::convert::{From, AsRef};
 
 use std::iter::Iterator;
 
@@ -12,23 +12,51 @@ use std::slice;
 
 use std::fmt;
 
-use xml::name::{OwnedName, Name};
 use xml::reader::{XmlEvent as ReaderEvent, EventReader};
 use xml::writer::{XmlEvent as WriterEvent, EventWriter};
-use xml::attribute::OwnedAttribute;
+use xml::name::Name;
+use xml::escape::escape_str_attribute;
+use xml::namespace::NS_NO_PREFIX;
 
 use error::Error;
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Attribute {
+    pub name: String,
+    pub value: String,
+}
+
+impl fmt::Display for Attribute {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        write!(fmt, "{}=\"{}\"", self.name, escape_str_attribute(&self.value))
+    }
+}
+
+impl Attribute {
+    pub fn new<N: Into<String>, V: Into<String>>(name: N, value: V) -> Attribute {
+        Attribute {
+            name: name.into(),
+            value: value.into(),
+        }
+    }
+}
+
 #[derive(Clone, PartialEq, Eq)]
 pub struct Element {
-    name: OwnedName,
-    attributes: Vec<OwnedAttribute>,
+    name: String,
+    namespace: Option<String>,
+    attributes: Vec<Attribute>,
     children: Vec<Fork>,
 }
 
 impl fmt::Debug for Element {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        write!(fmt, "<{}", self.name)?;
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        if let Some(ref ns) = self.namespace {
+            write!(fmt, "<{{{}}}{}", ns, self.name)?;
+        }
+        else {
+            write!(fmt, "<{}", self.name)?;
+        }
         for attr in &self.attributes {
             write!(fmt, " {}", attr)?;
         }
@@ -55,9 +83,10 @@ pub enum Fork {
 }
 
 impl Element {
-    pub fn new(name: OwnedName, attributes: Vec<OwnedAttribute>) -> Element {
+    pub fn new(name: String, namespace: Option<String>, attributes: Vec<Attribute>) -> Element {
         Element {
             name: name,
+            namespace: namespace,
             attributes: attributes,
             children: Vec::new(),
         }
@@ -65,35 +94,44 @@ impl Element {
 
     pub fn builder<S: Into<String>>(name: S) -> ElementBuilder {
         ElementBuilder {
-            name: OwnedName::local(name),
+            name: name.into(),
+            namespace: None,
             attributes: Vec::new(),
         }
     }
 
-    pub fn tag(&self) -> &str {
-        &self.name.local_name
+    pub fn name(&self) -> &str {
+        &self.name
     }
 
     pub fn ns(&self) -> Option<&str> {
-        self.name.namespace.as_ref()
-                           .map(String::as_ref)
+        self.namespace.as_ref()
+                      .map(String::as_ref)
     }
 
-    pub fn attr(&self, key: &str) -> Option<&str> {
+    pub fn attr(&self, name: &str) -> Option<&str> {
         for attr in &self.attributes {
-            if attr.name.local_name == key {
+            if attr.name == name {
                 return Some(&attr.value);
             }
         }
         None
     }
 
+    pub fn is<N: AsRef<str>, NS: AsRef<str>>(&self, name: N, namespace: NS) -> bool {
+        let ns = self.namespace.as_ref().map(String::as_ref);
+        self.name == name.as_ref() && ns == Some(namespace.as_ref())
+    }
+
     pub fn from_reader<R: Read>(reader: &mut EventReader<R>) -> Result<Element, Error> {
         loop {
             let e = reader.next()?;
             match e {
-                ReaderEvent::StartElement { name, attributes, .. } => {
-                    let mut root = Element::new(name, attributes);
+                ReaderEvent::StartElement { name, attributes, namespace } => {
+                    let attributes = attributes.into_iter()
+                                               .map(|o| Attribute::new(o.name.local_name, o.value))
+                                               .collect();
+                    let mut root = Element::new(name.local_name, namespace.get(NS_NO_PREFIX).map(|s| s.to_owned()), attributes);
                     root.from_reader_inner(reader);
                     return Ok(root);
                 },
@@ -109,8 +147,11 @@ impl Element {
         loop {
             let e = reader.next()?;
             match e {
-                ReaderEvent::StartElement { name, attributes, .. } => {
-                    let elem = Element::new(name, attributes);
+                ReaderEvent::StartElement { name, attributes, namespace } => {
+                    let attributes = attributes.into_iter()
+                                               .map(|o| Attribute::new(o.name.local_name, o.value))
+                                               .collect();
+                    let elem = Element::new(name.local_name, namespace.get(NS_NO_PREFIX).map(|s| s.to_owned()), attributes);
                     let elem_ref = self.append_child(elem);
                     elem_ref.from_reader_inner(reader);
                 },
@@ -133,12 +174,18 @@ impl Element {
     }
 
     pub fn write_to<W: Write>(&self, writer: &mut EventWriter<W>) -> Result<(), Error> {
-        let mut start = WriterEvent::start_element(self.name.borrow());
-        if let Some(ref ns) = self.name.namespace {
+        let name = if let Some(ref ns) = self.namespace {
+            Name::qualified(&self.name, &ns, None)
+        }
+        else {
+            Name::local(&self.name)
+        };
+        let mut start = WriterEvent::start_element(name);
+        if let Some(ref ns) = self.namespace {
             start = start.default_ns(ns.as_ref());
         }
         for attr in &self.attributes { // TODO: I think this could be done a lot more efficiently
-            start = start.attr(attr.name.borrow(), &attr.value);
+            start = start.attr(Name::local(&attr.name), &attr.value);
         }
         writer.write(start)?;
         for child in &self.children {
@@ -167,7 +214,10 @@ impl Element {
         }
     }
 
-    pub fn append_child(&mut self, child: Element) -> &mut Element {
+    pub fn append_child(&mut self, mut child: Element) -> &mut Element {
+        if child.namespace.is_none() {
+            child.namespace = self.namespace.clone();
+        }
         self.children.push(Fork::Element(child));
         if let Fork::Element(ref mut cld) = *self.children.last_mut().unwrap() {
             cld
@@ -233,28 +283,24 @@ impl<'a> Iterator for ChildrenMut<'a> {
 }
 
 pub struct ElementBuilder {
-    name: OwnedName,
-    attributes: Vec<OwnedAttribute>,
+    name: String,
+    namespace: Option<String>,
+    attributes: Vec<Attribute>,
 }
 
 impl ElementBuilder {
     pub fn ns<S: Into<String>>(mut self, namespace: S) -> ElementBuilder {
-        self.name.namespace = Some(namespace.into());
+        self.namespace = Some(namespace.into());
         self
     }
 
     pub fn attr<S: Into<String>, V: Into<String>>(mut self, name: S, value: V) -> ElementBuilder {
-        self.attributes.push(OwnedAttribute::new(OwnedName::local(name), value));
-        self
-    }
-
-    pub fn attr_ns<S: Into<String>, N: Into<String>, V: Into<String>>(mut self, name: S, namespace: N, value: V) -> ElementBuilder {
-        self.attributes.push(OwnedAttribute::new(OwnedName::qualified::<_, _, &'static str>(name, namespace, None), value));
+        self.attributes.push(Attribute::new(name, value));
         self
     }
 
     pub fn build(self) -> Element {
-        Element::new(self.name, self.attributes)
+        Element::new(self.name, self.namespace, self.attributes)
     }
 }
 
@@ -290,7 +336,6 @@ mod tests {
     fn reader_works() {
         use std::io::Cursor;
         let mut reader = EventReader::new(Cursor::new(TEST_STRING));
-        // TODO: fix a bunch of namespace stuff so this test passes
         assert_eq!(Element::from_reader(&mut reader).unwrap(), build_test_tree());
     }
 
@@ -311,8 +356,18 @@ mod tests {
                            .ns("b")
                            .attr("c", "d")
                            .build();
-        assert_eq!(elem.tag(), "a");
+        assert_eq!(elem.name(), "a");
         assert_eq!(elem.ns(), Some("b"));
         assert_eq!(elem.attr("c"), Some("d"));
+        assert_eq!(elem.is("a", "b"), true);
+    }
+
+    #[test]
+    fn children_iter_works() {
+        let root = build_test_tree();
+        let mut iter = root.children();
+        assert!(iter.next().unwrap().is("child", "root_ns"));
+        assert!(iter.next().unwrap().is("child", "child_ns"));
+        assert_eq!(iter.next(), None);
     }
 }
