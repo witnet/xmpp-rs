@@ -9,6 +9,8 @@ use std::sync::{Arc, Mutex};
 
 use ns;
 
+use tree;
+
 use locked_io::LockedIO;
 
 use error::Error;
@@ -18,6 +20,9 @@ use openssl::ssl::{SslMethod, SslConnectorBuilder, SslStream};
 pub trait Transport {
     fn write_event<'a, E: Into<XmlWriterEvent<'a>>>(&mut self, event: E) -> Result<(), Error>;
     fn read_event(&mut self) -> Result<XmlReaderEvent, Error>;
+
+    fn write_element(&mut self, element: &tree::Element) -> Result<(), Error>;
+    fn read_element(&mut self) -> Result<tree::Element, Error>;
 }
 
 pub struct SslTransport {
@@ -35,6 +40,14 @@ impl Transport for SslTransport {
 
     fn read_event(&mut self) -> Result<XmlReaderEvent, Error> {
         Ok(self.reader.next()?)
+    }
+
+    fn write_element(&mut self, element: &tree::Element) -> Result<(), Error> {
+        element.write_to(&mut self.writer)
+    }
+
+    fn read_element(&mut self) -> Result<tree::Element, Error> {
+        tree::Element::from_reader(&mut self.reader)
     }
 }
 

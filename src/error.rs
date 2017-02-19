@@ -16,6 +16,7 @@ pub enum Error {
     HandshakeError(HandshakeError<TcpStream>),
     OpenSslErrorStack(ErrorStack),
     StreamError,
+    EndOfDocument,
 }
 
 impl From<XmlError> for Error {

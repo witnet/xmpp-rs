@@ -3,7 +3,8 @@ use transport::{Transport, SslTransport};
 use error::Error;
 use ns;
 
-use xml::writer::XmlEvent;
+use xml::writer::XmlEvent as WriterEvent;
+use xml::reader::XmlEvent as ReaderEvent;
 
 pub struct ClientBuilder {
     jid: Jid,
@@ -33,10 +34,10 @@ impl ClientBuilder {
     pub fn connect(self) -> Result<Client, Error> {
         let host = &self.host.unwrap_or(self.jid.domain.clone());
         let mut transport = SslTransport::connect(host, self.port)?;
-        transport.write_event(XmlEvent::start_element("stream:stream")
-                                       .attr("to", &self.jid.domain)
-                                       .default_ns(ns::CLIENT)
-                                       .ns("stream", ns::STREAM))?;
+        transport.write_event(WriterEvent::start_element("stream:stream")
+                                          .attr("to", &self.jid.domain)
+                                          .default_ns(ns::CLIENT)
+                                          .ns("stream", ns::STREAM))?;
         Ok(Client {
             jid: self.jid,
             transport: transport
