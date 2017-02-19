@@ -6,6 +6,10 @@ use std::io::prelude::*;
 
 use std::convert::From;
 
+use std::iter::Iterator;
+
+use std::slice;
+
 use std::fmt;
 
 use xml::name::{OwnedName, Name};
@@ -152,11 +156,15 @@ impl Element {
     }
 
     pub fn children<'a>(&'a self) -> Children<'a> {
-        unimplemented!();
+        Children {
+            iter: self.children.iter(),
+        }
     }
 
     pub fn children_mut<'a>(&'a mut self) -> ChildrenMut<'a> {
-        unimplemented!();
+        ChildrenMut {
+            iter: self.children.iter_mut(),
+        }
     }
 
     pub fn append_child(&mut self, child: Element) -> &mut Element {
@@ -191,11 +199,37 @@ impl Element {
 }
 
 pub struct Children<'a> {
-    elem: &'a Element,
+    iter: slice::Iter<'a, Fork>,
+}
+
+impl<'a> Iterator for Children<'a> {
+    type Item = &'a Element;
+
+    fn next(&mut self) -> Option<&'a Element> {
+        while let Some(item) = self.iter.next() {
+            if let Fork::Element(ref child) = *item {
+                return Some(child);
+            }
+        }
+        None
+    }
 }
 
 pub struct ChildrenMut<'a> {
-    elem: &'a mut Element,
+    iter: slice::IterMut<'a, Fork>,
+}
+
+impl<'a> Iterator for ChildrenMut<'a> {
+    type Item = &'a mut Element;
+
+    fn next(&mut self) -> Option<&'a mut Element> {
+        while let Some(item) = self.iter.next() {
+            if let Fork::Element(ref mut child) = *item {
+                return Some(child);
+            }
+        }
+        None
+    }
 }
 
 pub struct ElementBuilder {
@@ -227,6 +261,9 @@ impl ElementBuilder {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    use xml::reader::EventReader;
+    use xml::writer::EventWriter;
 
     const TEST_STRING: &'static str = r#"<?xml version="1.0" encoding="utf-8"?><root xmlns="root_ns" a="b">meow<child c="d" /><child xmlns="child_ns" d="e" />nya</root>"#;
 
@@ -263,7 +300,7 @@ mod tests {
         let mut out = Vec::new();
         {
             let mut writer = EventWriter::new(&mut out);
-            root.write_to(&mut writer);
+            root.write_to(&mut writer).unwrap();
         }
         assert_eq!(String::from_utf8(out).unwrap(), TEST_STRING);
     }
