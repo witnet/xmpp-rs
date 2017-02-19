@@ -1,5 +1,4 @@
 use std::io::prelude::*;
-use std::io;
 
 use std::net::TcpStream;
 
@@ -10,6 +9,8 @@ use std::sync::{Arc, Mutex};
 
 use ns;
 
+use locked_io::LockedIO;
+
 use error::Error;
 
 use openssl::ssl::{SslMethod, SslConnectorBuilder, SslStream};
@@ -17,27 +18,6 @@ use openssl::ssl::{SslMethod, SslConnectorBuilder, SslStream};
 pub trait Transport {
     fn write_event<'a, E: Into<XmlWriterEvent<'a>>>(&mut self, event: E) -> Result<(), Error>;
     fn read_event(&mut self) -> Result<XmlReaderEvent, Error>;
-}
-
-struct LockedIO<T>(Arc<Mutex<T>>);
-
-impl<T: Write> io::Write for LockedIO<T> {
-    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-        let mut inner = self.0.lock().unwrap(); // TODO: make safer
-        inner.write(buf)
-    }
-
-    fn flush(&mut self) -> io::Result<()> {
-        let mut inner = self.0.lock().unwrap(); // TODO: make safer
-        inner.flush()
-    }
-}
-
-impl<T: Read> io::Read for LockedIO<T> {
-    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-        let mut inner = self.0.lock().unwrap(); // TODO: make safer
-        inner.read(buf)
-    }
 }
 
 pub struct SslTransport {
@@ -85,8 +65,9 @@ impl SslTransport {
         let stream = parser.into_inner();
         let ssl_connector = SslConnectorBuilder::new(SslMethod::tls())?.build();
         let ssl_stream = Arc::new(Mutex::new(ssl_connector.connect(host, stream)?));
-        let reader = EventReader::new(LockedIO(ssl_stream.clone()));
-        let writer = EventWriter::new(LockedIO(ssl_stream.clone()));
+        let locked_io = LockedIO::from(ssl_stream.clone());
+        let reader = EventReader::new(locked_io.clone());
+        let writer = EventWriter::new(locked_io);
         Ok(SslTransport {
             inner: ssl_stream,
             reader: reader,
