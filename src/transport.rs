@@ -1,7 +1,7 @@
 use std::io::prelude::*;
 use std::io;
 
-use std::net::{SocketAddr, TcpStream};
+use std::net::TcpStream;
 
 use xml::reader::{EventReader, XmlEvent as XmlReaderEvent};
 use xml::writer::{EventWriter, XmlEvent as XmlWriterEvent};
@@ -19,9 +19,9 @@ pub trait Transport {
     fn read_event(&mut self) -> Result<XmlReaderEvent, Error>;
 }
 
-struct LockedWrite<W: Write>(Arc<Mutex<W>>);
+struct LockedIO<T>(Arc<Mutex<T>>);
 
-impl<W: Write> io::Write for LockedWrite<W> {
+impl<T: Write> io::Write for LockedIO<T> {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         let mut inner = self.0.lock().unwrap(); // TODO: make safer
         inner.write(buf)
@@ -33,9 +33,7 @@ impl<W: Write> io::Write for LockedWrite<W> {
     }
 }
 
-struct LockedRead<R: Read>(Arc<Mutex<R>>);
-
-impl<R: Read> io::Read for LockedRead<R> {
+impl<T: Read> io::Read for LockedIO<T> {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         let mut inner = self.0.lock().unwrap(); // TODO: make safer
         inner.read(buf)
@@ -44,10 +42,10 @@ impl<R: Read> io::Read for LockedRead<R> {
 
 pub struct SslTransport {
     inner: Arc<Mutex<SslStream<TcpStream>>>, // TODO: this feels rather ugly
-    reader: EventReader<LockedRead<SslStream<TcpStream>>>, // TODO: especially feels ugly because
-                                                           //       this read would keep the lock
-                                                           //       held very long (potentially)
-    writer: EventWriter<LockedWrite<SslStream<TcpStream>>>,
+    reader: EventReader<LockedIO<SslStream<TcpStream>>>, // TODO: especially feels ugly because
+                                                         //       this read would keep the lock
+                                                         //       held very long (potentially)
+    writer: EventWriter<LockedIO<SslStream<TcpStream>>>,
 }
 
 impl Transport for SslTransport {
@@ -71,7 +69,7 @@ impl SslTransport {
         let mut parser = EventReader::new(stream);
         loop { // TODO: possibly a timeout?
             match parser.next()? {
-                XmlReaderEvent::StartElement { name, namespace, .. } => {
+                XmlReaderEvent::StartElement { name, .. } => {
                     if let Some(ns) = name.namespace {
                         if ns == ns::TLS && name.local_name == "proceed" {
                             break;
@@ -87,12 +85,19 @@ impl SslTransport {
         let stream = parser.into_inner();
         let ssl_connector = SslConnectorBuilder::new(SslMethod::tls())?.build();
         let ssl_stream = Arc::new(Mutex::new(ssl_connector.connect(host, stream)?));
-        let reader = EventReader::new(LockedRead(ssl_stream.clone()));
-        let writer = EventWriter::new(LockedWrite(ssl_stream.clone()));
+        let reader = EventReader::new(LockedIO(ssl_stream.clone()));
+        let writer = EventWriter::new(LockedIO(ssl_stream.clone()));
         Ok(SslTransport {
             inner: ssl_stream,
             reader: reader,
             writer: writer,
         })
+    }
+
+    pub fn close(&mut self) {
+        self.inner.lock()
+                  .unwrap()
+                  .shutdown()
+                  .unwrap(); // TODO: safety, return value and such
     }
 }

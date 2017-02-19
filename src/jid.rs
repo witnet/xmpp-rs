@@ -4,8 +4,6 @@ use std::convert::Into;
 
 use std::str::FromStr;
 
-use std::string::ToString;
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum JidParseError {
     NoDomain,
@@ -43,7 +41,7 @@ impl FromStr for Jid {
 
     fn from_str(s: &str) -> Result<Jid, JidParseError> {
         // TODO: very naive, may need to do it differently
-        let mut iter = s.chars();
+        let iter = s.chars();
         let mut buf = String::new();
         let mut state = ParserState::Node;
         let mut node = None;
