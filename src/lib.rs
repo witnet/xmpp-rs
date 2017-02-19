@@ -1,6 +1,7 @@
 extern crate xml;
 
 pub mod error;
+pub mod attribute;
 
 use std::io::prelude::*;
 
@@ -15,31 +16,11 @@ use std::fmt;
 use xml::reader::{XmlEvent as ReaderEvent, EventReader};
 use xml::writer::{XmlEvent as WriterEvent, EventWriter};
 use xml::name::Name;
-use xml::escape::escape_str_attribute;
 use xml::namespace::NS_NO_PREFIX;
 
 use error::Error;
 
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Attribute {
-    pub name: String,
-    pub value: String,
-}
-
-impl fmt::Display for Attribute {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        write!(fmt, "{}=\"{}\"", self.name, escape_str_attribute(&self.value))
-    }
-}
-
-impl Attribute {
-    pub fn new<N: Into<String>, V: Into<String>>(name: N, value: V) -> Attribute {
-        Attribute {
-            name: name.into(),
-            value: value.into(),
-        }
-    }
-}
+use attribute::Attribute;
 
 #[derive(Clone, PartialEq, Eq)]
 pub struct Element {
@@ -131,7 +112,13 @@ impl Element {
                     let attributes = attributes.into_iter()
                                                .map(|o| Attribute::new(o.name.local_name, o.value))
                                                .collect();
-                    let mut root = Element::new(name.local_name, namespace.get(NS_NO_PREFIX).map(|s| s.to_owned()), attributes);
+                    let ns = if let Some(ref prefix) = name.prefix {
+                        namespace.get(prefix)
+                    }
+                    else {
+                        namespace.get(NS_NO_PREFIX)
+                    }.map(|s| s.to_owned());
+                    let mut root = Element::new(name.local_name, ns, attributes);
                     root.from_reader_inner(reader);
                     return Ok(root);
                 },
@@ -151,7 +138,13 @@ impl Element {
                     let attributes = attributes.into_iter()
                                                .map(|o| Attribute::new(o.name.local_name, o.value))
                                                .collect();
-                    let elem = Element::new(name.local_name, namespace.get(NS_NO_PREFIX).map(|s| s.to_owned()), attributes);
+                    let ns = if let Some(ref prefix) = name.prefix {
+                        namespace.get(prefix)
+                    }
+                    else {
+                        namespace.get(NS_NO_PREFIX)
+                    }.map(|s| s.to_owned());
+                    let elem = Element::new(name.local_name, ns, attributes);
                     let elem_ref = self.append_child(elem);
                     elem_ref.from_reader_inner(reader);
                 },
