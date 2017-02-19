@@ -224,21 +224,38 @@ impl Element {
         self.children.push(Fork::Text(child.into()));
     }
 
-    pub fn text(&self) -> &str {
-        unimplemented!()
+    pub fn text(&self) -> String {
+        let mut ret = String::new();
+        for fork in &self.children {
+            if let Fork::Text(ref s) = *fork {
+                ret += s;
+            }
+        }
+        ret
     }
 
-    pub fn get_child<'a, N: Into<Name<'a>>>(&self, name: N) -> Option<&Element> {
-        unimplemented!()
+    pub fn get_child<N: AsRef<str>, NS: AsRef<str>>(&self, name: N, namespace: NS) -> Option<&Element> {
+        for fork in &self.children {
+            if let Fork::Element(ref e) = *fork {
+                if e.is(name.as_ref(), namespace.as_ref()) {
+                    return Some(e);
+                }
+            }
+        }
+        None
     }
 
-    pub fn get_child_mut<'a, N: Into<Name<'a>>>(&mut self, name: N) -> Option<&mut Element> {
-        unimplemented!()
+    pub fn get_child_mut<N: AsRef<str>, NS: AsRef<str>>(&mut self, name: N, namespace: NS) -> Option<&mut Element> {
+        for fork in &mut self.children {
+            if let Fork::Element(ref mut e) = *fork {
+                if e.is(name.as_ref(), namespace.as_ref()) {
+                    return Some(e);
+                }
+            }
+        }
+        None
     }
 
-    pub fn into_child<'a, N: Into<Name<'a>>>(self, name: N) -> Option<Element> {
-        unimplemented!()
-    }
 }
 
 pub struct Children<'a> {
@@ -352,7 +369,8 @@ mod tests {
         assert_eq!(elem.name(), "a");
         assert_eq!(elem.ns(), Some("b"));
         assert_eq!(elem.attr("c"), Some("d"));
-        assert_eq!(elem.is("a", "b"), true);
+        assert_eq!(elem.attr("x"), None);
+        assert!(elem.is("a", "b"));
     }
 
     #[test]
@@ -362,5 +380,16 @@ mod tests {
         assert!(iter.next().unwrap().is("child", "root_ns"));
         assert!(iter.next().unwrap().is("child", "child_ns"));
         assert_eq!(iter.next(), None);
+    }
+
+    #[test]
+    fn get_child_works() {
+        let root = build_test_tree();
+        assert_eq!(root.get_child("child", "inexistent_ns"), None);
+        assert_eq!(root.get_child("not_a_child", "root_ns"), None);
+        assert!(root.get_child("child", "root_ns").unwrap().is("child", "root_ns"));
+        assert!(root.get_child("child", "child_ns").unwrap().is("child", "child_ns"));
+        assert_eq!(root.get_child("child", "root_ns").unwrap().attr("c"), Some("d"));
+        assert_eq!(root.get_child("child", "child_ns").unwrap().attr("d"), Some("e"));
     }
 }
