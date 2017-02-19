@@ -6,10 +6,12 @@ use openssl::ssl::HandshakeError;
 use openssl::error::ErrorStack;
 
 use xml::reader::Error as XmlError;
+use xml::writer::Error as EmitterError;
 
 #[derive(Debug)]
 pub enum Error {
     XmlError(XmlError),
+    EmitterError(EmitterError),
     IoError(io::Error),
     HandshakeError(HandshakeError<TcpStream>),
     OpenSslErrorStack(ErrorStack),
@@ -19,6 +21,12 @@ pub enum Error {
 impl From<XmlError> for Error {
     fn from(err: XmlError) -> Error {
         Error::XmlError(err)
+    }
+}
+
+impl From<EmitterError> for Error {
+    fn from(err: EmitterError) -> Error {
+        Error::EmitterError(err)
     }
 }
 
