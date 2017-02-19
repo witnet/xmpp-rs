@@ -8,6 +8,8 @@ use openssl::error::ErrorStack;
 use xml::reader::Error as XmlError;
 use xml::writer::Error as EmitterError;
 
+use minidom::error::Error as MinidomError;
+
 #[derive(Debug)]
 pub enum Error {
     XmlError(XmlError),
@@ -15,6 +17,7 @@ pub enum Error {
     IoError(io::Error),
     HandshakeError(HandshakeError<TcpStream>),
     OpenSslErrorStack(ErrorStack),
+    MinidomError(MinidomError),
     StreamError,
     EndOfDocument,
 }
@@ -49,3 +52,8 @@ impl From<ErrorStack> for Error {
     }
 }
 
+impl From<MinidomError> for Error {
+    fn from(err: MinidomError) -> Error {
+        Error::MinidomError(err)
+    }
+}

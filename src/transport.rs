@@ -9,7 +9,7 @@ use std::sync::{Arc, Mutex};
 
 use ns;
 
-use tree;
+use minidom;
 
 use locked_io::LockedIO;
 
@@ -21,8 +21,8 @@ pub trait Transport {
     fn write_event<'a, E: Into<XmlWriterEvent<'a>>>(&mut self, event: E) -> Result<(), Error>;
     fn read_event(&mut self) -> Result<XmlReaderEvent, Error>;
 
-    fn write_element(&mut self, element: &tree::Element) -> Result<(), Error>;
-    fn read_element(&mut self) -> Result<tree::Element, Error>;
+    fn write_element(&mut self, element: &minidom::Element) -> Result<(), Error>;
+    fn read_element(&mut self) -> Result<minidom::Element, Error>;
 }
 
 pub struct SslTransport {
@@ -42,12 +42,12 @@ impl Transport for SslTransport {
         Ok(self.reader.next()?)
     }
 
-    fn write_element(&mut self, element: &tree::Element) -> Result<(), Error> {
-        element.write_to(&mut self.writer)
+    fn write_element(&mut self, element: &minidom::Element) -> Result<(), Error> {
+        Ok(element.write_to(&mut self.writer)?)
     }
 
-    fn read_element(&mut self) -> Result<tree::Element, Error> {
-        tree::Element::from_reader(&mut self.reader)
+    fn read_element(&mut self) -> Result<minidom::Element, Error> {
+        Ok(minidom::Element::from_reader(&mut self.reader)?)
     }
 }
 
