@@ -3,7 +3,7 @@ use std::io::prelude::*;
 use std::net::TcpStream;
 
 use xml::reader::{EventReader, XmlEvent as XmlReaderEvent};
-use xml::writer::{EventWriter, XmlEvent as XmlWriterEvent};
+use xml::writer::{EventWriter, XmlEvent as XmlWriterEvent, EmitterConfig};
 
 use std::sync::{Arc, Mutex};
 
@@ -67,7 +67,12 @@ impl SslTransport {
         let ssl_stream = Arc::new(Mutex::new(ssl_connector.connect(host, stream)?));
         let locked_io = LockedIO::from(ssl_stream.clone());
         let reader = EventReader::new(locked_io.clone());
-        let writer = EventWriter::new(locked_io);
+        let writer = EventWriter::new_with_config(locked_io, EmitterConfig {
+            line_separator: "".into(),
+            perform_indent: false,
+            normalize_empty_elements: false,
+            .. Default::default()
+        });
         Ok(SslTransport {
             inner: ssl_stream,
             reader: reader,
