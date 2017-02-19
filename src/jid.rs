@@ -150,6 +150,8 @@ impl Jid {
 mod tests {
     use super::*;
 
+    use std::str::FromStr;
+
     #[test]
     fn can_parse_jids() {
         assert_eq!(Jid::from_str("a@b.c/d"), Ok(Jid::full("a", "b.c", "d")));
