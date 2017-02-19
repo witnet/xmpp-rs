@@ -43,4 +43,7 @@ pub struct Client {
 }
 
 impl Client {
+    pub fn jid(&self) -> &Jid {
+        &self.jid
+    }
 }
