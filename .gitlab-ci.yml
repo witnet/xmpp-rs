@@ -2,9 +2,9 @@ image: "scorpil/rust:stable"
 
 before_script:
 - apt-get update -yqq
-- apt-get install -yqq --no-install-recommends build-essential libssl-dev
+- apt-get install -yqq --no-install-recommends build-essential libssl-dev pkg-config
 
 test:cargo:
   script:
-  - rustc --version && cargo --version      # Print version info for debugging
-  - cargo test --verbose --jobs 1 --release # Don't paralize to make errors more readable
+  - rustc --version && cargo --version
+  - cargo test --verbose --jobs 1 --release
