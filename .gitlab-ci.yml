@@ -2,7 +2,7 @@ image: "scorpil/rust:stable"
 
 before_script:
 - apt-get update -yqq
-- apt-get install -yqq --no-install-recommends build-essential openssl-dev
+- apt-get install -yqq --no-install-recommends build-essential libssl-dev
 
 test:cargo:
   script:
