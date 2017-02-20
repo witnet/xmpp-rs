@@ -141,11 +141,11 @@ impl Client {
                     auth.extend(self.jid.node.as_ref().expect("JID has no node").bytes());
                     auth.push(0);
                     auth.extend(password.bytes());
-                    let mut elem = Element::builder("auth")
-                                           .ns(ns::SASL)
-                                           .attr("mechanism", "PLAIN")
-                                           .build();
-                    elem.append_text_node(base64::encode(&auth));
+                    let elem = Element::builder("auth")
+                                       .text(base64::encode(&auth))
+                                       .ns(ns::SASL)
+                                       .attr("mechanism", "PLAIN")
+                                       .build();
                     self.transport.write_element(&elem)?;
                     did_sasl = true;
                 }

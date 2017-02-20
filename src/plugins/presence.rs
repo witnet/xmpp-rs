@@ -75,10 +75,10 @@ impl PresencePlugin {
                                      .ns(ns::CLIENT)
                                      .build();
             if let Some(stat) = status {
-                let mut elem = Element::builder("status")
-                                       .ns(ns::CLIENT)
-                                       .build();
-                elem.append_text_node(stat);
+                let elem = Element::builder("status")
+                                   .ns(ns::CLIENT)
+                                   .text(stat)
+                                   .build();
                 stanza.append_child(elem);
             }
             let mut elem = Element::builder("show")
