@@ -4,12 +4,12 @@ use error::Error;
 use ns;
 use plugin::{Plugin, PluginProxyBinding};
 use event::AbstractEvent;
+use connection::{Connection, C2S};
 
 use base64;
 
 use minidom::Element;
 
-use xml::writer::XmlEvent as WriterEvent;
 use xml::reader::XmlEvent as ReaderEvent;
 
 use std::sync::mpsc::{Receiver, channel};
@@ -42,10 +42,7 @@ impl ClientBuilder {
     pub fn connect(self) -> Result<Client, Error> {
         let host = &self.host.unwrap_or(self.jid.domain.clone());
         let mut transport = SslTransport::connect(host, self.port)?;
-        transport.write_event(WriterEvent::start_element("stream:stream")
-                                          .attr("to", &self.jid.domain)
-                                          .default_ns(ns::CLIENT)
-                                          .ns("stream", ns::STREAM))?;
+        C2S::init(&mut transport, &self.jid.domain, "before_sasl")?;
         let (sender_out, sender_in) = channel();
         let (dispatcher_out, dispatcher_in) = channel();
         Ok(Client {
@@ -155,10 +152,7 @@ impl Client {
             }
             else if n.is("success", ns::SASL) {
                 self.transport.reset_stream();
-                self.transport.write_event(WriterEvent::start_element("stream:stream")
-                                                       .attr("to", &self.jid.domain)
-                                                       .default_ns(ns::CLIENT)
-                                                       .ns("stream", ns::STREAM))?;
+                C2S::init(&mut self.transport, &self.jid.domain, "after_sasl")?;
                 loop {
                     let e = self.transport.read_event()?;
                     match e {

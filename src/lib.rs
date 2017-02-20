@@ -11,5 +11,6 @@ pub mod client;
 pub mod plugin;
 pub mod event;
 pub mod plugins;
+pub mod connection;
 
 mod locked_io;
