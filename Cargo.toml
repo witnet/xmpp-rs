@@ -6,6 +6,7 @@ authors = ["lumi <lumi@pew.im>"]
 [dependencies]
 xml-rs = "*"
 openssl = "*"
+base64 = "*"
 
 [dependencies.minidom]
 git = "https://gitlab.com/lumi/minidom-rs.git"
