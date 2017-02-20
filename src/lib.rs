@@ -76,6 +76,7 @@ impl Element {
     pub fn builder<S: Into<String>>(name: S) -> ElementBuilder {
         ElementBuilder {
             name: name.into(),
+            text: None,
             namespace: None,
             attributes: Vec::new(),
         }
@@ -297,6 +298,7 @@ impl<'a> Iterator for ChildrenMut<'a> {
 
 pub struct ElementBuilder {
     name: String,
+    text: Option<String>,
     namespace: Option<String>,
     attributes: Vec<Attribute>,
 }
@@ -312,8 +314,17 @@ impl ElementBuilder {
         self
     }
 
+    pub fn text<S: Into<String>>(mut self, text: S) -> ElementBuilder {
+        self.text = Some(text.into());
+        self
+    }
+
     pub fn build(self) -> Element {
-        Element::new(self.name, self.namespace, self.attributes)
+        let mut elem = Element::new(self.name, self.namespace, self.attributes);
+        if let Some(text) = self.text {
+            elem.append_text_node(text);
+        }
+        elem
     }
 }
 
@@ -368,11 +379,13 @@ mod tests {
         let elem = Element::builder("a")
                            .ns("b")
                            .attr("c", "d")
+                           .text("e")
                            .build();
         assert_eq!(elem.name(), "a");
         assert_eq!(elem.ns(), Some("b"));
         assert_eq!(elem.attr("c"), Some("d"));
         assert_eq!(elem.attr("x"), None);
+        assert_eq!(elem.text(), "e");
         assert!(elem.is("a", "b"));
     }
 
