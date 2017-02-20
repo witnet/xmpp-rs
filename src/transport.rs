@@ -23,6 +23,8 @@ pub trait Transport {
 
     fn write_element(&mut self, element: &minidom::Element) -> Result<(), Error>;
     fn read_element(&mut self) -> Result<minidom::Element, Error>;
+
+    fn reset_stream(&mut self);
 }
 
 pub struct SslTransport {
@@ -48,6 +50,17 @@ impl Transport for SslTransport {
 
     fn read_element(&mut self) -> Result<minidom::Element, Error> {
         Ok(minidom::Element::from_reader(&mut self.reader)?)
+    }
+
+    fn reset_stream(&mut self) {
+        let locked_io = LockedIO::from(self.inner.clone());
+        self.reader = EventReader::new(locked_io.clone());
+        self.writer = EventWriter::new_with_config(locked_io, EmitterConfig {
+            line_separator: "".into(),
+            perform_indent: false,
+            normalize_empty_elements: false,
+            .. Default::default()
+        });
     }
 }
 
