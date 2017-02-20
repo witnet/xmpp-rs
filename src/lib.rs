@@ -5,7 +5,7 @@ pub mod attribute;
 
 use std::io::prelude::*;
 
-use std::convert::{From, AsRef};
+use std::convert::AsRef;
 
 use std::iter::Iterator;
 
@@ -119,7 +119,7 @@ impl Element {
                         namespace.get(NS_NO_PREFIX)
                     }.map(|s| s.to_owned());
                     let mut root = Element::new(name.local_name, ns, attributes);
-                    root.from_reader_inner(reader);
+                    root.from_reader_inner(reader)?;
                     return Ok(root);
                 },
                 ReaderEvent::EndDocument => {
@@ -146,7 +146,7 @@ impl Element {
                     }.map(|s| s.to_owned());
                     let elem = Element::new(name.local_name, ns, attributes);
                     let elem_ref = self.append_child(elem);
-                    elem_ref.from_reader_inner(reader);
+                    elem_ref.from_reader_inner(reader)?;
                 },
                 ReaderEvent::EndElement { .. } => {
                     // TODO: may want to check whether we're closing the correct element
@@ -256,6 +256,9 @@ impl Element {
         None
     }
 
+    pub fn has_child<N: AsRef<str>, NS: AsRef<str>>(&self, name: N, namespace: NS) -> bool {
+        self.get_child(name, namespace).is_some()
+    }
 }
 
 pub struct Children<'a> {
