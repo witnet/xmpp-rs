@@ -8,7 +8,7 @@ use openssl::error::ErrorStack;
 use xml::reader::Error as XmlError;
 use xml::writer::Error as EmitterError;
 
-use minidom::error::Error as MinidomError;
+use minidom::Error as MinidomError;
 
 #[derive(Debug)]
 pub enum Error {
