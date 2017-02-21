@@ -1,3 +1,5 @@
+//! Provides a type for Jabber IDs.
+
 use std::fmt;
 
 use std::convert::Into;

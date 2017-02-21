@@ -1,3 +1,5 @@
+//! Provides an `Error` for use in this crate.
+
 use std::io;
 
 use std::net::TcpStream;
@@ -10,6 +12,7 @@ use xml::writer::Error as EmitterError;
 
 use minidom::Error as MinidomError;
 
+/// An error which wraps a bunch of errors from different crates and the stdlib.
 #[derive(Debug)]
 pub enum Error {
     XmlError(XmlError),

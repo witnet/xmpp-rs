@@ -1,3 +1,5 @@
+//! Provides the plugin infrastructure.
+
 use event::{Event, AbstractEvent};
 
 use std::any::Any;
