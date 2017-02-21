@@ -1,3 +1,5 @@
+//! Provides transports for the xml streams.
+
 use std::io::prelude::*;
 
 use std::net::TcpStream;
@@ -17,16 +19,25 @@ use error::Error;
 
 use openssl::ssl::{SslMethod, SslConnectorBuilder, SslStream};
 
+/// A trait which transports are required to implement.
 pub trait Transport {
+    /// Writes an `xml::writer::XmlEvent` to the stream.
     fn write_event<'a, E: Into<XmlWriterEvent<'a>>>(&mut self, event: E) -> Result<(), Error>;
+
+    /// Reads an `xml::reader::XmlEvent` from the stream.
     fn read_event(&mut self) -> Result<XmlReaderEvent, Error>;
 
+    /// Writes a `minidom::Element` to the stream.
     fn write_element(&mut self, element: &minidom::Element) -> Result<(), Error>;
+
+    /// Reads a `minidom::Element` from the stream.
     fn read_element(&mut self) -> Result<minidom::Element, Error>;
 
+    /// Resets the stream.
     fn reset_stream(&mut self);
 }
 
+/// A transport which uses STARTTLS.
 pub struct SslTransport {
     inner: Arc<Mutex<SslStream<TcpStream>>>, // TODO: this feels rather ugly
     reader: EventReader<LockedIO<SslStream<TcpStream>>>, // TODO: especially feels ugly because
@@ -65,6 +76,7 @@ impl Transport for SslTransport {
 }
 
 impl SslTransport {
+    /// Connects to a server using STARTTLS.
     pub fn connect(host: &str, port: u16) -> Result<SslTransport, Error> {
         // TODO: very quick and dirty, blame starttls
         let mut stream = TcpStream::connect((host, port))?;
@@ -106,6 +118,7 @@ impl SslTransport {
         })
     }
 
+    /// Closes the stream.
     pub fn close(&mut self) {
         self.inner.lock()
                   .unwrap()
