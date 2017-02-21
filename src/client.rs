@@ -61,6 +61,7 @@ impl ClientBuilder {
     }
 }
 
+/// An XMPP client.
 pub struct Client {
     jid: Jid,
     transport: SslTransport,
@@ -71,15 +72,18 @@ pub struct Client {
 }
 
 impl Client {
+    /// Return a reference to the `Jid` associated with this `Client`.
     pub fn jid(&self) -> &Jid {
         &self.jid
     }
 
+    /// Register a plugin.
     pub fn register_plugin<P: Plugin + 'static>(&mut self, mut plugin: P) {
         plugin.bind(self.binding.clone());
         self.plugins.push(Box::new(plugin));
     }
 
+    /// Return the plugin given by the type parameter, if it exists, else panic.
     pub fn plugin<P: Plugin>(&self) -> &P {
         for plugin in &self.plugins {
             let any = plugin.as_any();
@@ -90,6 +94,7 @@ impl Client {
         panic!("plugin does not exist!");
     }
 
+    /// Return the next event and flush the send queue.
     pub fn next_event(&mut self) -> Result<AbstractEvent, Error> {
         self.flush_send_queue()?;
         loop {
@@ -105,6 +110,7 @@ impl Client {
         }
     }
 
+    /// Flush the send queue, sending all queued up stanzas.
     pub fn flush_send_queue(&mut self) -> Result<(), Error> { // TODO: not sure how great of an
                                                               //       idea it is to flush in this
                                                               //       manner…
@@ -114,6 +120,7 @@ impl Client {
         Ok(())
     }
 
+    /// Connect using SASL plain authentication.
     pub fn connect_plain(&mut self, password: &str) -> Result<(), Error> {
         // TODO: this is very ugly
         loop {
