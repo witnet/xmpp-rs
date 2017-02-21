@@ -5,6 +5,7 @@ use std::convert::From;
 use xml::writer::Error as WriterError;
 use xml::reader::Error as ReaderError;
 
+/// An enum representing the possible errors.
 #[derive(Debug)]
 pub enum Error {
     IoError(io::Error),
