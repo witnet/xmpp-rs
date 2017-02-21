@@ -22,7 +22,7 @@ pub struct ClientBuilder {
 }
 
 impl ClientBuilder {
-    /// Create a new builder for an XMPP client that will connect to `jid` with default parameters.
+    /// Creates a new builder for an XMPP client that will connect to `jid` with default parameters.
     pub fn new(jid: Jid) -> ClientBuilder {
         ClientBuilder {
             jid: jid,
@@ -31,13 +31,13 @@ impl ClientBuilder {
         }
     }
 
-    /// Set the host to connect to.
+    /// Sets the host to connect to.
     pub fn host(mut self, host: String) -> ClientBuilder {
         self.host = Some(host);
         self
     }
 
-    /// Set the port to connect to.
+    /// Sets the port to connect to.
     pub fn port(mut self, port: u16) -> ClientBuilder {
         self.port = port;
         self
@@ -72,18 +72,18 @@ pub struct Client {
 }
 
 impl Client {
-    /// Return a reference to the `Jid` associated with this `Client`.
+    /// Returns a reference to the `Jid` associated with this `Client`.
     pub fn jid(&self) -> &Jid {
         &self.jid
     }
 
-    /// Register a plugin.
+    /// Registers a plugin.
     pub fn register_plugin<P: Plugin + 'static>(&mut self, mut plugin: P) {
         plugin.bind(self.binding.clone());
         self.plugins.push(Box::new(plugin));
     }
 
-    /// Return the plugin given by the type parameter, if it exists, else panic.
+    /// Returns the plugin given by the type parameter, if it exists, else panics.
     pub fn plugin<P: Plugin>(&self) -> &P {
         for plugin in &self.plugins {
             let any = plugin.as_any();
@@ -94,7 +94,7 @@ impl Client {
         panic!("plugin does not exist!");
     }
 
-    /// Return the next event and flush the send queue.
+    /// Returns the next event and flush the send queue.
     pub fn next_event(&mut self) -> Result<AbstractEvent, Error> {
         self.flush_send_queue()?;
         loop {
@@ -110,7 +110,7 @@ impl Client {
         }
     }
 
-    /// Flush the send queue, sending all queued up stanzas.
+    /// Flushes the send queue, sending all queued up stanzas.
     pub fn flush_send_queue(&mut self) -> Result<(), Error> { // TODO: not sure how great of an
                                                               //       idea it is to flush in this
                                                               //       manner…
@@ -120,7 +120,7 @@ impl Client {
         Ok(())
     }
 
-    /// Connect using SASL plain authentication.
+    /// Connects using SASL plain authentication.
     pub fn connect_plain(&mut self, password: &str) -> Result<(), Error> {
         // TODO: this is very ugly
         loop {
