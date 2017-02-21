@@ -1,5 +1,5 @@
 use error::Error;
-use plugin::{Plugin, PluginProxy};
+use plugin::{Plugin, PluginProxy, PluginReturn};
 
 use minidom::Element;
 
@@ -97,5 +97,9 @@ impl PresencePlugin {
 impl Plugin for PresencePlugin {
     fn get_proxy(&mut self) -> &mut PluginProxy {
         &mut self.proxy
+    }
+
+    fn handle(&mut self, _elem: &Element) -> PluginReturn {
+        PluginReturn::Continue
     }
 }

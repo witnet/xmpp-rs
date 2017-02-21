@@ -29,10 +29,12 @@ pub enum PluginProxy {
 }
 
 impl PluginProxy {
+    /// Returns a new `PluginProxy`.
     pub fn new() -> PluginProxy {
         PluginProxy::Unbound
     }
 
+    /// Binds the `PluginProxy` to a `PluginProxyBinding`.
     pub fn bind(&mut self, inner: PluginProxyBinding) {
         if let PluginProxy::BoundTo(_) = *self {
             panic!("trying to bind an already bound plugin proxy!");
@@ -51,6 +53,7 @@ impl PluginProxy {
         }
     }
 
+    /// Dispatches an event.
     pub fn dispatch<E: Event>(&self, event: E) {
         self.with_binding(move |binding| {
             binding.dispatcher.send(AbstractEvent::new(event))
@@ -58,6 +61,7 @@ impl PluginProxy {
         });
     }
 
+    /// Sends a stanza.
     pub fn send(&self, elem: Element) {
         self.with_binding(move |binding| {
             binding.sender.send(elem).unwrap(); // TODO: as above, may want to return the error
@@ -65,16 +69,24 @@ impl PluginProxy {
     }
 }
 
+/// A plugin handler return value.
+///
+/// The `Continue` variant means to do nothing, the `Unload` variant means to unload the plugin.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum PluginReturn {
     Continue,
     Unload,
 }
 
+/// A trait whch all plugins should implement.
 pub trait Plugin: Any + PluginAny {
+    /// Gets a mutable reference to the inner `PluginProxy`.
     fn get_proxy(&mut self) -> &mut PluginProxy;
-    fn handle(&mut self, _elem: &Element) -> PluginReturn { PluginReturn::Continue }
 
+    /// Handles a received stanza.
+    fn handle(&mut self, elem: &Element) -> PluginReturn;
+
+    #[doc(hidden)]
     fn bind(&mut self, inner: PluginProxyBinding) {
         self.get_proxy().bind(inner);
     }
