@@ -14,6 +14,7 @@ use xml::reader::XmlEvent as ReaderEvent;
 
 use std::sync::mpsc::{Receiver, channel};
 
+/// A builder for `Client`s.
 pub struct ClientBuilder {
     jid: Jid,
     host: Option<String>,
@@ -21,6 +22,7 @@ pub struct ClientBuilder {
 }
 
 impl ClientBuilder {
+    /// Create a new builder for an XMPP client that will connect to `jid` with default parameters.
     pub fn new(jid: Jid) -> ClientBuilder {
         ClientBuilder {
             jid: jid,
@@ -29,16 +31,19 @@ impl ClientBuilder {
         }
     }
 
+    /// Set the host to connect to.
     pub fn host(mut self, host: String) -> ClientBuilder {
         self.host = Some(host);
         self
     }
 
+    /// Set the port to connect to.
     pub fn port(mut self, port: u16) -> ClientBuilder {
         self.port = port;
         self
     }
 
+    /// Connects to the server and returns a `Client` when succesful.
     pub fn connect(self) -> Result<Client, Error> {
         let host = &self.host.unwrap_or(self.jid.domain.clone());
         let mut transport = SslTransport::connect(host, self.port)?;
