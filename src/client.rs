@@ -16,6 +16,7 @@ use xml::reader::XmlEvent as ReaderEvent;
 use std::sync::mpsc::{Receiver, channel};
 
 /// Struct that should be moved somewhere else and cleaned up.
+#[derive(Debug)]
 pub struct StreamFeatures {
     pub sasl_mechanisms: Option<Vec<String>>,
 }
@@ -129,7 +130,7 @@ impl Client {
     /// Connects and authenticates using the specified SASL mechanism.
     pub fn connect<S: SaslMechanism>(&mut self, mechanism: &mut S) -> Result<(), Error> {
         self.wait_for_features()?;
-        let auth = mechanism.initial();
+        let auth = mechanism.initial().map_err(|x| Error::SaslError(Some(x)))?;
         let mut elem = Element::builder("auth")
                                .ns(ns::SASL)
                                .attr("mechanism", S::name())
@@ -148,7 +149,7 @@ impl Client {
                 else {
                     base64::decode(&text)?
                 };
-                let response = mechanism.response(&challenge);
+                let response = mechanism.response(&challenge).map_err(|x| Error::SaslError(Some(x)))?;
                 let mut elem = Element::builder("response")
                                        .ns(ns::SASL)
                                        .build();
@@ -158,6 +159,14 @@ impl Client {
                 self.transport.write_element(&elem)?;
             }
             else if n.is("success", ns::SASL) {
+                let text = n.text();
+                let data = if text == "" {
+                    Vec::new()
+                }
+                else {
+                    base64::decode(&text)?
+                };
+                mechanism.success(&data).map_err(|x| Error::SaslError(Some(x)))?;
                 self.transport.reset_stream();
                 C2S::init(&mut self.transport, &self.jid.domain, "after_sasl")?;
                 return self.bind();

@@ -19,12 +19,12 @@ impl Plain {
 impl SaslMechanism for Plain {
     fn name() -> &'static str { "PLAIN" }
 
-    fn initial(&mut self) -> Vec<u8> {
+    fn initial(&mut self) -> Result<Vec<u8>, String> {
         let mut auth = Vec::new();
         auth.push(0);
         auth.extend(self.name.bytes());
         auth.push(0);
         auth.extend(self.password.bytes());
-        auth
+        Ok(auth)
     }
 }
