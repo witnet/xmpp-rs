@@ -6,4 +6,4 @@ mod scram;
 
 pub use self::anonymous::Anonymous;
 pub use self::plain::Plain;
-pub use self::scram::{Scram, Sha1, ScramProvider};
+pub use self::scram::{Scram, Sha1, Sha256, ScramProvider};

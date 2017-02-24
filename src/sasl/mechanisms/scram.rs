@@ -69,6 +69,29 @@ impl ScramProvider for Sha1 { // TODO: look at all these unwraps
     }
 }
 
+pub struct Sha256;
+
+impl ScramProvider for Sha256 { // TODO: look at all these unwraps
+    fn name() -> &'static str { "SCRAM-SHA-256" }
+
+    fn hash(data: &[u8]) -> Vec<u8> {
+        hash(MessageDigest::sha256(), data).unwrap()
+    }
+
+    fn hmac(data: &[u8], key: &[u8]) -> Vec<u8> {
+        let pkey = PKey::hmac(key).unwrap();
+        let mut signer = Signer::new(MessageDigest::sha256(), &pkey).unwrap();
+        signer.update(data).unwrap();
+        signer.finish().unwrap()
+    }
+
+    fn derive(data: &[u8], salt: &[u8], iterations: usize) -> Vec<u8> {
+        let mut result = vec![0; 32];
+        pbkdf2_hmac(data, salt, iterations, MessageDigest::sha256(), &mut result).unwrap();
+        result
+    }
+}
+
 enum ScramState {
     Init,
     SentInitialMessage { initial_message: Vec<u8> },
@@ -243,6 +266,25 @@ mod tests {
         let client_final = b"c=biws,r=fyko+d2lbbFgONRv9qkxdawL3rfcNHYJY1ZVvWVs7j,p=v0X8v3Bz2T0CJGbJQyF0X+HI4Ts=";
         let server_final = b"v=rmF9pqV8S7suAoZWja4dJRkFsKQ=";
         let mut mechanism = Scram::<Sha1>::new_with_nonce(username, password, client_nonce.to_owned());
+        let init = mechanism.initial().unwrap();
+        assert_eq!( String::from_utf8(init.clone()).unwrap()
+                  , String::from_utf8(client_init[..].to_owned()).unwrap() ); // depends on ordering…
+        let resp = mechanism.response(&server_init[..]).unwrap();
+        assert_eq!( String::from_utf8(resp.clone()).unwrap()
+                  , String::from_utf8(client_final[..].to_owned()).unwrap() ); // again, depends on ordering…
+        mechanism.success(&server_final[..]).unwrap();
+    }
+
+    #[test]
+    fn scram_sha256_works() { // Source: RFC 7677
+        let username = "user";
+        let password = "pencil";
+        let client_nonce = "rOprNGfwEbeRWgbNEkqO";
+        let client_init = b"n,,n=user,r=rOprNGfwEbeRWgbNEkqO";
+        let server_init = b"r=rOprNGfwEbeRWgbNEkqO%hvYDpWUa2RaTCAfuxFIlj)hNlF$k0,s=W22ZaJ0SNY7soEsUEjb6gQ==,i=4096";
+        let client_final = b"c=biws,r=rOprNGfwEbeRWgbNEkqO%hvYDpWUa2RaTCAfuxFIlj)hNlF$k0,p=dHzbZapWIk4jUhN+Ute9ytag9zjfMHgsqmmiz7AndVQ=";
+        let server_final = b"v=6rriTRBi23WpRR/wtup+mMhUZUn/dB5nLTJRsjl95G4=";
+        let mut mechanism = Scram::<Sha256>::new_with_nonce(username, password, client_nonce.to_owned());
         let init = mechanism.initial().unwrap();
         assert_eq!( String::from_utf8(init.clone()).unwrap()
                   , String::from_utf8(client_init[..].to_owned()).unwrap() ); // depends on ordering…
