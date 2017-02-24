@@ -169,7 +169,8 @@ impl Client {
                 mechanism.success(&data).map_err(|x| Error::SaslError(Some(x)))?;
                 self.transport.reset_stream();
                 C2S::init(&mut self.transport, &self.jid.domain, "after_sasl")?;
-                return self.bind();
+                self.wait_for_features()?;
+                return Ok(());
             }
             else if n.is("failure", ns::SASL) {
                 let msg = n.text();
@@ -179,15 +180,21 @@ impl Client {
         }
     }
 
-    fn bind(&mut self) -> Result<(), Error> {
-        self.wait_for_features()?;
+    pub fn bind(&mut self) -> Result<(), Error> {
         let mut elem = Element::builder("iq")
                                .attr("id", "bind")
                                .attr("type", "set")
                                .build();
-        let bind = Element::builder("bind")
-                           .ns(ns::BIND)
-                           .build();
+        let mut bind = Element::builder("bind")
+                               .ns(ns::BIND)
+                               .build();
+        if let Some(ref resource) = self.jid.resource {
+            let res = Element::builder("resource")
+                              .ns(ns::BIND)
+                              .text(resource.to_owned())
+                              .build();
+            bind.append_child(res);
+        }
         elem.append_child(bind);
         self.transport.write_element(&elem)?;
         loop {

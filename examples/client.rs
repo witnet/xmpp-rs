@@ -18,6 +18,7 @@ fn main() {
     client.connect(&mut Plain::new(name, pass)).unwrap();
     // Replace with this line if you want SCRAM-SHA-1 authentication:
     //  client.connect(&mut Scram::<Sha1>::new(name, pass).unwrap()).unwrap();
+    client.bind().unwrap();
     client.plugin::<PresencePlugin>().set_presence(Show::Available, None).unwrap();
     loop {
         let event = client.next_event().unwrap();
