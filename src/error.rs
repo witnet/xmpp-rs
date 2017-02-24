@@ -24,6 +24,7 @@ pub enum Error {
     OpenSslErrorStack(ErrorStack),
     MinidomError(MinidomError),
     Base64Error(Base64Error),
+    SaslError(Option<String>),
     StreamError,
     EndOfDocument,
 }

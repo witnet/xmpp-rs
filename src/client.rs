@@ -191,6 +191,11 @@ impl Client {
                     }
                 }
             }
+            else if n.is("failure", ns::SASL) {
+                let msg = n.text();
+                let inner = if msg == "" { None } else { Some(msg) };
+                return Err(Error::SaslError(inner));
+            }
             else if n.is("iq", ns::CLIENT) && n.has_child("bind", ns::BIND) {
                 return Ok(());
             }
