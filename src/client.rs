@@ -5,6 +5,8 @@ use ns;
 use plugin::{Plugin, PluginProxyBinding};
 use event::AbstractEvent;
 use connection::{Connection, C2S};
+use sasl::SaslMechanism;
+use sasl::mechanisms::Plain as SaslPlain;
 
 use base64;
 
@@ -148,11 +150,9 @@ impl Client {
                     self.transport.write_element(&elem)?;
                 }
                 else {
-                    let mut auth = Vec::new();
-                    auth.push(0);
-                    auth.extend(self.jid.node.as_ref().expect("JID has no node").bytes());
-                    auth.push(0);
-                    auth.extend(password.bytes());
+                    let name = self.jid.node.clone().expect("JID has no node");
+                    let mut plain = SaslPlain::new(name, password.to_owned());
+                    let auth = plain.initial();
                     let elem = Element::builder("auth")
                                        .text(base64::encode(&auth))
                                        .ns(ns::SASL)
