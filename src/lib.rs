@@ -672,4 +672,15 @@ mod tests {
         assert_eq!(root.get_child("child", "root_ns").unwrap().attr("c"), Some("d"));
         assert_eq!(root.get_child("child", "child_ns").unwrap().attr("d"), Some("e"));
     }
+
+    #[test]
+    fn namespace_propagation_works() {
+        let mut root = Element::builder("root").ns("root_ns").build();
+        let mut child = Element::bare("child");
+        let grandchild = Element::bare("grandchild");
+        child.append_child(grandchild);
+        root.append_child(child);
+        assert_eq!(root.get_child("child", "root_ns").unwrap().ns(), root.ns());
+        assert_eq!(root.get_child("grandchild", "root_ns").unwrap().ns(), root.ns());
+    }
 }
