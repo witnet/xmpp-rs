@@ -12,6 +12,8 @@ use xml::writer::Error as EmitterError;
 
 use minidom::Error as MinidomError;
 
+use base64::Base64Error;
+
 /// An error which wraps a bunch of errors from different crates and the stdlib.
 #[derive(Debug)]
 pub enum Error {
@@ -21,6 +23,7 @@ pub enum Error {
     HandshakeError(HandshakeError<TcpStream>),
     OpenSslErrorStack(ErrorStack),
     MinidomError(MinidomError),
+    Base64Error(Base64Error),
     StreamError,
     EndOfDocument,
 }
@@ -58,5 +61,11 @@ impl From<ErrorStack> for Error {
 impl From<MinidomError> for Error {
     fn from(err: MinidomError) -> Error {
         Error::MinidomError(err)
+    }
+}
+
+impl From<Base64Error> for Error {
+    fn from(err: Base64Error) -> Error {
+        Error::Base64Error(err)
     }
 }

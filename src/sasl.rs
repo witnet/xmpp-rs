@@ -10,7 +10,7 @@ pub trait SaslMechanism {
     }
 
     /// Creates a response to the SASL challenge.
-    fn respond(&mut self, _challenge: &[u8]) -> Vec<u8> {
+    fn response(&mut self, _challenge: &[u8]) -> Vec<u8> {
         Vec::new()
     }
 }

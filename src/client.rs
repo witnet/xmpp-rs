@@ -6,7 +6,6 @@ use plugin::{Plugin, PluginProxyBinding};
 use event::AbstractEvent;
 use connection::{Connection, C2S};
 use sasl::SaslMechanism;
-use sasl::mechanisms::Plain as SaslPlain;
 
 use base64;
 
@@ -122,8 +121,8 @@ impl Client {
         Ok(())
     }
 
-    /// Connects using SASL plain authentication.
-    pub fn connect_plain(&mut self, password: &str) -> Result<(), Error> {
+    /// Connects using the specified SASL mechanism.
+    pub fn connect<S: SaslMechanism>(&mut self, mechanism: &mut S) -> Result<(), Error> {
         // TODO: this is very ugly
         loop {
             let e = self.transport.read_event().unwrap();
@@ -150,19 +149,36 @@ impl Client {
                     self.transport.write_element(&elem)?;
                 }
                 else {
-                    let name = self.jid.node.clone().expect("JID has no node");
-                    let mut plain = SaslPlain::new(name, password.to_owned());
-                    let auth = plain.initial();
-                    let elem = Element::builder("auth")
-                                       .text(base64::encode(&auth))
-                                       .ns(ns::SASL)
-                                       .attr("mechanism", "PLAIN")
-                                       .build();
+                    let auth = mechanism.initial();
+                    let mut elem = Element::builder("auth")
+                                           .ns(ns::SASL)
+                                           .attr("mechanism", "PLAIN")
+                                           .build();
+                    if !auth.is_empty() {
+                        elem.append_text_node(base64::encode(&auth));
+                    }
                     self.transport.write_element(&elem)?;
-                    did_sasl = true;
                 }
             }
+            else if n.is("challenge", ns::SASL) {
+                let text = n.text();
+                let challenge = if text == "" {
+                    Vec::new()
+                }
+                else {
+                    base64::decode(&text)?
+                };
+                let response = mechanism.response(&challenge);
+                let mut elem = Element::builder("response")
+                                       .ns(ns::SASL)
+                                       .build();
+                if !response.is_empty() {
+                    elem.append_text_node(base64::encode(&response));
+                }
+                self.transport.write_element(&elem)?;
+            }
             else if n.is("success", ns::SASL) {
+                did_sasl = true;
                 self.transport.reset_stream();
                 C2S::init(&mut self.transport, &self.jid.domain, "after_sasl")?;
                 loop {
