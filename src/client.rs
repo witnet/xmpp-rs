@@ -15,6 +15,11 @@ use xml::reader::XmlEvent as ReaderEvent;
 
 use std::sync::mpsc::{Receiver, channel};
 
+/// Struct that should be moved somewhere else and cleaned up.
+pub struct StreamFeatures {
+    pub sasl_mechanisms: Option<Vec<String>>,
+}
+
 /// A builder for `Client`s.
 pub struct ClientBuilder {
     jid: Jid,
@@ -166,7 +171,7 @@ impl Client {
     }
 
     fn bind(&mut self) -> Result<(), Error> {
-        self.wait_for_features();
+        self.wait_for_features()?;
         let mut elem = Element::builder("iq")
                                .attr("id", "bind")
                                .attr("type", "set")
@@ -184,7 +189,7 @@ impl Client {
         }
     }
 
-    fn wait_for_features(&mut self) -> Result<Element, Error> {
+    fn wait_for_features(&mut self) -> Result<StreamFeatures, Error> {
         // TODO: this is very ugly
         loop {
             let e = self.transport.read_event()?;
@@ -198,7 +203,17 @@ impl Client {
         loop {
             let n = self.transport.read_element()?;
             if n.is("features", ns::STREAM) {
-                return Ok(n);
+                let mut features = StreamFeatures {
+                    sasl_mechanisms: None,
+                };
+                if let Some(ms) = n.get_child("mechanisms", ns::SASL) {
+                    let mut res = Vec::new();
+                    for cld in ms.children() {
+                        res.push(cld.text());
+                    }
+                    features.sasl_mechanisms = Some(res);
+                }
+                return Ok(features);
             }
         }
     }
