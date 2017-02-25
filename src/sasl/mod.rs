@@ -1,13 +1,17 @@
 //! Provides the `SaslMechanism` trait and some implementations.
 
+/// A struct containing SASL credentials.
 pub struct SaslCredentials {
     pub username: String,
     pub secret: SaslSecret,
     pub channel_binding: Option<Vec<u8>>,
 }
 
+/// Represents a SASL secret, like a password.
 pub enum SaslSecret {
+    /// No extra data needed.
     None,
+    /// Password required.
     Password(String),
 }
 
