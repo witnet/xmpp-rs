@@ -68,11 +68,12 @@ impl ClientBuilder {
     /// Connects to the server and returns a `Client` when succesful.
     pub fn connect(self) -> Result<Client, Error> {
         let host = &self.host.unwrap_or(self.jid.domain.clone());
-        // TODO: channel binding
         let mut transport = SslTransport::connect(host, self.port)?;
         C2S::init(&mut transport, &self.jid.domain, "before_sasl")?;
         let (sender_out, sender_in) = channel();
         let (dispatcher_out, dispatcher_in) = channel();
+        let mut credentials = self.credentials.expect("can't connect without credentials");
+        credentials.channel_binding = transport.channel_bind();
         let mut client = Client {
             jid: self.jid,
             transport: transport,
@@ -81,7 +82,7 @@ impl ClientBuilder {
             sender_in: sender_in,
             dispatcher_in: dispatcher_in,
         };
-        client.connect(self.credentials.expect("can't connect without credentials"))?;
+        client.connect(credentials)?;
         client.bind()?;
         Ok(client)
     }

@@ -35,6 +35,11 @@ pub trait Transport {
 
     /// Resets the stream.
     fn reset_stream(&mut self);
+
+    /// Gets channel binding data.
+    fn channel_bind(&self) -> Option<Vec<u8>> {
+        None
+    }
 }
 
 /// A transport which uses STARTTLS.
@@ -72,6 +77,11 @@ impl Transport for SslTransport {
             normalize_empty_elements: false,
             .. Default::default()
         });
+    }
+
+    fn channel_bind(&self) -> Option<Vec<u8>> {
+        // TODO: channel binding
+        None
     }
 }
 
