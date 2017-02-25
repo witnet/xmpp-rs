@@ -2,11 +2,20 @@
 name = "xmpp"
 version = "0.1.0"
 authors = ["lumi <lumi@pew.im>"]
+description = "A type-safe rust XMPP library. Still under development."
+homepage = "https://gitlab.com/lumi/xmpp-rs"
+repository = "https://gitlab.com/lumi/xmpp-rs"
+documentation = "https://docs.rs/xmpp"
+readme = "README.md"
+keywords = ["xmpp", "xml"]
+categories = ["network-programming"]
+license = "LGPL-3.0+"
+
+[badges]
+gitlab = { repository = "lumi/xmpp-rs" }
 
 [dependencies]
-xml-rs = "*"
-openssl = "*"
-base64 = "*"
-
-[dependencies.minidom]
-git = "https://gitlab.com/lumi/minidom-rs.git"
+xml-rs = "0.3.6"
+openssl = "0.9.7"
+base64 = "0.4.0"
+minidom = "0.1.0"
