@@ -2,6 +2,15 @@
 name = "minidom"
 version = "0.1.0"
 authors = ["lumi <lumi@pew.im>"]
+description = "A small, simple DOM implementation on top of xml-rs."
+homepage = "https://gitlab.com/lumi/minidom-rs"
+repository = "https://gitlab.com/lumi/minidom-rs"
+readme = "README.md"
+keywords = ["xml"]
+license = "LGPL-3.0+"
+
+[badges]
+gitlab = { repository = "lumi/minidom-rs" }
 
 [dependencies]
-xml-rs = "*"
+xml-rs = "0.3.6"
