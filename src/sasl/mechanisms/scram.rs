@@ -2,7 +2,7 @@
 
 use base64;
 
-use sasl::SaslMechanism;
+use sasl::{SaslMechanism, SaslCredentials, SaslSecret};
 
 use error::Error;
 
@@ -170,6 +170,22 @@ impl<S: ScramProvider> Scram<S> {
 impl<S: ScramProvider> SaslMechanism for Scram<S> {
     fn name(&self) -> &str { // TODO: this is quite the workaround…
         &self.name
+    }
+
+    fn from_credentials(credentials: SaslCredentials) -> Result<Scram<S>, String> {
+        if let SaslSecret::Password(password) = credentials.secret {
+            if let Some(binding) = credentials.channel_binding {
+                Scram::new_with_channel_binding(credentials.username, password, binding)
+                      .map_err(|_| "can't generate nonce".to_owned())
+            }
+            else {
+                Scram::new(credentials.username, password)
+                      .map_err(|_| "can't generate nonce".to_owned())
+            }
+        }
+        else {
+            Err("SCRAM requires a password".to_owned())
+        }
     }
 
     fn initial(&mut self) -> Result<Vec<u8>, String> {

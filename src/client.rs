@@ -5,7 +5,8 @@ use ns;
 use plugin::{Plugin, PluginProxyBinding};
 use event::AbstractEvent;
 use connection::{Connection, C2S};
-use sasl::SaslMechanism;
+use sasl::{SaslMechanism, SaslCredentials, SaslSecret};
+use sasl::mechanisms::{Plain, Scram, Sha1, Sha256};
 
 use base64;
 
@@ -15,15 +16,18 @@ use xml::reader::XmlEvent as ReaderEvent;
 
 use std::sync::mpsc::{Receiver, channel};
 
+use std::collections::HashSet;
+
 /// Struct that should be moved somewhere else and cleaned up.
 #[derive(Debug)]
 pub struct StreamFeatures {
-    pub sasl_mechanisms: Option<Vec<String>>,
+    pub sasl_mechanisms: Option<HashSet<String>>,
 }
 
 /// A builder for `Client`s.
 pub struct ClientBuilder {
     jid: Jid,
+    credentials: Option<SaslCredentials>,
     host: Option<String>,
     port: u16,
 }
@@ -33,6 +37,7 @@ impl ClientBuilder {
     pub fn new(jid: Jid) -> ClientBuilder {
         ClientBuilder {
             jid: jid,
+            credentials: None,
             host: None,
             port: 5222,
         }
@@ -50,21 +55,35 @@ impl ClientBuilder {
         self
     }
 
+    /// Sets the password to use.
+    pub fn password<P: Into<String>>(mut self, password: P) -> ClientBuilder {
+        self.credentials = Some(SaslCredentials {
+            username: self.jid.node.clone().expect("JID has no node"),
+            secret: SaslSecret::Password(password.into()),
+            channel_binding: None,
+        });
+        self
+    }
+
     /// Connects to the server and returns a `Client` when succesful.
     pub fn connect(self) -> Result<Client, Error> {
         let host = &self.host.unwrap_or(self.jid.domain.clone());
+        // TODO: channel binding
         let mut transport = SslTransport::connect(host, self.port)?;
         C2S::init(&mut transport, &self.jid.domain, "before_sasl")?;
         let (sender_out, sender_in) = channel();
         let (dispatcher_out, dispatcher_in) = channel();
-        Ok(Client {
+        let mut client = Client {
             jid: self.jid,
             transport: transport,
             plugins: Vec::new(),
             binding: PluginProxyBinding::new(sender_out, dispatcher_out),
             sender_in: sender_in,
             dispatcher_in: dispatcher_in,
-        })
+        };
+        client.connect(self.credentials.expect("can't connect without credentials"))?;
+        client.bind()?;
+        Ok(client)
     }
 }
 
@@ -127,9 +146,23 @@ impl Client {
         Ok(())
     }
 
-    /// Connects and authenticates using the specified SASL mechanism.
-    pub fn connect<S: SaslMechanism>(&mut self, mechanism: &mut S) -> Result<(), Error> {
-        self.wait_for_features()?;
+    fn connect(&mut self, credentials: SaslCredentials) -> Result<(), Error> {
+        let features = self.wait_for_features()?;
+        let ms = &features.sasl_mechanisms.ok_or(Error::SaslError(Some("no SASL mechanisms".to_owned())))?;
+        fn wrap_err(err: String) -> Error { Error::SaslError(Some(err)) }
+        // TODO: better way for selecting these, enabling anonymous auth
+        let mut mechanism: Box<SaslMechanism> = if ms.contains("SCRAM-SHA-256") {
+            Box::new(Scram::<Sha256>::from_credentials(credentials).map_err(wrap_err)?)
+        }
+        else if ms.contains("SCRAM-SHA-1") {
+            Box::new(Scram::<Sha1>::from_credentials(credentials).map_err(wrap_err)?)
+        }
+        else if ms.contains("PLAIN") {
+            Box::new(Plain::from_credentials(credentials).map_err(wrap_err)?)
+        }
+        else {
+            return Err(Error::SaslError(Some("can't find a SASL mechanism to use".to_owned())));
+        };
         let auth = mechanism.initial().map_err(|x| Error::SaslError(Some(x)))?;
         let mut elem = Element::builder("auth")
                                .ns(ns::SASL)
@@ -180,7 +213,7 @@ impl Client {
         }
     }
 
-    pub fn bind(&mut self) -> Result<(), Error> {
+    fn bind(&mut self) -> Result<(), Error> {
         let mut elem = Element::builder("iq")
                                .attr("id", "bind")
                                .attr("type", "set")
@@ -223,9 +256,9 @@ impl Client {
                     sasl_mechanisms: None,
                 };
                 if let Some(ms) = n.get_child("mechanisms", ns::SASL) {
-                    let mut res = Vec::new();
+                    let mut res = HashSet::new();
                     for cld in ms.children() {
-                        res.push(cld.text());
+                        res.insert(cld.text());
                     }
                     features.sasl_mechanisms = Some(res);
                 }

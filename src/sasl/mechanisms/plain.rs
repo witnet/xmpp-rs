@@ -1,6 +1,6 @@
 //! Provides the SASL "PLAIN" mechanism.
 
-use sasl::SaslMechanism;
+use sasl::{SaslMechanism, SaslCredentials, SaslSecret};
 
 pub struct Plain {
     username: String,
@@ -18,6 +18,15 @@ impl Plain {
 
 impl SaslMechanism for Plain {
     fn name(&self) -> &str { "PLAIN" }
+
+    fn from_credentials(credentials: SaslCredentials) -> Result<Plain, String> {
+        if let SaslSecret::Password(password) = credentials.secret {
+            Ok(Plain::new(credentials.username, password))
+        }
+        else {
+            Err("PLAIN requires a password".to_owned())
+        }
+    }
 
     fn initial(&mut self) -> Result<Vec<u8>, String> {
         let mut auth = Vec::new();
