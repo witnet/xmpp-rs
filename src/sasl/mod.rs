@@ -2,7 +2,7 @@
 
 pub trait SaslMechanism {
     /// The name of the mechanism.
-    fn name() -> &'static str;
+    fn name(&self) -> &str;
 
     /// Provides initial payload of the SASL mechanism.
     fn initial(&mut self) -> Result<Vec<u8>, String> {

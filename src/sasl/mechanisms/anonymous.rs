@@ -11,5 +11,5 @@ impl Anonymous {
 }
 
 impl SaslMechanism for Anonymous {
-    fn name() -> &'static str { "ANONYMOUS" }
+    fn name(&self) -> &str { "ANONYMOUS" }
 }

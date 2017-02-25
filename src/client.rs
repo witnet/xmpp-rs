@@ -133,7 +133,7 @@ impl Client {
         let auth = mechanism.initial().map_err(|x| Error::SaslError(Some(x)))?;
         let mut elem = Element::builder("auth")
                                .ns(ns::SASL)
-                               .attr("mechanism", S::name())
+                               .attr("mechanism", mechanism.name())
                                .build();
         if !auth.is_empty() {
             elem.append_text_node(base64::encode(&auth));
