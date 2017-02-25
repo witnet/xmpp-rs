@@ -56,11 +56,10 @@
 //!
 //! # Usage
 //!
-//! To use `minidom`, add this to your `Cargo.toml`:
+//! To use `minidom`, add this to your `Cargo.toml` under `dependencies`:
 //!
 //! ```toml,ignore
-//! [dependencies.minidom]
-//! git = "https://gitlab.com/lumi/minidom-rs.git"
+//! minidom = "*"
 //! ```
 
 extern crate xml;
