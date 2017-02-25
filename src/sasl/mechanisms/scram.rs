@@ -212,7 +212,7 @@ impl<S: ScramProvider> SaslMechanism for Scram<S> {
                 if let Some(ref cb) = self.channel_binding {
                     cb_data.extend(cb);
                 }
-                client_final_message_bare.extend(base64::encode(gs2_header).bytes());
+                client_final_message_bare.extend(base64::encode(&cb_data).bytes());
                 client_final_message_bare.extend(b",r=");
                 client_final_message_bare.extend(server_nonce.bytes());
                 let salted_password = S::derive(self.password.as_bytes(), &salt, iterations);
