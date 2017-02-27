@@ -217,6 +217,79 @@ impl Jid {
             resource: Some(resource.into()),
         }
     }
+
+    /// Constructs a new Jabber ID from an existing one, with the node swapped out with a new one.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use xmpp::jid::Jid;
+    ///
+    /// let jid = Jid::domain("domain");
+    ///
+    /// assert_eq!(jid.node, None);
+    ///
+    /// let new_jid = jid.with_node("node");
+    ///
+    /// assert_eq!(new_jid.node, Some("node".to_owned()));
+    /// ```
+    pub fn with_node<S>(&self, node: S) -> Jid
+        where S: Into<String> {
+        Jid {
+            node: Some(node.into()),
+            domain: self.domain.clone(),
+            resource: self.resource.clone(),
+        }
+    }
+
+    /// Constructs a new Jabber ID from an existing one, with the domain swapped out with a new one.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use xmpp::jid::Jid;
+    ///
+    /// let jid = Jid::domain("domain");
+    ///
+    /// assert_eq!(jid.domain, "domain");
+    ///
+    /// let new_jid = jid.with_domain("new_domain");
+    ///
+    /// assert_eq!(new_jid.domain, "new_domain");
+    /// ```
+    pub fn with_domain<S>(&self, domain: S) -> Jid
+        where S: Into<String> {
+        Jid {
+            node: self.node.clone(),
+            domain: domain.into(),
+            resource: self.resource.clone(),
+        }
+    }
+
+    /// Constructs a new Jabber ID from an existing one, with the resource swapped out with a new one.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use xmpp::jid::Jid;
+    ///
+    /// let jid = Jid::domain("domain");
+    ///
+    /// assert_eq!(jid.resource, None);
+    ///
+    /// let new_jid = jid.with_resource("resource");
+    ///
+    /// assert_eq!(new_jid.resource, Some("resource".to_owned()));
+    /// ```
+    pub fn with_resource<S>(&self, resource: S) -> Jid
+        where S: Into<String> {
+        Jid {
+            node: self.node.clone(),
+            domain: self.domain.clone(),
+            resource: Some(resource.into()),
+        }
+    }
+
 }
 
 #[cfg(test)]
