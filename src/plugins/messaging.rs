@@ -1,14 +1,15 @@
 use plugin::{Plugin, PluginReturn, PluginProxy};
 use event::Event;
 use minidom::Element;
+use error::Error;
 use jid::Jid;
 use ns;
 
 #[derive(Debug)]
 pub struct MessageEvent {
-    from: Jid,
-    to: Jid,
-    body: String,
+    pub from: Jid,
+    pub to: Jid,
+    pub body: String,
 }
 
 impl Event for MessageEvent {}
@@ -22,6 +23,16 @@ impl MessagingPlugin {
         MessagingPlugin {
             proxy: PluginProxy::new(),
         }
+    }
+
+    pub fn send_message(&self, to: &Jid, body: &str) -> Result<(), Error> {
+        let mut elem = Element::builder("message")
+                               .attr("type", "chat")
+                               .attr("to", to.to_string())
+                               .build();
+        elem.append_child(Element::builder("body").text(body).build());
+        self.proxy.send(elem);
+        Ok(())
     }
 }
 
