@@ -2,11 +2,11 @@ extern crate xml;
 extern crate openssl;
 extern crate minidom;
 extern crate base64;
+pub extern crate jid;
 
 pub mod ns;
 pub mod transport;
 pub mod error;
-pub mod jid;
 pub mod client;
 pub mod plugin;
 pub mod event;
