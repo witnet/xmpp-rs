@@ -19,9 +19,5 @@ xml-rs = "0.3.6"
 openssl = "0.9.7"
 base64 = "0.4.0"
 minidom = "0.1.0"
-
-[dependencies.jid]
-git = "https://gitlab.com/lumi/jid-rs.git"
-
-[dependencies.sasl]
-git = "https://gitlab.com/lumi/sasl-rs.git"
+jid = "0.1.0"
+sasl = "0.1.0"
