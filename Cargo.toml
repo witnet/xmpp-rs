@@ -1,6 +1,6 @@
 [package]
 name = "xmpp"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["lumi <lumi@pew.im>"]
 description = "A type-safe rust XMPP library. Still under development."
 homepage = "https://gitlab.com/lumi/xmpp-rs"
