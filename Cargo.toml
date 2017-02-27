@@ -1,0 +1,6 @@
+[package]
+name = "jid"
+version = "0.1.0"
+authors = ["lumi <lumi@pew.im>"]
+
+[dependencies]
