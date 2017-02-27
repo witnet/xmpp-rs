@@ -1,4 +1,6 @@
 //! Provides a type for Jabber IDs.
+//!
+//! For usage, check the documentation on the `Jid` struct.
 
 use std::fmt;
 

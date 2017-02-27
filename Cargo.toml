@@ -2,5 +2,15 @@
 name = "jid"
 version = "0.1.0"
 authors = ["lumi <lumi@pew.im>"]
+description = "A crate which provides a Jid struct for Jabber IDs."
+homepage = "https://gitlab.com/lumi/jid-rs"
+repository = "https://gitlab.com/lumi/jid-rs"
+documentation = "https://docs.rs/jid"
+readme = "README.md"
+keywords = ["xmpp", "jid"]
+license = "LGPL-3.0+"
+
+[badges]
+gitlab = { repository = "lumi/jid-rs" }
 
 [dependencies]
