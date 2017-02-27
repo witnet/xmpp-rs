@@ -3,6 +3,7 @@ extern crate openssl;
 extern crate minidom;
 extern crate base64;
 pub extern crate jid;
+pub extern crate sasl;
 
 pub mod ns;
 pub mod transport;
@@ -12,6 +13,5 @@ pub mod plugin;
 pub mod event;
 pub mod plugins;
 pub mod connection;
-pub mod sasl;
 
 mod locked_io;

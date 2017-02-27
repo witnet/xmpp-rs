@@ -22,3 +22,6 @@ minidom = "0.1.0"
 
 [dependencies.jid]
 git = "https://gitlab.com/lumi/jid-rs.git"
+
+[dependencies.sasl]
+git = "https://gitlab.com/lumi/sasl-rs.git"
