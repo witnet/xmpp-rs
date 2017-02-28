@@ -1,3 +1,5 @@
+#![deny(missing_docs)]
+
 //! Provides a type for Jabber IDs.
 //!
 //! For usage, check the documentation on the `Jid` struct.
@@ -11,6 +13,7 @@ use std::str::FromStr;
 /// An error that signifies that a `Jid` cannot be parsed from a string.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum JidParseError {
+    /// Happens when there is no domain. (really, only happens when the string is empty)
     NoDomain,
 }
 
