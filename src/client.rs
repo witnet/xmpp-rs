@@ -5,8 +5,14 @@ use ns;
 use plugin::{Plugin, PluginProxyBinding};
 use event::AbstractEvent;
 use connection::{Connection, C2S};
-use sasl::{SaslMechanism, SaslCredentials, SaslSecret};
+use sasl::{ Mechanism as SaslMechanism
+          , Credentials as SaslCredentials
+          , Secret as SaslSecret
+          , ChannelBinding
+          };
 use sasl::mechanisms::{Plain, Scram, Sha1, Sha256};
+use components::sasl_error::SaslError;
+use util::FromElement;
 
 use base64;
 
@@ -27,7 +33,7 @@ pub struct StreamFeatures {
 /// A builder for `Client`s.
 pub struct ClientBuilder {
     jid: Jid,
-    credentials: Option<SaslCredentials>,
+    credentials: SaslCredentials,
     host: Option<String>,
     port: u16,
 }
@@ -37,7 +43,7 @@ impl ClientBuilder {
     pub fn new(jid: Jid) -> ClientBuilder {
         ClientBuilder {
             jid: jid,
-            credentials: None,
+            credentials: SaslCredentials::default(),
             host: None,
             port: 5222,
         }
@@ -57,11 +63,11 @@ impl ClientBuilder {
 
     /// Sets the password to use.
     pub fn password<P: Into<String>>(mut self, password: P) -> ClientBuilder {
-        self.credentials = Some(SaslCredentials {
-            username: self.jid.node.clone().expect("JID has no node"),
+        self.credentials = SaslCredentials {
+            username: Some(self.jid.node.clone().expect("JID has no node")),
             secret: SaslSecret::Password(password.into()),
-            channel_binding: None,
-        });
+            channel_binding: ChannelBinding::None,
+        };
         self
     }
 
@@ -72,7 +78,7 @@ impl ClientBuilder {
         C2S::init(&mut transport, &self.jid.domain, "before_sasl")?;
         let (sender_out, sender_in) = channel();
         let (dispatcher_out, dispatcher_in) = channel();
-        let mut credentials = self.credentials.expect("can't connect without credentials");
+        let mut credentials = self.credentials;
         credentials.channel_binding = transport.channel_bind();
         let mut client = Client {
             jid: self.jid,
@@ -147,15 +153,23 @@ impl Client {
         Ok(())
     }
 
-    fn connect(&mut self, credentials: SaslCredentials) -> Result<(), Error> {
+    fn connect(&mut self, mut credentials: SaslCredentials) -> Result<(), Error> {
         let features = self.wait_for_features()?;
         let ms = &features.sasl_mechanisms.ok_or(Error::SaslError(Some("no SASL mechanisms".to_owned())))?;
         fn wrap_err(err: String) -> Error { Error::SaslError(Some(err)) }
         // TODO: better way for selecting these, enabling anonymous auth
-        let mut mechanism: Box<SaslMechanism> = if ms.contains("SCRAM-SHA-256") {
+        let mut mechanism: Box<SaslMechanism> = if ms.contains("SCRAM-SHA-256-PLUS") {
+            Box::new(Scram::<Sha256>::from_credentials(credentials).map_err(wrap_err)?)
+        }
+        else if ms.contains("SCRAM-SHA-1-PLUS") {
+            Box::new(Scram::<Sha1>::from_credentials(credentials).map_err(wrap_err)?)
+        }
+        else if ms.contains("SCRAM-SHA-256") {
+            credentials.channel_binding = ChannelBinding::Unsupported;
             Box::new(Scram::<Sha256>::from_credentials(credentials).map_err(wrap_err)?)
         }
         else if ms.contains("SCRAM-SHA-1") {
+            credentials.channel_binding = ChannelBinding::Unsupported;
             Box::new(Scram::<Sha1>::from_credentials(credentials).map_err(wrap_err)?)
         }
         else if ms.contains("PLAIN") {
@@ -207,9 +221,8 @@ impl Client {
                 return Ok(());
             }
             else if n.is("failure", ns::SASL) {
-                let msg = n.text();
-                let inner = if msg == "" { None } else { Some(msg) };
-                return Err(Error::SaslError(inner));
+                let inner = SaslError::from_element(&n).map_err(|_| Error::SaslError(None))?;
+                return Err(Error::XmppSaslError(inner));
             }
         }
     }

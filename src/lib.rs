@@ -13,5 +13,7 @@ pub mod plugin;
 pub mod event;
 pub mod plugins;
 pub mod connection;
+pub mod util;
+pub mod components;
 
 mod locked_io;

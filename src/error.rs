@@ -14,6 +14,8 @@ use minidom::Error as MinidomError;
 
 use base64::Base64Error;
 
+use components::sasl_error::SaslError;
+
 /// An error which wraps a bunch of errors from different crates and the stdlib.
 #[derive(Debug)]
 pub enum Error {
@@ -25,6 +27,7 @@ pub enum Error {
     MinidomError(MinidomError),
     Base64Error(Base64Error),
     SaslError(Option<String>),
+    XmppSaslError(SaslError),
     StreamError,
     EndOfDocument,
 }
