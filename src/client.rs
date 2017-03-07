@@ -158,18 +158,22 @@ impl Client {
         let ms = &features.sasl_mechanisms.ok_or(Error::SaslError(Some("no SASL mechanisms".to_owned())))?;
         fn wrap_err(err: String) -> Error { Error::SaslError(Some(err)) }
         // TODO: better way for selecting these, enabling anonymous auth
-        let mut mechanism: Box<SaslMechanism> = if ms.contains("SCRAM-SHA-256-PLUS") {
+        let mut mechanism: Box<SaslMechanism> = if ms.contains("SCRAM-SHA-256-PLUS") && credentials.channel_binding != ChannelBinding::None {
             Box::new(Scram::<Sha256>::from_credentials(credentials).map_err(wrap_err)?)
         }
-        else if ms.contains("SCRAM-SHA-1-PLUS") {
+        else if ms.contains("SCRAM-SHA-1-PLUS") && credentials.channel_binding != ChannelBinding::None {
             Box::new(Scram::<Sha1>::from_credentials(credentials).map_err(wrap_err)?)
         }
         else if ms.contains("SCRAM-SHA-256") {
-            credentials.channel_binding = ChannelBinding::Unsupported;
+            if credentials.channel_binding != ChannelBinding::None {
+                credentials.channel_binding = ChannelBinding::Unsupported;
+            }
             Box::new(Scram::<Sha256>::from_credentials(credentials).map_err(wrap_err)?)
         }
         else if ms.contains("SCRAM-SHA-1") {
-            credentials.channel_binding = ChannelBinding::Unsupported;
+            if credentials.channel_binding != ChannelBinding::None {
+                credentials.channel_binding = ChannelBinding::Unsupported;
+            }
             Box::new(Scram::<Sha1>::from_credentials(credentials).map_err(wrap_err)?)
         }
         else if ms.contains("PLAIN") {
