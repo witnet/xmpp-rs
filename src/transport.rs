@@ -17,7 +17,10 @@ use locked_io::LockedIO;
 
 use error::Error;
 
-use openssl::ssl::{SslMethod, SslConnectorBuilder, SslStream};
+#[allow(unused_imports)]
+use openssl::ssl::{SslMethod, Ssl, SslContextBuilder, SslStream, SSL_VERIFY_NONE, SslConnectorBuilder};
+
+use sasl::ChannelBinding;
 
 /// A trait which transports are required to implement.
 pub trait Transport {
@@ -37,8 +40,8 @@ pub trait Transport {
     fn reset_stream(&mut self);
 
     /// Gets channel binding data.
-    fn channel_bind(&self) -> Option<Vec<u8>> {
-        None
+    fn channel_bind(&self) -> ChannelBinding {
+        ChannelBinding::None
     }
 }
 
@@ -79,9 +82,9 @@ impl Transport for SslTransport {
         });
     }
 
-    fn channel_bind(&self) -> Option<Vec<u8>> {
+    fn channel_bind(&self) -> ChannelBinding {
         // TODO: channel binding
-        None
+        ChannelBinding::None
     }
 }
 
@@ -111,8 +114,19 @@ impl SslTransport {
             }
         }
         let stream = parser.into_inner();
-        let ssl_connector = SslConnectorBuilder::new(SslMethod::tls())?.build();
-        let ssl_stream = Arc::new(Mutex::new(ssl_connector.connect(host, stream)?));
+        #[cfg(feature = "insecure")]
+        let ssl_stream = {
+            let mut ctx = SslContextBuilder::new(SslMethod::tls())?;
+            ctx.set_verify(SSL_VERIFY_NONE);
+            let ssl = Ssl::new(&ctx.build())?;
+            ssl.connect(stream)?
+        };
+        #[cfg(not(feature = "insecure"))]
+        let ssl_stream = {
+            let ssl_connector = SslConnectorBuilder::new(SslMethod::tls())?.build();
+            ssl_connector.connect(host, stream)?
+        };
+        let ssl_stream = Arc::new(Mutex::new(ssl_stream));
         let locked_io = LockedIO::from(ssl_stream.clone());
         let reader = EventReader::new(locked_io.clone());
         let writer = EventWriter::new_with_config(locked_io, EmitterConfig {
