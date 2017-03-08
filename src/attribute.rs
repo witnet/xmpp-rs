@@ -1,3 +1,5 @@
+//! Provides an `Attribute` type which represents an attribute in an XML document.
+
 use xml::escape::escape_str_attribute;
 
 use std::fmt;

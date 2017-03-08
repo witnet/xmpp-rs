@@ -1,3 +1,5 @@
+//! Provides an error type for this crate.
+
 use std::io;
 
 use std::convert::From;
@@ -8,9 +10,13 @@ use xml::reader::Error as ReaderError;
 /// An enum representing the possible errors.
 #[derive(Debug)]
 pub enum Error {
+    /// An io::Error.
     IoError(io::Error),
+    /// An error in the xml-rs `EventWriter`.
     XmlWriterError(WriterError),
+    /// An error in the xml-rs `EventReader`.
     XmlReaderError(ReaderError),
+    /// The end of the document has been reached unexpectedly.
     EndOfDocument,
 }
 
