@@ -38,18 +38,23 @@ impl fmt::Debug for Element {
         for attr in &self.attributes {
             write!(fmt, " {}", attr)?;
         }
-        write!(fmt, ">")?;
-        for child in &self.children {
-            match *child {
-                Node::Element(ref e) => {
-                    write!(fmt, "{:?}", e)?;
-                },
-                Node::Text(ref s) => {
-                    write!(fmt, "{}", s)?;
-                },
-            }
+        if self.children.is_empty() {
+            write!(fmt, "/>")?;
         }
-        write!(fmt, "</{}>", self.name)?;
+        else {
+            write!(fmt, ">")?;
+            for child in &self.children {
+                match *child {
+                    Node::Element(ref e) => {
+                        write!(fmt, "{:?}", e)?;
+                    },
+                    Node::Text(ref s) => {
+                        write!(fmt, "{}", s)?;
+                    },
+                }
+            }
+            write!(fmt, "</{}>", self.name)?;
+        }
         Ok(())
     }
 }
