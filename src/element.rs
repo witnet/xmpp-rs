@@ -31,11 +31,9 @@ pub struct Element {
 
 impl fmt::Debug for Element {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        write!(fmt, "<{}", self.name)?;
         if let Some(ref ns) = self.namespace {
-            write!(fmt, "<{{{}}}{}", ns, self.name)?;
-        }
-        else {
-            write!(fmt, "<{}", self.name)?;
+            write!(fmt, " xmlns=\"{}\"", ns)?;
         }
         for attr in &self.attributes {
             write!(fmt, " {}", attr)?;
