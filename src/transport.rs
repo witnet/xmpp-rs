@@ -2,7 +2,7 @@
 
 use std::io::prelude::*;
 
-use std::net::TcpStream;
+use std::net::{TcpStream, Shutdown};
 
 use xml::reader::{EventReader, XmlEvent as XmlReaderEvent};
 use xml::writer::{EventWriter, XmlEvent as XmlWriterEvent, EmitterConfig};
@@ -42,6 +42,83 @@ pub trait Transport {
     /// Gets channel binding data.
     fn channel_bind(&self) -> ChannelBinding {
         ChannelBinding::None
+    }
+}
+
+/// A plain text transport, completely unencrypted.
+pub struct PlainTransport {
+    inner: Arc<Mutex<TcpStream>>, // TODO: this feels rather ugly
+    reader: EventReader<LockedIO<TcpStream>>, // TODO: especially feels ugly because
+                                              //       this read would keep the lock
+                                              //       held very long (potentially)
+    writer: EventWriter<LockedIO<TcpStream>>,
+}
+
+impl Transport for PlainTransport {
+    fn write_event<'a, E: Into<XmlWriterEvent<'a>>>(&mut self, event: E) -> Result<(), Error> {
+        Ok(self.writer.write(event)?)
+    }
+
+    fn read_event(&mut self) -> Result<XmlReaderEvent, Error> {
+        Ok(self.reader.next()?)
+    }
+
+    fn write_element(&mut self, element: &minidom::Element) -> Result<(), Error> {
+        println!("SENT: {:?}", element);
+        Ok(element.write_to(&mut self.writer)?)
+    }
+
+    fn read_element(&mut self) -> Result<minidom::Element, Error> {
+        let element = minidom::Element::from_reader(&mut self.reader)?;
+        println!("RECV: {:?}", element);
+        Ok(element)
+    }
+
+    fn reset_stream(&mut self) {
+        let locked_io = LockedIO::from(self.inner.clone());
+        self.reader = EventReader::new(locked_io.clone());
+        self.writer = EventWriter::new_with_config(locked_io, EmitterConfig {
+            line_separator: "".into(),
+            perform_indent: false,
+            normalize_empty_elements: false,
+            .. Default::default()
+        });
+    }
+
+    fn channel_bind(&self) -> ChannelBinding {
+        // TODO: channel binding
+        ChannelBinding::None
+    }
+}
+
+impl PlainTransport {
+    /// Connects to a server without any encryption.
+    pub fn connect(host: &str, port: u16) -> Result<PlainTransport, Error> {
+        let tcp_stream = TcpStream::connect((host, port))?;
+        let parser = EventReader::new(tcp_stream);
+        let parser_stream = parser.into_inner();
+        let stream = Arc::new(Mutex::new(parser_stream));
+        let locked_io = LockedIO::from(stream.clone());
+        let reader = EventReader::new(locked_io.clone());
+        let writer = EventWriter::new_with_config(locked_io, EmitterConfig {
+            line_separator: "".into(),
+            perform_indent: false,
+            normalize_empty_elements: false,
+            .. Default::default()
+        });
+        Ok(PlainTransport {
+            inner: stream,
+            reader: reader,
+            writer: writer,
+        })
+    }
+
+    /// Closes the stream.
+    pub fn close(&mut self) {
+        self.inner.lock()
+                  .unwrap()
+                  .shutdown(Shutdown::Both)
+                  .unwrap(); // TODO: safety, return value and such
     }
 }
 
