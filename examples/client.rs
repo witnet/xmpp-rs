@@ -4,6 +4,7 @@ use xmpp::jid::Jid;
 use xmpp::client::ClientBuilder;
 use xmpp::plugins::messaging::{MessagingPlugin, MessageEvent};
 use xmpp::plugins::presence::{PresencePlugin, Show};
+use xmpp::plugins::ping::{PingPlugin, PingEvent};
 
 use std::env;
 
@@ -16,11 +17,16 @@ fn main() {
                                    .unwrap();
     client.register_plugin(MessagingPlugin::new());
     client.register_plugin(PresencePlugin::new());
+    client.register_plugin(PingPlugin::new());
     client.plugin::<PresencePlugin>().set_presence(Show::Available, None).unwrap();
     loop {
         let event = client.next_event().unwrap();
         if let Some(evt) = event.downcast::<MessageEvent>() {
             println!("{:?}", evt);
+        }
+        else if let Some(evt) = event.downcast::<PingEvent>() {
+            println!("{:?}", evt);
+            client.plugin::<PingPlugin>().reply_ping(evt);
         }
     }
 }
