@@ -70,6 +70,16 @@ impl FromElement for SaslError {
         else if element.has_child("temporary-auth-failure", ns::SASL) {
             err.condition = Condition::TemporaryAuthFailure;
         }
+        else {
+            /* RFC 6120 section 6.5:
+             *
+             * However, because additional error conditions might be defined in
+             * the future, if an entity receives a SASL error condition that it
+             * does not understand then it MUST treat the unknown condition as
+             * a generic authentication failure, i.e., as equivalent to
+             * <not-authorized/> (Section 6.5.10). */
+            err.condition = Condition::NotAuthorized;
+        }
         Ok(err)
     }
 }
