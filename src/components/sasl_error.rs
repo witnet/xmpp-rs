@@ -5,7 +5,7 @@ use util::FromElement;
 #[derive(Clone, Debug)]
 pub enum Condition {
     Aborted,
-    AccountDisabled(Option<String>),
+    AccountDisabled,
     CredentialsExpired,
     EncryptionRequired,
     IncorrectEncoding,
@@ -42,9 +42,8 @@ impl FromElement for SaslError {
         if element.has_child("aborted", ns::SASL) {
             err.condition = Condition::Aborted;
         }
-        else if let Some(account_disabled) = element.get_child("account-disabled", ns::SASL) {
-            let text = account_disabled.text();
-            err.condition = Condition::AccountDisabled(if text == "" { None } else { Some(text) });
+        else if element.has_child("account-disabled", ns::SASL) {
+            err.condition = Condition::AccountDisabled;
         }
         else if element.has_child("credentials-expired", ns::SASL) {
             err.condition = Condition::CredentialsExpired;
