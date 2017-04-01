@@ -36,3 +36,26 @@ impl Connection for C2S {
         Ok(())
     }
 }
+
+pub struct Component2S;
+
+impl Connection for Component2S {
+    type InitError = Error;
+    type CloseError = Error;
+
+    fn namespace() -> &'static str { ns::COMPONENT_ACCEPT }
+
+    fn init<T: Transport>(transport: &mut T, domain: &str, id: &str) -> Result<(), Error> {
+        transport.write_event(WriterEvent::start_element("stream:stream")
+                                          .attr("to", domain)
+                                          .attr("id", id)
+                                          .default_ns(ns::COMPONENT_ACCEPT)
+                                          .ns("stream", ns::STREAM))?;
+        Ok(())
+    }
+
+    fn close<T: Transport>(transport: &mut T) -> Result<(), Error> {
+        transport.write_event(WriterEvent::end_element())?;
+        Ok(())
+    }
+}

@@ -9,6 +9,7 @@ pub mod ns;
 pub mod transport;
 pub mod error;
 pub mod client;
+pub mod component;
 pub mod plugin;
 pub mod event;
 pub mod plugins;
