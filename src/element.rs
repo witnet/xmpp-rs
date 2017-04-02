@@ -31,27 +31,30 @@ pub struct Element {
 
 impl fmt::Debug for Element {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        write!(fmt, "<{}", self.name)?;
         if let Some(ref ns) = self.namespace {
-            write!(fmt, "<{{{}}}{}", ns, self.name)?;
-        }
-        else {
-            write!(fmt, "<{}", self.name)?;
+            write!(fmt, " xmlns=\"{}\"", ns)?;
         }
         for attr in &self.attributes {
             write!(fmt, " {}", attr)?;
         }
-        write!(fmt, ">")?;
-        for child in &self.children {
-            match *child {
-                Node::Element(ref e) => {
-                    write!(fmt, "{:?}", e)?;
-                },
-                Node::Text(ref s) => {
-                    write!(fmt, "{}", s)?;
-                },
-            }
+        if self.children.is_empty() {
+            write!(fmt, "/>")?;
         }
-        write!(fmt, "</{}>", self.name)?;
+        else {
+            write!(fmt, ">")?;
+            for child in &self.children {
+                match *child {
+                    Node::Element(ref e) => {
+                        write!(fmt, "{:?}", e)?;
+                    },
+                    Node::Text(ref s) => {
+                        write!(fmt, "{}", s)?;
+                    },
+                }
+            }
+            write!(fmt, "</{}>", self.name)?;
+        }
         Ok(())
     }
 }
