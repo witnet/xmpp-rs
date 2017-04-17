@@ -6,6 +6,13 @@ What's this?
 
 A very much WIP rust XMPP library with the goals of being type-safe, well-tested and simple.
 
+Contact
+-------
+
+There is an XMPP MUC for the discussion of this library, feel free to join! :)
+
+[xmpp-rs@muc.linkmauve.fr](xmpp:xmpp-rs@muc.linkmauve.fr?join)
+
 Can I use it yet?
 -----------------
 
