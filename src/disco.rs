@@ -7,7 +7,7 @@ use ns::{DISCO_INFO_NS, DATA_FORMS_NS};
 
 use data_forms::{DataForm, DataFormType, parse_data_form};
 
-#[derive(Debug, Eq, PartialEq, Ord, PartialOrd)]
+#[derive(Debug, PartialEq)]
 pub struct Feature {
     pub var: String,
 }
