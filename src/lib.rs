@@ -13,16 +13,19 @@ pub mod ping;
 pub mod chatstates;
 pub mod ibb;
 
-use std::fmt::Debug;
 use minidom::Element;
 
-pub trait MessagePayload: Debug {}
+#[derive(Debug)]
+pub enum MessagePayload {
+    Body(body::Body),
+    ChatState(chatstates::ChatState),
+}
 
-pub fn parse_message_payload(elem: &Element) -> Option<Box<MessagePayload>> {
+pub fn parse_message_payload(elem: &Element) -> Option<MessagePayload> {
     if let Ok(body) = body::parse_body(elem) {
-        Some(Box::new(body))
+        Some(MessagePayload::Body(body))
     } else if let Ok(chatstate) = chatstates::parse_chatstate(elem) {
-        Some(Box::new(chatstate))
+        Some(MessagePayload::ChatState(chatstate))
     } else {
         None
     }

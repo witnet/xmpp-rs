@@ -1,7 +1,6 @@
 use minidom::Element;
 
 use error::Error;
-use super::MessagePayload;
 
 use ns::CHATSTATES_NS;
 
@@ -13,8 +12,6 @@ pub enum ChatState {
     Inactive,
     Paused,
 }
-
-impl MessagePayload for ChatState {}
 
 pub fn parse_chatstate(root: &Element) -> Result<ChatState, Error> {
     for _ in root.children() {

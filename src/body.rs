@@ -1,7 +1,6 @@
 use minidom::Element;
 
 use error::Error;
-use super::MessagePayload;
 
 // TODO: also support components and servers.
 use ns::JABBER_CLIENT_NS;
@@ -10,8 +9,6 @@ use ns::JABBER_CLIENT_NS;
 pub struct Body {
     body: String,
 }
-
-impl MessagePayload for Body {}
 
 pub fn parse_body(root: &Element) -> Result<Body, Error> {
     if !root.is("body", JABBER_CLIENT_NS) {
