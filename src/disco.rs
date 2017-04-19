@@ -60,7 +60,7 @@ pub fn parse_disco(root: &Element) -> Result<Disco, Error> {
             // TODO: this must check for the namespace of the attribute, but minidom doesn’t support that yet, see issue #2.
             let xml_lang = child.attr("lang").unwrap_or("");
             let name = child.attr("name")
-                            .and_then(|node| node.parse().ok());
+                            .and_then(|name| name.parse().ok());
             identities.push(Identity {
                 category: category.to_owned(),
                 type_: type_.to_owned(),
