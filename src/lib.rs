@@ -7,3 +7,4 @@ pub mod disco;
 pub mod data_forms;
 pub mod media_element;
 pub mod ecaps2;
+pub mod jingle;
