@@ -9,3 +9,4 @@ pub mod media_element;
 pub mod ecaps2;
 pub mod jingle;
 pub mod ping;
+pub mod chatstates;
