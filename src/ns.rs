@@ -4,3 +4,4 @@ pub const MEDIA_ELEMENT_NS: &'static str = "urn:xmpp:media-element";
 pub const JINGLE_NS: &'static str = "urn:xmpp:jingle:1";
 pub const PING_NS: &'static str = "urn:xmpp:ping";
 pub const CHATSTATES_NS: &'static str = "http://jabber.org/protocol/chatstates";
+pub const IBB_NS: &'static str = "http://jabber.org/protocol/ibb";

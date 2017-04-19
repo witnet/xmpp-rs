@@ -10,3 +10,4 @@ pub mod ecaps2;
 pub mod jingle;
 pub mod ping;
 pub mod chatstates;
+pub mod ibb;
