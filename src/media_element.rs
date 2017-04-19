@@ -2,7 +2,7 @@ use minidom::Element;
 
 use error::Error;
 
-const MEDIA_ELEMENT_NS: &'static str = "urn:xmpp:media-element";
+use ns::MEDIA_ELEMENT_NS;
 
 #[derive(Debug)]
 pub struct URI {
