@@ -210,7 +210,7 @@ pub struct Jingle {
 
 pub fn parse_jingle(root: &Element) -> Result<Jingle, Error> {
     if !root.is("jingle", JINGLE_NS) {
-        return Err(Error::ParseError("This is not a Jingle element.")),
+        return Err(Error::ParseError("This is not a Jingle element."));
     }
 
     let mut contents: Vec<Content> = vec!();

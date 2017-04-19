@@ -30,7 +30,7 @@ pub struct Disco {
 
 pub fn parse_disco(root: &Element) -> Result<Disco, Error> {
     if !root.is("query", DISCO_INFO_NS) {
-        return Err(Error::ParseError("This is not a disco#info element.")),
+        return Err(Error::ParseError("This is not a disco#info element."));
     }
 
     let mut identities: Vec<Identity> = vec!();

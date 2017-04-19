@@ -53,7 +53,7 @@ pub struct DataForm {
 
 pub fn parse_data_form(root: &Element) -> Result<DataForm, Error> {
     if !root.is("x", DATA_FORMS_NS) {
-        return Err(Error::ParseError("This is not a data form element.")),
+        return Err(Error::ParseError("This is not a data form element."));
     }
 
     let type_: DataFormType = match root.attr("type") {

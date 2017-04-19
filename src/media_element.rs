@@ -19,7 +19,7 @@ pub struct MediaElement {
 
 pub fn parse_media_element(root: &Element) -> Result<MediaElement, Error> {
     if !root.is("media", MEDIA_ELEMENT_NS) {
-        return Err(Error::ParseError("This is not a media element.")),
+        return Err(Error::ParseError("This is not a media element."));
     }
 
     let width = root.attr("width").and_then(|width| width.parse().ok());
