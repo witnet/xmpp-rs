@@ -5,7 +5,7 @@ use std::str::FromStr;
 use minidom::Element;
 
 use error::Error;
-use ns::{JINGLE_NS};
+use ns::JINGLE_NS;
 
 #[derive(Debug, PartialEq)]
 pub enum Action {
@@ -285,6 +285,9 @@ pub fn parse_jingle(root: &Element) -> Result<Jingle, Error> {
                 }
                 let name = stuff.name();
                 if name == "text" {
+                    if text.is_some() {
+                        return Err(Error::ParseError("Reason must not have more than one text."));
+                    }
                     text = Some(stuff.text());
                 } else {
                     reason = Some(name.parse()?);
@@ -487,5 +490,13 @@ mod tests {
             _ => panic!(),
         };
         assert_eq!(message, "Jingle must not have more than one reason.");
+
+        let elem: Element = "<jingle xmlns='urn:xmpp:jingle:1' action='session-initiate' sid='coucou'><reason><decline/><text/><text/></reason></jingle>".parse().unwrap();
+        let error = jingle::parse_jingle(&elem).unwrap_err();
+        let message = match error {
+            Error::ParseError(string) => string,
+            _ => panic!(),
+        };
+        assert_eq!(message, "Reason must not have more than one text.");
     }
 }
