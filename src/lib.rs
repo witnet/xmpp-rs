@@ -12,6 +12,7 @@ pub mod jingle;
 pub mod ping;
 pub mod chatstates;
 pub mod ibb;
+pub mod receipts;
 
 use minidom::Element;
 
@@ -19,6 +20,7 @@ use minidom::Element;
 pub enum MessagePayload {
     Body(body::Body),
     ChatState(chatstates::ChatState),
+    Receipt(receipts::Receipt),
 }
 
 pub fn parse_message_payload(elem: &Element) -> Option<MessagePayload> {
@@ -26,6 +28,8 @@ pub fn parse_message_payload(elem: &Element) -> Option<MessagePayload> {
         Some(MessagePayload::Body(body))
     } else if let Ok(chatstate) = chatstates::parse_chatstate(elem) {
         Some(MessagePayload::ChatState(chatstate))
+    } else if let Ok(receipt) = receipts::parse_receipt(elem) {
+        Some(MessagePayload::Receipt(receipt))
     } else {
         None
     }
