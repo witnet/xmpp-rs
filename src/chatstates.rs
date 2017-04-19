@@ -52,7 +52,7 @@ mod tests {
             Error::ParseError(string) => string,
             _ => panic!(),
         };
-        assert_eq!(message, "Unknown chatstate element.");
+        assert_eq!(message, "This is not a chatstate element.");
     }
 
     #[test]

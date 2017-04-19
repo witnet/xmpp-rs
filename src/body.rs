@@ -24,45 +24,45 @@ pub fn parse_body(root: &Element) -> Result<Body, Error> {
 mod tests {
     use minidom::Element;
     use error::Error;
-    use chatstates;
+    use body;
 
     #[test]
     fn test_simple() {
-        let elem: Element = "<active xmlns='http://jabber.org/protocol/chatstates'/>".parse().unwrap();
-        chatstates::parse_chatstate(&elem).unwrap();
+        let elem: Element = "<body xmlns='jabber:client'/>".parse().unwrap();
+        body::parse_body(&elem).unwrap();
     }
 
     #[test]
     fn test_invalid() {
-        let elem: Element = "<coucou xmlns='http://jabber.org/protocol/chatstates'/>".parse().unwrap();
-        let error = chatstates::parse_chatstate(&elem).unwrap_err();
+        let elem: Element = "<body xmlns='jabber:server'/>".parse().unwrap();
+        let error = body::parse_body(&elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
         };
-        assert_eq!(message, "Unknown chatstate element.");
+        assert_eq!(message, "This is not a body element.");
     }
 
     #[test]
     fn test_invalid_child() {
-        let elem: Element = "<gone xmlns='http://jabber.org/protocol/chatstates'><coucou/></gone>".parse().unwrap();
-        let error = chatstates::parse_chatstate(&elem).unwrap_err();
+        let elem: Element = "<body xmlns='jabber:client'><coucou/></body>".parse().unwrap();
+        let error = body::parse_body(&elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
         };
-        assert_eq!(message, "Unknown child in chatstate element.");
+        assert_eq!(message, "Unknown child in body element.");
     }
 
     #[test]
     #[ignore]
     fn test_invalid_attribute() {
-        let elem: Element = "<inactive xmlns='http://jabber.org/protocol/chatstates' coucou=''/>".parse().unwrap();
-        let error = chatstates::parse_chatstate(&elem).unwrap_err();
+        let elem: Element = "<body xmlns='jabber:client' coucou=''/>".parse().unwrap();
+        let error = body::parse_body(&elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
         };
-        assert_eq!(message, "Unknown attribute in chatstate element.");
+        assert_eq!(message, "Unknown attribute in body element.");
     }
 }
