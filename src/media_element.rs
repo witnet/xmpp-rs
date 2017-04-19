@@ -18,7 +18,10 @@ pub struct MediaElement {
 }
 
 pub fn parse_media_element(root: &Element) -> Result<MediaElement, Error> {
-    assert!(root.is("media", MEDIA_ELEMENT_NS));
+    if !root.is("media", MEDIA_ELEMENT_NS) {
+        return Err(Error::ParseError("This is not a media element.")),
+    }
+
     let width = root.attr("width").and_then(|width| width.parse().ok());
     let height = root.attr("height").and_then(|height| height.parse().ok());
     let mut uris = vec!();

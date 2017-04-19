@@ -9,7 +9,10 @@ pub struct Ping {
 }
 
 pub fn parse_ping(root: &Element) -> Result<Ping, Error> {
-    assert!(root.is("ping", PING_NS));
+    if !root.is("ping", PING_NS) {
+        return Err(Error::ParseError("This is not a ping element.")),
+    }
+
     for _ in root.children() {
         return Err(Error::ParseError("Unknown child in ping element."));
     }

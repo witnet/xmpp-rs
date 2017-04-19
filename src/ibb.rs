@@ -64,7 +64,7 @@ pub fn parse_ibb(root: &Element) -> Result<IBB, Error> {
             stanza: stanza
         })
     } else {
-        Err(Error::ParseError("Unknown ibb element."))
+        Err(Error::ParseError("This is not an ibb element."))
     }
 }
 

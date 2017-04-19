@@ -15,7 +15,7 @@ impl MessagePayload for Body {}
 
 pub fn parse_body(root: &Element) -> Result<Body, Error> {
     if !root.is("body", JABBER_CLIENT_NS) {
-        return Err(Error::ParseError("Not a body element."));
+        return Err(Error::ParseError("This is not a body element."));
     }
     for _ in root.children() {
         return Err(Error::ParseError("Unknown child in body element."));

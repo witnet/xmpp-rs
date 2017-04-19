@@ -52,7 +52,10 @@ pub struct DataForm {
 }
 
 pub fn parse_data_form(root: &Element) -> Result<DataForm, Error> {
-    assert!(root.is("x", DATA_FORMS_NS));
+    if !root.is("x", DATA_FORMS_NS) {
+        return Err(Error::ParseError("This is not a data form element.")),
+    }
+
     let type_: DataFormType = match root.attr("type") {
         Some(type_) => type_.parse()?,
         None => return Err(Error::ParseError("Type attribute on data form is mandatory.")),

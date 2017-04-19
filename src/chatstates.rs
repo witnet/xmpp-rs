@@ -31,7 +31,7 @@ pub fn parse_chatstate(root: &Element) -> Result<ChatState, Error> {
     } else if root.is("paused", CHATSTATES_NS) {
         Ok(ChatState::Paused)
     } else {
-        Err(Error::ParseError("Unknown chatstate element."))
+        Err(Error::ParseError("This is not a chatstate element."))
     }
 }
 

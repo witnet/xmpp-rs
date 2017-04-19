@@ -29,7 +29,10 @@ pub struct Disco {
 }
 
 pub fn parse_disco(root: &Element) -> Result<Disco, Error> {
-    assert!(root.is("query", DISCO_INFO_NS));
+    if !root.is("query", DISCO_INFO_NS) {
+        return Err(Error::ParseError("This is not a disco#info element.")),
+    }
+
     let mut identities: Vec<Identity> = vec!();
     let mut features: Vec<Feature> = vec!();
     let mut extensions: Vec<DataForm> = vec!();
