@@ -1,4 +1,8 @@
 extern crate minidom;
+extern crate sha2;
+extern crate sha3;
+extern crate blake2;
+extern crate base64;
 
 use minidom::Element;
 
@@ -6,6 +10,10 @@ use error::Error;
 
 use disco::{Feature, Identity, Disco, parse_disco};
 use data_forms::DataForm;
+
+use self::sha2::{Sha256, Sha512, Digest};
+use self::sha3::{Sha3_256, Sha3_512};
+use self::blake2::{Blake2b};
 
 fn compute_item(field: &String) -> Vec<u8> {
     let mut bytes = field.as_bytes().to_vec();
@@ -71,6 +79,52 @@ pub fn convert_element(root: &Element) -> Result<Vec<u8>, Error> {
     let disco = parse_disco(root)?;
     let final_string = compute_disco(&disco);
     Ok(final_string)
+}
+
+pub fn hash_ecaps2(data: &Vec<u8>, algo: String) -> String {
+    match algo.as_ref() {
+        "sha-256" => {
+            let mut hasher = Sha256::default();
+            hasher.input(data);
+            let hash = hasher.result();
+            base64::encode(&hash)
+        },
+        "sha-512" => {
+            let mut hasher = Sha512::default();
+            hasher.input(data);
+            let hash = hasher.result();
+            base64::encode(&hash)
+        },
+        "sha3-256" => {
+            let mut hasher = Sha3_256::default();
+            hasher.input(data);
+            let hash = hasher.result();
+            base64::encode(&hash)
+        },
+        "sha3-512" => {
+            let mut hasher = Sha3_512::default();
+            hasher.input(data);
+            let hash = hasher.result();
+            base64::encode(&hash)
+        },
+        /*
+        "blake2b-256" => {
+            // TODO: bit length is most likely wrong here!
+            let mut hasher = Blake2b::default();
+            hasher.input(data);
+            let hash = hasher.result();
+            base64::encode(&hash)
+        },
+        "blake2b-512" => {
+            // TODO: bit length is most likely wrong here!
+            let mut hasher = Blake2b::default();
+            hasher.input(data);
+            let hash = hasher.result();
+            base64::encode(&hash)
+        },
+        */
+        _ => panic!(),
+    }
 }
 
 #[cfg(test)]
@@ -147,12 +201,10 @@ mod tests {
         assert_eq!(ecaps2.len(), 0x1d9);
         assert_eq!(ecaps2, expected);
 
-        /*
-        let sha_256 = hash(ecaps2, "sha-256");
+        let sha_256 = ecaps2::hash_ecaps2(&ecaps2, String::from("sha-256"));
         assert_eq!(sha_256, "kzBZbkqJ3ADrj7v08reD1qcWUwNGHaidNUgD7nHpiw8=");
-        let sha3_256 = hash(ecaps2, "sha3-256");
+        let sha3_256 = ecaps2::hash_ecaps2(&ecaps2, String::from("sha3-256"));
         assert_eq!(sha3_256, "79mdYAfU9rEdTOcWDO7UEAt6E56SUzk/g6TnqUeuD9Q=");
-        */
     }
 
     #[test]
@@ -320,11 +372,9 @@ mod tests {
         assert_eq!(ecaps2.len(), 0x543);
         assert_eq!(ecaps2, expected);
 
-        /*
-        let sha_256 = hash(ecaps2, "sha-256");
+        let sha_256 = ecaps2::hash_ecaps2(&ecaps2, String::from("sha-256"));
         assert_eq!(sha_256, "u79ZroNJbdSWhdSp311mddz44oHHPsEBntQ5b1jqBSY=");
-        let sha3_256 = hash(ecaps2, "sha3-256");
+        let sha3_256 = ecaps2::hash_ecaps2(&ecaps2, String::from("sha3-256"));
         assert_eq!(sha3_256, "XpUJzLAc93258sMECZ3FJpebkzuyNXDzRNwQog8eycg=");
-        */
     }
 }
