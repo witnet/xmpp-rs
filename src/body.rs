@@ -2,8 +2,7 @@ use minidom::Element;
 
 use error::Error;
 
-// TODO: also support components and servers.
-use ns::JABBER_CLIENT_NS;
+use ns;
 
 #[derive(Debug)]
 pub struct Body {
@@ -11,7 +10,8 @@ pub struct Body {
 }
 
 pub fn parse_body(root: &Element) -> Result<Body, Error> {
-    if !root.is("body", JABBER_CLIENT_NS) {
+    // TODO: also support components and servers.
+    if !root.is("body", ns::JABBER_CLIENT) {
         return Err(Error::ParseError("This is not a body element."));
     }
     for _ in root.children() {

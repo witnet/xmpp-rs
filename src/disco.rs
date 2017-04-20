@@ -3,7 +3,7 @@ extern crate minidom;
 use minidom::Element;
 
 use error::Error;
-use ns::{DISCO_INFO_NS, DATA_FORMS_NS};
+use ns;
 
 use data_forms::{DataForm, DataFormType, parse_data_form};
 
@@ -29,7 +29,7 @@ pub struct Disco {
 }
 
 pub fn parse_disco(root: &Element) -> Result<Disco, Error> {
-    if !root.is("query", DISCO_INFO_NS) {
+    if !root.is("query", ns::DISCO_INFO) {
         return Err(Error::ParseError("This is not a disco#info element."));
     }
 
@@ -41,13 +41,13 @@ pub fn parse_disco(root: &Element) -> Result<Disco, Error> {
                    .and_then(|node| node.parse().ok());
 
     for child in root.children() {
-        if child.is("feature", DISCO_INFO_NS) {
+        if child.is("feature", ns::DISCO_INFO) {
             let feature = child.attr("var")
                                .ok_or(Error::ParseError("Feature must have a 'var' attribute."))?;
             features.push(Feature {
                 var: feature.to_owned(),
             });
-        } else if child.is("identity", DISCO_INFO_NS) {
+        } else if child.is("identity", ns::DISCO_INFO) {
             let category = child.attr("category")
                                 .ok_or(Error::ParseError("Identity must have a 'category' attribute."))?;
             if category == "" {
@@ -70,7 +70,7 @@ pub fn parse_disco(root: &Element) -> Result<Disco, Error> {
                 xml_lang: xml_lang.to_owned(),
                 name: name,
             });
-        } else if child.is("x", DATA_FORMS_NS) {
+        } else if child.is("x", ns::DATA_FORMS) {
             let data_form = parse_data_form(child)?;
             match data_form.type_ {
                 DataFormType::Result_ => (),
@@ -93,7 +93,7 @@ pub fn parse_disco(root: &Element) -> Result<Disco, Error> {
     if features.is_empty() {
         return Err(Error::ParseError("There must be at least one feature in disco#info."));
     }
-    if !features.contains(&Feature { var: DISCO_INFO_NS.to_owned() }) {
+    if !features.contains(&Feature { var: ns::DISCO_INFO.to_owned() }) {
         return Err(Error::ParseError("disco#info feature not present in disco#info."));
     }
     */
@@ -108,12 +108,12 @@ pub fn parse_disco(root: &Element) -> Result<Disco, Error> {
 
 pub fn serialise_disco(disco: &Disco) -> Element {
     let mut root = Element::builder("query")
-                           .ns(DISCO_INFO_NS)
+                           .ns(ns::DISCO_INFO)
                            .attr("node", disco.node.clone())
                            .build();
     for identity in &disco.identities {
         let identity_element = Element::builder("identity")
-                                       .ns(DISCO_INFO_NS)
+                                       .ns(ns::DISCO_INFO)
                                        .attr("category", identity.category.clone())
                                        .attr("type", identity.type_.clone())
                                        .attr("xml:lang", identity.xml_lang.clone())
@@ -123,7 +123,7 @@ pub fn serialise_disco(disco: &Disco) -> Element {
     }
     for feature in &disco.features {
         let feature_element = Element::builder("feature")
-                                      .ns(DISCO_INFO_NS)
+                                      .ns(ns::DISCO_INFO)
                                       .attr("var", feature.var.clone())
                                       .build();
         root.append_child(feature_element);

@@ -2,7 +2,7 @@ use minidom::Element;
 
 use error::Error;
 
-use ns::RECEIPTS_NS;
+use ns;
 
 #[derive(Debug)]
 pub enum Receipt {
@@ -14,9 +14,9 @@ pub fn parse_receipt(root: &Element) -> Result<Receipt, Error> {
     for _ in root.children() {
         return Err(Error::ParseError("Unknown child in receipt element."));
     }
-    if root.is("request", RECEIPTS_NS) {
+    if root.is("request", ns::RECEIPTS) {
         Ok(Receipt::Request)
-    } else if root.is("received", RECEIPTS_NS) {
+    } else if root.is("received", ns::RECEIPTS) {
         let id = root.attr("id").unwrap_or("").to_owned();
         Ok(Receipt::Received(id))
     } else {

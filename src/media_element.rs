@@ -2,7 +2,7 @@ use minidom::Element;
 
 use error::Error;
 
-use ns::MEDIA_ELEMENT_NS;
+use ns;
 
 #[derive(Debug)]
 pub struct URI {
@@ -18,7 +18,7 @@ pub struct MediaElement {
 }
 
 pub fn parse_media_element(root: &Element) -> Result<MediaElement, Error> {
-    if !root.is("media", MEDIA_ELEMENT_NS) {
+    if !root.is("media", ns::MEDIA_ELEMENT) {
         return Err(Error::ParseError("This is not a media element."));
     }
 
@@ -26,7 +26,7 @@ pub fn parse_media_element(root: &Element) -> Result<MediaElement, Error> {
     let height = root.attr("height").and_then(|height| height.parse().ok());
     let mut uris = vec!();
     for uri in root.children() {
-        if uri.is("uri", MEDIA_ELEMENT_NS) {
+        if uri.is("uri", ns::MEDIA_ELEMENT) {
             let type_ = uri.attr("type").ok_or(Error::ParseError("Attribute type on uri is mandatory."))?;
             let text = uri.text().trim().to_owned();
             if text == "" {

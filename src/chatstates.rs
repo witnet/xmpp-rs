@@ -2,7 +2,7 @@ use minidom::Element;
 
 use error::Error;
 
-use ns::CHATSTATES_NS;
+use ns;
 
 #[derive(Debug)]
 pub enum ChatState {
@@ -17,15 +17,15 @@ pub fn parse_chatstate(root: &Element) -> Result<ChatState, Error> {
     for _ in root.children() {
         return Err(Error::ParseError("Unknown child in chatstate element."));
     }
-    if root.is("active", CHATSTATES_NS) {
+    if root.is("active", ns::CHATSTATES) {
         Ok(ChatState::Active)
-    } else if root.is("composing", CHATSTATES_NS) {
+    } else if root.is("composing", ns::CHATSTATES) {
         Ok(ChatState::Composing)
-    } else if root.is("gone", CHATSTATES_NS) {
+    } else if root.is("gone", ns::CHATSTATES) {
         Ok(ChatState::Gone)
-    } else if root.is("inactive", CHATSTATES_NS) {
+    } else if root.is("inactive", ns::CHATSTATES) {
         Ok(ChatState::Inactive)
-    } else if root.is("paused", CHATSTATES_NS) {
+    } else if root.is("paused", ns::CHATSTATES) {
         Ok(ChatState::Paused)
     } else {
         Err(Error::ParseError("This is not a chatstate element."))

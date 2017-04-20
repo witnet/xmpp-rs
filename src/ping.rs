@@ -2,14 +2,14 @@ use minidom::Element;
 
 use error::Error;
 
-use ns::PING_NS;
+use ns;
 
 #[derive(Debug)]
 pub struct Ping {
 }
 
 pub fn parse_ping(root: &Element) -> Result<Ping, Error> {
-    if !root.is("ping", PING_NS) {
+    if !root.is("ping", ns::PING) {
         return Err(Error::ParseError("This is not a ping element."));
     }
 

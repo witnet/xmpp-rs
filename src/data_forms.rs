@@ -5,7 +5,7 @@ use std::str::FromStr;
 use minidom::Element;
 
 use error::Error;
-use ns::{DATA_FORMS_NS, MEDIA_ELEMENT_NS};
+use ns;
 
 use media_element::{MediaElement, parse_media_element};
 
@@ -52,7 +52,7 @@ pub struct DataForm {
 }
 
 pub fn parse_data_form(root: &Element) -> Result<DataForm, Error> {
-    if !root.is("x", DATA_FORMS_NS) {
+    if !root.is("x", ns::DATA_FORMS) {
         return Err(Error::ParseError("This is not a data form element."));
     }
 
@@ -63,16 +63,16 @@ pub fn parse_data_form(root: &Element) -> Result<DataForm, Error> {
     let mut fields = vec!();
     let mut form_type = None;
     for field in root.children() {
-        if field.is("field", DATA_FORMS_NS) {
+        if field.is("field", ns::DATA_FORMS) {
             let var = field.attr("var").ok_or(Error::ParseError("Field must have a 'var' attribute."))?;
             let field_type = field.attr("type").unwrap_or("text-single");
             let label = field.attr("label").and_then(|label| label.parse().ok());
             let mut values = vec!();
             let mut media = vec!();
             for element in field.children() {
-                if element.is("value", DATA_FORMS_NS) {
+                if element.is("value", ns::DATA_FORMS) {
                     values.push(element.text());
-                } else if element.is("media", MEDIA_ELEMENT_NS) {
+                } else if element.is("media", ns::MEDIA_ELEMENT) {
                     match parse_media_element(element) {
                         Ok(media_element) => media.push(media_element),
                         Err(_) => (), // TODO: is it really nice to swallow this error?

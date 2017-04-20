@@ -5,7 +5,7 @@ use std::str::FromStr;
 use minidom::Element;
 
 use error::Error;
-use ns::JINGLE_NS;
+use ns;
 
 #[derive(Debug, PartialEq)]
 pub enum Action {
@@ -209,7 +209,7 @@ pub struct Jingle {
 }
 
 pub fn parse_jingle(root: &Element) -> Result<Jingle, Error> {
-    if !root.is("jingle", JINGLE_NS) {
+    if !root.is("jingle", ns::JINGLE) {
         return Err(Error::ParseError("This is not a Jingle element."));
     }
 
@@ -227,7 +227,7 @@ pub fn parse_jingle(root: &Element) -> Result<Jingle, Error> {
     let mut reason_element = None;
 
     for child in root.children() {
-        if child.is("content", JINGLE_NS) {
+        if child.is("content", ns::JINGLE) {
             let creator = child.attr("creator")
                                .ok_or(Error::ParseError("Content must have a 'creator' attribute."))?
                                .parse()?;
@@ -276,14 +276,14 @@ pub fn parse_jingle(root: &Element) -> Result<Jingle, Error> {
                 transport: transport,
                 security: security.to_owned(),
             });
-        } else if child.is("reason", JINGLE_NS) {
+        } else if child.is("reason", ns::JINGLE) {
             if reason_element.is_some() {
                 return Err(Error::ParseError("Jingle must not have more than one reason."));
             }
             let mut reason = None;
             let mut text = None;
             for stuff in child.children() {
-                if stuff.ns() != Some(JINGLE_NS) {
+                if stuff.ns() != Some(ns::JINGLE) {
                     return Err(Error::ParseError("Reason contains a foreign element."));
                 }
                 let name = stuff.name();

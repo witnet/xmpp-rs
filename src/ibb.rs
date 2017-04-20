@@ -4,7 +4,7 @@ use minidom::Element;
 
 use error::Error;
 
-use ns::IBB_NS;
+use ns;
 
 #[derive(Debug)]
 pub enum Stanza {
@@ -49,7 +49,7 @@ fn required_attr<T: FromStr>(root: &Element, attr: &str, err: Error) -> Result<T
 }
 
 pub fn parse_ibb(root: &Element) -> Result<IBB, Error> {
-    if root.is("open", IBB_NS) {
+    if root.is("open", ns::IBB) {
         let block_size = required_attr(root, "block-size", Error::ParseError("Required attribute 'block-size' missing in open element."))?;
         let sid = required_attr(root, "sid", Error::ParseError("Required attribute 'sid' missing in open element."))?;
         let stanza = root.attr("stanza")
