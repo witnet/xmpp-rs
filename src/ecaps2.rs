@@ -13,7 +13,7 @@ use data_forms::DataForm;
 
 use self::sha2::{Sha256, Sha512, Digest};
 use self::sha3::{Sha3_256, Sha3_512};
-use self::blake2::{Blake2b};
+use self::blake2::Blake2b;
 
 fn compute_item(field: &String) -> Vec<u8> {
     let mut bytes = field.as_bytes().to_vec();
