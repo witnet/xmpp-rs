@@ -106,6 +106,34 @@ pub fn parse_disco(root: &Element) -> Result<Disco, Error> {
     });
 }
 
+pub fn serialise_disco(disco: Disco) -> Element {
+    let mut root = Element::builder("query")
+                           .ns(DISCO_INFO_NS)
+                           .attr("node", disco.node)
+                           .build();
+    for identity in disco.identities {
+        let identity_element = Element::builder("identity")
+                                       .ns(DISCO_INFO_NS)
+                                       .attr("category", identity.category)
+                                       .attr("type", identity.type_)
+                                       .attr("xml:lang", identity.xml_lang)
+                                       .attr("name", identity.name)
+                                       .build();
+        root.append_child(identity_element);
+    }
+    for feature in disco.features {
+        let feature_element = Element::builder("feature")
+                                      .ns(DISCO_INFO_NS)
+                                      .attr("var", feature.var)
+                                      .build();
+        root.append_child(feature_element);
+    }
+    for _ in disco.extensions {
+        panic!("Not yet implemented!");
+    }
+    root
+}
+
 #[cfg(test)]
 mod tests {
     use minidom::Element;
