@@ -85,6 +85,8 @@ pub fn parse_disco(root: &Element) -> Result<Disco, Error> {
         }
     }
 
+    /*
+    // TODO: encode these restrictions only for result disco#info, not get ones.
     if identities.is_empty() {
         return Err(Error::ParseError("There must be at least one identity in disco#info."));
     }
@@ -94,6 +96,7 @@ pub fn parse_disco(root: &Element) -> Result<Disco, Error> {
     if !features.contains(&Feature { var: DISCO_INFO_NS.to_owned() }) {
         return Err(Error::ParseError("disco#info feature not present in disco#info."));
     }
+    */
 
     return Ok(Disco {
         node: node,
@@ -128,15 +131,10 @@ mod tests {
             _ => panic!(),
         };
         assert_eq!(message, "Unknown element in disco#info.");
+    }
 
-        let elem: Element = "<query xmlns='http://jabber.org/protocol/disco#info'/>".parse().unwrap();
-        let error = disco::parse_disco(&elem).unwrap_err();
-        let message = match error {
-            Error::ParseError(string) => string,
-            _ => panic!(),
-        };
-        assert_eq!(message, "There must be at least one identity in disco#info.");
-
+    #[test]
+    fn test_invalid_identity() {
         let elem: Element = "<query xmlns='http://jabber.org/protocol/disco#info'><identity/></query>".parse().unwrap();
         let error = disco::parse_disco(&elem).unwrap_err();
         let message = match error {
@@ -168,7 +166,10 @@ mod tests {
             _ => panic!(),
         };
         assert_eq!(message, "Identity must have a non-empty 'type' attribute.");
+    }
 
+    #[test]
+    fn test_invalid_feature() {
         let elem: Element = "<query xmlns='http://jabber.org/protocol/disco#info'><feature/></query>".parse().unwrap();
         let error = disco::parse_disco(&elem).unwrap_err();
         let message = match error {
@@ -176,6 +177,18 @@ mod tests {
             _ => panic!(),
         };
         assert_eq!(message, "Feature must have a 'var' attribute.");
+    }
+
+    #[test]
+    #[ignore]
+    fn test_invalid_result() {
+        let elem: Element = "<query xmlns='http://jabber.org/protocol/disco#info'/>".parse().unwrap();
+        let error = disco::parse_disco(&elem).unwrap_err();
+        let message = match error {
+            Error::ParseError(string) => string,
+            _ => panic!(),
+        };
+        assert_eq!(message, "There must be at least one identity in disco#info.");
 
         let elem: Element = "<query xmlns='http://jabber.org/protocol/disco#info'><identity category='client' type='pc'/></query>".parse().unwrap();
         let error = disco::parse_disco(&elem).unwrap_err();
