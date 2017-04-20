@@ -7,12 +7,12 @@ use ns;
 
 use data_forms::{DataForm, DataFormType, parse_data_form};
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Feature {
     pub var: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Identity {
     pub category: String, // TODO: use an enum here.
     pub type_: String, // TODO: use an enum here.
@@ -20,7 +20,7 @@ pub struct Identity {
     pub name: Option<String>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Disco {
     pub node: Option<String>,
     pub identities: Vec<Identity>,

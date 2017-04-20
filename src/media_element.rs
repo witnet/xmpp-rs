@@ -4,13 +4,13 @@ use error::Error;
 
 use ns;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct URI {
     pub type_: String,
     pub uri: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct MediaElement {
     pub width: Option<usize>,
     pub height: Option<usize>,

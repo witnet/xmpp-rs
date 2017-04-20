@@ -7,7 +7,7 @@ use minidom::Element;
 use error::Error;
 use ns;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Action {
     ContentAccept,
     ContentAdd,
@@ -69,7 +69,7 @@ impl FromStr for Action {
 // TODO: use a real JID type.
 type Jid = String;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Creator {
     Initiator,
     Responder,
@@ -89,7 +89,7 @@ impl FromStr for Creator {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Senders {
     Both,
     Initiator,
@@ -115,7 +115,7 @@ impl FromStr for Senders {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Content {
     pub creator: Creator,
     pub disposition: String,
@@ -126,7 +126,7 @@ pub struct Content {
     pub security: Option<String>,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Reason {
     AlternativeSession, //(String),
     Busy,
@@ -191,13 +191,13 @@ impl FromStr for Reason {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ReasonElement {
     pub reason: Reason,
     pub text: Option<String>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Jingle {
     pub action: Action,
     pub initiator: Option<Jid>,

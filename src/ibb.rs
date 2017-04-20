@@ -6,7 +6,7 @@ use error::Error;
 
 use ns;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Stanza {
     Iq,
     Message,
@@ -32,7 +32,7 @@ impl FromStr for Stanza {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum IBB {
     Open { block_size: u16, sid: String, stanza: Stanza },
     Data(u16, String, Vec<u8>),

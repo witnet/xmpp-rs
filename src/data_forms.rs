@@ -9,7 +9,7 @@ use ns;
 
 use media_element::{MediaElement, parse_media_element};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Field {
     pub var: String,
     pub type_: String, // TODO: use an enum here.
@@ -18,7 +18,7 @@ pub struct Field {
     pub media: Vec<MediaElement>,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum DataFormType {
     Cancel,
     Form,
@@ -44,7 +44,7 @@ impl FromStr for DataFormType {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct DataForm {
     pub type_: DataFormType,
     pub form_type: Option<String>,
