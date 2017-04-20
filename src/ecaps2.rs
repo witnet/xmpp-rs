@@ -7,13 +7,13 @@ use error::Error;
 use disco::{Feature, Identity, Disco, parse_disco};
 use data_forms::DataForm;
 
-fn compute_item(field: String) -> Vec<u8> {
+fn compute_item(field: &String) -> Vec<u8> {
     let mut bytes = field.as_bytes().to_vec();
     bytes.push(0x1f);
     bytes
 }
 
-fn compute_items<T, F: Fn(T) -> Vec<u8>>(things: Vec<T>, separator: u8, encode: F) -> Vec<u8> {
+fn compute_items<T, F: Fn(&T) -> Vec<u8>>(things: &Vec<T>, separator: u8, encode: F) -> Vec<u8> {
     let mut string: Vec<u8> = vec!();
     let mut accumulator: Vec<Vec<u8>> = vec!();
     for thing in things {
@@ -29,36 +29,36 @@ fn compute_items<T, F: Fn(T) -> Vec<u8>>(things: Vec<T>, separator: u8, encode: 
     string
 }
 
-fn compute_features(features: Vec<Feature>) -> Vec<u8> {
-    compute_items(features, 0x1c, |feature| compute_item(feature.var))
+fn compute_features(features: &Vec<Feature>) -> Vec<u8> {
+    compute_items(features, 0x1c, |feature| compute_item(&feature.var))
 }
 
-fn compute_identities(identities: Vec<Identity>) -> Vec<u8> {
+fn compute_identities(identities: &Vec<Identity>) -> Vec<u8> {
     compute_items(identities, 0x1c, |identity| {
-        let mut bytes = compute_item(identity.category);
-        bytes.append(&mut compute_item(identity.type_));
-        bytes.append(&mut compute_item(identity.xml_lang));
-        bytes.append(&mut compute_item(identity.name.unwrap_or(String::new())));
+        let mut bytes = compute_item(&identity.category);
+        bytes.append(&mut compute_item(&identity.type_));
+        bytes.append(&mut compute_item(&identity.xml_lang));
+        bytes.append(&mut compute_item(&identity.name.clone().unwrap_or(String::new())));
         bytes.push(0x1e);
         bytes
     })
 }
 
-fn compute_extensions(extensions: Vec<DataForm>) -> Vec<u8> {
+fn compute_extensions(extensions: &Vec<DataForm>) -> Vec<u8> {
     compute_items(extensions, 0x1c, |extension| {
-        compute_items(extension.fields, 0x1d, |field| {
-            let mut bytes = compute_item(field.var);
-            bytes.append(&mut compute_items(field.values, 0x1e,
+        compute_items(&extension.fields, 0x1d, |field| {
+            let mut bytes = compute_item(&field.var);
+            bytes.append(&mut compute_items(&field.values, 0x1e,
                                             |value| compute_item(value)));
             bytes
         })
     })
 }
 
-fn compute_disco(disco: Disco) -> Vec<u8> {
-    let features_string = compute_features(disco.features);
-    let identities_string = compute_identities(disco.identities);
-    let extensions_string = compute_extensions(disco.extensions);
+pub fn compute_disco(disco: &Disco) -> Vec<u8> {
+    let features_string = compute_features(&disco.features);
+    let identities_string = compute_identities(&disco.identities);
+    let extensions_string = compute_extensions(&disco.extensions);
 
     let mut final_string = vec!();
     final_string.extend(features_string);
@@ -69,7 +69,7 @@ fn compute_disco(disco: Disco) -> Vec<u8> {
 
 pub fn convert_element(root: &Element) -> Result<Vec<u8>, Error> {
     let disco = parse_disco(root)?;
-    let final_string = compute_disco(disco);
+    let final_string = compute_disco(&disco);
     Ok(final_string)
 }
 
