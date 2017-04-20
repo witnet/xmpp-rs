@@ -7,7 +7,7 @@ use ns::JABBER_CLIENT_NS;
 
 #[derive(Debug)]
 pub struct Body {
-    body: String,
+    pub body: String,
 }
 
 pub fn parse_body(root: &Element) -> Result<Body, Error> {
