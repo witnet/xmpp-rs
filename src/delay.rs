@@ -20,10 +20,14 @@ pub fn parse_delay(root: &Element) -> Result<Delay, Error> {
     }
     let from = root.attr("from").and_then(|value| value.parse().ok());
     let stamp = root.attr("stamp").ok_or(Error::ParseError("Mandatory argument 'stamp' not present in delay element."))?.to_owned();
+    let data = match root.text().as_ref() {
+        "" => None,
+        text => Some(text.to_owned()),
+    };
     Ok(Delay {
         from: from,
         stamp: stamp,
-        data: None,
+        data: data,
     })
 }
 
