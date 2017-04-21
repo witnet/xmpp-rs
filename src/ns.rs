@@ -31,6 +31,9 @@ pub const MEDIA_ELEMENT: &'static str = "urn:xmpp:media-element";
 /// XEP-0224: Attention
 pub const ATTENTION: &'static str = "urn:xmpp:attention:0";
 
+/// XEP-0300: Use of Cryptographic Hash Functions in XMPP
+pub const HASHES: &'static str = "urn:xmpp:hashes:2";
+
 /// XEP-0308: Last Message Correction
 pub const MESSAGE_CORRECT: &'static str = "urn:xmpp:message-correct:0";
 

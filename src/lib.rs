@@ -49,6 +49,9 @@ pub mod media_element;
 /// XEP-0224: Attention
 pub mod attention;
 
+/// XEP-0300: Use of Cryptographic Hash Functions in XMPP
+pub mod hashes;
+
 /// XEP-0308: Last Message Correction
 pub mod message_correct;
 
