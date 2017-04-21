@@ -22,6 +22,9 @@ pub const RECEIPTS: &'static str = "urn:xmpp:receipts";
 /// XEP-0199: XMPP Ping
 pub const PING: &'static str = "urn:xmpp:ping";
 
+/// XEP-0203: Delayed Delivery
+pub const DELAY: &'static str = "urn:xmpp:delay";
+
 /// XEP-0221: Data Forms Media Element
 pub const MEDIA_ELEMENT: &'static str = "urn:xmpp:media-element";
 

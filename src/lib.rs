@@ -40,6 +40,9 @@ pub mod receipts;
 /// XEP-0199: XMPP Ping
 pub mod ping;
 
+/// XEP-0203: Delayed Delivery
+pub mod delay;
+
 /// XEP-0221: Data Forms Media Element
 pub mod media_element;
 
@@ -61,6 +64,7 @@ pub enum MessagePayload {
     Body(body::Body),
     ChatState(chatstates::ChatState),
     Receipt(receipts::Receipt),
+    Delay(delay::Delay),
     Attention(attention::Attention),
     MessageCorrect(message_correct::MessageCorrect),
     ExplicitMessageEncryption(eme::ExplicitMessageEncryption),
@@ -75,6 +79,8 @@ pub fn parse_message_payload(elem: &Element) -> Option<MessagePayload> {
         Some(MessagePayload::ChatState(chatstate))
     } else if let Ok(receipt) = receipts::parse_receipt(elem) {
         Some(MessagePayload::Receipt(receipt))
+    } else if let Ok(delay) = delay::parse_delay(elem) {
+        Some(MessagePayload::Delay(delay))
     } else if let Ok(attention) = attention::parse_attention(elem) {
         Some(MessagePayload::Attention(attention))
     } else if let Ok(replace) = message_correct::parse_message_correct(elem) {
