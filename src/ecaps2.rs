@@ -15,13 +15,13 @@ use self::sha2::{Sha256, Sha512, Digest};
 use self::sha3::{Sha3_256, Sha3_512};
 use self::blake2::Blake2b;
 
-fn compute_item(field: &String) -> Vec<u8> {
+fn compute_item(field: &str) -> Vec<u8> {
     let mut bytes = field.as_bytes().to_vec();
     bytes.push(0x1f);
     bytes
 }
 
-fn compute_items<T, F: Fn(&T) -> Vec<u8>>(things: &Vec<T>, separator: u8, encode: F) -> Vec<u8> {
+fn compute_items<T, F: Fn(&T) -> Vec<u8>>(things: &[T], separator: u8, encode: F) -> Vec<u8> {
     let mut string: Vec<u8> = vec!();
     let mut accumulator: Vec<Vec<u8>> = vec!();
     for thing in things {
@@ -37,22 +37,22 @@ fn compute_items<T, F: Fn(&T) -> Vec<u8>>(things: &Vec<T>, separator: u8, encode
     string
 }
 
-fn compute_features(features: &Vec<Feature>) -> Vec<u8> {
+fn compute_features(features: &[Feature]) -> Vec<u8> {
     compute_items(features, 0x1c, |feature| compute_item(&feature.var))
 }
 
-fn compute_identities(identities: &Vec<Identity>) -> Vec<u8> {
+fn compute_identities(identities: &[Identity]) -> Vec<u8> {
     compute_items(identities, 0x1c, |identity| {
         let mut bytes = compute_item(&identity.category);
         bytes.append(&mut compute_item(&identity.type_));
         bytes.append(&mut compute_item(&identity.xml_lang));
-        bytes.append(&mut compute_item(&identity.name.clone().unwrap_or(String::new())));
+        bytes.append(&mut compute_item(&identity.name.clone().unwrap_or_default()));
         bytes.push(0x1e);
         bytes
     })
 }
 
-fn compute_extensions(extensions: &Vec<DataForm>) -> Vec<u8> {
+fn compute_extensions(extensions: &[DataForm]) -> Vec<u8> {
     compute_items(extensions, 0x1c, |extension| {
         compute_items(&extension.fields, 0x1d, |field| {
             let mut bytes = compute_item(&field.var);
@@ -81,7 +81,7 @@ pub fn convert_element(root: &Element) -> Result<Vec<u8>, Error> {
     Ok(final_string)
 }
 
-pub fn hash_ecaps2(data: &Vec<u8>, algo: String) -> String {
+pub fn hash_ecaps2(data: &[u8], algo: &str) -> String {
     match algo.as_ref() {
         "sha-256" => {
             let mut hasher = Sha256::default();
@@ -201,9 +201,9 @@ mod tests {
         assert_eq!(ecaps2.len(), 0x1d9);
         assert_eq!(ecaps2, expected);
 
-        let sha_256 = ecaps2::hash_ecaps2(&ecaps2, String::from("sha-256"));
+        let sha_256 = ecaps2::hash_ecaps2(&ecaps2, "sha-256");
         assert_eq!(sha_256, "kzBZbkqJ3ADrj7v08reD1qcWUwNGHaidNUgD7nHpiw8=");
-        let sha3_256 = ecaps2::hash_ecaps2(&ecaps2, String::from("sha3-256"));
+        let sha3_256 = ecaps2::hash_ecaps2(&ecaps2, "sha3-256");
         assert_eq!(sha3_256, "79mdYAfU9rEdTOcWDO7UEAt6E56SUzk/g6TnqUeuD9Q=");
     }
 
@@ -372,9 +372,9 @@ mod tests {
         assert_eq!(ecaps2.len(), 0x543);
         assert_eq!(ecaps2, expected);
 
-        let sha_256 = ecaps2::hash_ecaps2(&ecaps2, String::from("sha-256"));
+        let sha_256 = ecaps2::hash_ecaps2(&ecaps2, "sha-256");
         assert_eq!(sha_256, "u79ZroNJbdSWhdSp311mddz44oHHPsEBntQ5b1jqBSY=");
-        let sha3_256 = ecaps2::hash_ecaps2(&ecaps2, String::from("sha3-256"));
+        let sha3_256 = ecaps2::hash_ecaps2(&ecaps2, "sha3-256");
         assert_eq!(sha3_256, "XpUJzLAc93258sMECZ3FJpebkzuyNXDzRNwQog8eycg=");
     }
 }

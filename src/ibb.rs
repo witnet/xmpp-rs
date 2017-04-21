@@ -54,7 +54,7 @@ pub fn parse_ibb(root: &Element) -> Result<IBB, Error> {
         let sid = required_attr(root, "sid", Error::ParseError("Required attribute 'sid' missing in open element."))?;
         let stanza = root.attr("stanza")
                          .and_then(|value| value.parse().ok())
-                         .unwrap_or(Default::default());
+                         .unwrap_or_default();
         for _ in root.children() {
             return Err(Error::ParseError("Unknown child in open element."));
         }

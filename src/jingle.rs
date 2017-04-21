@@ -308,14 +308,14 @@ pub fn parse_jingle(root: &Element) -> Result<Jingle, Error> {
         }
     }
 
-    return Ok(Jingle {
+    Ok(Jingle {
         action: action,
         initiator: initiator,
         responder: responder,
         sid: sid.to_owned(),
         contents: contents,
         reason: reason_element,
-    });
+    })
 }
 
 #[cfg(test)]

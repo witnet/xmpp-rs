@@ -98,12 +98,12 @@ pub fn parse_disco(root: &Element) -> Result<Disco, Error> {
     }
     */
 
-    return Ok(Disco {
+    Ok(Disco {
         node: node,
         identities: identities,
         features: features,
         extensions: extensions
-    });
+    })
 }
 
 pub fn serialise_disco(disco: &Disco) -> Element {
