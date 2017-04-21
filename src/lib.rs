@@ -49,6 +49,9 @@ pub mod attention;
 /// XEP-0308: Last Message Correction
 pub mod message_correct;
 
+/// XEP-0380: Explicit Message Encryption
+pub mod eme;
+
 /// XEP-0390: Entity Capabilities 2.0
 pub mod ecaps2;
 
@@ -60,6 +63,7 @@ pub enum MessagePayload {
     Receipt(receipts::Receipt),
     Attention(attention::Attention),
     MessageCorrect(message_correct::MessageCorrect),
+    ExplicitMessageEncryption(eme::ExplicitMessageEncryption),
 }
 
 /// Parse one of the payloads of a `<message/>` element, and return `Some` of a
@@ -75,6 +79,8 @@ pub fn parse_message_payload(elem: &Element) -> Option<MessagePayload> {
         Some(MessagePayload::Attention(attention))
     } else if let Ok(replace) = message_correct::parse_message_correct(elem) {
         Some(MessagePayload::MessageCorrect(replace))
+    } else if let Ok(eme) = eme::parse_explicit_message_encryption(elem) {
+        Some(MessagePayload::ExplicitMessageEncryption(eme))
     } else {
         None
     }
