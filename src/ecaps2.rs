@@ -1,14 +1,9 @@
-extern crate minidom;
 extern crate sha2;
 extern crate sha3;
 extern crate blake2;
 extern crate base64;
 
-use minidom::Element;
-
-use error::Error;
-
-use disco::{Feature, Identity, Disco, parse_disco};
+use disco::{Feature, Identity, Disco};
 use data_forms::DataForm;
 
 use self::sha2::{Sha256, Sha512, Digest};
@@ -75,12 +70,6 @@ pub fn compute_disco(disco: &Disco) -> Vec<u8> {
     final_string
 }
 
-pub fn convert_element(root: &Element) -> Result<Vec<u8>, Error> {
-    let disco = parse_disco(root)?;
-    let final_string = compute_disco(&disco);
-    Ok(final_string)
-}
-
 // TODO: make algo into an enum.
 pub fn hash_ecaps2(data: &[u8], algo: &str) -> String {
     match algo {
@@ -131,12 +120,14 @@ pub fn hash_ecaps2(data: &[u8], algo: &str) -> String {
 #[cfg(test)]
 mod tests {
     use minidom::Element;
+    use disco;
     use ecaps2;
 
     #[test]
     fn test_simple() {
         let elem: Element = "<query xmlns='http://jabber.org/protocol/disco#info'><identity category='client' type='pc'/><feature var='http://jabber.org/protocol/disco#info'/></query>".parse().unwrap();
-        let ecaps2 = ecaps2::convert_element(&elem).unwrap();
+        let disco = disco::parse_disco(&elem).unwrap();
+        let ecaps2 = ecaps2::compute_disco(&disco);
         assert_eq!(ecaps2.len(), 54);
     }
 
@@ -198,7 +189,8 @@ mod tests {
             105, 109, 101, 31, 28, 99, 108, 105, 101, 110, 116, 31, 109, 111,
             98, 105, 108, 101, 31, 31, 66, 111, 109, 98, 117, 115, 77, 111,
             100, 31, 30, 28, 28];
-        let ecaps2 = ecaps2::convert_element(&elem).unwrap();
+        let disco = disco::parse_disco(&elem).unwrap();
+        let ecaps2 = ecaps2::compute_disco(&disco);
         assert_eq!(ecaps2.len(), 0x1d9);
         assert_eq!(ecaps2, expected);
 
@@ -369,7 +361,8 @@ mod tests {
             111, 110, 31, 48, 46, 49, 49, 46, 49, 45, 115, 118, 110, 45, 50,
             48, 49, 49, 49, 50, 49, 54, 45, 109, 111, 100, 32, 40, 84, 99, 108,
             47, 84, 107, 32, 56, 46,54, 98, 50, 41, 31, 30, 29, 28];
-        let ecaps2 = ecaps2::convert_element(&elem).unwrap();
+        let disco = disco::parse_disco(&elem).unwrap();
+        let ecaps2 = ecaps2::compute_disco(&disco);
         assert_eq!(ecaps2.len(), 0x543);
         assert_eq!(ecaps2, expected);
 
