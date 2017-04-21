@@ -54,9 +54,11 @@ pub enum MessagePayload {
     Body(body::Body),
     ChatState(chatstates::ChatState),
     Receipt(receipts::Receipt),
+    Attention(attention::Attention),
 }
 
-/// Parse one of the payloads of a `<message/>` element, and return `Some` of a `MessagePayload` if parsing it succeeded, `None` otherwise.
+/// Parse one of the payloads of a `<message/>` element, and return `Some` of a
+/// `MessagePayload` if parsing it succeeded, `None` otherwise.
 pub fn parse_message_payload(elem: &Element) -> Option<MessagePayload> {
     if let Ok(body) = body::parse_body(elem) {
         Some(MessagePayload::Body(body))
@@ -64,6 +66,8 @@ pub fn parse_message_payload(elem: &Element) -> Option<MessagePayload> {
         Some(MessagePayload::ChatState(chatstate))
     } else if let Ok(receipt) = receipts::parse_receipt(elem) {
         Some(MessagePayload::Receipt(receipt))
+    } else if let Ok(attention) = attention::parse_attention(elem) {
+        Some(MessagePayload::Attention(attention))
     } else {
         None
     }
