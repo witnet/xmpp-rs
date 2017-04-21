@@ -1,6 +1,7 @@
 use std::str::FromStr;
 
 use minidom::Element;
+use base64;
 
 use error::Error;
 
@@ -35,7 +36,7 @@ impl FromStr for Stanza {
 #[derive(Debug, Clone)]
 pub enum IBB {
     Open { block_size: u16, sid: String, stanza: Stanza },
-    Data(u16, String, Vec<u8>),
+    Data { seq: u16, sid: String, data: Vec<u8> },
     Close(String),
 }
 
@@ -63,6 +64,18 @@ pub fn parse_ibb(root: &Element) -> Result<IBB, Error> {
             sid: sid,
             stanza: stanza
         })
+    } else if root.is("data", ns::IBB) {
+        let seq = required_attr(root, "seq", Error::ParseError("Required attribute 'seq' missing in data element."))?;
+        let sid = required_attr(root, "sid", Error::ParseError("Required attribute 'sid' missing in data element."))?;
+        let data = base64::decode(&root.text())?;
+        for _ in root.children() {
+            return Err(Error::ParseError("Unknown child in data element."));
+        }
+        Ok(IBB::Data {
+            seq: seq,
+            sid: sid,
+            data: data
+        })
     } else {
         Err(Error::ParseError("This is not an ibb element."))
     }
@@ -76,7 +89,10 @@ mod tests {
 
     #[test]
     fn test_simple() {
-        let elem: Element = "<open xmlns='http://jabber.org/protocol/ibb' block-size='128' sid='coucou'/>".parse().unwrap();
+        let elem: Element = "<open xmlns='http://jabber.org/protocol/ibb' block-size='3' sid='coucou'/>".parse().unwrap();
+        ibb::parse_ibb(&elem).unwrap();
+
+        let elem: Element = "<data xmlns='http://jabber.org/protocol/ibb' seq='0' sid='coucou'>AAAA</data>".parse().unwrap();
         ibb::parse_ibb(&elem).unwrap();
     }
 
