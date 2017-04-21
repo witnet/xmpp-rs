@@ -7,7 +7,7 @@ use error::Error;
 
 use ns;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Stanza {
     Iq,
     Message,
@@ -35,9 +35,19 @@ impl FromStr for Stanza {
 
 #[derive(Debug, Clone)]
 pub enum IBB {
-    Open { block_size: u16, sid: String, stanza: Stanza },
-    Data { seq: u16, sid: String, data: Vec<u8> },
-    Close { sid: String },
+    Open {
+        block_size: u16,
+        sid: String,
+        stanza: Stanza,
+    },
+    Data {
+        seq: u16,
+        sid: String,
+        data: Vec<u8>,
+    },
+    Close {
+        sid: String,
+    },
 }
 
 fn optional_attr<T: FromStr>(root: &Element, attr: &str) -> Option<T> {
@@ -98,13 +108,35 @@ mod tests {
     #[test]
     fn test_simple() {
         let elem: Element = "<open xmlns='http://jabber.org/protocol/ibb' block-size='3' sid='coucou'/>".parse().unwrap();
-        ibb::parse_ibb(&elem).unwrap();
+        let open = ibb::parse_ibb(&elem).unwrap();
+        match open {
+            ibb::IBB::Open { block_size, sid, stanza } => {
+                assert_eq!(block_size, 3);
+                assert_eq!(sid, "coucou");
+                assert_eq!(stanza, ibb::Stanza::Iq);
+            },
+            _ => panic!(),
+        }
 
         let elem: Element = "<data xmlns='http://jabber.org/protocol/ibb' seq='0' sid='coucou'>AAAA</data>".parse().unwrap();
-        ibb::parse_ibb(&elem).unwrap();
+        let data = ibb::parse_ibb(&elem).unwrap();
+        match data {
+            ibb::IBB::Data { seq, sid, data } => {
+                assert_eq!(seq, 0);
+                assert_eq!(sid, "coucou");
+                assert_eq!(data, vec!(0, 0, 0));
+            },
+            _ => panic!(),
+        }
 
         let elem: Element = "<close xmlns='http://jabber.org/protocol/ibb' sid='coucou'/>".parse().unwrap();
-        ibb::parse_ibb(&elem).unwrap();
+        let close = ibb::parse_ibb(&elem).unwrap();
+        match close {
+            ibb::IBB::Close { sid } => {
+                assert_eq!(sid, "coucou");
+            },
+            _ => panic!(),
+        }
     }
 
     #[test]
