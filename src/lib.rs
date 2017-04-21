@@ -45,6 +45,9 @@ pub mod media_element;
 /// XEP-0224: Attention
 pub mod attention;
 
+/// XEP-0308: Last Message Correction
+pub mod message_correct;
+
 /// XEP-0390: Entity Capabilities 2.0
 pub mod ecaps2;
 
@@ -55,6 +58,7 @@ pub enum MessagePayload {
     ChatState(chatstates::ChatState),
     Receipt(receipts::Receipt),
     Attention(attention::Attention),
+    MessageCorrect(message_correct::MessageCorrect),
 }
 
 /// Parse one of the payloads of a `<message/>` element, and return `Some` of a
@@ -68,6 +72,8 @@ pub fn parse_message_payload(elem: &Element) -> Option<MessagePayload> {
         Some(MessagePayload::Receipt(receipt))
     } else if let Ok(attention) = attention::parse_attention(elem) {
         Some(MessagePayload::Attention(attention))
+    } else if let Ok(replace) = message_correct::parse_message_correct(elem) {
+        Some(MessagePayload::MessageCorrect(replace))
     } else {
         None
     }
