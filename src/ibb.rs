@@ -37,7 +37,7 @@ impl FromStr for Stanza {
 pub enum IBB {
     Open { block_size: u16, sid: String, stanza: Stanza },
     Data { seq: u16, sid: String, data: Vec<u8> },
-    Close(String),
+    Close { sid: String },
 }
 
 fn optional_attr<T: FromStr>(root: &Element, attr: &str) -> Option<T> {
@@ -76,6 +76,14 @@ pub fn parse_ibb(root: &Element) -> Result<IBB, Error> {
             sid: sid,
             data: data
         })
+    } else if root.is("close", ns::IBB) {
+        let sid = required_attr(root, "sid", Error::ParseError("Required attribute 'sid' missing in data element."))?;
+        for _ in root.children() {
+            return Err(Error::ParseError("Unknown child in close element."));
+        }
+        Ok(IBB::Close {
+            sid: sid,
+        })
     } else {
         Err(Error::ParseError("This is not an ibb element."))
     }
@@ -93,6 +101,9 @@ mod tests {
         ibb::parse_ibb(&elem).unwrap();
 
         let elem: Element = "<data xmlns='http://jabber.org/protocol/ibb' seq='0' sid='coucou'>AAAA</data>".parse().unwrap();
+        ibb::parse_ibb(&elem).unwrap();
+
+        let elem: Element = "<close xmlns='http://jabber.org/protocol/ibb' sid='coucou'/>".parse().unwrap();
         ibb::parse_ibb(&elem).unwrap();
     }
 
