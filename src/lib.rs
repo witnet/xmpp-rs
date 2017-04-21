@@ -42,6 +42,9 @@ pub mod ping;
 /// XEP-0221: Data Forms Media Element
 pub mod media_element;
 
+/// XEP-0224: Attention
+pub mod attention;
+
 /// XEP-0390: Entity Capabilities 2.0
 pub mod ecaps2;
 

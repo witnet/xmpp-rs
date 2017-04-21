@@ -25,6 +25,9 @@ pub const PING: &'static str = "urn:xmpp:ping";
 /// XEP-0221: Data Forms Media Element
 pub const MEDIA_ELEMENT: &'static str = "urn:xmpp:media-element";
 
+/// XEP-0224: Attention
+pub const ATTENTION: &'static str = "urn:xmpp:attention:0";
+
 /// XEP-0390: Entity Capabilities 2.0
 pub const ECAPS2: &'static str = "urn:xmpp:caps";
 /// XEP-0390: Entity Capabilities 2.0
