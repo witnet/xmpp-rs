@@ -1,21 +1,51 @@
+//! A crate parsing common XMPP elements into Rust structures.
+//!
+//! The main entrypoint is `parse_message_payload`, it takes a minidom
+//! `Element` reference and optionally returns `Some(MessagePayload)` if the
+//! parsing succeeded.
+//!
+//! Parsed structs can then be manipulated internally, and serialised back
+//! before being sent over the wire.
+
 extern crate minidom;
-
-pub mod error;
-pub mod ns;
-
-pub mod body;
-pub mod disco;
-pub mod data_forms;
-pub mod media_element;
-pub mod ecaps2;
-pub mod jingle;
-pub mod ping;
-pub mod chatstates;
-pub mod ibb;
-pub mod receipts;
-
 use minidom::Element;
 
+/// Error type returned by every parser on failure.
+pub mod error;
+/// XML namespace definitions used through XMPP.
+pub mod ns;
+
+/// RFC 6120: Extensible Messaging and Presence Protocol (XMPP): Core
+pub mod body;
+
+/// XEP-0004: Data Forms
+pub mod data_forms;
+
+/// XEP-0030: Service Discovery
+pub mod disco;
+
+/// XEP-0047: In-Band Bytestreams
+pub mod ibb;
+
+/// XEP-0085: Chat State Notifications
+pub mod chatstates;
+
+/// XEP-0166: Jingle
+pub mod jingle;
+
+/// XEP-0184: Message Delivery Receipts
+pub mod receipts;
+
+/// XEP-0199: XMPP Ping
+pub mod ping;
+
+/// XEP-0221: Data Forms Media Element
+pub mod media_element;
+
+/// XEP-0390: Entity Capabilities 2.0
+pub mod ecaps2;
+
+/// Lists every known payload of a `<message/>`.
 #[derive(Debug)]
 pub enum MessagePayload {
     Body(body::Body),
@@ -23,6 +53,7 @@ pub enum MessagePayload {
     Receipt(receipts::Receipt),
 }
 
+/// Parse one of the payloads of a `<message/>` element, and return `Some` of a `MessagePayload` if parsing it succeeded, `None` otherwise.
 pub fn parse_message_payload(elem: &Element) -> Option<MessagePayload> {
     if let Ok(body) = body::parse_body(elem) {
         Some(MessagePayload::Body(body))
