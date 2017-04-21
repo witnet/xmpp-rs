@@ -81,8 +81,9 @@ pub fn convert_element(root: &Element) -> Result<Vec<u8>, Error> {
     Ok(final_string)
 }
 
+// TODO: make algo into an enum.
 pub fn hash_ecaps2(data: &[u8], algo: &str) -> String {
-    match algo.as_ref() {
+    match algo {
         "sha-256" => {
             let mut hasher = Sha256::default();
             hasher.input(data);
