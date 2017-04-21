@@ -1,7 +1,6 @@
 extern crate sha2;
 extern crate sha3;
 extern crate blake2;
-extern crate base64;
 
 use disco::{Feature, Identity, Disco};
 use data_forms::DataForm;
@@ -9,6 +8,7 @@ use data_forms::DataForm;
 use self::sha2::{Sha256, Sha512, Digest};
 use self::sha3::{Sha3_256, Sha3_512};
 use self::blake2::Blake2b;
+use base64;
 
 fn compute_item(field: &str) -> Vec<u8> {
     let mut bytes = field.as_bytes().to_vec();

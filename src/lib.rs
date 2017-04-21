@@ -8,6 +8,7 @@
 //! before being sent over the wire.
 
 extern crate minidom;
+extern crate base64;
 use minidom::Element;
 
 /// Error type returned by every parser on failure.
