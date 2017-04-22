@@ -4,10 +4,7 @@ use error::Error;
 
 use ns;
 
-#[derive(Debug, Clone)]
-pub struct Body {
-    pub body: String,
-}
+pub type Body = String;
 
 pub fn parse_body(root: &Element) -> Result<Body, Error> {
     // TODO: also support components and servers.
@@ -17,7 +14,7 @@ pub fn parse_body(root: &Element) -> Result<Body, Error> {
     for _ in root.children() {
         return Err(Error::ParseError("Unknown child in body element."));
     }
-    Ok(Body { body: root.text() })
+    Ok(root.text())
 }
 
 #[cfg(test)]
