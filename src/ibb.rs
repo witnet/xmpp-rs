@@ -28,7 +28,7 @@ impl FromStr for Stanza {
         } else if s == "message" {
             Ok(Stanza::Message)
         } else {
-            Err(Error::ParseError("Unknown 'stanza' attribute."))
+            Err(Error::ParseError("Invalid 'stanza' attribute."))
         }
     }
 }
@@ -50,37 +50,35 @@ pub enum IBB {
     },
 }
 
-fn optional_attr<T: FromStr>(root: &Element, attr: &str) -> Option<T> {
+fn required_attr<T: FromStr>(root: &Element, attr: &str, err: Error) -> Result<T, Error> {
     root.attr(attr)
         .and_then(|value| value.parse().ok())
-}
-
-fn required_attr<T: FromStr>(root: &Element, attr: &str, err: Error) -> Result<T, Error> {
-    optional_attr(root, attr).ok_or(err)
+        .ok_or(err)
 }
 
 pub fn parse_ibb(root: &Element) -> Result<IBB, Error> {
     if root.is("open", ns::IBB) {
-        let block_size = required_attr(root, "block-size", Error::ParseError("Required attribute 'block-size' missing in open element."))?;
-        let sid = required_attr(root, "sid", Error::ParseError("Required attribute 'sid' missing in open element."))?;
-        let stanza = root.attr("stanza")
-                         .and_then(|value| value.parse().ok())
-                         .unwrap_or_default();
         for _ in root.children() {
             return Err(Error::ParseError("Unknown child in open element."));
         }
+        let block_size = required_attr(root, "block-size", Error::ParseError("Required attribute 'block-size' missing in open element."))?;
+        let sid = required_attr(root, "sid", Error::ParseError("Required attribute 'sid' missing in open element."))?;
+        let stanza = match root.attr("stanza") {
+            Some(stanza) => stanza.parse()?,
+            None => Default::default(),
+        };
         Ok(IBB::Open {
             block_size: block_size,
             sid: sid,
             stanza: stanza
         })
     } else if root.is("data", ns::IBB) {
-        let seq = required_attr(root, "seq", Error::ParseError("Required attribute 'seq' missing in data element."))?;
-        let sid = required_attr(root, "sid", Error::ParseError("Required attribute 'sid' missing in data element."))?;
-        let data = base64::decode(&root.text())?;
         for _ in root.children() {
             return Err(Error::ParseError("Unknown child in data element."));
         }
+        let seq = required_attr(root, "seq", Error::ParseError("Required attribute 'seq' missing in data element."))?;
+        let sid = required_attr(root, "sid", Error::ParseError("Required attribute 'sid' missing in data element."))?;
+        let data = base64::decode(&root.text())?;
         Ok(IBB::Data {
             seq: seq,
             sid: sid,
@@ -168,7 +166,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn test_invalid_stanza() {
         let elem: Element = "<open xmlns='http://jabber.org/protocol/ibb' block-size='128' sid='coucou' stanza='fdsq'/>".parse().unwrap();
         let error = ibb::parse_ibb(&elem).unwrap_err();
@@ -176,6 +173,6 @@ mod tests {
             Error::ParseError(string) => string,
             _ => panic!(),
         };
-        assert_eq!(message, "Wrong value for 'stanza' attribute in open.");
+        assert_eq!(message, "Invalid 'stanza' attribute.");
     }
 }
