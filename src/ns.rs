@@ -36,6 +36,9 @@ pub const JINGLE_FT: &'static str = "urn:xmpp:jingle:apps:file-transfer:5";
 /// XEP-0234: Jingle File Transfer
 pub const JINGLE_FT_ERROR: &'static str = "urn:xmpp:jingle:apps:file-transfer:errors:0";
 
+/// XEP-0261: Jingle In-Band Bytestreams Transport Method
+pub const JINGLE_IBB: &'static str = "urn:xmpp:jingle:transports:ibb:1";
+
 /// XEP-0300: Use of Cryptographic Hash Functions in XMPP
 pub const HASHES: &'static str = "urn:xmpp:hashes:2";
 

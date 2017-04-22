@@ -52,6 +52,9 @@ pub mod attention;
 /// XEP-0234: Jingle File Transfer
 pub mod jingle_ft;
 
+/// XEP-0261: Jingle In-Band Bytestreams Transport Method
+pub mod jingle_ibb;
+
 /// XEP-0300: Use of Cryptographic Hash Functions in XMPP
 pub mod hashes;
 
