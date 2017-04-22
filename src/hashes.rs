@@ -4,7 +4,7 @@ use error::Error;
 
 use ns;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Hash {
     pub algo: String,
     pub hash: String,
