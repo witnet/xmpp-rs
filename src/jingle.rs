@@ -375,7 +375,6 @@ mod tests {
         assert_eq!(jingle.contents[0].name, "coucou");
         assert_eq!(jingle.contents[0].senders, jingle::Senders::Both);
         assert_eq!(jingle.contents[0].disposition, "session");
-        println!("{:#?}", jingle);
 
         let elem: Element = "<jingle xmlns='urn:xmpp:jingle:1' action='session-initiate' sid='coucou'><content creator='initiator' name='coucou' senders='both'><description/><transport/></content></jingle>".parse().unwrap();
         let jingle = jingle::parse_jingle(&elem).unwrap();
