@@ -121,9 +121,9 @@ pub struct Content {
     pub disposition: String,
     pub name: String,
     pub senders: Senders,
-    pub description: String,
-    pub transport: String,
-    pub security: Option<String>,
+    pub description: (String, Element),
+    pub transport: (String, Element),
+    pub security: Option<(String, Element)>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -246,17 +246,38 @@ pub fn parse_jingle(root: &Element) -> Result<Jingle, Error> {
                     if description.is_some() {
                         return Err(Error::ParseError("Content must not have more than one description."));
                     }
-                    description = Some(stuff.ns().ok_or(Error::ParseError("Description without a namespace."))?);
+                    let namespace = stuff.ns()
+                                         .and_then(|ns| ns.parse().ok())
+                                         // TODO: is this even reachable?
+                                         .ok_or(Error::ParseError("Invalid namespace on description element."))?;
+                    description = Some((
+                        namespace,
+                        stuff.clone(),
+                    ));
                 } else if stuff.name() == "transport" {
                     if transport.is_some() {
                         return Err(Error::ParseError("Content must not have more than one transport."));
                     }
-                    transport = Some(stuff.ns().ok_or(Error::ParseError("Transport without a namespace."))?);
+                    let namespace = stuff.ns()
+                                         .and_then(|ns| ns.parse().ok())
+                                         // TODO: is this even reachable?
+                                         .ok_or(Error::ParseError("Invalid namespace on transport element."))?;
+                    transport = Some((
+                        namespace,
+                        stuff.clone(),
+                    ));
                 } else if stuff.name() == "security" {
                     if security.is_some() {
                         return Err(Error::ParseError("Content must not have more than one security."));
                     }
-                    security = stuff.ns().and_then(|ns| ns.parse().ok());
+                    let namespace = stuff.ns()
+                                         .and_then(|ns| ns.parse().ok())
+                                         // TODO: is this even reachable?
+                                         .ok_or(Error::ParseError("Invalid namespace on security element."))?;
+                    security = Some((
+                        namespace,
+                        stuff.clone(),
+                    ));
                 }
             }
             if description.is_none() {
@@ -274,7 +295,7 @@ pub fn parse_jingle(root: &Element) -> Result<Jingle, Error> {
                 senders: senders,
                 description: description,
                 transport: transport,
-                security: security.to_owned(),
+                security: security,
             });
         } else if child.is("reason", ns::JINGLE) {
             if reason_element.is_some() {
