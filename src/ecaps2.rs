@@ -4,11 +4,39 @@ extern crate blake2;
 
 use disco::{Feature, Identity, Disco};
 use data_forms::DataForm;
+use hashes::{Hash, parse_hash};
+
+use minidom::Element;
+use error::Error;
+use ns;
 
 use self::sha2::{Sha256, Sha512, Digest};
 use self::sha3::{Sha3_256, Sha3_512};
 use self::blake2::Blake2b;
 use base64;
+
+#[derive(Debug, Clone)]
+pub struct ECaps2 {
+    hashes: Vec<Hash>,
+}
+
+pub fn parse_ecaps2(root: &Element) -> Result<ECaps2, Error> {
+    if !root.is("c", ns::ECAPS2) {
+        return Err(Error::ParseError("This is not an ecaps2 element."));
+    }
+    let mut hashes = vec!();
+    for child in root.children() {
+        if child.is("hash", ns::HASHES) {
+            let hash = parse_hash(child)?;
+            hashes.push(hash);
+        } else {
+            return Err(Error::ParseError("Unknown child in ecaps2 element."));
+        }
+    }
+    Ok(ECaps2 {
+        hashes: hashes,
+    })
+}
 
 fn compute_item(field: &str) -> Vec<u8> {
     let mut bytes = field.as_bytes().to_vec();
@@ -120,8 +148,31 @@ pub fn hash_ecaps2(data: &[u8], algo: &str) -> String {
 #[cfg(test)]
 mod tests {
     use minidom::Element;
+    use error::Error;
     use disco;
     use ecaps2;
+
+    #[test]
+    fn test_parse() {
+        let elem: Element = "<c xmlns='urn:xmpp:caps'><hash xmlns='urn:xmpp:hashes:2' algo='sha-256'>K1Njy3HZBThlo4moOD5gBGhn0U0oK7/CbfLlIUDi6o4=</hash><hash xmlns='urn:xmpp:hashes:2' algo='sha3-256'>+sDTQqBmX6iG/X3zjt06fjZMBBqL/723knFIyRf0sg8=</hash></c>".parse().unwrap();
+        let ecaps2 = ecaps2::parse_ecaps2(&elem).unwrap();
+        assert_eq!(ecaps2.hashes.len(), 2);
+        assert_eq!(ecaps2.hashes[0].algo, "sha-256");
+        assert_eq!(ecaps2.hashes[0].hash, "K1Njy3HZBThlo4moOD5gBGhn0U0oK7/CbfLlIUDi6o4=");
+        assert_eq!(ecaps2.hashes[1].algo, "sha3-256");
+        assert_eq!(ecaps2.hashes[1].hash, "+sDTQqBmX6iG/X3zjt06fjZMBBqL/723knFIyRf0sg8=");
+    }
+
+    #[test]
+    fn test_invalid_child() {
+        let elem: Element = "<c xmlns='urn:xmpp:caps'><hash xmlns='urn:xmpp:hashes:2' algo='sha-256'>K1Njy3HZBThlo4moOD5gBGhn0U0oK7/CbfLlIUDi6o4=</hash><hash xmlns='urn:xmpp:hashes:1' algo='sha3-256'>+sDTQqBmX6iG/X3zjt06fjZMBBqL/723knFIyRf0sg8=</hash></c>".parse().unwrap();
+        let error = ecaps2::parse_ecaps2(&elem).unwrap_err();
+        let message = match error {
+            Error::ParseError(string) => string,
+            _ => panic!(),
+        };
+        assert_eq!(message, "Unknown child in ecaps2 element.");
+    }
 
     #[test]
     fn test_simple() {
