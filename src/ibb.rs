@@ -23,13 +23,12 @@ impl FromStr for Stanza {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Stanza, Error> {
-        if s == "iq" {
-            Ok(Stanza::Iq)
-        } else if s == "message" {
-            Ok(Stanza::Message)
-        } else {
-            Err(Error::ParseError("Invalid 'stanza' attribute."))
-        }
+        Ok(match s {
+            "iq" => Stanza::Iq,
+            "message" => Stanza::Message,
+
+            _ => return Err(Error::ParseError("Invalid 'stanza' attribute.")),
+        })
     }
 }
 
