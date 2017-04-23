@@ -17,6 +17,13 @@ pub fn parse_body(root: &Element) -> Result<Body, Error> {
     Ok(root.text())
 }
 
+pub fn serialise(body: &Body) -> Element {
+    Element::builder("body")
+            .ns(ns::JABBER_CLIENT)
+            .append(body.to_owned())
+            .build()
+}
+
 #[cfg(test)]
 mod tests {
     use minidom::Element;
