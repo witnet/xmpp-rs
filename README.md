@@ -12,6 +12,11 @@ What license is it under?
 
 LGPLv3 or later. See `COPYING` and `COPYING.LESSER`.
 
+Notes
+-----
+
+This library does not yet implement RFC7622.
+
 License yadda yadda.
 --------------------
 
