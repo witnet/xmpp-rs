@@ -10,7 +10,6 @@
 extern crate minidom;
 extern crate jid;
 extern crate base64;
-use minidom::Element;
 
 /// Error type returned by every parser on failure.
 pub mod error;

@@ -124,7 +124,6 @@ pub fn parse_jingle_ft(root: &Element) -> Result<Description, Error> {
 #[cfg(test)]
 mod tests {
     use minidom::Element;
-    use error::Error;
     use jingle_ft;
 
     #[test]

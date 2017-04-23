@@ -168,7 +168,6 @@ pub fn serialise(message: &Message) -> Element {
 mod tests {
     use std::str::FromStr;
     use minidom::Element;
-    use error::Error;
     use jid::Jid;
     use message;
 
