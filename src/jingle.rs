@@ -30,39 +30,25 @@ impl FromStr for Action {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Action, Error> {
-        if s == "content-accept" {
-            Ok(Action::ContentAccept)
-        } else if s == "content-add" {
-            Ok(Action::ContentAdd)
-        } else if s == "content-modify" {
-            Ok(Action::ContentModify)
-        } else if s == "content-reject" {
-            Ok(Action::ContentReject)
-        } else if s == "content-remove" {
-            Ok(Action::ContentRemove)
-        } else if s == "description-info" {
-            Ok(Action::DescriptionInfo)
-        } else if s == "security-info" {
-            Ok(Action::SecurityInfo)
-        } else if s == "session-accept" {
-            Ok(Action::SessionAccept)
-        } else if s == "session-info" {
-            Ok(Action::SessionInfo)
-        } else if s == "session-initiate" {
-            Ok(Action::SessionInitiate)
-        } else if s == "session-terminate" {
-            Ok(Action::SessionTerminate)
-        } else if s == "transport-accept" {
-            Ok(Action::TransportAccept)
-        } else if s == "transport-info" {
-            Ok(Action::TransportInfo)
-        } else if s == "transport-reject" {
-            Ok(Action::TransportReject)
-        } else if s == "transport-replace" {
-            Ok(Action::TransportReplace)
-        } else {
-            Err(Error::ParseError("Unknown action."))
-        }
+        Ok(match s {
+            "content-accept" => Action::ContentAccept,
+            "content-add" => Action::ContentAdd,
+            "content-modify" => Action::ContentModify,
+            "content-reject" => Action::ContentReject,
+            "content-remove" => Action::ContentRemove,
+            "description-info" => Action::DescriptionInfo,
+            "security-info" => Action::SecurityInfo,
+            "session-accept" => Action::SessionAccept,
+            "session-info" => Action::SessionInfo,
+            "session-initiate" => Action::SessionInitiate,
+            "session-terminate" => Action::SessionTerminate,
+            "transport-accept" => Action::TransportAccept,
+            "transport-info" => Action::TransportInfo,
+            "transport-reject" => Action::TransportReject,
+            "transport-replace" => Action::TransportReplace,
+
+            _ => return Err(Error::ParseError("Unknown action.")),
+        })
     }
 }
 
@@ -79,13 +65,12 @@ impl FromStr for Creator {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Creator, Error> {
-        if s == "initiator" {
-            Ok(Creator::Initiator)
-        } else if s == "responder" {
-            Ok(Creator::Responder)
-        } else {
-            Err(Error::ParseError("Unknown creator."))
-        }
+        Ok(match s {
+            "initiator" => Creator::Initiator,
+            "responder" => Creator::Responder,
+
+            _ => return Err(Error::ParseError("Unknown creator.")),
+        })
     }
 }
 
@@ -101,17 +86,14 @@ impl FromStr for Senders {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Senders, Error> {
-        if s == "both" {
-            Ok(Senders::Both)
-        } else if s == "initiator" {
-            Ok(Senders::Initiator)
-        } else if s == "none" {
-            Ok(Senders::None_)
-        } else if s == "responder" {
-            Ok(Senders::Responder)
-        } else {
-            Err(Error::ParseError("Unknown senders."))
-        }
+        Ok(match s {
+            "both" => Senders::Both,
+            "initiator" => Senders::Initiator,
+            "none" => Senders::None_,
+            "responder" => Senders::Responder,
+
+            _ => return Err(Error::ParseError("Unknown senders.")),
+        })
     }
 }
 
@@ -151,43 +133,27 @@ impl FromStr for Reason {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Reason, Error> {
-        if s == "alternative-session" {
-            Ok(Reason::AlternativeSession)
-        } else if s == "busy" {
-            Ok(Reason::Busy)
-        } else if s == "cancel" {
-            Ok(Reason::Cancel)
-        } else if s == "connectivity-error" {
-            Ok(Reason::ConnectivityError)
-        } else if s == "decline" {
-            Ok(Reason::Decline)
-        } else if s == "expired" {
-            Ok(Reason::Expired)
-        } else if s == "failed-application" {
-            Ok(Reason::FailedApplication)
-        } else if s == "failed-transport" {
-            Ok(Reason::FailedTransport)
-        } else if s == "general-error" {
-            Ok(Reason::GeneralError)
-        } else if s == "gone" {
-            Ok(Reason::Gone)
-        } else if s == "incompatible-parameters" {
-            Ok(Reason::IncompatibleParameters)
-        } else if s == "media-error" {
-            Ok(Reason::MediaError)
-        } else if s == "security-error" {
-            Ok(Reason::SecurityError)
-        } else if s == "success" {
-            Ok(Reason::Success)
-        } else if s == "timeout" {
-            Ok(Reason::Timeout)
-        } else if s == "unsupported-applications" {
-            Ok(Reason::UnsupportedApplications)
-        } else if s == "unsupported-transports" {
-            Ok(Reason::UnsupportedTransports)
-        } else {
-            Err(Error::ParseError("Unknown reason."))
-        }
+        Ok(match s {
+            "alternative-session" => Reason::AlternativeSession,
+            "busy" => Reason::Busy,
+            "cancel" => Reason::Cancel,
+            "connectivity-error" => Reason::ConnectivityError,
+            "decline" => Reason::Decline,
+            "expired" => Reason::Expired,
+            "failed-application" => Reason::FailedApplication,
+            "failed-transport" => Reason::FailedTransport,
+            "general-error" => Reason::GeneralError,
+            "gone" => Reason::Gone,
+            "incompatible-parameters" => Reason::IncompatibleParameters,
+            "media-error" => Reason::MediaError,
+            "security-error" => Reason::SecurityError,
+            "success" => Reason::Success,
+            "timeout" => Reason::Timeout,
+            "unsupported-applications" => Reason::UnsupportedApplications,
+            "unsupported-transports" => Reason::UnsupportedTransports,
+
+            _ => return Err(Error::ParseError("Unknown reason.")),
+        })
     }
 }
 
