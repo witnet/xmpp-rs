@@ -5,8 +5,7 @@ use error::Error;
 use ns;
 
 #[derive(Debug, Clone)]
-pub struct Ping {
-}
+pub struct Ping;
 
 pub fn parse_ping(root: &Element) -> Result<Ping, Error> {
     if !root.is("ping", ns::PING) {
