@@ -8,11 +8,13 @@ use error::Error;
 use ns;
 
 use disco;
+use ping;
 
 /// Lists every known payload of a `<iq/>`.
 #[derive(Debug, Clone)]
 pub enum IqPayload {
     Disco(disco::Disco),
+    Ping(ping::Ping),
 }
 
 #[derive(Debug, Clone)]
@@ -77,6 +79,8 @@ pub fn parse_iq(root: &Element) -> Result<Iq, Error> {
         } else {
             let parsed_payload = if let Ok(disco) = disco::parse_disco(elem) {
                 Some(IqPayload::Disco(disco))
+            } else if let Ok(ping) = ping::parse_ping(elem) {
+                Some(IqPayload::Ping(ping))
             } else {
                 None
             };
@@ -127,6 +131,7 @@ pub fn parse_iq(root: &Element) -> Result<Iq, Error> {
 pub fn serialise_payload(payload: &IqPayload) -> Element {
     match *payload {
         IqPayload::Disco(ref disco) => disco::serialise_disco(disco),
+        IqPayload::Ping(_) => ping::serialise_ping(),
     }
 }
 

@@ -18,6 +18,10 @@ pub fn parse_ping(root: &Element) -> Result<Ping, Error> {
     Ok(Ping {  })
 }
 
+pub fn serialise_ping() -> Element {
+    Element::builder("ping").ns(ns::PING).build()
+}
+
 #[cfg(test)]
 mod tests {
     use minidom::Element;
