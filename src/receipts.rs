@@ -24,11 +24,24 @@ pub fn parse_receipt(root: &Element) -> Result<Receipt, Error> {
     }
 }
 
+pub fn serialise(receipt: &Receipt) -> Element {
+    match *receipt {
+        Receipt::Request => Element::builder("request")
+                                    .ns(ns::RECEIPTS)
+                                    .build(),
+        Receipt::Received(ref id) => Element::builder("received")
+                                             .ns(ns::RECEIPTS)
+                                             .attr("id", id.clone())
+                                             .build(),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use minidom::Element;
     //use error::Error;
     use receipts;
+    use ns;
 
     #[test]
     fn test_simple() {
@@ -40,5 +53,17 @@ mod tests {
 
         let elem: Element = "<received xmlns='urn:xmpp:receipts' id='coucou'/>".parse().unwrap();
         receipts::parse_receipt(&elem).unwrap();
+    }
+
+    #[test]
+    fn test_serialise() {
+        let receipt = receipts::Receipt::Request;
+        let elem = receipts::serialise(&receipt);
+        assert!(elem.is("request", ns::RECEIPTS));
+
+        let receipt = receipts::Receipt::Received("coucou".to_owned());
+        let elem = receipts::serialise(&receipt);
+        assert!(elem.is("received", ns::RECEIPTS));
+        assert_eq!(elem.attr("id"), Some("coucou"));
     }
 }
