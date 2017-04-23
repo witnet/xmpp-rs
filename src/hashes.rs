@@ -28,6 +28,14 @@ pub fn parse_hash(root: &Element) -> Result<Hash, Error> {
     })
 }
 
+pub fn serialise(hash: &Hash) -> Element {
+    Element::builder("hash")
+            .ns(ns::HASHES)
+            .attr("algo", hash.algo.clone())
+            .append(hash.hash.clone())
+            .build()
+}
+
 #[cfg(test)]
 mod tests {
     use minidom::Element;
