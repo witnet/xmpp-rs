@@ -31,6 +31,15 @@ pub fn parse_delay(root: &Element) -> Result<Delay, Error> {
     })
 }
 
+pub fn serialise(delay: &Delay) -> Element {
+    Element::builder("delay")
+            .ns(ns::DELAY)
+            .attr("from", delay.from.clone())
+            .attr("stamp", delay.stamp.clone())
+            .append(delay.data.clone())
+            .build()
+}
+
 #[cfg(test)]
 mod tests {
     use minidom::Element;
@@ -66,5 +75,29 @@ mod tests {
             _ => panic!(),
         };
         assert_eq!(message, "Unknown child in delay element.");
+    }
+
+    #[test]
+    fn test_serialise() {
+        let elem: Element = "<delay xmlns='urn:xmpp:delay' stamp='2002-09-10T23:08:25Z'/>".parse().unwrap();
+        let delay = delay::Delay {
+            from: None,
+            stamp: "2002-09-10T23:08:25Z".to_owned(),
+            data: None,
+        };
+        let elem2 = delay::serialise(&delay);
+        assert_eq!(elem, elem2);
+    }
+
+    #[test]
+    fn test_serialise_data() {
+        let elem: Element = "<delay xmlns='urn:xmpp:delay' from='juliet@example.org' stamp='2002-09-10T23:08:25Z'>Reason</delay>".parse().unwrap();
+        let delay = delay::Delay {
+            from: Some(String::from("juliet@example.org")),
+            stamp: "2002-09-10T23:08:25Z".to_owned(),
+            data: Some(String::from("Reason")),
+        };
+        let elem2 = delay::serialise(&delay);
+        assert_eq!(elem, elem2);
     }
 }
