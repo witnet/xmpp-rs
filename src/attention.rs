@@ -5,9 +5,7 @@ use error::Error;
 use ns;
 
 #[derive(Debug, Clone)]
-pub enum Attention {
-    Attention,
-}
+pub struct Attention;
 
 pub fn parse_attention(root: &Element) -> Result<Attention, Error> {
     if !root.is("attention", ns::ATTENTION) {
@@ -16,7 +14,13 @@ pub fn parse_attention(root: &Element) -> Result<Attention, Error> {
     for _ in root.children() {
         return Err(Error::ParseError("Unknown child in attention element."));
     }
-    Ok(Attention::Attention)
+    Ok(Attention)
+}
+
+pub fn serialise(_: &Attention) -> Element {
+    Element::builder("attention")
+            .ns(ns::ATTENTION)
+            .build()
 }
 
 #[cfg(test)]
@@ -40,5 +44,13 @@ mod tests {
             _ => panic!(),
         };
         assert_eq!(message, "Unknown child in attention element.");
+    }
+
+    #[test]
+    fn test_serialise() {
+        let elem: Element = "<attention xmlns='urn:xmpp:attention:0'/>".parse().unwrap();
+        let attention = attention::Attention;
+        let elem2 = attention::serialise(&attention);
+        assert_eq!(elem, elem2);
     }
 }
