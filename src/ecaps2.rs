@@ -4,6 +4,7 @@ extern crate blake2;
 
 use disco::{Feature, Identity, Disco};
 use data_forms::DataForm;
+use hashes;
 use hashes::{Hash, parse_hash};
 
 use minidom::Element;
@@ -36,6 +37,17 @@ pub fn parse_ecaps2(root: &Element) -> Result<ECaps2, Error> {
     Ok(ECaps2 {
         hashes: hashes,
     })
+}
+
+pub fn serialise(ecaps2: &ECaps2) -> Element {
+    let mut c = Element::builder("c")
+                        .ns(ns::ECAPS2)
+                        .build();
+    for hash in ecaps2.hashes.clone() {
+        let hash_elem = hashes::serialise(&hash);
+        c.append_child(hash_elem);
+    }
+    c
 }
 
 fn compute_item(field: &str) -> Vec<u8> {
