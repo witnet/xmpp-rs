@@ -75,7 +75,7 @@ pub enum MessagePayload {
     Receipt(receipts::Receipt),
     Delay(delay::Delay),
     Attention(attention::Attention),
-    MessageCorrect(message_correct::MessageCorrect),
+    MessageCorrect(message_correct::Replace),
     ExplicitMessageEncryption(eme::ExplicitMessageEncryption),
 }
 
@@ -92,7 +92,7 @@ pub fn parse_message_payload(elem: &Element) -> Option<MessagePayload> {
         Some(MessagePayload::Delay(delay))
     } else if let Ok(attention) = attention::parse_attention(elem) {
         Some(MessagePayload::Attention(attention))
-    } else if let Ok(replace) = message_correct::parse_message_correct(elem) {
+    } else if let Ok(replace) = message_correct::parse_replace(elem) {
         Some(MessagePayload::MessageCorrect(replace))
     } else if let Ok(eme) = eme::parse_explicit_message_encryption(elem) {
         Some(MessagePayload::ExplicitMessageEncryption(eme))
