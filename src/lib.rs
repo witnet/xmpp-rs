@@ -21,6 +21,8 @@ pub mod ns;
 pub mod message;
 /// RFC 6120: Extensible Messaging and Presence Protocol (XMPP): Core
 pub mod presence;
+/// RFC 6120: Extensible Messaging and Presence Protocol (XMPP): Core
+pub mod iq;
 
 /// RFC 6121: Extensible Messaging and Presence Protocol (XMPP): Instant Messaging and Presence
 pub mod body;
