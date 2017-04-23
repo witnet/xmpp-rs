@@ -14,6 +14,7 @@ use ns;
 use self::sha2::{Sha256, Sha512, Digest};
 use self::sha3::{Sha3_256, Sha3_512};
 use self::blake2::Blake2b;
+use digest::VariableOutput;
 use base64;
 
 #[derive(Debug, Clone)]
@@ -137,22 +138,20 @@ pub fn hash_ecaps2(data: &[u8], algo: &str) -> String {
             let hash = hasher.result();
             base64::encode(&hash)
         },
-        /*
         "blake2b-256" => {
-            // TODO: bit length is most likely wrong here!
             let mut hasher = Blake2b::default();
             hasher.input(data);
-            let hash = hasher.result();
+            let mut buf: [u8; 32] = [0; 32];
+            let hash = hasher.variable_result(&mut buf).unwrap();
             base64::encode(&hash)
         },
         "blake2b-512" => {
-            // TODO: bit length is most likely wrong here!
             let mut hasher = Blake2b::default();
             hasher.input(data);
-            let hash = hasher.result();
+            let mut buf: [u8; 64] = [0; 64];
+            let hash = hasher.variable_result(&mut buf).unwrap();
             base64::encode(&hash)
         },
-        */
         _ => panic!(),
     }
 }
@@ -163,6 +162,7 @@ mod tests {
     use error::Error;
     use disco;
     use ecaps2;
+    use base64;
 
     #[test]
     fn test_parse() {
@@ -433,5 +433,18 @@ mod tests {
         assert_eq!(sha_256, "u79ZroNJbdSWhdSp311mddz44oHHPsEBntQ5b1jqBSY=");
         let sha3_256 = ecaps2::hash_ecaps2(&ecaps2, "sha3-256");
         assert_eq!(sha3_256, "XpUJzLAc93258sMECZ3FJpebkzuyNXDzRNwQog8eycg=");
+    }
+
+    #[test]
+    fn test_blake2b_512() {
+        let hash = ecaps2::hash_ecaps2("abc".as_bytes(), "blake2b-512");
+        let known_hash: [u8; 64] = [
+            0xBA, 0x80, 0xA5, 0x3F, 0x98, 0x1C, 0x4D, 0x0D, 0x6A, 0x27, 0x97, 0xB6, 0x9F, 0x12, 0xF6, 0xE9,
+            0x4C, 0x21, 0x2F, 0x14, 0x68, 0x5A, 0xC4, 0xB7, 0x4B, 0x12, 0xBB, 0x6F, 0xDB, 0xFF, 0xA2, 0xD1,
+            0x7D, 0x87, 0xC5, 0x39, 0x2A, 0xAB, 0x79, 0x2D, 0xC2, 0x52, 0xD5, 0xDE, 0x45, 0x33, 0xCC, 0x95,
+            0x18, 0xD3, 0x8A, 0xA8, 0xDB, 0xF1, 0x92, 0x5A, 0xB9, 0x23, 0x86, 0xED, 0xD4, 0x00, 0x99, 0x23,
+        ];
+        let known_hash = base64::encode(&known_hash);
+        assert_eq!(hash, known_hash);
     }
 }
