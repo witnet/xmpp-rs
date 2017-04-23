@@ -7,9 +7,12 @@ use error::Error;
 
 use ns;
 
+use disco;
+
 /// Lists every known payload of a `<iq/>`.
 #[derive(Debug, Clone)]
 pub enum IqPayload {
+    Disco(disco::Disco),
 }
 
 #[derive(Debug, Clone)]
@@ -67,36 +70,45 @@ pub fn parse_iq(root: &Element) -> Result<Iq, Error> {
         }
         if type_ == "error" {
             if elem.is("error", ns::JABBER_CLIENT) {
-                payload = Some(elem);
+                payload = Some(IqPayloadType::XML(elem.clone()));
             } else if root.children().collect::<Vec<_>>().len() != 2 {
                 return Err(Error::ParseError("Wrong number of children in iq element."));
             }
         } else {
-            payload = Some(elem);
+            let parsed_payload = if let Ok(disco) = disco::parse_disco(elem) {
+                Some(IqPayload::Disco(disco))
+            } else {
+                None
+            };
+
+            payload = match parsed_payload {
+                Some(payload) => Some(IqPayloadType::Parsed(payload)),
+                None => Some(IqPayloadType::XML(elem.clone())),
+            };
         }
     }
 
     let type_ = if type_ == "get" {
         if let Some(payload) = payload.clone() {
-            IqType::Get(IqPayloadType::XML(payload.clone()))
+            IqType::Get(payload.clone())
         } else {
             return Err(Error::ParseError("Wrong number of children in iq element."));
         }
     } else if type_ == "set" {
         if let Some(payload) = payload.clone() {
-            IqType::Set(IqPayloadType::XML(payload.clone()))
+            IqType::Set(payload.clone())
         } else {
             return Err(Error::ParseError("Wrong number of children in iq element."));
         }
     } else if type_ == "result" {
         if let Some(payload) = payload.clone() {
-            IqType::Result(Some(IqPayloadType::XML(payload.clone())))
+            IqType::Result(Some(payload.clone()))
         } else {
             IqType::Result(None)
         }
     } else if type_ == "error" {
         if let Some(payload) = payload.clone() {
-            IqType::Error(IqPayloadType::XML(payload.clone()))
+            IqType::Error(payload.clone())
         } else {
             return Err(Error::ParseError("Wrong number of children in iq element."));
         }
@@ -112,6 +124,12 @@ pub fn parse_iq(root: &Element) -> Result<Iq, Error> {
     })
 }
 
+pub fn serialise_payload(payload: &IqPayload) -> Element {
+    match *payload {
+        IqPayload::Disco(ref disco) => disco::serialise_disco(disco),
+    }
+}
+
 pub fn serialise(iq: &Iq) -> Element {
     let mut stanza = Element::builder("iq")
                              .ns(ns::JABBER_CLIENT)
@@ -122,9 +140,12 @@ pub fn serialise(iq: &Iq) -> Element {
                              .build();
     let elem = match iq.payload.clone() {
         IqType::Get(IqPayloadType::XML(elem)) => elem,
+        IqType::Get(IqPayloadType::Parsed(payload)) => serialise_payload(&payload),
         IqType::Set(IqPayloadType::XML(elem)) => elem,
+        IqType::Set(IqPayloadType::Parsed(payload)) => serialise_payload(&payload),
         IqType::Result(None) => return stanza,
         IqType::Result(Some(IqPayloadType::XML(elem))) => elem,
+        IqType::Result(Some(IqPayloadType::Parsed(payload))) => serialise_payload(&payload),
         IqType::Error(IqPayloadType::XML(elem)) => elem,
         _ => panic!(),
     };
@@ -137,6 +158,7 @@ mod tests {
     use minidom::Element;
     use error::Error;
     use iq;
+    use disco;
 
     #[test]
     fn test_require_type() {
@@ -152,10 +174,10 @@ mod tests {
     #[test]
     fn test_get() {
         let elem: Element = "<iq xmlns='jabber:client' type='get'>
-            <query xmlns='http://jabber.org/protocol/disco#info'/>
+            <foo/>
         </iq>".parse().unwrap();
         let iq = iq::parse_iq(&elem).unwrap();
-        let query: Element = "<query xmlns='http://jabber.org/protocol/disco#info'/>".parse().unwrap();
+        let query: Element = "<foo xmlns='jabber:client'/>".parse().unwrap();
         assert_eq!(iq.from, None);
         assert_eq!(iq.to, None);
         assert_eq!(iq.id, None);
@@ -253,5 +275,15 @@ mod tests {
         };
         let elem2 = iq::serialise(&iq2);
         assert_eq!(elem, elem2);
+    }
+
+    #[test]
+    fn test_disco() {
+        let elem: Element = "<iq xmlns='jabber:client' type='get'><query xmlns='http://jabber.org/protocol/disco#info'/></iq>".parse().unwrap();
+        let iq = iq::parse_iq(&elem).unwrap();
+        assert!(match iq.payload {
+            iq::IqType::Get(iq::IqPayloadType::Parsed(iq::IqPayload::Disco(disco::Disco { .. }))) => true,
+            _ => false,
+        });
     }
 }
