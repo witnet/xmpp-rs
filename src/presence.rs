@@ -9,12 +9,14 @@ use error::Error;
 
 use ns;
 
+use status;
 use delay;
 use ecaps2;
 
 /// Lists every known payload of a `<presence/>`.
 #[derive(Debug, Clone)]
 pub enum PresencePayload {
+    Status(status::Status),
     Delay(delay::Delay),
     ECaps2(ecaps2::ECaps2),
 }
@@ -104,7 +106,9 @@ pub fn parse_presence(root: &Element) -> Result<Presence, Error> {
     };
     let mut payloads = vec!();
     for elem in root.children() {
-        let payload = if let Ok(delay) = delay::parse_delay(elem) {
+        let payload = if let Ok(status) = status::parse_status(elem) {
+            Some(PresencePayload::Status(status))
+        } else if let Ok(delay) = delay::parse_delay(elem) {
             Some(PresencePayload::Delay(delay))
         } else if let Ok(ecaps2) = ecaps2::parse_ecaps2(elem) {
             Some(PresencePayload::ECaps2(ecaps2))
@@ -127,6 +131,7 @@ pub fn parse_presence(root: &Element) -> Result<Presence, Error> {
 
 pub fn serialise_payload(payload: &PresencePayload) -> Element {
     match *payload {
+        PresencePayload::Status(ref status) => status::serialise(status),
         PresencePayload::Delay(ref delay) => delay::serialise(delay),
         PresencePayload::ECaps2(ref ecaps2) => ecaps2::serialise(ecaps2),
     }
