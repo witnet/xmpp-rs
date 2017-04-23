@@ -29,6 +29,7 @@ mod tests {
     use minidom::Element;
     use error::Error;
     use body;
+    use ns;
 
     #[test]
     fn test_simple() {
@@ -68,5 +69,12 @@ mod tests {
             _ => panic!(),
         };
         assert_eq!(message, "Unknown attribute in body element.");
+    }
+
+    #[test]
+    fn test_serialise() {
+        let body = body::Body::from("Hello world!");
+        let elem = body::serialise(&body);
+        assert!(elem.is("body", ns::JABBER_CLIENT));
     }
 }
