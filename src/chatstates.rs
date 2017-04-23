@@ -32,11 +32,23 @@ pub fn parse_chatstate(root: &Element) -> Result<ChatState, Error> {
     }
 }
 
+pub fn serialise(chatstate: &ChatState) -> Element {
+    Element::builder(match *chatstate {
+        ChatState::Active => "active",
+        ChatState::Composing => "composing",
+        ChatState::Gone => "gone",
+        ChatState::Inactive => "inactive",
+        ChatState::Paused => "paused",
+    }).ns(ns::CHATSTATES)
+      .build()
+}
+
 #[cfg(test)]
 mod tests {
     use minidom::Element;
     use error::Error;
     use chatstates;
+    use ns;
 
     #[test]
     fn test_simple() {
@@ -76,5 +88,12 @@ mod tests {
             _ => panic!(),
         };
         assert_eq!(message, "Unknown attribute in chatstate element.");
+    }
+
+    #[test]
+    fn test_serialise() {
+        let chatstate = chatstates::ChatState::Active;
+        let elem = chatstates::serialise(&chatstate);
+        assert!(elem.is("active", ns::CHATSTATES));
     }
 }
