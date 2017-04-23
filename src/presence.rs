@@ -10,11 +10,13 @@ use error::Error;
 use ns;
 
 use delay;
+use ecaps2;
 
 /// Lists every known payload of a `<presence/>`.
 #[derive(Debug, Clone)]
 pub enum PresencePayload {
     Delay(delay::Delay),
+    ECaps2(ecaps2::ECaps2),
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -104,6 +106,8 @@ pub fn parse_presence(root: &Element) -> Result<Presence, Error> {
     for elem in root.children() {
         let payload = if let Ok(delay) = delay::parse_delay(elem) {
             Some(PresencePayload::Delay(delay))
+        } else if let Ok(ecaps2) = ecaps2::parse_ecaps2(elem) {
+            Some(PresencePayload::ECaps2(ecaps2))
         } else {
             None
         };
@@ -124,6 +128,7 @@ pub fn parse_presence(root: &Element) -> Result<Presence, Error> {
 pub fn serialise_payload(payload: &PresencePayload) -> Element {
     match *payload {
         PresencePayload::Delay(ref delay) => delay::serialise(delay),
+        PresencePayload::ECaps2(ref ecaps2) => ecaps2::serialise(ecaps2),
     }
 }
 
