@@ -30,17 +30,14 @@ impl FromStr for DataFormType {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<DataFormType, Error> {
-        if s == "cancel" {
-            Ok(DataFormType::Cancel)
-        } else if s == "form" {
-            Ok(DataFormType::Form)
-        } else if s == "result" {
-            Ok(DataFormType::Result_)
-        } else if s == "submit" {
-            Ok(DataFormType::Submit)
-        } else {
-            Err(Error::ParseError("Unknown data form type."))
-        }
+        Ok(match s {
+            "cancel" => DataFormType::Cancel,
+            "form" => DataFormType::Form,
+            "result" => DataFormType::Result_,
+            "submit" => DataFormType::Submit,
+
+            _ => return Err(Error::ParseError("Unknown data form type.")),
+        })
     }
 }
 
