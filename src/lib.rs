@@ -19,6 +19,8 @@ pub mod ns;
 /// RFC 6120: Extensible Messaging and Presence Protocol (XMPP): Core
 pub mod message;
 /// RFC 6120: Extensible Messaging and Presence Protocol (XMPP): Core
+pub mod presence;
+/// RFC 6120: Extensible Messaging and Presence Protocol (XMPP): Core
 pub mod body;
 
 /// XEP-0004: Data Forms
