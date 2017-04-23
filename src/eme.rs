@@ -25,6 +25,14 @@ pub fn parse_explicit_message_encryption(root: &Element) -> Result<ExplicitMessa
     })
 }
 
+pub fn serialise(eme: &ExplicitMessageEncryption) -> Element {
+    Element::builder("encryption")
+            .ns(ns::EME)
+            .attr("namespace", eme.namespace.clone())
+            .attr("name", eme.name.clone())
+            .build()
+}
+
 #[cfg(test)]
 mod tests {
     use minidom::Element;
@@ -64,5 +72,13 @@ mod tests {
             _ => panic!(),
         };
         assert_eq!(message, "Unknown child in encryption element.");
+    }
+
+    #[test]
+    fn test_serialise() {
+        let elem: Element = "<encryption xmlns='urn:xmpp:eme:0' namespace='coucou'/>".parse().unwrap();
+        let eme = eme::ExplicitMessageEncryption { namespace: String::from("coucou"), name: None };
+        let elem2 = eme::serialise(&eme);
+        assert_eq!(elem, elem2);
     }
 }
