@@ -34,6 +34,22 @@ pub struct Jid {
     pub resource: Option<String>,
 }
 
+impl From<Jid> for String {
+    fn from(jid: Jid) -> String {
+        let mut string = String::new();
+        if let Some(ref node) = jid.node {
+            string.push_str(node);
+            string.push('@');
+        }
+        string.push_str(&jid.domain);
+        if let Some(ref resource) = jid.resource {
+            string.push('/');
+            string.push_str(resource);
+        }
+        string
+    }
+}
+
 impl fmt::Display for Jid {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         // TODO: may need escaping
@@ -312,5 +328,10 @@ mod tests {
         assert_eq!(Jid::from_str(""), Err(JidParseError::NoDomain));
 
         assert_eq!(Jid::from_str("a/b@c"), Ok(Jid::domain_with_resource("a", "b@c")));
+    }
+
+    #[test]
+    fn serialise() {
+        assert_eq!(String::from(Jid::full("a", "b", "c")), String::from("a@b/c"));
     }
 }
