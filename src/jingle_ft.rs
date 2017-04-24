@@ -1,8 +1,10 @@
 extern crate minidom;
 
+use hashes;
 use hashes::{Hash, parse_hash};
 
-use minidom::Element;
+use minidom::{Element, IntoElements};
+use minidom::convert::ElementEmitter;
 
 use error::Error;
 use ns;
@@ -14,12 +16,29 @@ pub struct Range {
     pub hashes: Vec<Hash>,
 }
 
+impl IntoElements for Range {
+    fn into_elements(self, emitter: &mut ElementEmitter) {
+        let mut elem = Element::builder("range")
+                               .ns(ns::JINGLE_FT)
+                               .attr("offset", format!("{}", self.offset))
+                               .attr("length", match self.length {
+                                    Some(length) => Some(format!("{}", length)),
+                                    None => None
+                                })
+                               .build();
+        for hash in self.hashes {
+            elem.append_child(hashes::serialise(&hash));
+        }
+        emitter.append_child(elem);
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct File {
     pub date: Option<String>,
     pub media_type: Option<String>,
     pub name: Option<String>,
-    pub size: Option<String>,
+    pub size: Option<u64>,
     pub range: Option<Range>,
     pub hashes: Vec<Hash>,
 }
@@ -79,7 +98,7 @@ pub fn parse_jingle_ft(root: &Element) -> Result<Description, Error> {
                 if size.is_some() {
                     return Err(Error::ParseError("File must not have more than one size."));
                 }
-                size = Some(file_payload.text());
+                size = Some(file_payload.text().parse()?);
             } else if file_payload.is("range", ns::JINGLE_FT) {
                 if range.is_some() {
                     return Err(Error::ParseError("File must not have more than one range."));
@@ -193,7 +212,7 @@ mod tests {
         assert_eq!(desc.file.media_type, Some(String::from("text/plain")));
         assert_eq!(desc.file.name, Some(String::from("test.txt")));
         assert_eq!(desc.file.date, Some(String::from("2015-07-26T21:46:00")));
-        assert_eq!(desc.file.size, Some(String::from("6144")));
+        assert_eq!(desc.file.size, Some(6144u64));
         assert_eq!(desc.file.range, None);
         assert_eq!(desc.file.hashes[0].algo, "sha-1");
         assert_eq!(desc.file.hashes[0].hash, "w0mcJylzCn+AfvuGdqkty2+KP48=");
