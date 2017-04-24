@@ -144,14 +144,14 @@ pub fn serialise(iq: &Iq) -> Element {
                              .attr("type", iq.payload.clone())
                              .build();
     let elem = match iq.payload.clone() {
-        IqType::Get(IqPayloadType::XML(elem)) => elem,
-        IqType::Get(IqPayloadType::Parsed(payload)) => serialise_payload(&payload),
-        IqType::Set(IqPayloadType::XML(elem)) => elem,
-        IqType::Set(IqPayloadType::Parsed(payload)) => serialise_payload(&payload),
+        IqType::Get(IqPayloadType::XML(elem))
+      | IqType::Set(IqPayloadType::XML(elem))
+      | IqType::Result(Some(IqPayloadType::XML(elem)))
+      | IqType::Error(IqPayloadType::XML(elem)) => elem,
+        IqType::Get(IqPayloadType::Parsed(payload))
+      | IqType::Set(IqPayloadType::Parsed(payload))
+      | IqType::Result(Some(IqPayloadType::Parsed(payload))) => serialise_payload(&payload),
         IqType::Result(None) => return stanza,
-        IqType::Result(Some(IqPayloadType::XML(elem))) => elem,
-        IqType::Result(Some(IqPayloadType::Parsed(payload))) => serialise_payload(&payload),
-        IqType::Error(IqPayloadType::XML(elem)) => elem,
         _ => panic!(),
     };
     stanza.append_child(elem);
