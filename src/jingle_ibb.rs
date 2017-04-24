@@ -44,6 +44,15 @@ pub fn parse_jingle_ibb(root: &Element) -> Result<Transport, Error> {
     }
 }
 
+pub fn serialise(transport: &Transport) -> Element {
+    Element::builder("transport")
+            .ns(ns::JINGLE_IBB)
+            .attr("block-size", format!("{}", transport.block_size))
+            .attr("sid", transport.sid.clone())
+            .attr("stanza", transport.stanza.clone())
+            .build()
+}
+
 #[cfg(test)]
 mod tests {
     use minidom::Element;
