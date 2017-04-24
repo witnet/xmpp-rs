@@ -121,6 +121,54 @@ pub fn parse_jingle_ft(root: &Element) -> Result<Description, Error> {
     })
 }
 
+pub fn serialise_file(file: &File) -> Element {
+    let mut root = Element::builder("file")
+                           .ns(ns::JINGLE_FT)
+                           .build();
+    println!("{:#?}", file);
+    if let Some(ref date) = file.date {
+        root.append_child(Element::builder("date")
+                                  .ns(ns::JINGLE_FT)
+                                  .append(date.clone())
+                                  .build());
+    }
+    if let Some(ref media_type) = file.media_type {
+        root.append_child(Element::builder("media-type")
+                                  .ns(ns::JINGLE_FT)
+                                  .append(media_type.clone())
+                                  .build());
+    }
+    if let Some(ref name) = file.name {
+        root.append_child(Element::builder("name")
+                                  .ns(ns::JINGLE_FT)
+                                  .append(name.clone())
+                                  .build());
+    }
+    if let Some(ref size) = file.size {
+        root.append_child(Element::builder("size")
+                                  .ns(ns::JINGLE_FT)
+                                  .append(format!("{}", size))
+                                  .build());
+    }
+    if let Some(ref range) = file.range {
+        root.append_child(Element::builder("range")
+                                  .ns(ns::JINGLE_FT)
+                                  .append(range.clone())
+                                  .build());
+    }
+    for hash in file.hashes.clone() {
+        root.append_child(hashes::serialise(&hash));
+    }
+    root
+}
+
+pub fn serialise(desc: &Description) -> Element {
+    Element::builder("description")
+            .ns(ns::JINGLE_FT)
+            .append(serialise_file(&desc.file))
+            .build()
+}
+
 #[cfg(test)]
 mod tests {
     use minidom::Element;
