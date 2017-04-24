@@ -347,6 +347,38 @@ pub fn parse_jingle(root: &Element) -> Result<Jingle, Error> {
     })
 }
 
+pub fn serialise_content(content: &Content) -> Element {
+    let mut root = Element::builder("content")
+                           .ns(ns::JINGLE)
+                           .attr("creator", String::from(content.creator.clone()))
+                           .attr("disposition", content.disposition.clone())
+                           .attr("name", content.name.clone())
+                           .attr("senders", String::from(content.senders.clone()))
+                           .build();
+    root.append_child(content.description.1.clone());
+    root.append_child(content.transport.1.clone());
+    if let Some(security) = content.security.clone() {
+        root.append_child(security.1.clone());
+    }
+    root
+}
+
+pub fn serialise(jingle: &Jingle) -> Element {
+    let mut root = Element::builder("jingle")
+                           .ns(ns::JINGLE)
+                           .attr("action", String::from(jingle.action.clone()))
+                           .attr("initiator", jingle.initiator.clone())
+                           .attr("responder", jingle.responder.clone())
+                           .attr("sid", jingle.sid.clone())
+                           .build();
+    for content in jingle.contents.clone() {
+        println!("{:?}", content);
+        let content_elem = serialise_content(&content);
+        root.append_child(content_elem);
+    }
+    root
+}
+
 #[cfg(test)]
 mod tests {
     use minidom::Element;
