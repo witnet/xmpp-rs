@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use minidom::Element;
+use minidom::{Element, IntoAttributeValue};
 use base64;
 
 use error::Error;
@@ -29,6 +29,15 @@ impl FromStr for Stanza {
 
             _ => return Err(Error::ParseError("Invalid 'stanza' attribute.")),
         })
+    }
+}
+
+impl IntoAttributeValue for Stanza {
+    fn into_attribute_value(self) -> Option<String> {
+        match self {
+            Stanza::Iq => None,
+            Stanza::Message => Some(String::from("message")),
+        }
     }
 }
 
