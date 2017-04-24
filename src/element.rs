@@ -197,7 +197,15 @@ impl Element {
             match e {
                 ReaderEvent::StartElement { name, attributes, namespace } => {
                     let attributes = attributes.into_iter()
-                                               .map(|o| Attribute::new(o.name.local_name, o.value))
+                                               .map(|o| {
+                                                    Attribute::new(
+                                                        match o.name.prefix {
+                                                            Some(prefix) => format!("{}:{}", prefix, o.name.local_name),
+                                                            None => o.name.local_name
+                                                        },
+                                                        o.value
+                                                    )
+                                                })
                                                .collect();
                     let ns = if let Some(ref prefix) = name.prefix {
                         namespace.get(prefix)
@@ -205,6 +213,7 @@ impl Element {
                     else {
                         namespace.get(NS_NO_PREFIX)
                     }.map(|s| s.to_owned());
+
                     let mut root = Element::new(name.local_name, ns, attributes, Vec::new());
                     root.from_reader_inner(reader)?;
                     return Ok(root);
@@ -223,7 +232,15 @@ impl Element {
             match e {
                 ReaderEvent::StartElement { name, attributes, namespace } => {
                     let attributes = attributes.into_iter()
-                                               .map(|o| Attribute::new(o.name.local_name, o.value))
+                                               .map(|o| {
+                                                    Attribute::new(
+                                                        match o.name.prefix {
+                                                            Some(prefix) => format!("{}:{}", prefix, o.name.local_name),
+                                                            None => o.name.local_name
+                                                        },
+                                                        o.value
+                                                    )
+                                                })
                                                .collect();
                     let ns = if let Some(ref prefix) = name.prefix {
                         namespace.get(prefix)
