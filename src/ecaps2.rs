@@ -143,14 +143,14 @@ pub fn hash_ecaps2(data: &[u8], algo: &str) -> String {
             hasher.input(data);
             let mut buf: [u8; 32] = [0; 32];
             let hash = hasher.variable_result(&mut buf).unwrap();
-            base64::encode(&hash)
+            base64::encode(hash)
         },
         "blake2b-512" => {
             let mut hasher = Blake2b::default();
             hasher.input(data);
             let mut buf: [u8; 64] = [0; 64];
             let hash = hasher.variable_result(&mut buf).unwrap();
-            base64::encode(&hash)
+            base64::encode(hash)
         },
         _ => panic!(),
     }
