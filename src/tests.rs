@@ -94,3 +94,14 @@ fn namespace_propagation_works() {
                    .get_child("grandchild", "root_ns").unwrap()
                    .ns(), root.ns());
 }
+
+#[test]
+fn two_elements_with_same_arguments_different_order_are_equal() {
+    let elem1: Element = "<a b='a' c=''/>".parse().unwrap();
+    let elem2: Element = "<a c='' b='a'/>".parse().unwrap();
+    assert_eq!(elem1, elem2);
+
+    let elem1: Element = "<a b='a' c=''/>".parse().unwrap();
+    let elem2: Element = "<a c='d' b='a'/>".parse().unwrap();
+    assert_ne!(elem1, elem2);
+}

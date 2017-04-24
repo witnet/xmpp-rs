@@ -20,13 +20,27 @@ use std::slice;
 
 use convert::{IntoElements, IntoAttributeValue, ElementEmitter};
 
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, Eq)]
 /// A struct representing a DOM Element.
 pub struct Element {
     name: String,
     namespace: Option<String>,
     attributes: Vec<Attribute>,
     children: Vec<Node>,
+}
+
+impl PartialEq for Element {
+    fn eq(&self, other: &Element) -> bool {
+        let mut my_attr = self.attributes.clone();
+        my_attr.sort();
+        let mut other_attr = other.attributes.clone();
+        other_attr.sort();
+
+        self.name == other.name &&
+        self.namespace == other.namespace &&
+        my_attr == other_attr &&
+        self.children == other.children
+    }
 }
 
 impl fmt::Debug for Element {
