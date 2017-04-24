@@ -52,6 +52,28 @@ impl FromStr for Action {
     }
 }
 
+impl From<Action> for String {
+    fn from(action: Action) -> String {
+        String::from(match action {
+            Action::ContentAccept => "content-accept",
+            Action::ContentAdd => "content-add",
+            Action::ContentModify => "content-modify",
+            Action::ContentReject => "content-reject",
+            Action::ContentRemove => "content-remove",
+            Action::DescriptionInfo => "description-info",
+            Action::SecurityInfo => "security-info",
+            Action::SessionAccept => "session-accept",
+            Action::SessionInfo => "session-info",
+            Action::SessionInitiate => "session-initiate",
+            Action::SessionTerminate => "session-terminate",
+            Action::TransportAccept => "transport-accept",
+            Action::TransportInfo => "transport-info",
+            Action::TransportReject => "transport-reject",
+            Action::TransportReplace => "transport-replace",
+        })
+    }
+}
+
 // TODO: use a real JID type.
 type Jid = String;
 
@@ -70,6 +92,15 @@ impl FromStr for Creator {
             "responder" => Creator::Responder,
 
             _ => return Err(Error::ParseError("Unknown creator.")),
+        })
+    }
+}
+
+impl From<Creator> for String {
+    fn from(creator: Creator) -> String {
+        String::from(match creator {
+            Creator::Initiator => "initiator",
+            Creator::Responder => "responder",
         })
     }
 }
@@ -93,6 +124,17 @@ impl FromStr for Senders {
             "responder" => Senders::Responder,
 
             _ => return Err(Error::ParseError("Unknown senders.")),
+        })
+    }
+}
+
+impl From<Senders> for String {
+    fn from(senders: Senders) -> String {
+        String::from(match senders {
+            Senders::Both => "both",
+            Senders::Initiator => "initiator",
+            Senders::None_ => "none",
+            Senders::Responder => "responder",
         })
     }
 }
