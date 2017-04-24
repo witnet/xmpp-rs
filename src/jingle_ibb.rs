@@ -10,9 +10,9 @@ use ibb::Stanza;
 
 #[derive(Debug, Clone)]
 pub struct Transport {
-    block_size: u16,
-    sid: String,
-    stanza: Stanza,
+    pub block_size: u16,
+    pub sid: String,
+    pub stanza: Stanza,
 }
 
 fn optional_attr<T: FromStr>(root: &Element, attr: &str) -> Option<T> {
