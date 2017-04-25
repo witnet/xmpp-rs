@@ -11,10 +11,10 @@ use minidom::Element;
 use error::Error;
 use ns;
 
-use self::sha2::{Sha256, Sha512, Digest};
+use self::sha2::{Sha256, Sha512};
 use self::sha3::{Sha3_256, Sha3_512};
 use self::blake2::Blake2b;
-use digest::VariableOutput;
+use digest::{Digest, VariableOutput};
 use base64;
 
 #[derive(Debug, Clone)]
