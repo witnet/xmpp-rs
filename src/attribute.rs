@@ -9,7 +9,7 @@ use std::fmt;
 /// This is of the form: `name`="`value`"
 ///
 /// This does not support prefixed/namespaced attributes yet.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Ord, PartialOrd)]
 pub struct Attribute {
     /// The name of the attribute.
     pub name: String,
