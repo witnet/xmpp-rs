@@ -9,7 +9,7 @@ A minimal DOM library on top of xml-rs.
 What license is it under?
 -------------------------
 
-MIT or later. See `LICENSE`.
+MIT. See `LICENSE`.
 
 License yadda yadda.
 --------------------
