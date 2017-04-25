@@ -1,14 +1,14 @@
 [package]
 name = "minidom"
-version = "0.1.1"
-authors = ["lumi <lumi@pew.im>"]
+version = "0.2.0"
+authors = ["lumi <lumi@pew.im>", "Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>", "Bastien Orivel <eijebong+minidom@bananium.fr>"]
 description = "A small, simple DOM implementation on top of xml-rs."
 homepage = "https://gitlab.com/lumi/minidom-rs"
 repository = "https://gitlab.com/lumi/minidom-rs"
 documentation = "https://docs.rs/minidom"
 readme = "README.md"
 keywords = ["xml"]
-license = "LGPL-3.0+"
+license = "MIT"
 
 [badges]
 gitlab = { repository = "lumi/minidom-rs" }
