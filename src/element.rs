@@ -2,12 +2,12 @@
 
 use std::io::prelude::*;
 use std::io::Cursor;
+use std::collections::BTreeMap;
+use std::iter::FromIterator;
 
 use std::fmt;
 
 use error::Error;
-
-use attribute::Attribute;
 
 use xml::reader::{XmlEvent as ReaderEvent, EventReader};
 use xml::writer::{XmlEvent as WriterEvent, EventWriter};
@@ -20,28 +20,15 @@ use std::slice;
 
 use convert::{IntoElements, IntoAttributeValue, ElementEmitter};
 
-#[derive(Clone, Eq)]
+#[derive(Clone, PartialEq, Eq)]
 /// A struct representing a DOM Element.
 pub struct Element {
     name: String,
     namespace: Option<String>,
-    attributes: Vec<Attribute>,
+    attributes: BTreeMap<String, String>,
     children: Vec<Node>,
 }
 
-impl PartialEq for Element {
-    fn eq(&self, other: &Element) -> bool {
-        let mut my_attr = self.attributes.clone();
-        my_attr.sort();
-        let mut other_attr = other.attributes.clone();
-        other_attr.sort();
-
-        self.name == other.name &&
-        self.namespace == other.namespace &&
-        my_attr == other_attr &&
-        self.children == other.children
-    }
-}
 
 impl fmt::Debug for Element {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
@@ -50,7 +37,7 @@ impl fmt::Debug for Element {
             write!(fmt, " xmlns=\"{}\"", ns)?;
         }
         for attr in &self.attributes {
-            write!(fmt, " {}", attr)?;
+            write!(fmt, " {}=\"{}\"", attr.0, attr.1)?;
         }
         if self.children.is_empty() {
             write!(fmt, "/>")?;
@@ -92,7 +79,7 @@ pub enum Node {
 }
 
 impl Element {
-    fn new(name: String, namespace: Option<String>, attributes: Vec<Attribute>, children: Vec<Node>) -> Element {
+    fn new(name: String, namespace: Option<String>, attributes: BTreeMap<String, String>, children: Vec<Node>) -> Element {
         Element {
             name: name,
             namespace: namespace,
@@ -122,7 +109,7 @@ impl Element {
     /// ```
     pub fn builder<S: Into<String>>(name: S) -> ElementBuilder {
         ElementBuilder {
-            root: Element::new(name.into(), None, Vec::new(), Vec::new()),
+            root: Element::new(name.into(), None, BTreeMap::new(), Vec::new()),
         }
     }
 
@@ -144,7 +131,7 @@ impl Element {
         Element {
             name: name.into(),
             namespace: None,
-            attributes: Vec::new(),
+            attributes: BTreeMap::new(),
             children: Vec::new(),
         }
     }
@@ -162,10 +149,8 @@ impl Element {
 
     /// Returns a reference to the value of the given attribute, if it exists, else `None`.
     pub fn attr(&self, name: &str) -> Option<&str> {
-        for attr in &self.attributes {
-            if attr.name == name {
-                return Some(&attr.value);
-            }
+        if let Some(value) = self.attributes.get(name) {
+            return Some(&value)
         }
         None
     }
@@ -174,14 +159,14 @@ impl Element {
     pub fn set_attr<S: Into<String>, V: IntoAttributeValue>(&mut self, name: S, val: V) {
         let name = name.into();
         let val = val.into_attribute_value();
-        for attr in &mut self.attributes {
-            if attr.name == name {
-                attr.value = val.expect("removing existing value via set_attr, this is not yet supported (TODO)"); // TODO
-                return;
-            }
+
+        if let Some(value) = self.attributes.get_mut(&name) {
+            *value = val.expect("removing existing value via set_attr, this is not yet supported (TODO)"); // TODO
+            return;
         }
+
         if let Some(val) = val {
-            self.attributes.push(Attribute::new(name, val));
+            self.attributes.insert(name, val);
         }
     }
 
@@ -212,13 +197,11 @@ impl Element {
                 ReaderEvent::StartElement { name, attributes, namespace } => {
                     let attributes = attributes.into_iter()
                                                .map(|o| {
-                                                    Attribute::new(
-                                                        match o.name.prefix {
-                                                            Some(prefix) => format!("{}:{}", prefix, o.name.local_name),
-                                                            None => o.name.local_name
-                                                        },
-                                                        o.value
-                                                    )
+                                                    (match o.name.prefix {
+                                                        Some(prefix) => format!("{}:{}", prefix, o.name.local_name),
+                                                        None => o.name.local_name
+                                                    },
+                                                    o.value)
                                                 })
                                                .collect();
                     let ns = if let Some(ref prefix) = name.prefix {
@@ -247,13 +230,11 @@ impl Element {
                 ReaderEvent::StartElement { name, attributes, namespace } => {
                     let attributes = attributes.into_iter()
                                                .map(|o| {
-                                                    Attribute::new(
-                                                        match o.name.prefix {
-                                                            Some(prefix) => format!("{}:{}", prefix, o.name.local_name),
-                                                            None => o.name.local_name
-                                                        },
-                                                        o.value
-                                                    )
+                                                    (match o.name.prefix {
+                                                        Some(prefix) => format!("{}:{}", prefix, o.name.local_name),
+                                                        None => o.name.local_name
+                                                    },
+                                                    o.value)
                                                 })
                                                .collect();
                     let ns = if let Some(ref prefix) = name.prefix {
@@ -297,7 +278,7 @@ impl Element {
             start = start.default_ns(ns.as_ref());
         }
         for attr in &self.attributes { // TODO: I think this could be done a lot more efficiently
-            start = start.attr(Name::local(&attr.name), &attr.value);
+            start = start.attr(Name::local(&attr.0), &attr.1);
         }
         writer.write(start)?;
         for child in &self.children {
@@ -582,7 +563,7 @@ impl ElementBuilder {
 fn test_element_new() {
     let elem = Element::new( "name".to_owned()
                            , Some("namespace".to_owned())
-                           , vec![ Attribute::new("name", "value") ]
+                           , BTreeMap::from_iter(vec![ ("name".to_string(), "value".to_string()) ].into_iter() )
                            , Vec::new() );
 
     assert_eq!(elem.name(), "name");

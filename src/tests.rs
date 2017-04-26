@@ -7,7 +7,7 @@ use xml::writer::EventWriter;
 
 use element::Element;
 
-const TEST_STRING: &'static str = r#"<?xml version="1.0" encoding="utf-8"?><root xmlns="root_ns" xml:lang="en" a="b">meow<child c="d" /><child xmlns="child_ns" d="e" xml:lang="fr" />nya</root>"#;
+const TEST_STRING: &'static str = r#"<?xml version="1.0" encoding="utf-8"?><root xmlns="root_ns" a="b" xml:lang="en">meow<child c="d" /><child xmlns="child_ns" d="e" xml:lang="fr" />nya</root>"#;
 
 fn build_test_tree() -> Element {
     let mut root = Element::builder("root")
