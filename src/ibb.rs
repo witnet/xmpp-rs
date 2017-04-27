@@ -105,6 +105,33 @@ pub fn parse_ibb(root: &Element) -> Result<IBB, Error> {
     }
 }
 
+pub fn serialise(ibb: &IBB) -> Element {
+    match *ibb {
+        IBB::Open { ref block_size, ref sid, ref stanza } => {
+            Element::builder("open")
+                    .ns(ns::IBB)
+                    .attr("block-size", format!("{}", block_size))
+                    .attr("sid", sid.to_owned())
+                    .attr("stanza", stanza.to_owned())
+                    .build()
+        },
+        IBB::Data { ref seq, ref sid, ref data } => {
+            Element::builder("data")
+                    .ns(ns::IBB)
+                    .attr("seq", format!("{}", seq))
+                    .attr("sid", sid.to_owned())
+                    .attr("data", base64::encode(&data))
+                    .build()
+        },
+        IBB::Close { ref sid } => {
+            Element::builder("close")
+                    .ns(ns::IBB)
+                    .attr("sid", sid.to_owned())
+                    .build()
+        },
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use minidom::Element;
