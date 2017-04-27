@@ -10,7 +10,7 @@ pub enum Error {
     ParseError(&'static str),
     IoError(io::Error),
     XMLError(minidom::Error),
-    Base64Error(base64::Base64Error),
+    Base64Error(base64::DecodeError),
     ParseIntError(num::ParseIntError),
 }
 
@@ -26,8 +26,8 @@ impl From<minidom::Error> for Error {
     }
 }
 
-impl From<base64::Base64Error> for Error {
-    fn from(err: base64::Base64Error) -> Error {
+impl From<base64::DecodeError> for Error {
+    fn from(err: base64::DecodeError) -> Error {
         Error::Base64Error(err)
     }
 }
