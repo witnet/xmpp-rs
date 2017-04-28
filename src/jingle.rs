@@ -2,7 +2,8 @@ extern crate minidom;
 
 use std::str::FromStr;
 
-use minidom::Element;
+use minidom::{Element, IntoElements};
+use minidom::convert::ElementEmitter;
 
 use error::Error;
 use ns;
@@ -199,6 +200,31 @@ impl FromStr for Reason {
     }
 }
 
+impl IntoElements for Reason {
+    fn into_elements(self, emitter: &mut ElementEmitter) {
+        let elem = Element::builder(match self {
+            Reason::AlternativeSession => "alternative-session",
+            Reason::Busy => "busy",
+            Reason::Cancel => "cancel",
+            Reason::ConnectivityError => "connectivity-error",
+            Reason::Decline => "decline",
+            Reason::Expired => "expired",
+            Reason::FailedApplication => "failed-application",
+            Reason::FailedTransport => "failed-transport",
+            Reason::GeneralError => "general-error",
+            Reason::Gone => "gone",
+            Reason::IncompatibleParameters => "incompatible-parameters",
+            Reason::MediaError => "media-error",
+            Reason::SecurityError => "security-error",
+            Reason::Success => "success",
+            Reason::Timeout => "timeout",
+            Reason::UnsupportedApplications => "unsupported-applications",
+            Reason::UnsupportedTransports => "unsupported-transports",
+        }).build();
+        emitter.append_child(elem);
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct ReasonElement {
     pub reason: Reason,
@@ -375,6 +401,13 @@ pub fn serialise(jingle: &Jingle) -> Element {
         println!("{:?}", content);
         let content_elem = serialise_content(&content);
         root.append_child(content_elem);
+    }
+    if let Some(ref reason) = jingle.reason {
+        let reason_elem = Element::builder("reason")
+                                  .append(reason.reason.clone())
+                                  .append(reason.text.clone())
+                                  .build();
+        root.append_child(reason_elem);
     }
     root
 }
