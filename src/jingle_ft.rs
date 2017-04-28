@@ -50,8 +50,9 @@ pub struct Description {
 }
 
 #[derive(Debug, Clone)]
-pub struct Creator {
-    pub creator: String,
+pub enum Creator {
+    Initiator,
+    Responder,
 }
 
 #[derive(Debug, Clone)]
