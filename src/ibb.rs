@@ -120,7 +120,7 @@ pub fn serialise(ibb: &IBB) -> Element {
                     .ns(ns::IBB)
                     .attr("seq", format!("{}", seq))
                     .attr("sid", sid.to_owned())
-                    .attr("data", base64::encode(&data))
+                    .append(base64::encode(&data))
                     .build()
         },
         IBB::Close { ref sid } => {
