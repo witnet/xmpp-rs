@@ -38,6 +38,7 @@ pub struct File {
     pub date: Option<String>,
     pub media_type: Option<String>,
     pub name: Option<String>,
+    pub desc: Option<String>,
     pub size: Option<u64>,
     pub range: Option<Range>,
     pub hashes: Vec<Hash>,
@@ -71,6 +72,7 @@ pub fn parse_jingle_ft(root: &Element) -> Result<Description, Error> {
     let mut date = None;
     let mut media_type = None;
     let mut name = None;
+    let mut desc = None;
     let mut size = None;
     let mut range = None;
     let mut hashes = vec!();
@@ -94,6 +96,11 @@ pub fn parse_jingle_ft(root: &Element) -> Result<Description, Error> {
                     return Err(Error::ParseError("File must not have more than one name."));
                 }
                 name = Some(file_payload.text());
+            } else if file_payload.is("desc", ns::JINGLE_FT) {
+                if desc.is_some() {
+                    return Err(Error::ParseError("File must not have more than one desc."));
+                }
+                desc = Some(file_payload.text());
             } else if file_payload.is("size", ns::JINGLE_FT) {
                 if size.is_some() {
                     return Err(Error::ParseError("File must not have more than one size."));
@@ -133,6 +140,7 @@ pub fn parse_jingle_ft(root: &Element) -> Result<Description, Error> {
             date: date,
             media_type: media_type,
             name: name,
+            desc: desc,
             size: size,
             range: range,
             hashes: hashes,
@@ -161,6 +169,12 @@ pub fn serialise_file(file: &File) -> Element {
         root.append_child(Element::builder("name")
                                   .ns(ns::JINGLE_FT)
                                   .append(name.clone())
+                                  .build());
+    }
+    if let Some(ref desc) = file.desc {
+        root.append_child(Element::builder("desc")
+                                  .ns(ns::JINGLE_FT)
+                                  .append(desc.clone())
                                   .build());
     }
     if let Some(ref size) = file.size {
@@ -211,6 +225,7 @@ mod tests {
         let desc = jingle_ft::parse_jingle_ft(&elem).unwrap();
         assert_eq!(desc.file.media_type, Some(String::from("text/plain")));
         assert_eq!(desc.file.name, Some(String::from("test.txt")));
+        assert_eq!(desc.file.desc, None);
         assert_eq!(desc.file.date, Some(String::from("2015-07-26T21:46:00")));
         assert_eq!(desc.file.size, Some(6144u64));
         assert_eq!(desc.file.range, None);
@@ -232,6 +247,7 @@ mod tests {
         let desc = jingle_ft::parse_jingle_ft(&elem).unwrap();
         assert_eq!(desc.file.media_type, None);
         assert_eq!(desc.file.name, None);
+        assert_eq!(desc.file.desc, None);
         assert_eq!(desc.file.date, None);
         assert_eq!(desc.file.size, None);
         assert_eq!(desc.file.range, None);
