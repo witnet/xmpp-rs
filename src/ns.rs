@@ -42,17 +42,17 @@ pub const JINGLE_IBB: &'static str = "urn:xmpp:jingle:transports:ibb:1";
 /// XEP-0300: Use of Cryptographic Hash Functions in XMPP
 pub const HASHES: &'static str = "urn:xmpp:hashes:2";
 /// XEP-0300: Use of Cryptographic Hash Functions in XMPP
-pub const HASH_ALGO_SHA_256: &'static str = "urn:xmpp:hash-function-text-name:sha-256";
+pub const HASH_ALGO_SHA_256: &'static str = "urn:xmpp:hash-function-text-names:sha-256";
 /// XEP-0300: Use of Cryptographic Hash Functions in XMPP
-pub const HASH_ALGO_SHA_512: &'static str = "urn:xmpp:hash-function-text-name:sha-512";
+pub const HASH_ALGO_SHA_512: &'static str = "urn:xmpp:hash-function-text-names:sha-512";
 /// XEP-0300: Use of Cryptographic Hash Functions in XMPP
-pub const HASH_ALGO_SHA3_256: &'static str = "urn:xmpp:hash-function-text-name:sha3-256";
+pub const HASH_ALGO_SHA3_256: &'static str = "urn:xmpp:hash-function-text-names:sha3-256";
 /// XEP-0300: Use of Cryptographic Hash Functions in XMPP
-pub const HASH_ALGO_SHA3_512: &'static str = "urn:xmpp:hash-function-text-name:sha3-512";
+pub const HASH_ALGO_SHA3_512: &'static str = "urn:xmpp:hash-function-text-names:sha3-512";
 /// XEP-0300: Use of Cryptographic Hash Functions in XMPP
-pub const HASH_ALGO_BLAKE2B_256: &'static str = "urn:xmpp:hash-function-text-name:id-blake2b256";
+pub const HASH_ALGO_BLAKE2B_256: &'static str = "urn:xmpp:hash-function-text-names:id-blake2b256";
 /// XEP-0300: Use of Cryptographic Hash Functions in XMPP
-pub const HASH_ALGO_BLAKE2B_512: &'static str = "urn:xmpp:hash-function-text-name:id-blake2b512";
+pub const HASH_ALGO_BLAKE2B_512: &'static str = "urn:xmpp:hash-function-text-names:id-blake2b512";
 
 /// XEP-0308: Last Message Correction
 pub const MESSAGE_CORRECT: &'static str = "urn:xmpp:message-correct:0";
