@@ -400,7 +400,6 @@ pub fn serialise(jingle: &Jingle) -> Element {
                            .attr("sid", jingle.sid.clone())
                            .build();
     for content in jingle.contents.clone() {
-        println!("{:?}", content);
         let content_elem = serialise_content(&content);
         root.append_child(content_elem);
     }
