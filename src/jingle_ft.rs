@@ -62,6 +62,26 @@ pub struct Checksum {
     pub file: File,
 }
 
+#[derive(Debug, Clone)]
+pub struct Received {
+    pub name: String,
+    pub creator: Creator,
+}
+
+impl IntoElements for Received {
+    fn into_elements(self, emitter: &mut ElementEmitter) {
+        let elem = Element::builder("received")
+                           .ns(ns::JINGLE_FT)
+                           .attr("name", self.name)
+                           .attr("creator", match self.creator {
+                                Creator::Initiator => "initiator",
+                                Creator::Responder => "responder",
+                            })
+                           .build();
+        emitter.append_child(elem);
+    }
+}
+
 pub fn parse_jingle_ft(root: &Element) -> Result<Description, Error> {
     if !root.is("description", ns::JINGLE_FT) {
         return Err(Error::ParseError("This is not a JingleFT description element."));
