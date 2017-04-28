@@ -239,7 +239,7 @@ pub struct Jingle {
     pub sid: String,
     pub contents: Vec<Content>,
     pub reason: Option<ReasonElement>,
-    //pub other: Vec<Element>,
+    pub other: Vec<Element>,
 }
 
 pub fn parse_jingle(root: &Element) -> Result<Jingle, Error> {
@@ -259,6 +259,7 @@ pub fn parse_jingle(root: &Element) -> Result<Jingle, Error> {
     let sid = root.attr("sid")
                   .ok_or(Error::ParseError("Jingle must have a 'sid' attribute."))?;
     let mut reason_element = None;
+    let mut other = vec!();
 
     for child in root.children() {
         if child.is("content", ns::JINGLE) {
@@ -359,7 +360,7 @@ pub fn parse_jingle(root: &Element) -> Result<Jingle, Error> {
                 text: text,
             });
         } else {
-            return Err(Error::ParseError("Unknown element in jingle."));
+            other.push(child.clone());
         }
     }
 
@@ -370,6 +371,7 @@ pub fn parse_jingle(root: &Element) -> Result<Jingle, Error> {
         sid: sid.to_owned(),
         contents: contents,
         reason: reason_element,
+        other: other,
     })
 }
 
@@ -451,14 +453,6 @@ mod tests {
             _ => panic!(),
         };
         assert_eq!(message, "Unknown action.");
-
-        let elem: Element = "<jingle xmlns='urn:xmpp:jingle:1' action='session-accept' sid='coucou'><coucou/></jingle>".parse().unwrap();
-        let error = jingle::parse_jingle(&elem).unwrap_err();
-        let message = match error {
-            Error::ParseError(string) => string,
-            _ => panic!(),
-        };
-        assert_eq!(message, "Unknown element in jingle.");
     }
 
     #[test]
