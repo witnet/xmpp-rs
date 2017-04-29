@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
-use minidom::Element;
-use minidom::IntoAttributeValue;
+use minidom::{Element, IntoElements, IntoAttributeValue};
+use minidom::convert::ElementEmitter;
 
 use jid::Jid;
 
@@ -162,6 +162,13 @@ pub fn serialise(message: &Message) -> Element {
         stanza.append_child(elem);
     }
     stanza
+}
+
+impl IntoElements for Message {
+    fn into_elements(self, emitter: &mut ElementEmitter) {
+        let elem = serialise(&self);
+        emitter.append_child(elem);
+    }
 }
 
 #[cfg(test)]
