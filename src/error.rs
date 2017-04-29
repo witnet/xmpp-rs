@@ -4,6 +4,7 @@ use std::num;
 
 use base64;
 use minidom;
+use jid;
 
 #[derive(Debug)]
 pub enum Error {
@@ -12,6 +13,7 @@ pub enum Error {
     XMLError(minidom::Error),
     Base64Error(base64::DecodeError),
     ParseIntError(num::ParseIntError),
+    JidParseError(jid::JidParseError),
 }
 
 impl From<io::Error> for Error {
@@ -35,5 +37,11 @@ impl From<base64::DecodeError> for Error {
 impl From<num::ParseIntError> for Error {
     fn from(err: num::ParseIntError) -> Error {
         Error::ParseIntError(err)
+    }
+}
+
+impl From<jid::JidParseError> for Error {
+    fn from(err: jid::JidParseError) -> Error {
+        Error::JidParseError(err)
     }
 }
