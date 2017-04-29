@@ -1,4 +1,5 @@
-use minidom::Element;
+use minidom::{Element, IntoElements};
+use minidom::convert::ElementEmitter;
 
 use error::Error;
 
@@ -38,6 +39,13 @@ pub fn serialise(delay: &Delay) -> Element {
             .attr("stamp", delay.stamp.clone())
             .append(delay.data.clone())
             .build()
+}
+
+impl IntoElements for Delay {
+    fn into_elements(self, emitter: &mut ElementEmitter) {
+        let elem = serialise(&self);
+        emitter.append_child(elem)
+    }
 }
 
 #[cfg(test)]
