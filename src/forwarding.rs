@@ -1,5 +1,4 @@
-use minidom::{Element, IntoElements};
-use minidom::convert::ElementEmitter;
+use minidom::Element;
 
 use error::Error;
 
