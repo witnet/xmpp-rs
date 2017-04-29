@@ -11,6 +11,9 @@ extern crate minidom;
 extern crate jid;
 extern crate base64;
 extern crate digest;
+extern crate sha2;
+extern crate sha3;
+extern crate blake2;
 
 /// Error type returned by every parser on failure.
 pub mod error;

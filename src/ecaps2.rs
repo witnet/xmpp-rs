@@ -1,7 +1,3 @@
-extern crate sha2;
-extern crate sha3;
-extern crate blake2;
-
 use disco::{Feature, Identity, Disco};
 use data_forms::DataForm;
 use hashes;
@@ -11,9 +7,9 @@ use minidom::Element;
 use error::Error;
 use ns;
 
-use self::sha2::{Sha256, Sha512};
-use self::sha3::{Sha3_256, Sha3_512};
-use self::blake2::Blake2b;
+use sha2::{Sha256, Sha512};
+use sha3::{Sha3_256, Sha3_512};
+use blake2::Blake2b;
 use digest::{Digest, VariableOutput};
 use base64;
 
