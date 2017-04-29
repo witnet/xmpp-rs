@@ -63,6 +63,9 @@ pub const HASH_ALGO_BLAKE2B_512: &'static str = "urn:xmpp:hash-function-text-nam
 /// XEP-0308: Last Message Correction
 pub const MESSAGE_CORRECT: &'static str = "urn:xmpp:message-correct:0";
 
+/// XEP-0313: Message Archive Management
+pub const MAM: &'static str = "urn:xmpp:mam:2";
+
 /// XEP-0359: Unique and Stable Stanza IDs
 pub const SID: &'static str = "urn:xmpp:sid:0";
 

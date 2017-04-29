@@ -80,6 +80,9 @@ pub mod hashes;
 /// XEP-0308: Last Message Correction
 pub mod message_correct;
 
+/// XEP-0313: Message Archive Management
+pub mod mam;
+
 /// XEP-0359: Unique and Stable Stanza IDs
 pub mod stanza_id;
 
