@@ -7,6 +7,8 @@ homepage = "https://hg.linkmauve.fr/xmpp-parsers"
 repository = "https://hg.linkmauve.fr/xmpp-parsers"
 keywords = ["xmpp"]
 categories = ["parsing", "network-programming"]
+license = "MPL-2.0"
+license-file = "LICENSE"
 
 [dependencies]
 minidom = "0.2.0"
