@@ -173,7 +173,6 @@ pub fn serialise_file(file: &File) -> Element {
     let mut root = Element::builder("file")
                            .ns(ns::JINGLE_FT)
                            .build();
-    println!("{:#?}", file);
     if let Some(ref date) = file.date {
         root.append_child(Element::builder("date")
                                   .ns(ns::JINGLE_FT)

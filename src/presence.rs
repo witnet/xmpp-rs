@@ -174,16 +174,14 @@ mod tests {
     #[test]
     fn test_serialise() {
         let elem: Element = "<presence xmlns='jabber:client' type='unavailable'/>".parse().unwrap();
-        let presence = presence::parse_presence(&elem).unwrap();
-        let presence2 = presence::Presence {
+        let presence = presence::Presence {
             from: None,
             to: None,
             id: None,
             type_: presence::PresenceType::Unavailable,
             payloads: vec!(),
         };
-        let elem2 = presence::serialise(&presence2);
+        let elem2 = presence::serialise(&presence);
         assert_eq!(elem, elem2);
-        println!("{:#?}", presence);
     }
 }

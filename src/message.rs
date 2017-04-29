@@ -192,31 +192,27 @@ mod tests {
     #[test]
     fn test_serialise() {
         let elem: Element = "<message xmlns='jabber:client' type='normal'/>".parse().unwrap();
-        let message = message::parse_message(&elem).unwrap();
-        let message2 = message::Message {
+        let message = message::Message {
             from: None,
             to: None,
             id: None,
             type_: message::MessageType::Normal,
             payloads: vec!(),
         };
-        let elem2 = message::serialise(&message2);
+        let elem2 = message::serialise(&message);
         assert_eq!(elem, elem2);
-        println!("{:#?}", message);
     }
 
     #[test]
     fn test_body() {
         let elem: Element = "<message xmlns='jabber:client' to='coucou@example.org' type='chat'><body>Hello world!</body></message>".parse().unwrap();
-        let message = message::parse_message(&elem).unwrap();
-        println!("{:#?}", message);
+        message::parse_message(&elem).unwrap();
     }
 
     #[test]
     fn test_serialise_body() {
         let elem: Element = "<message xmlns='jabber:client' to='coucou@example.org' type='chat'><body>Hello world!</body></message>".parse().unwrap();
-        let message = message::parse_message(&elem).unwrap();
-        let message2 = message::Message {
+        let message = message::Message {
             from: None,
             to: Some(Jid::from_str("coucou@example.org").unwrap()),
             id: None,
@@ -225,9 +221,8 @@ mod tests {
                 message::MessagePayloadType::Parsed(message::MessagePayload::Body("Hello world!".to_owned())),
             ),
         };
-        let elem2 = message::serialise(&message2);
+        let elem2 = message::serialise(&message);
         assert_eq!(elem, elem2);
-        println!("{:#?}", message);
     }
 
     #[test]
