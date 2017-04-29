@@ -239,45 +239,126 @@ pub fn serialise_prefs(prefs: &Prefs) -> Element {
 
 #[cfg(test)]
 mod tests {
-    /*
     use minidom::Element;
     use error::Error;
     use mam;
 
     #[test]
-    fn test_simple() {
-        let elem: Element = "<replace xmlns='urn:xmpp:message-correct:0' id='coucou'/>".parse().unwrap();
+    fn test_query() {
+        let elem: Element = "<query xmlns='urn:xmpp:mam:2'/>".parse().unwrap();
         mam::parse_query(&elem).unwrap();
     }
 
     #[test]
-    fn test_invalid_child() {
-        let elem: Element = "<replace xmlns='urn:xmpp:message-correct:0'><coucou/></replace>".parse().unwrap();
-        let error = mam::parse_query(&elem).unwrap_err();
-        let message = match error {
-            Error::ParseError(string) => string,
-            _ => panic!(),
-        };
-        assert_eq!(message, "Unknown child in replace element.");
+    fn test_result() {
+        let elem: Element = r#"
+<result xmlns='urn:xmpp:mam:2' queryid='f27' id='28482-98726-73623'>
+  <forwarded xmlns='urn:xmpp:forward:0'>
+    <delay xmlns='urn:xmpp:delay' stamp='2010-07-10T23:08:25Z'/>
+    <message xmlns='jabber:client' from="witch@shakespeare.lit" to="macbeth@shakespeare.lit">
+      <body>Hail to thee</body>
+    </message>
+  </forwarded>
+</result>
+"#.parse().unwrap();
+        mam::parse_result(&elem).unwrap();
     }
 
     #[test]
-    fn test_invalid_id() {
-        let elem: Element = "<replace xmlns='urn:xmpp:message-correct:0'/>".parse().unwrap();
+    fn test_fin() {
+        let elem: Element = r#"
+<fin xmlns='urn:xmpp:mam:2'>
+  <set xmlns='http://jabber.org/protocol/rsm'>
+    <first index='0'>28482-98726-73623</first>
+    <last>09af3-cc343-b409f</last>
+  </set>
+</fin>
+"#.parse().unwrap();
+        mam::parse_fin(&elem).unwrap();
+    }
+
+    #[test]
+    fn test_query_x() {
+        let elem: Element = r#"
+<query xmlns='urn:xmpp:mam:2'>
+  <x xmlns='jabber:x:data' type='submit'>
+    <field var='FORM_TYPE' type='hidden'>
+      <value>urn:xmpp:mam:2</value>
+    </field>
+    <field var='with'>
+      <value>juliet@capulet.lit</value>
+    </field>
+  </x>
+</query>
+"#.parse().unwrap();
+        mam::parse_query(&elem).unwrap();
+    }
+
+    #[test]
+    fn test_query_x_set() {
+        let elem: Element = r#"
+<query xmlns='urn:xmpp:mam:2'>
+  <x xmlns='jabber:x:data' type='submit'>
+    <field var='FORM_TYPE' type='hidden'>
+      <value>urn:xmpp:mam:2</value>
+    </field>
+    <field var='start'>
+      <value>2010-08-07T00:00:00Z</value>
+    </field>
+  </x>
+  <set xmlns='http://jabber.org/protocol/rsm'>
+    <max>10</max>
+  </set>
+</query>
+"#.parse().unwrap();
+        mam::parse_query(&elem).unwrap();
+    }
+
+    #[test]
+    fn test_prefs_get() {
+        let elem: Element = "<prefs xmlns='urn:xmpp:mam:2'/>".parse().unwrap();
+        mam::parse_prefs(&elem).unwrap();
+
+        let elem: Element = r#"
+<prefs xmlns='urn:xmpp:mam:2' default='roster'>
+  <always/>
+  <never/>
+</prefs>
+"#.parse().unwrap();
+        mam::parse_prefs(&elem).unwrap();
+    }
+
+    #[test]
+    fn test_prefs_result() {
+        let elem: Element = r#"
+<prefs xmlns='urn:xmpp:mam:2' default='roster'>
+  <always>
+    <jid>romeo@montague.lit</jid>
+  </always>
+  <never>
+    <jid>montague@montague.lit</jid>
+  </never>
+</prefs>
+"#.parse().unwrap();
+        mam::parse_prefs(&elem).unwrap();
+    }
+
+    #[test]
+    fn test_invalid_child() {
+        let elem: Element = "<query xmlns='urn:xmpp:mam:2'><coucou/></query>".parse().unwrap();
         let error = mam::parse_query(&elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
         };
-        assert_eq!(message, "No 'id' attribute present in replace.");
+        assert_eq!(message, "Unknown child in query element.");
     }
 
     #[test]
     fn test_serialise() {
-        let elem: Element = "<replace xmlns='urn:xmpp:message-correct:0' id='coucou'/>".parse().unwrap();
-        let replace = mam::Query { id: String::from("coucou") };
-        let elem2 = mam::serialise(&replace);
+        let elem: Element = "<query xmlns='urn:xmpp:mam:2'/>".parse().unwrap();
+        let replace = mam::Query { queryid: None, node: None, form: None, set: None };
+        let elem2 = mam::serialise_query(&replace);
         assert_eq!(elem, elem2);
     }
-    */
 }
