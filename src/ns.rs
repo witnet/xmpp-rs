@@ -10,6 +10,9 @@ pub const DISCO_INFO: &'static str = "http://jabber.org/protocol/disco#info";
 /// XEP-0047: In-Band Bytestreams
 pub const IBB: &'static str = "http://jabber.org/protocol/ibb";
 
+/// XEP-0059: Result Set Management
+pub const RSM: &'static str = "http://jabber.org/protocol/rsm";
+
 /// XEP-0085: Chat State Notifications
 pub const CHATSTATES: &'static str = "http://jabber.org/protocol/chatstates";
 

@@ -41,6 +41,9 @@ pub mod disco;
 /// XEP-0047: In-Band Bytestreams
 pub mod ibb;
 
+/// XEP-0059: Result Set Management
+pub mod rsm;
+
 /// XEP-0085: Chat State Notifications
 pub mod chatstates;
 
