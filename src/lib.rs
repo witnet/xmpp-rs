@@ -74,6 +74,9 @@ pub mod hashes;
 /// XEP-0308: Last Message Correction
 pub mod message_correct;
 
+/// XEP-0359: Unique and Stable Stanza IDs
+pub mod stanza_id;
+
 /// XEP-0380: Explicit Message Encryption
 pub mod eme;
 
