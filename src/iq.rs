@@ -8,6 +8,7 @@ use error::Error;
 use ns;
 
 use disco;
+use ibb;
 use jingle;
 use ping;
 
@@ -15,6 +16,7 @@ use ping;
 #[derive(Debug, Clone)]
 pub enum IqPayload {
     Disco(disco::Disco),
+    IBB(ibb::IBB),
     Jingle(jingle::Jingle),
     Ping(ping::Ping),
 }
@@ -81,6 +83,8 @@ pub fn parse_iq(root: &Element) -> Result<Iq, Error> {
         } else {
             let parsed_payload = if let Ok(disco) = disco::parse_disco(elem) {
                 Some(IqPayload::Disco(disco))
+            } else if let Ok(ibb) = ibb::parse_ibb(elem) {
+                Some(IqPayload::IBB(ibb))
             } else if let Ok(jingle) = jingle::parse_jingle(elem) {
                 Some(IqPayload::Jingle(jingle))
             } else if let Ok(ping) = ping::parse_ping(elem) {
@@ -135,6 +139,7 @@ pub fn parse_iq(root: &Element) -> Result<Iq, Error> {
 pub fn serialise_payload(payload: &IqPayload) -> Element {
     match *payload {
         IqPayload::Disco(ref disco) => disco::serialise_disco(disco),
+        IqPayload::IBB(ref ibb) => ibb::serialise(ibb),
         IqPayload::Jingle(ref jingle) => jingle::serialise(jingle),
         IqPayload::Ping(_) => ping::serialise_ping(),
     }
