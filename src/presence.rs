@@ -5,6 +5,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use std::str::FromStr;
+use std::collections::BTreeMap;
 
 use minidom::{Element, IntoElements, IntoAttributeValue};
 use minidom::convert::ElementEmitter;
@@ -38,6 +39,7 @@ impl IntoElements for Show {
     }
 }
 
+pub type Lang = String;
 pub type Status = String;
 
 pub type Priority = i8;
@@ -119,7 +121,7 @@ pub struct Presence {
     pub id: Option<String>,
     pub type_: PresenceType,
     pub show: Option<Show>,
-    pub statuses: Vec<Status>,
+    pub statuses: BTreeMap<Lang, Status>,
     pub priority: Priority,
     pub payloads: Vec<PresencePayloadType>,
 }
@@ -139,7 +141,7 @@ pub fn parse_presence(root: &Element) -> Result<Presence, Error> {
         None => Default::default(),
     };
     let mut show = None;
-    let mut statuses = vec!();
+    let mut statuses = BTreeMap::new();
     let mut priority = None;
     let mut payloads = vec!();
     for elem in root.children() {
@@ -162,7 +164,8 @@ pub fn parse_presence(root: &Element) -> Result<Presence, Error> {
             for _ in elem.children() {
                 return Err(Error::ParseError("Unknown child in status element."));
             }
-            statuses.push(elem.text());
+            let lang = elem.attr("xml:lang").unwrap_or("").to_owned();
+            statuses.insert(lang, elem.text());
         } else if elem.is("priority", ns::JABBER_CLIENT) {
             if priority.is_some() {
                 return Err(Error::ParseError("More than one priority element in a presence."));
@@ -242,6 +245,7 @@ pub fn serialise(presence: &Presence) -> Element {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::BTreeMap;
     use minidom::Element;
     use error::Error;
     use presence;
@@ -267,7 +271,7 @@ mod tests {
             id: None,
             type_: presence::PresenceType::Unavailable,
             show: None,
-            statuses: vec!(),
+            statuses: BTreeMap::new(),
             priority: 0i8,
             payloads: vec!(),
         };
@@ -313,7 +317,7 @@ mod tests {
         let presence = presence::parse_presence(&elem).unwrap();
         assert_eq!(presence.payloads.len(), 0);
         assert_eq!(presence.statuses.len(), 1);
-        assert_eq!(presence.statuses[0], "");
+        assert_eq!(presence.statuses[""], "");
     }
 
     #[test]
@@ -322,7 +326,7 @@ mod tests {
         let presence = presence::parse_presence(&elem).unwrap();
         assert_eq!(presence.payloads.len(), 0);
         assert_eq!(presence.statuses.len(), 1);
-        assert_eq!(presence.statuses[0], "Here!");
+        assert_eq!(presence.statuses[""], "Here!");
     }
 
     #[test]
@@ -331,8 +335,8 @@ mod tests {
         let presence = presence::parse_presence(&elem).unwrap();
         assert_eq!(presence.payloads.len(), 0);
         assert_eq!(presence.statuses.len(), 2);
-        assert_eq!(presence.statuses[0], "Here!");
-        assert_eq!(presence.statuses[1], "Là!");
+        assert_eq!(presence.statuses[""], "Here!");
+        assert_eq!(presence.statuses["fr"], "Là!");
     }
 
     #[test]
@@ -398,7 +402,7 @@ mod tests {
             id: None,
             type_: presence::PresenceType::Unavailable,
             show: None,
-            statuses: vec!(),
+            statuses: BTreeMap::new(),
             priority: 0i8,
             payloads: payloads,
         };
