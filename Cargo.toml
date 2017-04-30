@@ -14,4 +14,4 @@ license = "MIT"
 gitlab = { repository = "lumi/minidom-rs" }
 
 [dependencies]
-xml-rs = "0.3.6"
+xml-rs = "0.4.1"
