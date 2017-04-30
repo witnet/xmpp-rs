@@ -14,7 +14,7 @@ use xml::writer::Error as EmitterError;
 
 use minidom::Error as MinidomError;
 
-use base64::Base64Error;
+use base64::DecodeError;
 
 use components::sasl_error::SaslError;
 
@@ -27,7 +27,7 @@ pub enum Error {
     HandshakeError(HandshakeError<TcpStream>),
     OpenSslErrorStack(ErrorStack),
     MinidomError(MinidomError),
-    Base64Error(Base64Error),
+    Base64Error(DecodeError),
     SaslError(Option<String>),
     XmppSaslError(SaslError),
     FormatError(FormatError),
@@ -71,8 +71,8 @@ impl From<MinidomError> for Error {
     }
 }
 
-impl From<Base64Error> for Error {
-    fn from(err: Base64Error) -> Error {
+impl From<DecodeError> for Error {
+    fn from(err: DecodeError) -> Error {
         Error::Base64Error(err)
     }
 }
