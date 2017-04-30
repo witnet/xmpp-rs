@@ -165,7 +165,9 @@ pub fn parse_presence(root: &Element) -> Result<Presence, Error> {
                 return Err(Error::ParseError("Unknown child in status element."));
             }
             let lang = elem.attr("xml:lang").unwrap_or("").to_owned();
-            statuses.insert(lang, elem.text());
+            if let Some(_) = statuses.insert(lang, elem.text()) {
+                return Err(Error::ParseError("Status element present twice for the same xml:lang."));
+            }
         } else if elem.is("priority", ns::JABBER_CLIENT) {
             if priority.is_some() {
                 return Err(Error::ParseError("More than one priority element in a presence."));
@@ -337,6 +339,17 @@ mod tests {
         assert_eq!(presence.statuses.len(), 2);
         assert_eq!(presence.statuses[""], "Here!");
         assert_eq!(presence.statuses["fr"], "Là!");
+    }
+
+    #[test]
+    fn test_invalid_multiple_statuses() {
+        let elem: Element = "<presence xmlns='jabber:client'><status xml:lang='fr'>Here!</status><status xml:lang='fr'>Là!</status></presence>".parse().unwrap();
+        let error = presence::parse_presence(&elem).unwrap_err();
+        let message = match error {
+            Error::ParseError(string) => string,
+            _ => panic!(),
+        };
+        assert_eq!(message, "Status element present twice for the same xml:lang.");
     }
 
     #[test]
