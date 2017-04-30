@@ -35,8 +35,6 @@ pub mod iq;
 
 /// RFC 6121: Extensible Messaging and Presence Protocol (XMPP): Instant Messaging and Presence
 pub mod body;
-/// RFC 6121: Extensible Messaging and Presence Protocol (XMPP): Instant Messaging and Presence
-pub mod status;
 
 /// XEP-0004: Data Forms
 pub mod data_forms;

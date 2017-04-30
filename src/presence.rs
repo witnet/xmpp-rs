@@ -15,14 +15,15 @@ use error::Error;
 
 use ns;
 
-use status;
 use delay;
 use ecaps2;
+
+pub type Status = String;
 
 /// Lists every known payload of a `<presence/>`.
 #[derive(Debug, Clone)]
 pub enum PresencePayload {
-    Status(status::Status),
+    Status(Status),
     Delay(delay::Delay),
     ECaps2(ecaps2::ECaps2),
 }
@@ -112,19 +113,25 @@ pub fn parse_presence(root: &Element) -> Result<Presence, Error> {
     };
     let mut payloads = vec!();
     for elem in root.children() {
-        let payload = if let Ok(status) = status::parse_status(elem) {
-            Some(PresencePayload::Status(status))
-        } else if let Ok(delay) = delay::parse_delay(elem) {
-            Some(PresencePayload::Delay(delay))
-        } else if let Ok(ecaps2) = ecaps2::parse_ecaps2(elem) {
-            Some(PresencePayload::ECaps2(ecaps2))
+        if elem.is("status", ns::JABBER_CLIENT) {
+            for _ in elem.children() {
+                return Err(Error::ParseError("Unknown child in status element."));
+            }
+            let payload = PresencePayload::Status(elem.text());
+            payloads.push(PresencePayloadType::Parsed(payload));
         } else {
-            None
-        };
-        payloads.push(match payload {
-            Some(payload) => PresencePayloadType::Parsed(payload),
-            None => PresencePayloadType::XML(elem.clone()),
-        });
+            let payload = if let Ok(delay) = delay::parse_delay(elem) {
+                Some(PresencePayload::Delay(delay))
+            } else if let Ok(ecaps2) = ecaps2::parse_ecaps2(elem) {
+                Some(PresencePayload::ECaps2(ecaps2))
+            } else {
+                None
+            };
+            payloads.push(match payload {
+                Some(payload) => PresencePayloadType::Parsed(payload),
+                None => PresencePayloadType::XML(elem.clone()),
+            });
+        }
     }
     Ok(Presence {
         from: from,
@@ -137,7 +144,12 @@ pub fn parse_presence(root: &Element) -> Result<Presence, Error> {
 
 pub fn serialise_payload(payload: &PresencePayload) -> Element {
     match *payload {
-        PresencePayload::Status(ref status) => status::serialise(status),
+        PresencePayload::Status(ref status) => {
+            Element::builder("status")
+                    .ns(ns::JABBER_CLIENT)
+                    .append(status.to_owned())
+                    .build()
+        },
         PresencePayload::Delay(ref delay) => delay::serialise(delay),
         PresencePayload::ECaps2(ref ecaps2) => ecaps2::serialise(ecaps2),
     }
@@ -164,7 +176,9 @@ pub fn serialise(presence: &Presence) -> Element {
 #[cfg(test)]
 mod tests {
     use minidom::Element;
+    use error::Error;
     use presence;
+    use ns;
 
     #[test]
     fn test_simple() {
@@ -189,5 +203,69 @@ mod tests {
         };
         let elem2 = presence::serialise(&presence);
         assert_eq!(elem, elem2);
+    }
+
+    #[test]
+    fn test_status() {
+        let elem: Element = "<presence xmlns='jabber:client'><status xmlns='jabber:client'/></presence>".parse().unwrap();
+        let presence = presence::parse_presence(&elem).unwrap();
+        assert_eq!(presence.payloads.len(), 1);
+        match presence.payloads[0] {
+            presence::PresencePayloadType::Parsed(presence::PresencePayload::Status(ref status)) => {
+                assert_eq!(*status, presence::Status::from(""));
+            },
+            _ => panic!("Failed to parse status presence."),
+        }
+    }
+
+    #[test]
+    fn test_unknown_child() {
+        let elem: Element = "<presence xmlns='jabber:client'><test xmlns='invalid'/></presence>".parse().unwrap();
+        let presence = presence::parse_presence(&elem).unwrap();
+        if let presence::PresencePayloadType::XML(ref payload) = presence.payloads[0] {
+            assert!(payload.is("test", "invalid"));
+        } else {
+            panic!("Did successfully parse an invalid element.");
+        }
+    }
+
+    #[test]
+    #[ignore]
+    fn test_invalid_status_child() {
+        let elem: Element = "<presence xmlns='jabber:client'><status xmlns='jabber:client'><coucou/></status></presence>".parse().unwrap();
+        let error = presence::parse_presence(&elem).unwrap_err();
+        let message = match error {
+            Error::ParseError(string) => string,
+            _ => panic!(),
+        };
+        assert_eq!(message, "Unknown child in status element.");
+    }
+
+    #[test]
+    #[ignore]
+    fn test_invalid_attribute() {
+        let elem: Element = "<status xmlns='jabber:client' coucou=''/>".parse().unwrap();
+        let error = presence::parse_presence(&elem).unwrap_err();
+        let message = match error {
+            Error::ParseError(string) => string,
+            _ => panic!(),
+        };
+        assert_eq!(message, "Unknown attribute in status element.");
+    }
+
+    #[test]
+    fn test_serialise_status() {
+        let status = presence::Status::from("Hello world!");
+        let payloads = vec!(presence::PresencePayloadType::Parsed(presence::PresencePayload::Status(status)));
+        let presence = presence::Presence {
+            from: None,
+            to: None,
+            id: None,
+            type_: presence::PresenceType::Unavailable,
+            payloads: payloads,
+        };
+        let elem = presence::serialise(&presence);
+        assert!(elem.is("presence", ns::JABBER_CLIENT));
+        assert!(elem.children().collect::<Vec<_>>()[0].is("status", ns::JABBER_CLIENT));
     }
 }
