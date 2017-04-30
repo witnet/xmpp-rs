@@ -67,13 +67,11 @@
 extern crate xml;
 
 pub mod error;
-pub mod attribute;
 pub mod element;
 pub mod convert;
 
 #[cfg(test)] mod tests;
 
 pub use error::Error;
-pub use attribute::Attribute;
 pub use element::{Element, Node, Children, ChildrenMut, ElementBuilder};
 pub use convert::{IntoElements, IntoAttributeValue};
