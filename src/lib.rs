@@ -24,7 +24,7 @@ pub enum JidParseError {
 ///  - A node/name, `node`, which is the optional part before the @.
 ///  - A domain, `domain`, which is the mandatory part after the @ but before the /.
 ///  - A resource, `resource`, which is the optional part after the /.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct Jid {
     /// The node part of the Jabber ID, if it exists, else None.
     pub node: Option<String>,
@@ -47,6 +47,13 @@ impl From<Jid> for String {
             string.push_str(resource);
         }
         string
+    }
+}
+
+impl fmt::Debug for Jid {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        write!(fmt, "JID({})", self)?;
+        Ok(())
     }
 }
 
