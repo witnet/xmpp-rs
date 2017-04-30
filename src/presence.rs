@@ -6,8 +6,8 @@
 
 use std::str::FromStr;
 
-use minidom::Element;
-use minidom::IntoAttributeValue;
+use minidom::{Element, IntoElements, IntoAttributeValue};
+use minidom::convert::ElementEmitter;
 
 use jid::Jid;
 
@@ -18,11 +18,32 @@ use ns;
 use delay;
 use ecaps2;
 
+#[derive(Debug, Clone, PartialEq)]
+pub enum Show {
+    Away,
+    Chat,
+    Dnd,
+    Xa,
+}
+
+impl IntoElements for Show {
+    fn into_elements(self, emitter: &mut ElementEmitter) {
+        let elem = Element::builder(match self {
+            Show::Away => "away",
+            Show::Chat => "chat",
+            Show::Dnd => "dnd",
+            Show::Xa => "xa",
+        }).build();
+        emitter.append_child(elem);
+    }
+}
+
 pub type Status = String;
 
 /// Lists every known payload of a `<presence/>`.
 #[derive(Debug, Clone)]
 pub enum PresencePayload {
+    Show(Show),
     Status(Status),
     Delay(delay::Delay),
     ECaps2(ecaps2::ECaps2),
@@ -113,7 +134,20 @@ pub fn parse_presence(root: &Element) -> Result<Presence, Error> {
     };
     let mut payloads = vec!();
     for elem in root.children() {
-        if elem.is("status", ns::JABBER_CLIENT) {
+        if elem.is("show", ns::JABBER_CLIENT) {
+            for _ in elem.children() {
+                return Err(Error::ParseError("Unknown child in show element."));
+            }
+            let payload = PresencePayload::Show(match elem.text().as_ref() {
+                "away" => Show::Away,
+                "chat" => Show::Chat,
+                "dnd" => Show::Dnd,
+                "xa" => Show::Xa,
+
+                _ => return Err(Error::ParseError("Invalid value for show.")),
+            });
+            payloads.push(PresencePayloadType::Parsed(payload));
+        } else if elem.is("status", ns::JABBER_CLIENT) {
             for _ in elem.children() {
                 return Err(Error::ParseError("Unknown child in status element."));
             }
@@ -144,6 +178,12 @@ pub fn parse_presence(root: &Element) -> Result<Presence, Error> {
 
 pub fn serialise_payload(payload: &PresencePayload) -> Element {
     match *payload {
+        PresencePayload::Show(ref show) => {
+            Element::builder("status")
+                    .ns(ns::JABBER_CLIENT)
+                    .append(show.to_owned())
+                    .build()
+        },
         PresencePayload::Status(ref status) => {
             Element::builder("status")
                     .ns(ns::JABBER_CLIENT)
@@ -203,6 +243,43 @@ mod tests {
         };
         let elem2 = presence::serialise(&presence);
         assert_eq!(elem, elem2);
+    }
+
+    #[test]
+    fn test_show() {
+        let elem: Element = "<presence xmlns='jabber:client'><show>chat</show></presence>".parse().unwrap();
+        let presence = presence::parse_presence(&elem).unwrap();
+        assert_eq!(presence.payloads.len(), 1);
+        match presence.payloads[0] {
+            presence::PresencePayloadType::Parsed(presence::PresencePayload::Show(ref show)) => {
+                assert_eq!(*show, presence::Show::Chat);
+            },
+            _ => panic!("Failed to parse show presence."),
+        }
+    }
+
+    #[test]
+    fn test_missing_show_value() {
+        // "online" used to be a pretty common mistake.
+        let elem: Element = "<presence xmlns='jabber:client'><show/></presence>".parse().unwrap();
+        let error = presence::parse_presence(&elem).unwrap_err();
+        let message = match error {
+            Error::ParseError(string) => string,
+            _ => panic!(),
+        };
+        assert_eq!(message, "Invalid value for show.");
+    }
+
+    #[test]
+    fn test_invalid_show() {
+        // "online" used to be a pretty common mistake.
+        let elem: Element = "<presence xmlns='jabber:client'><show>online</show></presence>".parse().unwrap();
+        let error = presence::parse_presence(&elem).unwrap_err();
+        let message = match error {
+            Error::ParseError(string) => string,
+            _ => panic!(),
+        };
+        assert_eq!(message, "Invalid value for show.");
     }
 
     #[test]
