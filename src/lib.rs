@@ -52,14 +52,7 @@ impl From<Jid> for String {
 
 impl fmt::Display for Jid {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        // TODO: may need escaping
-        if let Some(ref node) = self.node {
-            write!(fmt, "{}@", node)?;
-        }
-        write!(fmt, "{}", self.domain)?;
-        if let Some(ref resource) = self.resource {
-            write!(fmt, "/{}", resource)?;
-        }
+        fmt.write_str(String::from(self.clone()).as_ref())?;
         Ok(())
     }
 }
