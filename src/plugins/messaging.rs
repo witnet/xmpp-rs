@@ -30,7 +30,7 @@ impl MessagingPlugin {
                                .attr("type", "chat")
                                .attr("to", to.to_string())
                                .build();
-        elem.append_child(Element::builder("body").text(body).build());
+        elem.append_child(Element::builder("body").append(body).build());
         self.proxy.send(elem);
         Ok(())
     }
