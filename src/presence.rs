@@ -40,11 +40,14 @@ impl IntoElements for Show {
 
 pub type Status = String;
 
+pub type Priority = i8;
+
 /// Lists every known payload of a `<presence/>`.
 #[derive(Debug, Clone)]
 pub enum PresencePayload {
     Show(Show),
     Status(Status),
+    Priority(Priority),
     Delay(delay::Delay),
     ECaps2(ecaps2::ECaps2),
 }
@@ -153,6 +156,13 @@ pub fn parse_presence(root: &Element) -> Result<Presence, Error> {
             }
             let payload = PresencePayload::Status(elem.text());
             payloads.push(PresencePayloadType::Parsed(payload));
+        } else if elem.is("priority", ns::JABBER_CLIENT) {
+            for _ in elem.children() {
+                return Err(Error::ParseError("Unknown child in priority element."));
+            }
+            let priority = Priority::from_str(elem.text().as_ref())?;
+            let payload = PresencePayload::Priority(priority);
+            payloads.push(PresencePayloadType::Parsed(payload));
         } else {
             let payload = if let Ok(delay) = delay::parse_delay(elem) {
                 Some(PresencePayload::Delay(delay))
@@ -188,6 +198,12 @@ pub fn serialise_payload(payload: &PresencePayload) -> Element {
             Element::builder("status")
                     .ns(ns::JABBER_CLIENT)
                     .append(status.to_owned())
+                    .build()
+        },
+        PresencePayload::Priority(ref priority) => {
+            Element::builder("status")
+                    .ns(ns::JABBER_CLIENT)
+                    .append(format!("{}", priority))
                     .build()
         },
         PresencePayload::Delay(ref delay) => delay::serialise(delay),
@@ -293,6 +309,29 @@ mod tests {
             },
             _ => panic!("Failed to parse status presence."),
         }
+    }
+
+    #[test]
+    fn test_priority() {
+        let elem: Element = "<presence xmlns='jabber:client'><priority>-1</priority></presence>".parse().unwrap();
+        let presence = presence::parse_presence(&elem).unwrap();
+        assert_eq!(presence.payloads.len(), 1);
+        match presence.payloads[0] {
+            presence::PresencePayloadType::Parsed(presence::PresencePayload::Priority(ref priority)) => {
+                assert_eq!(*priority, presence::Priority::from(-1i8));
+            },
+            _ => panic!("Failed to parse priority."),
+        }
+    }
+
+    #[test]
+    fn test_invalid_priority() {
+        let elem: Element = "<presence xmlns='jabber:client'><priority>128</priority></presence>".parse().unwrap();
+        let error = presence::parse_presence(&elem).unwrap_err();
+        match error {
+            Error::ParseIntError(_) => (),
+            _ => panic!(),
+        };
     }
 
     #[test]
