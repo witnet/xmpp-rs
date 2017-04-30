@@ -77,7 +77,7 @@ impl PresencePlugin {
             if let Some(stat) = status {
                 let elem = Element::builder("status")
                                    .ns(ns::CLIENT)
-                                   .text(stat)
+                                   .append(stat)
                                    .build();
                 stanza.append_child(elem);
             }

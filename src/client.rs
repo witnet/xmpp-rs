@@ -242,7 +242,7 @@ impl Client {
         if let Some(ref resource) = self.jid.resource {
             let res = Element::builder("resource")
                               .ns(ns::BIND)
-                              .text(resource.to_owned())
+                              .append(resource.to_owned())
                               .build();
             bind.append_child(res);
         }
