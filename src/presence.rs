@@ -118,6 +118,9 @@ pub struct Presence {
     pub to: Option<Jid>,
     pub id: Option<String>,
     pub type_: PresenceType,
+    pub show: Option<Show>,
+    pub statuses: Vec<Status>,
+    pub priority: Priority,
     pub payloads: Vec<PresencePayloadType>,
 }
 
@@ -135,13 +138,19 @@ pub fn parse_presence(root: &Element) -> Result<Presence, Error> {
         Some(type_) => type_.parse()?,
         None => Default::default(),
     };
+    let mut show = None;
+    let mut statuses = vec!();
+    let mut priority = None;
     let mut payloads = vec!();
     for elem in root.children() {
         if elem.is("show", ns::JABBER_CLIENT) {
+            if show.is_some() {
+                return Err(Error::ParseError("More than one show element in a presence."));
+            }
             for _ in elem.children() {
                 return Err(Error::ParseError("Unknown child in show element."));
             }
-            let payload = PresencePayload::Show(match elem.text().as_ref() {
+            show = Some(match elem.text().as_ref() {
                 "away" => Show::Away,
                 "chat" => Show::Chat,
                 "dnd" => Show::Dnd,
@@ -149,20 +158,19 @@ pub fn parse_presence(root: &Element) -> Result<Presence, Error> {
 
                 _ => return Err(Error::ParseError("Invalid value for show.")),
             });
-            payloads.push(PresencePayloadType::Parsed(payload));
         } else if elem.is("status", ns::JABBER_CLIENT) {
             for _ in elem.children() {
                 return Err(Error::ParseError("Unknown child in status element."));
             }
-            let payload = PresencePayload::Status(elem.text());
-            payloads.push(PresencePayloadType::Parsed(payload));
+            statuses.push(elem.text());
         } else if elem.is("priority", ns::JABBER_CLIENT) {
+            if priority.is_some() {
+                return Err(Error::ParseError("More than one priority element in a presence."));
+            }
             for _ in elem.children() {
                 return Err(Error::ParseError("Unknown child in priority element."));
             }
-            let priority = Priority::from_str(elem.text().as_ref())?;
-            let payload = PresencePayload::Priority(priority);
-            payloads.push(PresencePayloadType::Parsed(payload));
+            priority = Some(Priority::from_str(elem.text().as_ref())?);
         } else {
             let payload = if let Ok(delay) = delay::parse_delay(elem) {
                 Some(PresencePayload::Delay(delay))
@@ -182,6 +190,9 @@ pub fn parse_presence(root: &Element) -> Result<Presence, Error> {
         to: to,
         id: id,
         type_: type_,
+        show: show,
+        statuses: statuses,
+        priority: priority.unwrap_or(0i8),
         payloads: payloads,
     })
 }
@@ -255,6 +266,9 @@ mod tests {
             to: None,
             id: None,
             type_: presence::PresenceType::Unavailable,
+            show: None,
+            statuses: vec!(),
+            priority: 0i8,
             payloads: vec!(),
         };
         let elem2 = presence::serialise(&presence);
@@ -265,13 +279,8 @@ mod tests {
     fn test_show() {
         let elem: Element = "<presence xmlns='jabber:client'><show>chat</show></presence>".parse().unwrap();
         let presence = presence::parse_presence(&elem).unwrap();
-        assert_eq!(presence.payloads.len(), 1);
-        match presence.payloads[0] {
-            presence::PresencePayloadType::Parsed(presence::PresencePayload::Show(ref show)) => {
-                assert_eq!(*show, presence::Show::Chat);
-            },
-            _ => panic!("Failed to parse show presence."),
-        }
+        assert_eq!(presence.payloads.len(), 0);
+        assert_eq!(presence.show, Some(presence::Show::Chat));
     }
 
     #[test]
@@ -299,29 +308,39 @@ mod tests {
     }
 
     #[test]
-    fn test_status() {
-        let elem: Element = "<presence xmlns='jabber:client'><status xmlns='jabber:client'/></presence>".parse().unwrap();
+    fn test_empty_status() {
+        let elem: Element = "<presence xmlns='jabber:client'><status/></presence>".parse().unwrap();
         let presence = presence::parse_presence(&elem).unwrap();
-        assert_eq!(presence.payloads.len(), 1);
-        match presence.payloads[0] {
-            presence::PresencePayloadType::Parsed(presence::PresencePayload::Status(ref status)) => {
-                assert_eq!(*status, presence::Status::from(""));
-            },
-            _ => panic!("Failed to parse status presence."),
-        }
+        assert_eq!(presence.payloads.len(), 0);
+        assert_eq!(presence.statuses.len(), 1);
+        assert_eq!(presence.statuses[0], "");
+    }
+
+    #[test]
+    fn test_status() {
+        let elem: Element = "<presence xmlns='jabber:client'><status>Here!</status></presence>".parse().unwrap();
+        let presence = presence::parse_presence(&elem).unwrap();
+        assert_eq!(presence.payloads.len(), 0);
+        assert_eq!(presence.statuses.len(), 1);
+        assert_eq!(presence.statuses[0], "Here!");
+    }
+
+    #[test]
+    fn test_multiple_statuses() {
+        let elem: Element = "<presence xmlns='jabber:client'><status>Here!</status><status xml:lang='fr'>Là!</status></presence>".parse().unwrap();
+        let presence = presence::parse_presence(&elem).unwrap();
+        assert_eq!(presence.payloads.len(), 0);
+        assert_eq!(presence.statuses.len(), 2);
+        assert_eq!(presence.statuses[0], "Here!");
+        assert_eq!(presence.statuses[1], "Là!");
     }
 
     #[test]
     fn test_priority() {
         let elem: Element = "<presence xmlns='jabber:client'><priority>-1</priority></presence>".parse().unwrap();
         let presence = presence::parse_presence(&elem).unwrap();
-        assert_eq!(presence.payloads.len(), 1);
-        match presence.payloads[0] {
-            presence::PresencePayloadType::Parsed(presence::PresencePayload::Priority(ref priority)) => {
-                assert_eq!(*priority, presence::Priority::from(-1i8));
-            },
-            _ => panic!("Failed to parse priority."),
-        }
+        assert_eq!(presence.payloads.len(), 0);
+        assert_eq!(presence.priority, -1i8);
     }
 
     #[test]
@@ -378,6 +397,9 @@ mod tests {
             to: None,
             id: None,
             type_: presence::PresenceType::Unavailable,
+            show: None,
+            statuses: vec!(),
+            priority: 0i8,
             payloads: payloads,
         };
         let elem = presence::serialise(&presence);
