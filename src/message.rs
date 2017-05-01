@@ -4,6 +4,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+use std::convert::TryFrom;
 use std::str::FromStr;
 
 use minidom::{Element, IntoElements, IntoAttributeValue};
@@ -20,7 +21,7 @@ use stanza_error;
 use chatstates;
 use receipts;
 use delay;
-use attention;
+use attention::Attention;
 use message_correct;
 use eme;
 
@@ -32,7 +33,7 @@ pub enum MessagePayload {
     ChatState(chatstates::ChatState),
     Receipt(receipts::Receipt),
     Delay(delay::Delay),
-    Attention(attention::Attention),
+    Attention(Attention),
     MessageCorrect(message_correct::Replace),
     ExplicitMessageEncryption(eme::ExplicitMessageEncryption),
 }
@@ -121,7 +122,7 @@ pub fn parse_message(root: &Element) -> Result<Message, Error> {
             Some(MessagePayload::Receipt(receipt))
         } else if let Ok(delay) = delay::parse_delay(elem) {
             Some(MessagePayload::Delay(delay))
-        } else if let Ok(attention) = attention::parse_attention(elem) {
+        } else if let Ok(attention) = Attention::try_from(elem) {
             Some(MessagePayload::Attention(attention))
         } else if let Ok(replace) = message_correct::parse_replace(elem) {
             Some(MessagePayload::MessageCorrect(replace))
@@ -148,7 +149,7 @@ pub fn serialise_payload(payload: &MessagePayload) -> Element {
     match *payload {
         MessagePayload::Body(ref body) => body::serialise(body),
         MessagePayload::StanzaError(ref stanza_error) => stanza_error::serialise(stanza_error),
-        MessagePayload::Attention(ref attention) => attention::serialise(attention),
+        MessagePayload::Attention(ref attention) => attention.into(),
         MessagePayload::ChatState(ref chatstate) => chatstates::serialise(chatstate),
         MessagePayload::Receipt(ref receipt) => receipts::serialise(receipt),
         MessagePayload::Delay(ref delay) => delay::serialise(delay),
