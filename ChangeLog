@@ -1,0 +1,13 @@
+Version XXX:
+2017-0X-XX  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
+    * New parsers/serialisers:
+        - Stanza error, as per RFC 6120 §8.3.
+    * Incompatible changes:
+        - Presence has got an overhaul, it now hosts show, statuses and
+          priority in its struct.  The status module has also been
+          dropped.
+        - Iq now gets a proper StanzaError when the type is error.
+
+Version 0.1.0:
+2017-04-29  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
+    * Implement many extensions.
