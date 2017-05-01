@@ -14,6 +14,7 @@ use error::Error;
 
 use ns;
 
+use stanza_error;
 use disco;
 use ibb;
 use jingle;
@@ -39,7 +40,7 @@ pub enum IqType {
     Get(IqPayloadType),
     Set(IqPayloadType),
     Result(Option<IqPayloadType>),
-    Error(IqPayloadType),
+    Error(stanza_error::StanzaError),
 }
 
 impl IntoAttributeValue for IqType {
@@ -77,13 +78,17 @@ pub fn parse_iq(root: &Element) -> Result<Iq, Error> {
     };
 
     let mut payload = None;
+    let mut error_payload = None;
     for elem in root.children() {
         if payload.is_some() {
             return Err(Error::ParseError("Wrong number of children in iq element."));
         }
         if type_ == "error" {
             if elem.is("error", ns::JABBER_CLIENT) {
-                payload = Some(IqPayloadType::XML(elem.clone()));
+                if error_payload.is_some() {
+                    return Err(Error::ParseError("Wrong number of children in iq element."));
+                }
+                error_payload = Some(stanza_error::parse_stanza_error(elem)?);
             } else if root.children().collect::<Vec<_>>().len() != 2 {
                 return Err(Error::ParseError("Wrong number of children in iq element."));
             }
@@ -126,7 +131,7 @@ pub fn parse_iq(root: &Element) -> Result<Iq, Error> {
             IqType::Result(None)
         }
     } else if type_ == "error" {
-        if let Some(payload) = payload.clone() {
+        if let Some(payload) = error_payload.clone() {
             IqType::Error(payload.clone())
         } else {
             return Err(Error::ParseError("Wrong number of children in iq element."));
@@ -163,13 +168,12 @@ pub fn serialise(iq: &Iq) -> Element {
     let elem = match iq.payload.clone() {
         IqType::Get(IqPayloadType::XML(elem))
       | IqType::Set(IqPayloadType::XML(elem))
-      | IqType::Result(Some(IqPayloadType::XML(elem)))
-      | IqType::Error(IqPayloadType::XML(elem)) => elem,
+      | IqType::Result(Some(IqPayloadType::XML(elem))) => elem,
+        IqType::Error(error) => stanza_error::serialise(&error),
         IqType::Get(IqPayloadType::Parsed(payload))
       | IqType::Set(IqPayloadType::Parsed(payload))
       | IqType::Result(Some(IqPayloadType::Parsed(payload))) => serialise_payload(&payload),
         IqType::Result(None) => return stanza,
-        _ => panic!(),
     };
     stanza.append_child(elem);
     stanza
@@ -180,6 +184,7 @@ mod tests {
     use minidom::Element;
     use error::Error;
     use iq;
+    use stanza_error;
     use disco;
 
     #[test]
@@ -269,10 +274,16 @@ mod tests {
         assert_eq!(iq.from, None);
         assert_eq!(iq.to, None);
         assert_eq!(iq.id, None);
-        assert!(match iq.payload {
-            iq::IqType::Error(iq::IqPayloadType::XML(element)) => element == error,
-            _ => false,
-        });
+        match iq.payload {
+            iq::IqType::Error(element) => {
+                assert_eq!(element.type_, stanza_error::ErrorType::Cancel);
+                assert_eq!(element.by, None);
+                assert_eq!(element.defined_condition, stanza_error::DefinedCondition::ServiceUnavailable);
+                assert_eq!(element.texts.len(), 0);
+                assert_eq!(element.other, None);
+            },
+            _ => panic!(),
+        }
     }
 
     #[test]
