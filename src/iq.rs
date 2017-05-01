@@ -268,19 +268,16 @@ mod tests {
             </error>
         </iq>".parse().unwrap();
         let iq = iq::parse_iq(&elem).unwrap();
-        let error: Element = "<error xmlns='jabber:client' type='cancel'>
-            <service-unavailable xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/>
-        </error>".parse().unwrap();
         assert_eq!(iq.from, None);
         assert_eq!(iq.to, None);
         assert_eq!(iq.id, None);
         match iq.payload {
-            iq::IqType::Error(element) => {
-                assert_eq!(element.type_, stanza_error::ErrorType::Cancel);
-                assert_eq!(element.by, None);
-                assert_eq!(element.defined_condition, stanza_error::DefinedCondition::ServiceUnavailable);
-                assert_eq!(element.texts.len(), 0);
-                assert_eq!(element.other, None);
+            iq::IqType::Error(error) => {
+                assert_eq!(error.type_, stanza_error::ErrorType::Cancel);
+                assert_eq!(error.by, None);
+                assert_eq!(error.defined_condition, stanza_error::DefinedCondition::ServiceUnavailable);
+                assert_eq!(error.texts.len(), 0);
+                assert_eq!(error.other, None);
             },
             _ => panic!(),
         }
