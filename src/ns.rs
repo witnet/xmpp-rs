@@ -6,6 +6,8 @@
 
 /// RFC 6120: Extensible Messaging and Presence Protocol (XMPP): Core
 pub const JABBER_CLIENT: &'static str = "jabber:client";
+/// RFC 6120: Extensible Messaging and Presence Protocol (XMPP): Core
+pub const XMPP_STANZAS: &'static str = "urn:ietf:params:xml:ns:xmpp-stanzas";
 
 /// XEP-0004: Data Forms
 pub const DATA_FORMS: &'static str = "jabber:x:data";
