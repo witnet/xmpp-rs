@@ -8,12 +8,13 @@ use minidom::{Element, IntoElements};
 use minidom::convert::ElementEmitter;
 
 use error::Error;
+use jid::Jid;
 
 use ns;
 
 #[derive(Debug, Clone)]
 pub struct Delay {
-    pub from: Option<String>,
+    pub from: Option<Jid>,
     pub stamp: String,
     pub data: Option<String>,
 }
@@ -41,7 +42,7 @@ pub fn parse_delay(root: &Element) -> Result<Delay, Error> {
 pub fn serialise(delay: &Delay) -> Element {
     Element::builder("delay")
             .ns(ns::DELAY)
-            .attr("from", delay.from.clone())
+            .attr("from", delay.from.clone().and_then(|value| Some(String::from(value))))
             .attr("stamp", delay.stamp.clone())
             .append(delay.data.clone())
             .build()
@@ -56,15 +57,17 @@ impl IntoElements for Delay {
 
 #[cfg(test)]
 mod tests {
+    use std::str::FromStr;
     use minidom::Element;
     use error::Error;
+    use jid::Jid;
     use delay;
 
     #[test]
     fn test_simple() {
         let elem: Element = "<delay xmlns='urn:xmpp:delay' from='capulet.com' stamp='2002-09-10T23:08:25Z'/>".parse().unwrap();
         let delay = delay::parse_delay(&elem).unwrap();
-        assert_eq!(delay.from, Some(String::from("capulet.com")));
+        assert_eq!(delay.from, Some(Jid::from_str("capulet.com").unwrap()));
         assert_eq!(delay.stamp, "2002-09-10T23:08:25Z");
         assert_eq!(delay.data, None);
     }
@@ -107,7 +110,7 @@ mod tests {
     fn test_serialise_data() {
         let elem: Element = "<delay xmlns='urn:xmpp:delay' from='juliet@example.org' stamp='2002-09-10T23:08:25Z'>Reason</delay>".parse().unwrap();
         let delay = delay::Delay {
-            from: Some(String::from("juliet@example.org")),
+            from: Some(Jid::from_str("juliet@example.org").unwrap()),
             stamp: "2002-09-10T23:08:25Z".to_owned(),
             data: Some(String::from("Reason")),
         };
