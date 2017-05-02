@@ -1,5 +1,7 @@
 //! Provides an `Error` for use in this crate.
 
+use std::fmt::Error as FormatError;
+
 use std::io;
 
 use std::net::TcpStream;
@@ -28,6 +30,7 @@ pub enum Error {
     Base64Error(Base64Error),
     SaslError(Option<String>),
     XmppSaslError(SaslError),
+    FormatError(FormatError),
     StreamError,
     EndOfDocument,
 }
@@ -71,5 +74,11 @@ impl From<MinidomError> for Error {
 impl From<Base64Error> for Error {
     fn from(err: Base64Error) -> Error {
         Error::Base64Error(err)
+    }
+}
+
+impl From<FormatError> for Error {
+    fn from(err: FormatError) -> Error {
+        Error::FormatError(err)
     }
 }
