@@ -2,6 +2,7 @@ extern crate xml;
 extern crate openssl;
 extern crate minidom;
 extern crate base64;
+extern crate sha_1;
 pub extern crate jid;
 pub extern crate sasl;
 
