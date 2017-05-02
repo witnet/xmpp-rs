@@ -10,7 +10,7 @@ use std::fmt;
 use error::Error;
 
 use xml::reader::{XmlEvent as ReaderEvent, EventReader};
-use xml::writer::{XmlEvent as WriterEvent, EventWriter};
+use xml::writer::{XmlEvent as WriterEvent, EventWriter, EmitterConfig};
 use xml::name::Name;
 use xml::namespace::NS_NO_PREFIX;
 
@@ -30,32 +30,19 @@ pub struct Element {
 }
 
 
+impl<'a> From<&'a Element> for String {
+    fn from(elem: &'a Element) -> String {
+        let mut out = Vec::new();
+        let config = EmitterConfig::new()
+                    .write_document_declaration(false);
+        elem.write_to(&mut EventWriter::new_with_config(&mut out, config)).unwrap();
+        String::from_utf8(out).unwrap()
+    }
+}
+
 impl fmt::Debug for Element {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        write!(fmt, "<{}", self.name)?;
-        if let Some(ref ns) = self.namespace {
-            write!(fmt, " xmlns=\"{}\"", ns)?;
-        }
-        for attr in &self.attributes {
-            write!(fmt, " {}=\"{}\"", attr.0, attr.1)?;
-        }
-        if self.children.is_empty() {
-            write!(fmt, "/>")?;
-        }
-        else {
-            write!(fmt, ">")?;
-            for child in &self.children {
-                match *child {
-                    Node::Element(ref e) => {
-                        write!(fmt, "{:?}", e)?;
-                    },
-                    Node::Text(ref s) => {
-                        write!(fmt, "{}", s)?;
-                    },
-                }
-            }
-            write!(fmt, "</{}>", self.name)?;
-        }
+        write!(fmt, "{}", String::from(self))?;
         Ok(())
     }
 }
@@ -275,7 +262,7 @@ impl Element {
         };
         let mut start = WriterEvent::start_element(name);
         if let Some(ref ns) = self.namespace {
-            start = start.default_ns(ns.as_ref());
+            start = start.default_ns(ns.clone());
         }
         for attr in &self.attributes { // TODO: I think this could be done a lot more efficiently
             start = start.attr(Name::local(&attr.0), &attr.1);
