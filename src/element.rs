@@ -3,7 +3,6 @@
 use std::io::prelude::*;
 use std::io::Cursor;
 use std::collections::BTreeMap;
-use std::iter::FromIterator;
 
 use std::fmt;
 
@@ -548,6 +547,8 @@ impl ElementBuilder {
 
 #[test]
 fn test_element_new() {
+    use std::iter::FromIterator;
+
     let elem = Element::new( "name".to_owned()
                            , Some("namespace".to_owned())
                            , BTreeMap::from_iter(vec![ ("name".to_string(), "value".to_string()) ].into_iter() )
