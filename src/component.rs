@@ -5,12 +5,13 @@ use ns;
 use plugin::{Plugin, PluginProxyBinding};
 use event::AbstractEvent;
 use connection::{Connection, Component2S};
-use openssl::hash::{hash, MessageDigest};
+use sha_1::{Sha1, Digest};
 
 use minidom::Element;
 
 use xml::reader::XmlEvent as ReaderEvent;
 
+use std::fmt::Write;
 use std::sync::mpsc::{Receiver, channel};
 
 /// A builder for `Component`s.
@@ -147,11 +148,11 @@ impl Component {
             }
         }
         let concatenated = format!("{}{}", sid, secret);
-        let hash = hash(MessageDigest::sha1(), concatenated.as_bytes())?;
+        let mut hasher = Sha1::default();
+        hasher.input(concatenated.as_bytes());
         let mut handshake = String::new();
-        for byte in hash {
-            // TODO: probably terrible perfs!
-            handshake = format!("{}{:x}", handshake, byte);
+        for byte in hasher.result() {
+            write!(handshake, "{:02x}", byte)?;
         }
         let mut elem = Element::builder("handshake")
                                .ns(ns::COMPONENT_ACCEPT)
