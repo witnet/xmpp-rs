@@ -74,4 +74,4 @@ pub mod convert;
 
 pub use error::Error;
 pub use element::{Element, Node, Children, ChildrenMut, ElementBuilder};
-pub use convert::{IntoElements, IntoAttributeValue};
+pub use convert::{IntoElements, IntoAttributeValue, ElementEmitter};
