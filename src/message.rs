@@ -7,8 +7,7 @@
 use std::convert::TryFrom;
 use std::str::FromStr;
 
-use minidom::{Element, IntoElements, IntoAttributeValue};
-use minidom::convert::ElementEmitter;
+use minidom::{Element, IntoElements, IntoAttributeValue, ElementEmitter};
 
 use jid::Jid;
 

@@ -7,8 +7,7 @@
 use hashes;
 use hashes::{Hash, parse_hash};
 
-use minidom::{Element, IntoElements};
-use minidom::convert::ElementEmitter;
+use minidom::{Element, IntoElements, ElementEmitter};
 
 use error::Error;
 use ns;
