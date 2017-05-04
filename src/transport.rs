@@ -20,7 +20,7 @@ use error::Error;
 #[allow(unused_imports)]
 use openssl::ssl::{SslMethod, Ssl, SslContextBuilder, SslStream, SSL_VERIFY_NONE, SslConnectorBuilder};
 
-use sasl::ChannelBinding;
+use sasl::common::ChannelBinding;
 
 /// A trait which transports are required to implement.
 pub trait Transport {
