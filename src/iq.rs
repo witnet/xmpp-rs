@@ -5,6 +5,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+use std::convert::TryFrom;
+
 use minidom::Element;
 use minidom::IntoAttributeValue;
 
@@ -17,7 +19,7 @@ use ns;
 use stanza_error;
 use disco;
 use ibb;
-use jingle;
+use jingle::Jingle;
 use ping;
 
 /// Lists every known payload of a `<iq/>`.
@@ -25,7 +27,7 @@ use ping;
 pub enum IqPayload {
     Disco(disco::Disco),
     IBB(ibb::IBB),
-    Jingle(jingle::Jingle),
+    Jingle(Jingle),
     Ping(ping::Ping),
 }
 
@@ -97,7 +99,7 @@ pub fn parse_iq(root: &Element) -> Result<Iq, Error> {
                 Some(IqPayload::Disco(disco))
             } else if let Ok(ibb) = ibb::parse_ibb(elem) {
                 Some(IqPayload::IBB(ibb))
-            } else if let Ok(jingle) = jingle::parse_jingle(elem) {
+            } else if let Ok(jingle) = Jingle::try_from(elem) {
                 Some(IqPayload::Jingle(jingle))
             } else if let Ok(ping) = ping::parse_ping(elem) {
                 Some(IqPayload::Ping(ping))
@@ -152,7 +154,7 @@ pub fn serialise_payload(payload: &IqPayload) -> Element {
     match *payload {
         IqPayload::Disco(ref disco) => disco::serialise_disco(disco),
         IqPayload::IBB(ref ibb) => ibb::serialise(ibb),
-        IqPayload::Jingle(ref jingle) => jingle::serialise(jingle),
+        IqPayload::Jingle(ref jingle) => jingle.into(),
         IqPayload::Ping(_) => ping::serialise_ping(),
     }
 }
