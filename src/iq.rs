@@ -20,7 +20,7 @@ use stanza_error;
 use disco;
 use ibb;
 use jingle::Jingle;
-use ping;
+use ping::Ping;
 
 /// Lists every known payload of a `<iq/>`.
 #[derive(Debug, Clone)]
@@ -28,7 +28,7 @@ pub enum IqPayload {
     Disco(disco::Disco),
     IBB(ibb::IBB),
     Jingle(Jingle),
-    Ping(ping::Ping),
+    Ping(Ping),
 }
 
 #[derive(Debug, Clone)]
@@ -101,7 +101,7 @@ pub fn parse_iq(root: &Element) -> Result<Iq, Error> {
                 Some(IqPayload::IBB(ibb))
             } else if let Ok(jingle) = Jingle::try_from(elem) {
                 Some(IqPayload::Jingle(jingle))
-            } else if let Ok(ping) = ping::parse_ping(elem) {
+            } else if let Ok(ping) = Ping::try_from(elem) {
                 Some(IqPayload::Ping(ping))
             } else {
                 None
@@ -155,7 +155,7 @@ pub fn serialise_payload(payload: &IqPayload) -> Element {
         IqPayload::Disco(ref disco) => disco::serialise_disco(disco),
         IqPayload::IBB(ref ibb) => ibb::serialise(ibb),
         IqPayload::Jingle(ref jingle) => jingle.into(),
-        IqPayload::Ping(_) => ping::serialise_ping(),
+        IqPayload::Ping(ref ping) => ping.into(),
     }
 }
 
