@@ -4,6 +4,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+use std::convert::TryFrom;
 use std::str::FromStr;
 
 use minidom::{Element, IntoAttributeValue};
@@ -64,103 +65,107 @@ pub enum IBB {
     },
 }
 
-fn required_attr<T: FromStr>(root: &Element, attr: &str, err: Error) -> Result<T, Error> {
-    root.attr(attr)
+fn required_attr<T: FromStr>(elem: &Element, attr: &str, err: Error) -> Result<T, Error> {
+    elem.attr(attr)
         .and_then(|value| value.parse().ok())
         .ok_or(err)
 }
 
-pub fn parse_ibb(root: &Element) -> Result<IBB, Error> {
-    if root.is("open", ns::IBB) {
-        for _ in root.children() {
-            return Err(Error::ParseError("Unknown child in open element."));
+impl<'a> TryFrom<&'a Element> for IBB {
+    type Error = Error;
+
+    fn try_from(elem: &'a Element) -> Result<IBB, Error> {
+        if elem.is("open", ns::IBB) {
+            for _ in elem.children() {
+                return Err(Error::ParseError("Unknown child in open element."));
+            }
+            let block_size = required_attr(elem, "block-size", Error::ParseError("Required attribute 'block-size' missing in open element."))?;
+            let sid = required_attr(elem, "sid", Error::ParseError("Required attribute 'sid' missing in open element."))?;
+            let stanza = match elem.attr("stanza") {
+                Some(stanza) => stanza.parse()?,
+                None => Default::default(),
+            };
+            Ok(IBB::Open {
+                block_size: block_size,
+                sid: sid,
+                stanza: stanza
+            })
+        } else if elem.is("data", ns::IBB) {
+            for _ in elem.children() {
+                return Err(Error::ParseError("Unknown child in data element."));
+            }
+            let seq = required_attr(elem, "seq", Error::ParseError("Required attribute 'seq' missing in data element."))?;
+            let sid = required_attr(elem, "sid", Error::ParseError("Required attribute 'sid' missing in data element."))?;
+            let data = base64::decode(&elem.text())?;
+            Ok(IBB::Data {
+                seq: seq,
+                sid: sid,
+                data: data
+            })
+        } else if elem.is("close", ns::IBB) {
+            let sid = required_attr(elem, "sid", Error::ParseError("Required attribute 'sid' missing in data element."))?;
+            for _ in elem.children() {
+                return Err(Error::ParseError("Unknown child in close element."));
+            }
+            Ok(IBB::Close {
+                sid: sid,
+            })
+        } else {
+            Err(Error::ParseError("This is not an ibb element."))
         }
-        let block_size = required_attr(root, "block-size", Error::ParseError("Required attribute 'block-size' missing in open element."))?;
-        let sid = required_attr(root, "sid", Error::ParseError("Required attribute 'sid' missing in open element."))?;
-        let stanza = match root.attr("stanza") {
-            Some(stanza) => stanza.parse()?,
-            None => Default::default(),
-        };
-        Ok(IBB::Open {
-            block_size: block_size,
-            sid: sid,
-            stanza: stanza
-        })
-    } else if root.is("data", ns::IBB) {
-        for _ in root.children() {
-            return Err(Error::ParseError("Unknown child in data element."));
-        }
-        let seq = required_attr(root, "seq", Error::ParseError("Required attribute 'seq' missing in data element."))?;
-        let sid = required_attr(root, "sid", Error::ParseError("Required attribute 'sid' missing in data element."))?;
-        let data = base64::decode(&root.text())?;
-        Ok(IBB::Data {
-            seq: seq,
-            sid: sid,
-            data: data
-        })
-    } else if root.is("close", ns::IBB) {
-        let sid = required_attr(root, "sid", Error::ParseError("Required attribute 'sid' missing in data element."))?;
-        for _ in root.children() {
-            return Err(Error::ParseError("Unknown child in close element."));
-        }
-        Ok(IBB::Close {
-            sid: sid,
-        })
-    } else {
-        Err(Error::ParseError("This is not an ibb element."))
     }
 }
 
-pub fn serialise(ibb: &IBB) -> Element {
-    match *ibb {
-        IBB::Open { ref block_size, ref sid, ref stanza } => {
-            Element::builder("open")
-                    .ns(ns::IBB)
-                    .attr("block-size", format!("{}", block_size))
-                    .attr("sid", sid.to_owned())
-                    .attr("stanza", stanza.to_owned())
-                    .build()
-        },
-        IBB::Data { ref seq, ref sid, ref data } => {
-            Element::builder("data")
-                    .ns(ns::IBB)
-                    .attr("seq", format!("{}", seq))
-                    .attr("sid", sid.to_owned())
-                    .append(base64::encode(&data))
-                    .build()
-        },
-        IBB::Close { ref sid } => {
-            Element::builder("close")
-                    .ns(ns::IBB)
-                    .attr("sid", sid.to_owned())
-                    .build()
-        },
+impl<'a> Into<Element> for &'a IBB {
+    fn into(self) -> Element {
+        match *self {
+            IBB::Open { ref block_size, ref sid, ref stanza } => {
+                Element::builder("open")
+                        .ns(ns::IBB)
+                        .attr("block-size", format!("{}", block_size))
+                        .attr("sid", sid.to_owned())
+                        .attr("stanza", stanza.to_owned())
+                        .build()
+            },
+            IBB::Data { ref seq, ref sid, ref data } => {
+                Element::builder("data")
+                        .ns(ns::IBB)
+                        .attr("seq", format!("{}", seq))
+                        .attr("sid", sid.to_owned())
+                        .append(base64::encode(&data))
+                        .build()
+            },
+            IBB::Close { ref sid } => {
+                Element::builder("close")
+                        .ns(ns::IBB)
+                        .attr("sid", sid.to_owned())
+                        .build()
+            },
+        }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use minidom::Element;
-    use error::Error;
-    use ibb;
+    use super::*;
 
     #[test]
     fn test_simple() {
         let elem: Element = "<open xmlns='http://jabber.org/protocol/ibb' block-size='3' sid='coucou'/>".parse().unwrap();
-        let open = ibb::parse_ibb(&elem).unwrap();
+        let open = IBB::try_from(&elem).unwrap();
         match open {
-            ibb::IBB::Open { block_size, sid, stanza } => {
+            IBB::Open { block_size, sid, stanza } => {
                 assert_eq!(block_size, 3);
                 assert_eq!(sid, "coucou");
-                assert_eq!(stanza, ibb::Stanza::Iq);
+                assert_eq!(stanza, Stanza::Iq);
             },
             _ => panic!(),
         }
 
         let elem: Element = "<data xmlns='http://jabber.org/protocol/ibb' seq='0' sid='coucou'>AAAA</data>".parse().unwrap();
-        let data = ibb::parse_ibb(&elem).unwrap();
+        let data = IBB::try_from(&elem).unwrap();
         match data {
-            ibb::IBB::Data { seq, sid, data } => {
+            IBB::Data { seq, sid, data } => {
                 assert_eq!(seq, 0);
                 assert_eq!(sid, "coucou");
                 assert_eq!(data, vec!(0, 0, 0));
@@ -169,9 +174,9 @@ mod tests {
         }
 
         let elem: Element = "<close xmlns='http://jabber.org/protocol/ibb' sid='coucou'/>".parse().unwrap();
-        let close = ibb::parse_ibb(&elem).unwrap();
+        let close = IBB::try_from(&elem).unwrap();
         match close {
-            ibb::IBB::Close { sid } => {
+            IBB::Close { sid } => {
                 assert_eq!(sid, "coucou");
             },
             _ => panic!(),
@@ -181,7 +186,7 @@ mod tests {
     #[test]
     fn test_invalid() {
         let elem: Element = "<open xmlns='http://jabber.org/protocol/ibb'/>".parse().unwrap();
-        let error = ibb::parse_ibb(&elem).unwrap_err();
+        let error = IBB::try_from(&elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -190,7 +195,7 @@ mod tests {
 
         // TODO: maybe make a better error message here.
         let elem: Element = "<open xmlns='http://jabber.org/protocol/ibb' block-size='-5'/>".parse().unwrap();
-        let error = ibb::parse_ibb(&elem).unwrap_err();
+        let error = IBB::try_from(&elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -198,7 +203,7 @@ mod tests {
         assert_eq!(message, "Required attribute 'block-size' missing in open element.");
 
         let elem: Element = "<open xmlns='http://jabber.org/protocol/ibb' block-size='128'/>".parse().unwrap();
-        let error = ibb::parse_ibb(&elem).unwrap_err();
+        let error = IBB::try_from(&elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -209,7 +214,7 @@ mod tests {
     #[test]
     fn test_invalid_stanza() {
         let elem: Element = "<open xmlns='http://jabber.org/protocol/ibb' block-size='128' sid='coucou' stanza='fdsq'/>".parse().unwrap();
-        let error = ibb::parse_ibb(&elem).unwrap_err();
+        let error = IBB::try_from(&elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),

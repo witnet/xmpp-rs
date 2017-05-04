@@ -18,7 +18,7 @@ use ns;
 
 use stanza_error;
 use disco;
-use ibb;
+use ibb::IBB;
 use jingle::Jingle;
 use ping::Ping;
 
@@ -26,7 +26,7 @@ use ping::Ping;
 #[derive(Debug, Clone)]
 pub enum IqPayload {
     Disco(disco::Disco),
-    IBB(ibb::IBB),
+    IBB(IBB),
     Jingle(Jingle),
     Ping(Ping),
 }
@@ -97,7 +97,7 @@ pub fn parse_iq(root: &Element) -> Result<Iq, Error> {
         } else {
             let parsed_payload = if let Ok(disco) = disco::parse_disco(elem) {
                 Some(IqPayload::Disco(disco))
-            } else if let Ok(ibb) = ibb::parse_ibb(elem) {
+            } else if let Ok(ibb) = IBB::try_from(elem) {
                 Some(IqPayload::IBB(ibb))
             } else if let Ok(jingle) = Jingle::try_from(elem) {
                 Some(IqPayload::Jingle(jingle))
@@ -153,7 +153,7 @@ pub fn parse_iq(root: &Element) -> Result<Iq, Error> {
 pub fn serialise_payload(payload: &IqPayload) -> Element {
     match *payload {
         IqPayload::Disco(ref disco) => disco::serialise_disco(disco),
-        IqPayload::IBB(ref ibb) => ibb::serialise(ibb),
+        IqPayload::IBB(ref ibb) => ibb.into(),
         IqPayload::Jingle(ref jingle) => jingle.into(),
         IqPayload::Ping(ref ping) => ping.into(),
     }
