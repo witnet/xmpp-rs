@@ -5,12 +5,10 @@ use ns;
 use plugin::{Plugin, PluginProxyBinding};
 use event::AbstractEvent;
 use connection::{Connection, C2S};
-use sasl::{ Mechanism as SaslMechanism
-          , Credentials as SaslCredentials
-          , Secret as SaslSecret
-          , ChannelBinding
-          };
-use sasl::mechanisms::{Plain, Scram, Sha1, Sha256};
+use sasl::client::Mechanism as SaslMechanism;
+use sasl::client::mechanisms::{Plain, Scram};
+use sasl::common::{Credentials as SaslCredentials, Identity, Secret, ChannelBinding};
+use sasl::common::scram::{Sha1, Sha256};
 use components::sasl_error::SaslError;
 use util::FromElement;
 
@@ -64,8 +62,8 @@ impl ClientBuilder {
     /// Sets the password to use.
     pub fn password<P: Into<String>>(mut self, password: P) -> ClientBuilder {
         self.credentials = SaslCredentials {
-            username: Some(self.jid.node.clone().expect("JID has no node")),
-            secret: SaslSecret::Password(password.into()),
+            identity: Identity::Username(self.jid.node.clone().expect("JID has no node")),
+            secret: Secret::password_plain(password),
             channel_binding: ChannelBinding::None,
         };
         self
