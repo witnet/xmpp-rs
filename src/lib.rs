@@ -1,11 +1,10 @@
 //! A crate parsing common XMPP elements into Rust structures.
 //!
-//! Each module implements a `parse` function, which takes a minidom
-//! `Element` reference and returns `Some(MessagePayload)` if the parsing
-//! succeeded, None otherwise.
+//! Each module implements the `TryFrom<&minidom::Element>` trait, which takes
+//! a minidom `Element` reference and returns a `Result`.
 //!
-//! Parsed structs can then be manipulated internally, and serialised back
-//! before being sent over the wire.
+//! Parsed structs can then be manipulated manually, and must be serialised
+//! back before being sent over the wire.
 
 // Copyright (c) 2017 Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
 //
