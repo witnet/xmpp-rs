@@ -16,7 +16,7 @@ use error::Error;
 use ns;
 
 use body;
-use stanza_error;
+use stanza_error::StanzaError;
 use chatstates::ChatState;
 use receipts::Receipt;
 use delay::Delay;
@@ -28,7 +28,7 @@ use eme::ExplicitMessageEncryption;
 #[derive(Debug, Clone)]
 pub enum MessagePayload {
     Body(body::Body),
-    StanzaError(stanza_error::StanzaError),
+    StanzaError(StanzaError),
     ChatState(ChatState),
     Receipt(Receipt),
     Delay(Delay),
@@ -113,7 +113,7 @@ pub fn parse_message(root: &Element) -> Result<Message, Error> {
     for elem in root.children() {
         let payload = if let Ok(body) = body::parse_body(elem) {
             Some(MessagePayload::Body(body))
-        } else if let Ok(stanza_error) = stanza_error::parse_stanza_error(elem) {
+        } else if let Ok(stanza_error) = StanzaError::try_from(elem) {
             Some(MessagePayload::StanzaError(stanza_error))
         } else if let Ok(chatstate) = ChatState::try_from(elem) {
             Some(MessagePayload::ChatState(chatstate))
@@ -147,7 +147,7 @@ pub fn parse_message(root: &Element) -> Result<Message, Error> {
 pub fn serialise_payload(payload: &MessagePayload) -> Element {
     match *payload {
         MessagePayload::Body(ref body) => body::serialise(body),
-        MessagePayload::StanzaError(ref stanza_error) => stanza_error::serialise(stanza_error),
+        MessagePayload::StanzaError(ref stanza_error) => stanza_error.into(),
         MessagePayload::Attention(ref attention) => attention.into(),
         MessagePayload::ChatState(ref chatstate) => chatstate.into(),
         MessagePayload::Receipt(ref receipt) => receipt.into(),

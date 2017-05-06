@@ -16,7 +16,7 @@ use error::Error;
 
 use ns;
 
-use stanza_error;
+use stanza_error::StanzaError;
 use disco::Disco;
 use ibb::IBB;
 use jingle::Jingle;
@@ -42,7 +42,7 @@ pub enum IqType {
     Get(IqPayloadType),
     Set(IqPayloadType),
     Result(Option<IqPayloadType>),
-    Error(stanza_error::StanzaError),
+    Error(StanzaError),
 }
 
 impl IntoAttributeValue for IqType {
@@ -90,7 +90,7 @@ pub fn parse_iq(root: &Element) -> Result<Iq, Error> {
                 if error_payload.is_some() {
                     return Err(Error::ParseError("Wrong number of children in iq element."));
                 }
-                error_payload = Some(stanza_error::parse_stanza_error(elem)?);
+                error_payload = Some(StanzaError::try_from(elem)?);
             } else if root.children().collect::<Vec<_>>().len() != 2 {
                 return Err(Error::ParseError("Wrong number of children in iq element."));
             }
@@ -171,7 +171,7 @@ pub fn serialise(iq: &Iq) -> Element {
         IqType::Get(IqPayloadType::XML(elem))
       | IqType::Set(IqPayloadType::XML(elem))
       | IqType::Result(Some(IqPayloadType::XML(elem))) => elem,
-        IqType::Error(error) => stanza_error::serialise(&error),
+        IqType::Error(error) => (&error).into(),
         IqType::Get(IqPayloadType::Parsed(payload))
       | IqType::Set(IqPayloadType::Parsed(payload))
       | IqType::Result(Some(IqPayloadType::Parsed(payload))) => serialise_payload(&payload),
@@ -183,11 +183,9 @@ pub fn serialise(iq: &Iq) -> Element {
 
 #[cfg(test)]
 mod tests {
-    use minidom::Element;
-    use error::Error;
+    use super::*;
     use iq;
-    use stanza_error;
-    use disco;
+    use stanza_error::{ErrorType, DefinedCondition};
 
     #[test]
     fn test_require_type() {
@@ -275,9 +273,9 @@ mod tests {
         assert_eq!(iq.id, None);
         match iq.payload {
             iq::IqType::Error(error) => {
-                assert_eq!(error.type_, stanza_error::ErrorType::Cancel);
+                assert_eq!(error.type_, ErrorType::Cancel);
                 assert_eq!(error.by, None);
-                assert_eq!(error.defined_condition, stanza_error::DefinedCondition::ServiceUnavailable);
+                assert_eq!(error.defined_condition, DefinedCondition::ServiceUnavailable);
                 assert_eq!(error.texts.len(), 0);
                 assert_eq!(error.other, None);
             },
@@ -314,7 +312,7 @@ mod tests {
         let elem: Element = "<iq xmlns='jabber:client' type='get'><query xmlns='http://jabber.org/protocol/disco#info'/></iq>".parse().unwrap();
         let iq = iq::parse_iq(&elem).unwrap();
         assert!(match iq.payload {
-            iq::IqType::Get(iq::IqPayloadType::Parsed(iq::IqPayload::Disco(disco::Disco { .. }))) => true,
+            IqType::Get(IqPayloadType::Parsed(IqPayload::Disco(Disco { .. }))) => true,
             _ => false,
         });
     }

@@ -4,6 +4,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+use std::convert::TryFrom;
 use std::str::FromStr;
 use std::collections::BTreeMap;
 
@@ -149,104 +150,108 @@ pub struct StanzaError {
     pub other: Option<Element>,
 }
 
-pub fn parse_stanza_error(root: &Element) -> Result<StanzaError, Error> {
-    if !root.is("error", ns::JABBER_CLIENT) {
-        return Err(Error::ParseError("This is not an error element."));
-    }
+impl<'a> TryFrom<&'a Element> for StanzaError {
+    type Error = Error;
 
-    let type_ = root.attr("type")
-                    .ok_or(Error::ParseError("Error must have a 'type' attribute."))?
-                    .parse()?;
-    let by = root.attr("by")
-                 .and_then(|by| by.parse().ok());
-    let mut defined_condition = None;
-    let mut texts = BTreeMap::new();
-    let mut other = None;
-
-    for child in root.children() {
-        if child.is("text", ns::XMPP_STANZAS) {
-            for _ in child.children() {
-                return Err(Error::ParseError("Unknown element in error text."));
-            }
-            let lang = child.attr("xml:lang").unwrap_or("").to_owned();
-            if let Some(_) = texts.insert(lang, child.text()) {
-                return Err(Error::ParseError("Text element present twice for the same xml:lang."));
-            }
-        } else if child.ns() == Some(ns::XMPP_STANZAS) {
-            if defined_condition.is_some() {
-                return Err(Error::ParseError("Error must not have more than one defined-condition."));
-            }
-            for _ in child.children() {
-                return Err(Error::ParseError("Unknown element in defined-condition."));
-            }
-            let condition = DefinedCondition::from_str(child.name())?;
-            defined_condition = Some(condition);
-        } else {
-            if other.is_some() {
-                return Err(Error::ParseError("Error must not have more than one other element."));
-            }
-            other = Some(child.clone());
+    fn try_from(elem: &'a Element) -> Result<StanzaError, Error> {
+        if !elem.is("error", ns::JABBER_CLIENT) {
+            return Err(Error::ParseError("This is not an error element."));
         }
-    }
 
-    if defined_condition.is_none() {
-        return Err(Error::ParseError("Error must have a defined-condition."));
-    }
-    let defined_condition = defined_condition.unwrap();
+        let type_ = elem.attr("type")
+                        .ok_or(Error::ParseError("Error must have a 'type' attribute."))?
+                        .parse()?;
+        let by = elem.attr("by")
+                     .and_then(|by| by.parse().ok());
+        let mut defined_condition = None;
+        let mut texts = BTreeMap::new();
+        let mut other = None;
 
-    Ok(StanzaError {
-        type_: type_,
-        by: by,
-        defined_condition: defined_condition,
-        texts: texts,
-        other: other,
-    })
+        for child in elem.children() {
+            if child.is("text", ns::XMPP_STANZAS) {
+                for _ in child.children() {
+                    return Err(Error::ParseError("Unknown element in error text."));
+                }
+                let lang = child.attr("xml:lang").unwrap_or("").to_owned();
+                if let Some(_) = texts.insert(lang, child.text()) {
+                    return Err(Error::ParseError("Text element present twice for the same xml:lang."));
+                }
+            } else if child.ns() == Some(ns::XMPP_STANZAS) {
+                if defined_condition.is_some() {
+                    return Err(Error::ParseError("Error must not have more than one defined-condition."));
+                }
+                for _ in child.children() {
+                    return Err(Error::ParseError("Unknown element in defined-condition."));
+                }
+                let condition = DefinedCondition::from_str(child.name())?;
+                defined_condition = Some(condition);
+            } else {
+                if other.is_some() {
+                    return Err(Error::ParseError("Error must not have more than one other element."));
+                }
+                other = Some(child.clone());
+            }
+        }
+
+        if defined_condition.is_none() {
+            return Err(Error::ParseError("Error must have a defined-condition."));
+        }
+        let defined_condition = defined_condition.unwrap();
+
+        Ok(StanzaError {
+            type_: type_,
+            by: by,
+            defined_condition: defined_condition,
+            texts: texts,
+            other: other,
+        })
+    }
 }
 
-pub fn serialise(error: &StanzaError) -> Element {
-    let mut root = Element::builder("error")
-                           .ns(ns::JABBER_CLIENT)
-                           .attr("type", String::from(error.type_.clone()))
-                           .attr("by", match error.by {
-                                Some(ref by) => Some(String::from(by.clone())),
-                                None => None,
-                            })
-                           .append(Element::builder(error.defined_condition.clone())
-                                           .ns(ns::XMPP_STANZAS)
-                                           .build())
-                           .build();
-    for (lang, text) in error.texts.clone() {
-        let elem = Element::builder("text")
-                           .ns(ns::XMPP_STANZAS)
-                           .attr("xml:lang", lang)
-                           .append(text)
-                           .build();
-        root.append_child(elem);
+impl<'a> Into<Element> for &'a StanzaError {
+    fn into(self) -> Element {
+        let mut root = Element::builder("error")
+                               .ns(ns::JABBER_CLIENT)
+                               .attr("type", String::from(self.type_.clone()))
+                               .attr("by", match self.by {
+                                    Some(ref by) => Some(String::from(by.clone())),
+                                    None => None,
+                                })
+                               .append(Element::builder(self.defined_condition.clone())
+                                               .ns(ns::XMPP_STANZAS)
+                                               .build())
+                               .build();
+        for (lang, text) in self.texts.clone() {
+            let elem = Element::builder("text")
+                               .ns(ns::XMPP_STANZAS)
+                               .attr("xml:lang", lang)
+                               .append(text)
+                               .build();
+            root.append_child(elem);
+        }
+        if let Some(ref other) = self.other {
+            root.append_child(other.clone());
+        }
+        root
     }
-    if let Some(ref other) = error.other {
-        root.append_child(other.clone());
-    }
-    root
 }
 
 #[cfg(test)]
 mod tests {
-    use minidom::Element;
-    use error::Error;
-    use stanza_error;
+    use super::*;
 
     #[test]
     fn test_simple() {
         let elem: Element = "<error xmlns='jabber:client' type='cancel'><undefined-condition xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/></error>".parse().unwrap();
-        let error = stanza_error::parse_stanza_error(&elem).unwrap();
-        assert_eq!(error.type_, stanza_error::ErrorType::Cancel);
-        assert_eq!(error.defined_condition, stanza_error::DefinedCondition::UndefinedCondition);
+        let error = StanzaError::try_from(&elem).unwrap();
+        assert_eq!(error.type_, ErrorType::Cancel);
+        assert_eq!(error.defined_condition, DefinedCondition::UndefinedCondition);
     }
 
     #[test]
     fn test_invalid_type() {
         let elem: Element = "<error xmlns='jabber:client'/>".parse().unwrap();
-        let error = stanza_error::parse_stanza_error(&elem).unwrap_err();
+        let error = StanzaError::try_from(&elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -254,7 +259,7 @@ mod tests {
         assert_eq!(message, "Error must have a 'type' attribute.");
 
         let elem: Element = "<error xmlns='jabber:client' type='coucou'/>".parse().unwrap();
-        let error = stanza_error::parse_stanza_error(&elem).unwrap_err();
+        let error = StanzaError::try_from(&elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -265,7 +270,7 @@ mod tests {
     #[test]
     fn test_invalid_condition() {
         let elem: Element = "<error xmlns='jabber:client' type='cancel'/>".parse().unwrap();
-        let error = stanza_error::parse_stanza_error(&elem).unwrap_err();
+        let error = StanzaError::try_from(&elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
