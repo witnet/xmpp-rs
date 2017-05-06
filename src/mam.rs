@@ -4,6 +4,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+use std::convert::TryFrom;
+
 use minidom::Element;
 use jid::Jid;
 
@@ -11,7 +13,6 @@ use error::Error;
 
 use data_forms;
 use data_forms::DataForm;
-use rsm;
 use rsm::Set;
 use forwarding;
 use forwarding::Forwarded;
@@ -63,7 +64,7 @@ pub fn parse_query(root: &Element) -> Result<Query, Error> {
         if child.is("x", ns::DATA_FORMS) {
             form = Some(data_forms::parse_data_form(child)?);
         } else if child.is("set", ns::RSM) {
-            set = Some(rsm::parse_rsm(child)?);
+            set = Some(Set::try_from(child)?);
         } else {
             return Err(Error::ParseError("Unknown child in query element."));
         }
@@ -117,7 +118,7 @@ pub fn parse_fin(root: &Element) -> Result<Fin, Error> {
     let mut set = None;
     for child in root.children() {
         if child.is("set", ns::RSM) {
-            set = Some(rsm::parse_rsm(child)?);
+            set = Some(Set::try_from(child)?);
         } else {
             return Err(Error::ParseError("Unknown child in fin element."));
         }
@@ -179,7 +180,7 @@ pub fn serialise_query(query: &Query) -> Element {
     //    elem.append_child(data_forms::serialise(&form));
     //}
     if let Some(ref set) = query.set {
-        elem.append_child(rsm::serialise(&set));
+        elem.append_child(set.into());
     }
     elem
 }
@@ -202,7 +203,7 @@ pub fn serialise_fin(fin: &Fin) -> Element {
                                 false => None,
                             })
                            .build();
-    elem.append_child(rsm::serialise(&fin.set));
+    elem.append_child((&fin.set).into());
     elem
 }
 
