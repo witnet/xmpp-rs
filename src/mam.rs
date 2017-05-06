@@ -11,7 +11,6 @@ use jid::Jid;
 
 use error::Error;
 
-use data_forms;
 use data_forms::DataForm;
 use rsm::Set;
 use forwarding;
@@ -62,7 +61,7 @@ pub fn parse_query(root: &Element) -> Result<Query, Error> {
     let mut set = None;
     for child in root.children() {
         if child.is("x", ns::DATA_FORMS) {
-            form = Some(data_forms::parse_data_form(child)?);
+            form = Some(DataForm::try_from(child)?);
         } else if child.is("set", ns::RSM) {
             set = Some(Set::try_from(child)?);
         } else {
@@ -177,7 +176,7 @@ pub fn serialise_query(query: &Query) -> Element {
                            .attr("node", query.node.clone())
                            .build();
     //if let Some(form) = query.form {
-    //    elem.append_child(data_forms::serialise(&form));
+    //    elem.append_child((&form).into());
     //}
     if let Some(ref set) = query.set {
         elem.append_child(set.into());

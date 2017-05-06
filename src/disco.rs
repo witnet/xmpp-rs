@@ -4,12 +4,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+use std::convert::TryFrom;
+
 use minidom::Element;
 
 use error::Error;
 use ns;
 
-use data_forms::{DataForm, DataFormType, parse_data_form};
+use data_forms::{DataForm, DataFormType};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Feature {
@@ -74,7 +76,7 @@ pub fn parse_disco(root: &Element) -> Result<Disco, Error> {
                 name: name,
             });
         } else if child.is("x", ns::DATA_FORMS) {
-            let data_form = parse_data_form(child)?;
+            let data_form = DataForm::try_from(child)?;
             match data_form.type_ {
                 DataFormType::Result_ => (),
                 _ => return Err(Error::ParseError("Data form must have a 'result' type in disco#info.")),

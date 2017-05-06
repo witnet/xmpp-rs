@@ -55,7 +55,7 @@ impl<'a> TryFrom<&'a Element> for MediaElement {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use data_forms;
+    use data_forms::DataForm;
 
     #[test]
     fn test_simple() {
@@ -177,7 +177,7 @@ mod tests {
   </field>
   [ ... ]
 </x>"#.parse().unwrap();
-        let form = data_forms::parse_data_form(&elem).unwrap();
+        let form = DataForm::try_from(&elem).unwrap();
         assert_eq!(form.fields.len(), 1);
         assert_eq!(form.fields[0].var, "ocr");
         assert_eq!(form.fields[0].media[0].width, Some(290));
