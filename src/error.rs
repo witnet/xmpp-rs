@@ -7,6 +7,7 @@
 use std::convert::From;
 use std::io;
 use std::num;
+use std::string;
 
 use base64;
 use minidom;
@@ -19,6 +20,7 @@ pub enum Error {
     XMLError(minidom::Error),
     Base64Error(base64::DecodeError),
     ParseIntError(num::ParseIntError),
+    ParseStringError(string::ParseError),
     JidParseError(jid::JidParseError),
 }
 
@@ -43,6 +45,12 @@ impl From<base64::DecodeError> for Error {
 impl From<num::ParseIntError> for Error {
     fn from(err: num::ParseIntError) -> Error {
         Error::ParseIntError(err)
+    }
+}
+
+impl From<string::ParseError> for Error {
+    fn from(err: string::ParseError) -> Error {
+        Error::ParseStringError(err)
     }
 }
 
