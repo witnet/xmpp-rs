@@ -52,206 +52,228 @@ pub struct Prefs {
     pub never: Vec<Jid>,
 }
 
-pub fn parse_query(root: &Element) -> Result<Query, Error> {
-    if !root.is("query", ns::MAM) {
-        return Err(Error::ParseError("This is not a query element."));
-    }
-    let mut form = None;
-    let mut set = None;
-    for child in root.children() {
-        if child.is("x", ns::DATA_FORMS) {
-            form = Some(DataForm::try_from(child)?);
-        } else if child.is("set", ns::RSM) {
-            set = Some(Set::try_from(child)?);
-        } else {
-            return Err(Error::ParseError("Unknown child in query element."));
-        }
-    }
-    let queryid = match root.attr("queryid") {
-        Some(queryid) => Some(queryid.to_owned()),
-        None => None,
-    };
-    let node = match root.attr("node") {
-        Some(node) => Some(node.to_owned()),
-        None => None,
-    };
-    Ok(Query { queryid, node, form, set })
-}
+impl<'a> TryFrom<&'a Element> for Query {
+    type Error = Error;
 
-pub fn parse_result(root: &Element) -> Result<Result_, Error> {
-    if !root.is("result", ns::MAM) {
-        return Err(Error::ParseError("This is not a result element."));
-    }
-    let mut forwarded = None;
-    for child in root.children() {
-        if child.is("forwarded", ns::FORWARD) {
-            forwarded = Some(Forwarded::try_from(child)?);
-        } else {
-            return Err(Error::ParseError("Unknown child in result element."));
+    fn try_from(elem: &'a Element) -> Result<Query, Error> {
+        if !elem.is("query", ns::MAM) {
+            return Err(Error::ParseError("This is not a query element."));
         }
-    }
-    let queryid = match root.attr("queryid") {
-        Some(queryid) => queryid.to_owned(),
-        None => return Err(Error::ParseError("No 'queryid' attribute present in result.")),
-    };
-    let id = match root.attr("id") {
-        Some(id) => id.to_owned(),
-        None => return Err(Error::ParseError("No 'id' attribute present in result.")),
-    };
-    if forwarded.is_none() {
-        return Err(Error::ParseError("Mandatory forwarded element missing in result."));
-    }
-    let forwarded = forwarded.unwrap();
-    Ok(Result_ {
-        queryid,
-        id,
-        forwarded,
-    })
-}
-
-pub fn parse_fin(root: &Element) -> Result<Fin, Error> {
-    if !root.is("fin", ns::MAM) {
-        return Err(Error::ParseError("This is not a fin element."));
-    }
-    let mut set = None;
-    for child in root.children() {
-        if child.is("set", ns::RSM) {
-            set = Some(Set::try_from(child)?);
-        } else {
-            return Err(Error::ParseError("Unknown child in fin element."));
-        }
-    }
-    let complete = match root.attr("complete") {
-        Some(complete) => complete == "true",
-        None => false,
-    };
-    if set.is_none() {
-        return Err(Error::ParseError("Mandatory set element missing in fin."));
-    }
-    let set = set.unwrap();
-    Ok(Fin { complete, set })
-}
-
-pub fn parse_prefs(root: &Element) -> Result<Prefs, Error> {
-    if !root.is("prefs", ns::MAM) {
-        return Err(Error::ParseError("This is not a prefs element."));
-    }
-    let mut always = vec!();
-    let mut never = vec!();
-    for child in root.children() {
-        if child.is("always", ns::MAM) {
-            for jid_elem in child.children() {
-                if !jid_elem.is("jid", ns::MAM) {
-                    return Err(Error::ParseError("Invalid jid element in always."));
-                }
-                always.push(jid_elem.text().parse()?);
+        let mut form = None;
+        let mut set = None;
+        for child in elem.children() {
+            if child.is("x", ns::DATA_FORMS) {
+                form = Some(DataForm::try_from(child)?);
+            } else if child.is("set", ns::RSM) {
+                set = Some(Set::try_from(child)?);
+            } else {
+                return Err(Error::ParseError("Unknown child in query element."));
             }
-        } else if child.is("never", ns::MAM) {
-            for jid_elem in child.children() {
-                if !jid_elem.is("jid", ns::MAM) {
-                    return Err(Error::ParseError("Invalid jid element in never."));
-                }
-                never.push(jid_elem.text().parse()?);
+        }
+        let queryid = match elem.attr("queryid") {
+            Some(queryid) => Some(queryid.to_owned()),
+            None => None,
+        };
+        let node = match elem.attr("node") {
+            Some(node) => Some(node.to_owned()),
+            None => None,
+        };
+        Ok(Query { queryid, node, form, set })
+    }
+}
+
+impl<'a> TryFrom<&'a Element> for Result_ {
+    type Error = Error;
+
+    fn try_from(elem: &'a Element) -> Result<Result_, Error> {
+        if !elem.is("result", ns::MAM) {
+            return Err(Error::ParseError("This is not a result element."));
+        }
+        let mut forwarded = None;
+        for child in elem.children() {
+            if child.is("forwarded", ns::FORWARD) {
+                forwarded = Some(Forwarded::try_from(child)?);
+            } else {
+                return Err(Error::ParseError("Unknown child in result element."));
             }
-        } else {
-            return Err(Error::ParseError("Unknown child in prefs element."));
         }
-    }
-    let default_ = match root.attr("default") {
-        Some("always") => Some(DefaultPrefs::Always),
-        Some("never") => Some(DefaultPrefs::Never),
-        Some("roster") => Some(DefaultPrefs::Roster),
-        None => None,
-
-        _ => return Err(Error::ParseError("Invalid 'default' attribute present in prefs.")),
-    };
-    Ok(Prefs { default_, always, never })
-}
-
-pub fn serialise_query(query: &Query) -> Element {
-    let mut elem = Element::builder("query")
-                           .ns(ns::MAM)
-                           .attr("queryid", query.queryid.clone())
-                           .attr("node", query.node.clone())
-                           .build();
-    //if let Some(form) = query.form {
-    //    elem.append_child((&form).into());
-    //}
-    if let Some(ref set) = query.set {
-        elem.append_child(set.into());
-    }
-    elem
-}
-
-pub fn serialise_result(result: &Result_) -> Element {
-    let mut elem = Element::builder("result")
-                           .ns(ns::MAM)
-                           .attr("queryid", result.queryid.clone())
-                           .attr("id", result.id.clone())
-                           .build();
-    elem.append_child((&result.forwarded).into());
-    elem
-}
-
-pub fn serialise_fin(fin: &Fin) -> Element {
-    let mut elem = Element::builder("fin")
-                           .ns(ns::MAM)
-                           .attr("complete", match fin.complete {
-                                true => Some("true"),
-                                false => None,
-                            })
-                           .build();
-    elem.append_child((&fin.set).into());
-    elem
-}
-
-pub fn serialise_prefs(prefs: &Prefs) -> Element {
-    let mut elem = Element::builder("prefs")
-                           .ns(ns::MAM)
-                           .attr("default", match prefs.default_ {
-                                Some(DefaultPrefs::Always) => Some("always"),
-                                Some(DefaultPrefs::Never) => Some("never"),
-                                Some(DefaultPrefs::Roster) => Some("roster"),
-                                None => None,
-                            })
-                           .build();
-    if !prefs.always.is_empty() {
-        let mut always = Element::builder("always")
-                                 .ns(ns::RSM)
-                                 .build();
-        for jid in prefs.always.clone() {
-            always.append_child(Element::builder("jid")
-                                        .ns(ns::RSM)
-                                        .append(String::from(jid))
-                                        .build());
+        let queryid = match elem.attr("queryid") {
+            Some(queryid) => queryid.to_owned(),
+            None => return Err(Error::ParseError("No 'queryid' attribute present in result.")),
+        };
+        let id = match elem.attr("id") {
+            Some(id) => id.to_owned(),
+            None => return Err(Error::ParseError("No 'id' attribute present in result.")),
+        };
+        if forwarded.is_none() {
+            return Err(Error::ParseError("Mandatory forwarded element missing in result."));
         }
-        elem.append_child(always);
+        let forwarded = forwarded.unwrap();
+        Ok(Result_ {
+            queryid,
+            id,
+            forwarded,
+        })
     }
-    if !prefs.never.is_empty() {
-        let mut never = Element::builder("never")
-                                 .ns(ns::RSM)
-                                 .build();
-        for jid in prefs.never.clone() {
-            never.append_child(Element::builder("jid")
-                                        .ns(ns::RSM)
-                                        .append(String::from(jid))
-                                        .build());
+}
+
+impl<'a> TryFrom<&'a Element> for Fin {
+    type Error = Error;
+
+    fn try_from(elem: &'a Element) -> Result<Fin, Error> {
+        if !elem.is("fin", ns::MAM) {
+            return Err(Error::ParseError("This is not a fin element."));
         }
-        elem.append_child(never);
+        let mut set = None;
+        for child in elem.children() {
+            if child.is("set", ns::RSM) {
+                set = Some(Set::try_from(child)?);
+            } else {
+                return Err(Error::ParseError("Unknown child in fin element."));
+            }
+        }
+        let complete = match elem.attr("complete") {
+            Some(complete) => complete == "true",
+            None => false,
+        };
+        if set.is_none() {
+            return Err(Error::ParseError("Mandatory set element missing in fin."));
+        }
+        let set = set.unwrap();
+        Ok(Fin { complete, set })
     }
-    elem
+}
+
+impl<'a> TryFrom<&'a Element> for Prefs {
+    type Error = Error;
+
+    fn try_from(elem: &'a Element) -> Result<Prefs, Error> {
+        if !elem.is("prefs", ns::MAM) {
+            return Err(Error::ParseError("This is not a prefs element."));
+        }
+        let mut always = vec!();
+        let mut never = vec!();
+        for child in elem.children() {
+            if child.is("always", ns::MAM) {
+                for jid_elem in child.children() {
+                    if !jid_elem.is("jid", ns::MAM) {
+                        return Err(Error::ParseError("Invalid jid element in always."));
+                    }
+                    always.push(jid_elem.text().parse()?);
+                }
+            } else if child.is("never", ns::MAM) {
+                for jid_elem in child.children() {
+                    if !jid_elem.is("jid", ns::MAM) {
+                        return Err(Error::ParseError("Invalid jid element in never."));
+                    }
+                    never.push(jid_elem.text().parse()?);
+                }
+            } else {
+                return Err(Error::ParseError("Unknown child in prefs element."));
+            }
+        }
+        let default_ = match elem.attr("default") {
+            Some("always") => Some(DefaultPrefs::Always),
+            Some("never") => Some(DefaultPrefs::Never),
+            Some("roster") => Some(DefaultPrefs::Roster),
+            None => None,
+
+            _ => return Err(Error::ParseError("Invalid 'default' attribute present in prefs.")),
+        };
+        Ok(Prefs { default_, always, never })
+    }
+}
+
+impl<'a> Into<Element> for &'a Query {
+    fn into(self) -> Element {
+        let mut elem = Element::builder("query")
+                               .ns(ns::MAM)
+                               .attr("queryid", self.queryid.clone())
+                               .attr("node", self.node.clone())
+                               .build();
+        //if let Some(form) = self.form {
+        //    elem.append_child((&form).into());
+        //}
+        if let Some(ref set) = self.set {
+            elem.append_child(set.into());
+        }
+        elem
+    }
+}
+
+impl<'a> Into<Element> for &'a Result_ {
+    fn into(self) -> Element {
+        let mut elem = Element::builder("result")
+                               .ns(ns::MAM)
+                               .attr("queryid", self.queryid.clone())
+                               .attr("id", self.id.clone())
+                               .build();
+        elem.append_child((&self.forwarded).into());
+        elem
+    }
+}
+
+impl<'a> Into<Element> for &'a Fin {
+    fn into(self) -> Element {
+        let mut elem = Element::builder("fin")
+                               .ns(ns::MAM)
+                               .attr("complete", match self.complete {
+                                    true => Some("true"),
+                                    false => None,
+                                })
+                               .build();
+        elem.append_child((&self.set).into());
+        elem
+    }
+}
+
+impl<'a> Into<Element> for &'a Prefs {
+    fn into(self) -> Element {
+        let mut elem = Element::builder("prefs")
+                               .ns(ns::MAM)
+                               .attr("default", match self.default_ {
+                                    Some(DefaultPrefs::Always) => Some("always"),
+                                    Some(DefaultPrefs::Never) => Some("never"),
+                                    Some(DefaultPrefs::Roster) => Some("roster"),
+                                    None => None,
+                                })
+                               .build();
+        if !self.always.is_empty() {
+            let mut always = Element::builder("always")
+                                     .ns(ns::RSM)
+                                     .build();
+            for jid in self.always.clone() {
+                always.append_child(Element::builder("jid")
+                                            .ns(ns::RSM)
+                                            .append(String::from(jid))
+                                            .build());
+            }
+            elem.append_child(always);
+        }
+        if !self.never.is_empty() {
+            let mut never = Element::builder("never")
+                                     .ns(ns::RSM)
+                                     .build();
+            for jid in self.never.clone() {
+                never.append_child(Element::builder("jid")
+                                            .ns(ns::RSM)
+                                            .append(String::from(jid))
+                                            .build());
+            }
+            elem.append_child(never);
+        }
+        elem
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use minidom::Element;
-    use error::Error;
-    use mam;
+    use super::*;
 
     #[test]
     fn test_query() {
         let elem: Element = "<query xmlns='urn:xmpp:mam:2'/>".parse().unwrap();
-        mam::parse_query(&elem).unwrap();
+        Query::try_from(&elem).unwrap();
     }
 
     #[test]
@@ -266,7 +288,7 @@ mod tests {
   </forwarded>
 </result>
 "#.parse().unwrap();
-        mam::parse_result(&elem).unwrap();
+        Result_::try_from(&elem).unwrap();
     }
 
     #[test]
@@ -279,7 +301,7 @@ mod tests {
   </set>
 </fin>
 "#.parse().unwrap();
-        mam::parse_fin(&elem).unwrap();
+        Fin::try_from(&elem).unwrap();
     }
 
     #[test]
@@ -296,7 +318,7 @@ mod tests {
   </x>
 </query>
 "#.parse().unwrap();
-        mam::parse_query(&elem).unwrap();
+        Query::try_from(&elem).unwrap();
     }
 
     #[test]
@@ -316,13 +338,13 @@ mod tests {
   </set>
 </query>
 "#.parse().unwrap();
-        mam::parse_query(&elem).unwrap();
+        Query::try_from(&elem).unwrap();
     }
 
     #[test]
     fn test_prefs_get() {
         let elem: Element = "<prefs xmlns='urn:xmpp:mam:2'/>".parse().unwrap();
-        mam::parse_prefs(&elem).unwrap();
+        Prefs::try_from(&elem).unwrap();
 
         let elem: Element = r#"
 <prefs xmlns='urn:xmpp:mam:2' default='roster'>
@@ -330,7 +352,7 @@ mod tests {
   <never/>
 </prefs>
 "#.parse().unwrap();
-        mam::parse_prefs(&elem).unwrap();
+        Prefs::try_from(&elem).unwrap();
     }
 
     #[test]
@@ -345,13 +367,13 @@ mod tests {
   </never>
 </prefs>
 "#.parse().unwrap();
-        mam::parse_prefs(&elem).unwrap();
+        Prefs::try_from(&elem).unwrap();
     }
 
     #[test]
     fn test_invalid_child() {
         let elem: Element = "<query xmlns='urn:xmpp:mam:2'><coucou/></query>".parse().unwrap();
-        let error = mam::parse_query(&elem).unwrap_err();
+        let error = Query::try_from(&elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -362,8 +384,8 @@ mod tests {
     #[test]
     fn test_serialise() {
         let elem: Element = "<query xmlns='urn:xmpp:mam:2'/>".parse().unwrap();
-        let replace = mam::Query { queryid: None, node: None, form: None, set: None };
-        let elem2 = mam::serialise_query(&replace);
+        let replace = Query { queryid: None, node: None, form: None, set: None };
+        let elem2 = (&replace).into();
         assert_eq!(elem, elem2);
     }
 }
