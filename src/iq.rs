@@ -17,7 +17,7 @@ use error::Error;
 use ns;
 
 use stanza_error;
-use disco;
+use disco::Disco;
 use ibb::IBB;
 use jingle::Jingle;
 use ping::Ping;
@@ -25,7 +25,7 @@ use ping::Ping;
 /// Lists every known payload of a `<iq/>`.
 #[derive(Debug, Clone)]
 pub enum IqPayload {
-    Disco(disco::Disco),
+    Disco(Disco),
     IBB(IBB),
     Jingle(Jingle),
     Ping(Ping),
@@ -95,7 +95,7 @@ pub fn parse_iq(root: &Element) -> Result<Iq, Error> {
                 return Err(Error::ParseError("Wrong number of children in iq element."));
             }
         } else {
-            let parsed_payload = if let Ok(disco) = disco::parse_disco(elem) {
+            let parsed_payload = if let Ok(disco) = Disco::try_from(elem) {
                 Some(IqPayload::Disco(disco))
             } else if let Ok(ibb) = IBB::try_from(elem) {
                 Some(IqPayload::IBB(ibb))
@@ -152,7 +152,7 @@ pub fn parse_iq(root: &Element) -> Result<Iq, Error> {
 
 pub fn serialise_payload(payload: &IqPayload) -> Element {
     match *payload {
-        IqPayload::Disco(ref disco) => disco::serialise_disco(disco),
+        IqPayload::Disco(ref disco) => disco.into(),
         IqPayload::IBB(ref ibb) => ibb.into(),
         IqPayload::Jingle(ref jingle) => jingle.into(),
         IqPayload::Ping(ref ping) => ping.into(),

@@ -34,121 +34,125 @@ pub struct Disco {
     pub extensions: Vec<DataForm>,
 }
 
-pub fn parse_disco(root: &Element) -> Result<Disco, Error> {
-    if !root.is("query", ns::DISCO_INFO) {
-        return Err(Error::ParseError("This is not a disco#info element."));
-    }
+impl<'a> TryFrom<&'a Element> for Disco {
+    type Error = Error;
 
-    let mut identities: Vec<Identity> = vec!();
-    let mut features: Vec<Feature> = vec!();
-    let mut extensions: Vec<DataForm> = vec!();
-
-    let node = root.attr("node")
-                   .and_then(|node| node.parse().ok());
-
-    for child in root.children() {
-        if child.is("feature", ns::DISCO_INFO) {
-            let feature = child.attr("var")
-                               .ok_or(Error::ParseError("Feature must have a 'var' attribute."))?;
-            features.push(Feature {
-                var: feature.to_owned(),
-            });
-        } else if child.is("identity", ns::DISCO_INFO) {
-            let category = child.attr("category")
-                                .ok_or(Error::ParseError("Identity must have a 'category' attribute."))?;
-            if category == "" {
-                return Err(Error::ParseError("Identity must have a non-empty 'category' attribute."))
-            }
-
-            let type_ = child.attr("type")
-                             .ok_or(Error::ParseError("Identity must have a 'type' attribute."))?;
-            if type_ == "" {
-                return Err(Error::ParseError("Identity must have a non-empty 'type' attribute."))
-            }
-
-            let xml_lang = child.attr("xml:lang").unwrap_or("");
-            let name = child.attr("name")
-                            .and_then(|name| name.parse().ok());
-            identities.push(Identity {
-                category: category.to_owned(),
-                type_: type_.to_owned(),
-                xml_lang: xml_lang.to_owned(),
-                name: name,
-            });
-        } else if child.is("x", ns::DATA_FORMS) {
-            let data_form = DataForm::try_from(child)?;
-            match data_form.type_ {
-                DataFormType::Result_ => (),
-                _ => return Err(Error::ParseError("Data form must have a 'result' type in disco#info.")),
-            }
-            match data_form.form_type {
-                Some(_) => extensions.push(data_form),
-                None => return Err(Error::ParseError("Data form found without a FORM_TYPE.")),
-            }
-        } else {
-            return Err(Error::ParseError("Unknown element in disco#info."));
+    fn try_from(elem: &'a Element) -> Result<Disco, Error> {
+        if !elem.is("query", ns::DISCO_INFO) {
+            return Err(Error::ParseError("This is not a disco#info element."));
         }
-    }
 
-    /*
-    // TODO: encode these restrictions only for result disco#info, not get ones.
-    if identities.is_empty() {
-        return Err(Error::ParseError("There must be at least one identity in disco#info."));
-    }
-    if features.is_empty() {
-        return Err(Error::ParseError("There must be at least one feature in disco#info."));
-    }
-    if !features.contains(&Feature { var: ns::DISCO_INFO.to_owned() }) {
-        return Err(Error::ParseError("disco#info feature not present in disco#info."));
-    }
-    */
+        let mut identities: Vec<Identity> = vec!();
+        let mut features: Vec<Feature> = vec!();
+        let mut extensions: Vec<DataForm> = vec!();
 
-    Ok(Disco {
-        node: node,
-        identities: identities,
-        features: features,
-        extensions: extensions
-    })
+        let node = elem.attr("node")
+                       .and_then(|node| node.parse().ok());
+
+        for child in elem.children() {
+            if child.is("feature", ns::DISCO_INFO) {
+                let feature = child.attr("var")
+                                   .ok_or(Error::ParseError("Feature must have a 'var' attribute."))?;
+                features.push(Feature {
+                    var: feature.to_owned(),
+                });
+            } else if child.is("identity", ns::DISCO_INFO) {
+                let category = child.attr("category")
+                                    .ok_or(Error::ParseError("Identity must have a 'category' attribute."))?;
+                if category == "" {
+                    return Err(Error::ParseError("Identity must have a non-empty 'category' attribute."))
+                }
+
+                let type_ = child.attr("type")
+                                 .ok_or(Error::ParseError("Identity must have a 'type' attribute."))?;
+                if type_ == "" {
+                    return Err(Error::ParseError("Identity must have a non-empty 'type' attribute."))
+                }
+
+                let xml_lang = child.attr("xml:lang").unwrap_or("");
+                let name = child.attr("name")
+                                .and_then(|name| name.parse().ok());
+                identities.push(Identity {
+                    category: category.to_owned(),
+                    type_: type_.to_owned(),
+                    xml_lang: xml_lang.to_owned(),
+                    name: name,
+                });
+            } else if child.is("x", ns::DATA_FORMS) {
+                let data_form = DataForm::try_from(child)?;
+                match data_form.type_ {
+                    DataFormType::Result_ => (),
+                    _ => return Err(Error::ParseError("Data form must have a 'result' type in disco#info.")),
+                }
+                match data_form.form_type {
+                    Some(_) => extensions.push(data_form),
+                    None => return Err(Error::ParseError("Data form found without a FORM_TYPE.")),
+                }
+            } else {
+                return Err(Error::ParseError("Unknown element in disco#info."));
+            }
+        }
+
+        /*
+        // TODO: encode these restrictions only for result disco#info, not get ones.
+        if identities.is_empty() {
+            return Err(Error::ParseError("There must be at least one identity in disco#info."));
+        }
+        if features.is_empty() {
+            return Err(Error::ParseError("There must be at least one feature in disco#info."));
+        }
+        if !features.contains(&Feature { var: ns::DISCO_INFO.to_owned() }) {
+            return Err(Error::ParseError("disco#info feature not present in disco#info."));
+        }
+        */
+
+        Ok(Disco {
+            node: node,
+            identities: identities,
+            features: features,
+            extensions: extensions
+        })
+    }
 }
 
-pub fn serialise_disco(disco: &Disco) -> Element {
-    let mut root = Element::builder("query")
-                           .ns(ns::DISCO_INFO)
-                           .attr("node", disco.node.clone())
-                           .build();
-    for identity in &disco.identities {
-        let identity_element = Element::builder("identity")
-                                       .ns(ns::DISCO_INFO)
-                                       .attr("category", identity.category.clone())
-                                       .attr("type", identity.type_.clone())
-                                       .attr("xml:lang", identity.xml_lang.clone())
-                                       .attr("name", identity.name.clone())
-                                       .build();
-        root.append_child(identity_element);
+impl<'a> Into<Element> for &'a Disco {
+    fn into(self) -> Element {
+        let mut root = Element::builder("query")
+                               .ns(ns::DISCO_INFO)
+                               .attr("node", self.node.clone())
+                               .build();
+        for identity in &self.identities {
+            let identity_element = Element::builder("identity")
+                                           .ns(ns::DISCO_INFO)
+                                           .attr("category", identity.category.clone())
+                                           .attr("type", identity.type_.clone())
+                                           .attr("xml:lang", identity.xml_lang.clone())
+                                           .attr("name", identity.name.clone())
+                                           .build();
+            root.append_child(identity_element);
+        }
+        for feature in &self.features {
+            let feature_element = Element::builder("feature")
+                                          .ns(ns::DISCO_INFO)
+                                          .attr("var", feature.var.clone())
+                                          .build();
+            root.append_child(feature_element);
+        }
+        for _ in &self.extensions {
+            panic!("Not yet implemented!");
+        }
+        root
     }
-    for feature in &disco.features {
-        let feature_element = Element::builder("feature")
-                                      .ns(ns::DISCO_INFO)
-                                      .attr("var", feature.var.clone())
-                                      .build();
-        root.append_child(feature_element);
-    }
-    for _ in &disco.extensions {
-        panic!("Not yet implemented!");
-    }
-    root
 }
 
 #[cfg(test)]
 mod tests {
-    use minidom::Element;
-    use error::Error;
-    use disco;
+    use super::*;
 
     #[test]
     fn test_simple() {
         let elem: Element = "<query xmlns='http://jabber.org/protocol/disco#info'><identity category='client' type='pc'/><feature var='http://jabber.org/protocol/disco#info'/></query>".parse().unwrap();
-        let query = disco::parse_disco(&elem).unwrap();
+        let query = Disco::try_from(&elem).unwrap();
         assert!(query.node.is_none());
         assert_eq!(query.identities.len(), 1);
         assert_eq!(query.features.len(), 1);
@@ -158,7 +162,7 @@ mod tests {
     #[test]
     fn test_invalid() {
         let elem: Element = "<query xmlns='http://jabber.org/protocol/disco#info'><coucou/></query>".parse().unwrap();
-        let error = disco::parse_disco(&elem).unwrap_err();
+        let error = Disco::try_from(&elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -169,7 +173,7 @@ mod tests {
     #[test]
     fn test_invalid_identity() {
         let elem: Element = "<query xmlns='http://jabber.org/protocol/disco#info'><identity/></query>".parse().unwrap();
-        let error = disco::parse_disco(&elem).unwrap_err();
+        let error = Disco::try_from(&elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -177,7 +181,7 @@ mod tests {
         assert_eq!(message, "Identity must have a 'category' attribute.");
 
         let elem: Element = "<query xmlns='http://jabber.org/protocol/disco#info'><identity category=''/></query>".parse().unwrap();
-        let error = disco::parse_disco(&elem).unwrap_err();
+        let error = Disco::try_from(&elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -185,7 +189,7 @@ mod tests {
         assert_eq!(message, "Identity must have a non-empty 'category' attribute.");
 
         let elem: Element = "<query xmlns='http://jabber.org/protocol/disco#info'><identity category='coucou'/></query>".parse().unwrap();
-        let error = disco::parse_disco(&elem).unwrap_err();
+        let error = Disco::try_from(&elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -193,7 +197,7 @@ mod tests {
         assert_eq!(message, "Identity must have a 'type' attribute.");
 
         let elem: Element = "<query xmlns='http://jabber.org/protocol/disco#info'><identity category='coucou' type=''/></query>".parse().unwrap();
-        let error = disco::parse_disco(&elem).unwrap_err();
+        let error = Disco::try_from(&elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -204,7 +208,7 @@ mod tests {
     #[test]
     fn test_invalid_feature() {
         let elem: Element = "<query xmlns='http://jabber.org/protocol/disco#info'><feature/></query>".parse().unwrap();
-        let error = disco::parse_disco(&elem).unwrap_err();
+        let error = Disco::try_from(&elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -216,7 +220,7 @@ mod tests {
     #[ignore]
     fn test_invalid_result() {
         let elem: Element = "<query xmlns='http://jabber.org/protocol/disco#info'/>".parse().unwrap();
-        let error = disco::parse_disco(&elem).unwrap_err();
+        let error = Disco::try_from(&elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -224,7 +228,7 @@ mod tests {
         assert_eq!(message, "There must be at least one identity in disco#info.");
 
         let elem: Element = "<query xmlns='http://jabber.org/protocol/disco#info'><identity category='client' type='pc'/></query>".parse().unwrap();
-        let error = disco::parse_disco(&elem).unwrap_err();
+        let error = Disco::try_from(&elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -232,7 +236,7 @@ mod tests {
         assert_eq!(message, "There must be at least one feature in disco#info.");
 
         let elem: Element = "<query xmlns='http://jabber.org/protocol/disco#info'><identity category='client' type='pc'/><feature var='http://jabber.org/protocol/disco#items'/></query>".parse().unwrap();
-        let error = disco::parse_disco(&elem).unwrap_err();
+        let error = Disco::try_from(&elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),

@@ -166,7 +166,6 @@ pub fn hash_ecaps2(data: &[u8], algo: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use disco;
     use ecaps2;
     use base64;
 
@@ -195,7 +194,7 @@ mod tests {
     #[test]
     fn test_simple() {
         let elem: Element = "<query xmlns='http://jabber.org/protocol/disco#info'><identity category='client' type='pc'/><feature var='http://jabber.org/protocol/disco#info'/></query>".parse().unwrap();
-        let disco = disco::parse_disco(&elem).unwrap();
+        let disco = Disco::try_from(&elem).unwrap();
         let ecaps2 = ecaps2::compute_disco(&disco);
         assert_eq!(ecaps2.len(), 54);
     }
@@ -258,7 +257,7 @@ mod tests {
             105, 109, 101, 31, 28, 99, 108, 105, 101, 110, 116, 31, 109, 111,
             98, 105, 108, 101, 31, 31, 66, 111, 109, 98, 117, 115, 77, 111,
             100, 31, 30, 28, 28];
-        let disco = disco::parse_disco(&elem).unwrap();
+        let disco = Disco::try_from(&elem).unwrap();
         let ecaps2 = ecaps2::compute_disco(&disco);
         assert_eq!(ecaps2.len(), 0x1d9);
         assert_eq!(ecaps2, expected);
@@ -430,7 +429,7 @@ mod tests {
             111, 110, 31, 48, 46, 49, 49, 46, 49, 45, 115, 118, 110, 45, 50,
             48, 49, 49, 49, 50, 49, 54, 45, 109, 111, 100, 32, 40, 84, 99, 108,
             47, 84, 107, 32, 56, 46,54, 98, 50, 41, 31, 30, 29, 28];
-        let disco = disco::parse_disco(&elem).unwrap();
+        let disco = Disco::try_from(&elem).unwrap();
         let ecaps2 = ecaps2::compute_disco(&disco);
         assert_eq!(ecaps2.len(), 0x543);
         assert_eq!(ecaps2, expected);
