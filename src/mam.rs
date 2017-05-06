@@ -13,7 +13,6 @@ use error::Error;
 
 use data_forms::DataForm;
 use rsm::Set;
-use forwarding;
 use forwarding::Forwarded;
 
 use ns;
@@ -86,7 +85,7 @@ pub fn parse_result(root: &Element) -> Result<Result_, Error> {
     let mut forwarded = None;
     for child in root.children() {
         if child.is("forwarded", ns::FORWARD) {
-            forwarded = Some(forwarding::parse_forwarded(child)?);
+            forwarded = Some(Forwarded::try_from(child)?);
         } else {
             return Err(Error::ParseError("Unknown child in result element."));
         }
@@ -190,7 +189,7 @@ pub fn serialise_result(result: &Result_) -> Element {
                            .attr("queryid", result.queryid.clone())
                            .attr("id", result.id.clone())
                            .build();
-    elem.append_child(forwarding::serialise(&result.forwarded));
+    elem.append_child((&result.forwarded).into());
     elem
 }
 
