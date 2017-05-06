@@ -6,6 +6,7 @@
 
 use std::convert::TryFrom;
 use std::str::FromStr;
+use std::collections::BTreeMap;
 
 use minidom::{Element, IntoAttributeValue};
 
@@ -15,7 +16,6 @@ use error::Error;
 
 use ns;
 
-use body;
 use stanza_error::StanzaError;
 use chatstates::ChatState;
 use receipts::Receipt;
@@ -27,7 +27,6 @@ use eme::ExplicitMessageEncryption;
 /// Lists every known payload of a `<message/>`.
 #[derive(Debug, Clone)]
 pub enum MessagePayload {
-    Body(body::Body),
     StanzaError(StanzaError),
     ChatState(ChatState),
     Receipt(Receipt),
@@ -86,12 +85,16 @@ pub enum MessagePayloadType {
     Parsed(MessagePayload),
 }
 
+type Lang = String;
+type Body = String;
+
 #[derive(Debug, Clone)]
 pub struct Message {
     pub from: Option<Jid>,
     pub to: Option<Jid>,
     pub id: Option<String>,
     pub type_: MessageType,
+    pub bodies: BTreeMap<Lang, Body>,
     pub payloads: Vec<MessagePayloadType>,
 }
 
@@ -112,37 +115,47 @@ impl<'a> TryFrom<&'a Element> for Message {
             Some(type_) => type_.parse()?,
             None => Default::default(),
         };
+        let mut bodies = BTreeMap::new();
         let mut payloads = vec!();
         for elem in root.children() {
-            let payload = if let Ok(body) = body::parse_body(elem) {
-                Some(MessagePayload::Body(body))
-            } else if let Ok(stanza_error) = StanzaError::try_from(elem) {
-                Some(MessagePayload::StanzaError(stanza_error))
-            } else if let Ok(chatstate) = ChatState::try_from(elem) {
-                Some(MessagePayload::ChatState(chatstate))
-            } else if let Ok(receipt) = Receipt::try_from(elem) {
-                Some(MessagePayload::Receipt(receipt))
-            } else if let Ok(delay) = Delay::try_from(elem) {
-                Some(MessagePayload::Delay(delay))
-            } else if let Ok(attention) = Attention::try_from(elem) {
-                Some(MessagePayload::Attention(attention))
-            } else if let Ok(replace) = Replace::try_from(elem) {
-                Some(MessagePayload::MessageCorrect(replace))
-            } else if let Ok(eme) = ExplicitMessageEncryption::try_from(elem) {
-                Some(MessagePayload::ExplicitMessageEncryption(eme))
+            if elem.is("body", ns::JABBER_CLIENT) {
+                for _ in elem.children() {
+                    return Err(Error::ParseError("Unknown child in body element."));
+                }
+                let lang = elem.attr("xml:lang").unwrap_or("").to_owned();
+                if let Some(_) = bodies.insert(lang, elem.text()) {
+                    return Err(Error::ParseError("Body element present twice for the same xml:lang."));
+                }
             } else {
-                None
-            };
-            payloads.push(match payload {
-                Some(payload) => MessagePayloadType::Parsed(payload),
-                None => MessagePayloadType::XML(elem.clone()),
-            });
+                let payload = if let Ok(stanza_error) = StanzaError::try_from(elem) {
+                    Some(MessagePayload::StanzaError(stanza_error))
+                } else if let Ok(chatstate) = ChatState::try_from(elem) {
+                    Some(MessagePayload::ChatState(chatstate))
+                } else if let Ok(receipt) = Receipt::try_from(elem) {
+                    Some(MessagePayload::Receipt(receipt))
+                } else if let Ok(delay) = Delay::try_from(elem) {
+                    Some(MessagePayload::Delay(delay))
+                } else if let Ok(attention) = Attention::try_from(elem) {
+                    Some(MessagePayload::Attention(attention))
+                } else if let Ok(replace) = Replace::try_from(elem) {
+                    Some(MessagePayload::MessageCorrect(replace))
+                } else if let Ok(eme) = ExplicitMessageEncryption::try_from(elem) {
+                    Some(MessagePayload::ExplicitMessageEncryption(eme))
+                } else {
+                    None
+                };
+                payloads.push(match payload {
+                    Some(payload) => MessagePayloadType::Parsed(payload),
+                    None => MessagePayloadType::XML(elem.clone()),
+                });
+            }
         }
         Ok(Message {
             from: from,
             to: to,
             id: id,
             type_: type_,
+            bodies: BTreeMap::new(),
             payloads: payloads,
         })
     }
@@ -151,7 +164,6 @@ impl<'a> TryFrom<&'a Element> for Message {
 impl<'a> Into<Element> for &'a MessagePayload {
     fn into(self) -> Element {
         match *self {
-            MessagePayload::Body(ref body) => body::serialise(body),
             MessagePayload::StanzaError(ref stanza_error) => stanza_error.into(),
             MessagePayload::Attention(ref attention) => attention.into(),
             MessagePayload::ChatState(ref chatstate) => chatstate.into(),
@@ -171,6 +183,17 @@ impl<'a> Into<Element> for &'a Message {
                                  .attr("to", self.to.clone().and_then(|value| Some(String::from(value))))
                                  .attr("id", self.id.clone())
                                  .attr("type", self.type_.clone())
+                                 .append(self.bodies.iter()
+                                                    .map(|(lang, body)| {
+                                                         Element::builder("body")
+                                                                 .ns(ns::JABBER_CLIENT)
+                                                                 .attr("xml:lang", match lang.as_ref() {
+                                                                      "" => None,
+                                                                      lang => Some(lang),
+                                                                  })
+                                                                 .append(body.clone())
+                                                                 .build() })
+                                                    .collect::<Vec<_>>())
                                  .build();
         for child in self.payloads.clone() {
             let elem = match child {
@@ -206,6 +229,7 @@ mod tests {
             to: None,
             id: None,
             type_: MessageType::Normal,
+            bodies: BTreeMap::new(),
             payloads: vec!(),
         };
         let elem2 = (&message).into();
@@ -221,14 +245,15 @@ mod tests {
     #[test]
     fn test_serialise_body() {
         let elem: Element = "<message xmlns='jabber:client' to='coucou@example.org' type='chat'><body>Hello world!</body></message>".parse().unwrap();
+        let mut bodies = BTreeMap::new();
+        bodies.insert(String::from(""), String::from("Hello world!"));
         let message = Message {
             from: None,
             to: Some(Jid::from_str("coucou@example.org").unwrap()),
             id: None,
             type_: MessageType::Chat,
-            payloads: vec!(
-                MessagePayloadType::Parsed(MessagePayload::Body("Hello world!".to_owned())),
-            ),
+            bodies: bodies,
+            payloads: vec!(),
         };
         let elem2 = (&message).into();
         assert_eq!(elem, elem2);
