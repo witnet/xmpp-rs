@@ -17,7 +17,7 @@ use ns;
 
 use body;
 use stanza_error;
-use chatstates;
+use chatstates::ChatState;
 use receipts::Receipt;
 use delay;
 use attention::Attention;
@@ -29,7 +29,7 @@ use eme;
 pub enum MessagePayload {
     Body(body::Body),
     StanzaError(stanza_error::StanzaError),
-    ChatState(chatstates::ChatState),
+    ChatState(ChatState),
     Receipt(Receipt),
     Delay(delay::Delay),
     Attention(Attention),
@@ -115,7 +115,7 @@ pub fn parse_message(root: &Element) -> Result<Message, Error> {
             Some(MessagePayload::Body(body))
         } else if let Ok(stanza_error) = stanza_error::parse_stanza_error(elem) {
             Some(MessagePayload::StanzaError(stanza_error))
-        } else if let Ok(chatstate) = chatstates::parse_chatstate(elem) {
+        } else if let Ok(chatstate) = ChatState::try_from(elem) {
             Some(MessagePayload::ChatState(chatstate))
         } else if let Ok(receipt) = Receipt::try_from(elem) {
             Some(MessagePayload::Receipt(receipt))
@@ -149,7 +149,7 @@ pub fn serialise_payload(payload: &MessagePayload) -> Element {
         MessagePayload::Body(ref body) => body::serialise(body),
         MessagePayload::StanzaError(ref stanza_error) => stanza_error::serialise(stanza_error),
         MessagePayload::Attention(ref attention) => attention.into(),
-        MessagePayload::ChatState(ref chatstate) => chatstates::serialise(chatstate),
+        MessagePayload::ChatState(ref chatstate) => chatstate.into(),
         MessagePayload::Receipt(ref receipt) => receipt.into(),
         MessagePayload::Delay(ref delay) => delay::serialise(delay),
         MessagePayload::MessageCorrect(ref replace) => replace.into(),
