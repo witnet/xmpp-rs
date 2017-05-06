@@ -47,6 +47,9 @@ pub const JINGLE_FT: &'static str = "urn:xmpp:jingle:apps:file-transfer:5";
 /// XEP-0234: Jingle File Transfer
 pub const JINGLE_FT_ERROR: &'static str = "urn:xmpp:jingle:apps:file-transfer:errors:0";
 
+/// XEP-0260: Jingle SOCKS5 Bytestreams Transport Method
+pub const JINGLE_S5B: &'static str = "urn:xmpp:jingle:transports:s5b:1";
+
 /// XEP-0261: Jingle In-Band Bytestreams Transport Method
 pub const JINGLE_IBB: &'static str = "urn:xmpp:jingle:transports:ibb:1";
 

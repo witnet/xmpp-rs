@@ -76,6 +76,9 @@ pub mod attention;
 /// XEP-0234: Jingle File Transfer
 pub mod jingle_ft;
 
+/// XEP-0260: Jingle SOCKS5 Bytestreams Transport Method
+pub mod jingle_s5b;
+
 /// XEP-0261: Jingle In-Band Bytestreams Transport Method
 pub mod jingle_ibb;
 
