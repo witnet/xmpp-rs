@@ -4,6 +4,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+use std::convert::TryFrom;
 use std::str::FromStr;
 
 use minidom::Element;
@@ -30,55 +31,58 @@ fn required_attr<T: FromStr>(root: &Element, attr: &str, err: Error) -> Result<T
     optional_attr(root, attr).ok_or(err)
 }
 
-pub fn parse_jingle_ibb(root: &Element) -> Result<Transport, Error> {
-    if root.is("transport", ns::JINGLE_IBB) {
-        for _ in root.children() {
-            return Err(Error::ParseError("Unknown child in JingleIBB element."));
+impl<'a> TryFrom<&'a Element> for Transport {
+    type Error = Error;
+
+    fn try_from(elem: &'a Element) -> Result<Transport, Error> {
+        if elem.is("transport", ns::JINGLE_IBB) {
+            for _ in elem.children() {
+                return Err(Error::ParseError("Unknown child in JingleIBB element."));
+            }
+            let block_size = required_attr(elem, "block-size", Error::ParseError("Required attribute 'block-size' missing in JingleIBB element."))?;
+            let sid = required_attr(elem, "sid", Error::ParseError("Required attribute 'sid' missing in JingleIBB element."))?;
+            let stanza = elem.attr("stanza")
+                             .unwrap_or("iq")
+                             .parse()?;
+            Ok(Transport {
+                block_size: block_size,
+                sid: sid,
+                stanza: stanza
+            })
+        } else {
+            Err(Error::ParseError("This is not an JingleIBB element."))
         }
-        let block_size = required_attr(root, "block-size", Error::ParseError("Required attribute 'block-size' missing in JingleIBB element."))?;
-        let sid = required_attr(root, "sid", Error::ParseError("Required attribute 'sid' missing in JingleIBB element."))?;
-        let stanza = root.attr("stanza")
-                         .unwrap_or("iq")
-                         .parse()?;
-        Ok(Transport {
-            block_size: block_size,
-            sid: sid,
-            stanza: stanza
-        })
-    } else {
-        Err(Error::ParseError("This is not an JingleIBB element."))
     }
 }
 
-pub fn serialise(transport: &Transport) -> Element {
-    Element::builder("transport")
-            .ns(ns::JINGLE_IBB)
-            .attr("block-size", format!("{}", transport.block_size))
-            .attr("sid", transport.sid.clone())
-            .attr("stanza", transport.stanza.clone())
-            .build()
+impl<'a> Into<Element> for &'a Transport {
+    fn into(self) -> Element {
+        Element::builder("transport")
+                .ns(ns::JINGLE_IBB)
+                .attr("block-size", format!("{}", self.block_size))
+                .attr("sid", self.sid.clone())
+                .attr("stanza", self.stanza.clone())
+                .build()
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use minidom::Element;
-    use error::Error;
-    use ibb;
-    use jingle_ibb;
+    use super::*;
 
     #[test]
     fn test_simple() {
         let elem: Element = "<transport xmlns='urn:xmpp:jingle:transports:ibb:1' block-size='3' sid='coucou'/>".parse().unwrap();
-        let transport = jingle_ibb::parse_jingle_ibb(&elem).unwrap();
+        let transport = Transport::try_from(&elem).unwrap();
         assert_eq!(transport.block_size, 3);
         assert_eq!(transport.sid, "coucou");
-        assert_eq!(transport.stanza, ibb::Stanza::Iq);
+        assert_eq!(transport.stanza, Stanza::Iq);
     }
 
     #[test]
     fn test_invalid() {
         let elem: Element = "<transport xmlns='urn:xmpp:jingle:transports:ibb:1'/>".parse().unwrap();
-        let error = jingle_ibb::parse_jingle_ibb(&elem).unwrap_err();
+        let error = Transport::try_from(&elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -87,7 +91,7 @@ mod tests {
 
         // TODO: maybe make a better error message here.
         let elem: Element = "<transport xmlns='urn:xmpp:jingle:transports:ibb:1' block-size='-5'/>".parse().unwrap();
-        let error = jingle_ibb::parse_jingle_ibb(&elem).unwrap_err();
+        let error = Transport::try_from(&elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -95,7 +99,7 @@ mod tests {
         assert_eq!(message, "Required attribute 'block-size' missing in JingleIBB element.");
 
         let elem: Element = "<transport xmlns='urn:xmpp:jingle:transports:ibb:1' block-size='128'/>".parse().unwrap();
-        let error = jingle_ibb::parse_jingle_ibb(&elem).unwrap_err();
+        let error = Transport::try_from(&elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -106,7 +110,7 @@ mod tests {
     #[test]
     fn test_invalid_stanza() {
         let elem: Element = "<transport xmlns='urn:xmpp:jingle:transports:ibb:1' block-size='128' sid='coucou' stanza='fdsq'/>".parse().unwrap();
-        let error = jingle_ibb::parse_jingle_ibb(&elem).unwrap_err();
+        let error = Transport::try_from(&elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
