@@ -18,7 +18,7 @@ use ns;
 
 use stanza_error;
 use delay::Delay;
-use ecaps2;
+use ecaps2::ECaps2;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Show {
@@ -53,7 +53,7 @@ pub enum PresencePayload {
     Priority(Priority),
     StanzaError(stanza_error::StanzaError),
     Delay(Delay),
-    ECaps2(ecaps2::ECaps2),
+    ECaps2(ECaps2),
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -183,7 +183,7 @@ pub fn parse_presence(root: &Element) -> Result<Presence, Error> {
                 Some(PresencePayload::StanzaError(stanza_error))
             } else if let Ok(delay) = Delay::try_from(elem) {
                 Some(PresencePayload::Delay(delay))
-            } else if let Ok(ecaps2) = ecaps2::parse_ecaps2(elem) {
+            } else if let Ok(ecaps2) = ECaps2::try_from(elem) {
                 Some(PresencePayload::ECaps2(ecaps2))
             } else {
                 None
@@ -228,7 +228,7 @@ pub fn serialise_payload(payload: &PresencePayload) -> Element {
         },
         PresencePayload::StanzaError(ref stanza_error) => stanza_error::serialise(stanza_error),
         PresencePayload::Delay(ref delay) => delay.into(),
-        PresencePayload::ECaps2(ref ecaps2) => ecaps2::serialise(ecaps2),
+        PresencePayload::ECaps2(ref ecaps2) => ecaps2.into(),
     }
 }
 

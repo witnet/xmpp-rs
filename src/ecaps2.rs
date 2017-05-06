@@ -25,33 +25,37 @@ pub struct ECaps2 {
     hashes: Vec<Hash>,
 }
 
-pub fn parse_ecaps2(root: &Element) -> Result<ECaps2, Error> {
-    if !root.is("c", ns::ECAPS2) {
-        return Err(Error::ParseError("This is not an ecaps2 element."));
-    }
-    let mut hashes = vec!();
-    for child in root.children() {
-        if child.is("hash", ns::HASHES) {
-            let hash = Hash::try_from(child)?;
-            hashes.push(hash);
-        } else {
-            return Err(Error::ParseError("Unknown child in ecaps2 element."));
+impl<'a> TryFrom<&'a Element> for ECaps2 {
+    type Error = Error;
+
+    fn try_from(elem: &'a Element) -> Result<ECaps2, Error> {
+        if !elem.is("c", ns::ECAPS2) {
+            return Err(Error::ParseError("This is not an ecaps2 element."));
         }
+        let mut hashes = vec!();
+        for child in elem.children() {
+            if child.is("hash", ns::HASHES) {
+                let hash = Hash::try_from(child)?;
+                hashes.push(hash);
+            } else {
+                return Err(Error::ParseError("Unknown child in ecaps2 element."));
+            }
+        }
+        Ok(ECaps2 {
+            hashes: hashes,
+        })
     }
-    Ok(ECaps2 {
-        hashes: hashes,
-    })
 }
 
-pub fn serialise(ecaps2: &ECaps2) -> Element {
-    let mut c = Element::builder("c")
-                        .ns(ns::ECAPS2)
-                        .build();
-    for hash in ecaps2.hashes.clone() {
-        let hash_elem = (&hash).into();
-        c.append_child(hash_elem);
+impl<'a> Into<Element> for &'a ECaps2 {
+    fn into(self) -> Element {
+        Element::builder("c")
+                .ns(ns::ECAPS2)
+                .append(self.hashes.iter()
+                                   .map(|hash| hash.into())
+                                   .collect::<Vec<Element>>())
+                .build()
     }
-    c
 }
 
 fn compute_item(field: &str) -> Vec<u8> {
@@ -161,8 +165,7 @@ pub fn hash_ecaps2(data: &[u8], algo: &str) -> String {
 
 #[cfg(test)]
 mod tests {
-    use minidom::Element;
-    use error::Error;
+    use super::*;
     use disco;
     use ecaps2;
     use base64;
@@ -170,7 +173,7 @@ mod tests {
     #[test]
     fn test_parse() {
         let elem: Element = "<c xmlns='urn:xmpp:caps'><hash xmlns='urn:xmpp:hashes:2' algo='sha-256'>K1Njy3HZBThlo4moOD5gBGhn0U0oK7/CbfLlIUDi6o4=</hash><hash xmlns='urn:xmpp:hashes:2' algo='sha3-256'>+sDTQqBmX6iG/X3zjt06fjZMBBqL/723knFIyRf0sg8=</hash></c>".parse().unwrap();
-        let ecaps2 = ecaps2::parse_ecaps2(&elem).unwrap();
+        let ecaps2 = ECaps2::try_from(&elem).unwrap();
         assert_eq!(ecaps2.hashes.len(), 2);
         assert_eq!(ecaps2.hashes[0].algo, "sha-256");
         assert_eq!(ecaps2.hashes[0].hash, "K1Njy3HZBThlo4moOD5gBGhn0U0oK7/CbfLlIUDi6o4=");
@@ -181,7 +184,7 @@ mod tests {
     #[test]
     fn test_invalid_child() {
         let elem: Element = "<c xmlns='urn:xmpp:caps'><hash xmlns='urn:xmpp:hashes:2' algo='sha-256'>K1Njy3HZBThlo4moOD5gBGhn0U0oK7/CbfLlIUDi6o4=</hash><hash xmlns='urn:xmpp:hashes:1' algo='sha3-256'>+sDTQqBmX6iG/X3zjt06fjZMBBqL/723knFIyRf0sg8=</hash></c>".parse().unwrap();
-        let error = ecaps2::parse_ecaps2(&elem).unwrap_err();
+        let error = ECaps2::try_from(&elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
