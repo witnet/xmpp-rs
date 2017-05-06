@@ -11,7 +11,7 @@ use minidom::Element;
 use error::Error;
 
 use delay::Delay;
-use message;
+use message::Message;
 
 use ns;
 
@@ -19,7 +19,7 @@ use ns;
 pub struct Forwarded {
     pub delay: Option<Delay>,
     // XXX: really?  Option?
-    pub stanza: Option<message::Message>,
+    pub stanza: Option<Message>,
 }
 
 impl<'a> TryFrom<&'a Element> for Forwarded {
@@ -35,7 +35,7 @@ impl<'a> TryFrom<&'a Element> for Forwarded {
             if child.is("delay", ns::DELAY) {
                 delay = Some(Delay::try_from(child)?);
             } else if child.is("message", ns::JABBER_CLIENT) {
-                stanza = Some(message::parse_message(child)?);
+                stanza = Some(Message::try_from(child)?);
             // TODO: also handle the five other possibilities.
             } else {
                 return Err(Error::ParseError("Unknown child in forwarded element."));
@@ -53,7 +53,7 @@ impl<'a> Into<Element> for &'a Forwarded {
         Element::builder("forwarded")
                 .ns(ns::FORWARD)
                 .append(match self.delay { Some(ref delay) => { let elem: Element = delay.into(); Some(elem) }, None => None })
-                .append(self.stanza.clone())
+                .append(match self.stanza { Some(ref stanza) => { let elem: Element = stanza.into(); Some(elem) }, None => None })
                 .build()
     }
 }
