@@ -1,12 +1,22 @@
-Version XXX:
-2017-0X-XX  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
+Version 0.2.0:
+2017-05-06  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
     * New parsers/serialisers:
         - Stanza error, as per RFC 6120 §8.3.
+        - Jingle SOCKS5 Transport, XEP-0260.
     * Incompatible changes:
+        - Parsers and serialisers now all implement TryFrom<Element>
+          and Into<Element>, instead of the old parse_* and serialise_*
+          functions.
         - Presence has got an overhaul, it now hosts show, statuses and
           priority in its struct.  The status module has also been
           dropped.
+        - Message now supports multiple bodies, each in a different
+          language.  The body module has also been dropped.
         - Iq now gets a proper StanzaError when the type is error.
+        - Fix bogus Jingle payload, which was requiring both
+          description and transport.
+    * Crate updates:
+        - minidom 0.3.0
 
 Version 0.1.0:
 2017-04-29  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>

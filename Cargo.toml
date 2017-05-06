@@ -1,11 +1,11 @@
 [package]
 name = "xmpp-parsers"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>"]
 description = "Collection of parsers and serialisers for XMPP extensions"
 homepage = "https://hg.linkmauve.fr/xmpp-parsers"
 repository = "https://hg.linkmauve.fr/xmpp-parsers"
-keywords = ["xmpp"]
+keywords = ["xmpp", "xml"]
 categories = ["parsing", "network-programming"]
 license = "MPL-2.0"
 
