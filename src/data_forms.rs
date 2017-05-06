@@ -4,6 +4,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+use std::convert::TryFrom;
 use std::str::FromStr;
 
 use minidom::Element;
@@ -11,7 +12,7 @@ use minidom::Element;
 use error::Error;
 use ns;
 
-use media_element::{MediaElement, parse_media_element};
+use media_element::MediaElement;
 
 #[derive(Debug, Clone)]
 pub struct Field {
@@ -74,7 +75,7 @@ pub fn parse_data_form(root: &Element) -> Result<DataForm, Error> {
                 if element.is("value", ns::DATA_FORMS) {
                     values.push(element.text());
                 } else if element.is("media", ns::MEDIA_ELEMENT) {
-                    match parse_media_element(element) {
+                    match MediaElement::try_from(element) {
                         Ok(media_element) => media.push(media_element),
                         Err(_) => (), // TODO: is it really nice to swallow this error?
                     }
