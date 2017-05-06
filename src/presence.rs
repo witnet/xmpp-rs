@@ -4,6 +4,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+use std::convert::TryFrom;
 use std::str::FromStr;
 use std::collections::BTreeMap;
 
@@ -16,7 +17,7 @@ use error::Error;
 use ns;
 
 use stanza_error;
-use delay;
+use delay::Delay;
 use ecaps2;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -51,7 +52,7 @@ pub enum PresencePayload {
     Status(Status),
     Priority(Priority),
     StanzaError(stanza_error::StanzaError),
-    Delay(delay::Delay),
+    Delay(Delay),
     ECaps2(ecaps2::ECaps2),
 }
 
@@ -180,7 +181,7 @@ pub fn parse_presence(root: &Element) -> Result<Presence, Error> {
         } else {
             let payload = if let Ok(stanza_error) = stanza_error::parse_stanza_error(elem) {
                 Some(PresencePayload::StanzaError(stanza_error))
-            } else if let Ok(delay) = delay::parse_delay(elem) {
+            } else if let Ok(delay) = Delay::try_from(elem) {
                 Some(PresencePayload::Delay(delay))
             } else if let Ok(ecaps2) = ecaps2::parse_ecaps2(elem) {
                 Some(PresencePayload::ECaps2(ecaps2))
@@ -226,7 +227,7 @@ pub fn serialise_payload(payload: &PresencePayload) -> Element {
                     .build()
         },
         PresencePayload::StanzaError(ref stanza_error) => stanza_error::serialise(stanza_error),
-        PresencePayload::Delay(ref delay) => delay::serialise(delay),
+        PresencePayload::Delay(ref delay) => delay.into(),
         PresencePayload::ECaps2(ref ecaps2) => ecaps2::serialise(ecaps2),
     }
 }

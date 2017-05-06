@@ -4,18 +4,20 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+use std::convert::TryFrom;
+
 use minidom::Element;
 
 use error::Error;
 
-use delay;
+use delay::Delay;
 use message;
 
 use ns;
 
 #[derive(Debug, Clone)]
 pub struct Forwarded {
-    pub delay: Option<delay::Delay>,
+    pub delay: Option<Delay>,
     // XXX: really?  Option?
     pub stanza: Option<message::Message>,
 }
@@ -28,7 +30,7 @@ pub fn parse_forwarded(root: &Element) -> Result<Forwarded, Error> {
     let mut stanza = None;
     for child in root.children() {
         if child.is("delay", ns::DELAY) {
-            delay = Some(delay::parse_delay(child)?);
+            delay = Some(Delay::try_from(child)?);
         } else if child.is("message", ns::JABBER_CLIENT) {
             stanza = Some(message::parse_message(child)?);
         // TODO: also handle the five other possibilities.
@@ -45,7 +47,7 @@ pub fn parse_forwarded(root: &Element) -> Result<Forwarded, Error> {
 pub fn serialise(forwarded: &Forwarded) -> Element {
     Element::builder("forwarded")
             .ns(ns::FORWARD)
-            .append(forwarded.delay.clone())
+            .append(match forwarded.delay { Some(ref delay) => { let elem: Element = delay.into(); Some(elem) }, None => None })
             .append(forwarded.stanza.clone())
             .build()
 }
