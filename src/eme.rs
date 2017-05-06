@@ -4,6 +4,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+use std::convert::TryFrom;
+
 use minidom::Element;
 
 use error::Error;
@@ -16,44 +18,48 @@ pub struct ExplicitMessageEncryption {
     pub name: Option<String>,
 }
 
-pub fn parse_explicit_message_encryption(root: &Element) -> Result<ExplicitMessageEncryption, Error> {
-    if !root.is("encryption", ns::EME) {
-        return Err(Error::ParseError("This is not an encryption element."));
+impl<'a> TryFrom<&'a Element> for ExplicitMessageEncryption {
+    type Error = Error;
+
+    fn try_from(elem: &'a Element) -> Result<ExplicitMessageEncryption, Error> {
+        if !elem.is("encryption", ns::EME) {
+            return Err(Error::ParseError("This is not an encryption element."));
+        }
+        for _ in elem.children() {
+            return Err(Error::ParseError("Unknown child in encryption element."));
+        }
+        let namespace = elem.attr("namespace").ok_or(Error::ParseError("Mandatory argument 'namespace' not present in encryption element."))?.to_owned();
+        let name = elem.attr("name").and_then(|value| value.parse().ok());
+        Ok(ExplicitMessageEncryption {
+            namespace: namespace,
+            name: name,
+        })
     }
-    for _ in root.children() {
-        return Err(Error::ParseError("Unknown child in encryption element."));
-    }
-    let namespace = root.attr("namespace").ok_or(Error::ParseError("Mandatory argument 'namespace' not present in encryption element."))?.to_owned();
-    let name = root.attr("name").and_then(|value| value.parse().ok());
-    Ok(ExplicitMessageEncryption {
-        namespace: namespace,
-        name: name,
-    })
 }
 
-pub fn serialise(eme: &ExplicitMessageEncryption) -> Element {
-    Element::builder("encryption")
-            .ns(ns::EME)
-            .attr("namespace", eme.namespace.clone())
-            .attr("name", eme.name.clone())
-            .build()
+impl<'a> Into<Element> for &'a ExplicitMessageEncryption {
+    fn into(self) -> Element {
+        Element::builder("encryption")
+                .ns(ns::EME)
+                .attr("namespace", self.namespace.clone())
+                .attr("name", self.name.clone())
+                .build()
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use minidom::Element;
-    use error::Error;
-    use eme;
+    use super::*;
 
     #[test]
     fn test_simple() {
         let elem: Element = "<encryption xmlns='urn:xmpp:eme:0' namespace='urn:xmpp:otr:0'/>".parse().unwrap();
-        let encryption = eme::parse_explicit_message_encryption(&elem).unwrap();
+        let encryption = ExplicitMessageEncryption::try_from(&elem).unwrap();
         assert_eq!(encryption.namespace, "urn:xmpp:otr:0");
         assert_eq!(encryption.name, None);
 
         let elem: Element = "<encryption xmlns='urn:xmpp:eme:0' namespace='some.unknown.mechanism' name='SuperMechanism'/>".parse().unwrap();
-        let encryption = eme::parse_explicit_message_encryption(&elem).unwrap();
+        let encryption = ExplicitMessageEncryption::try_from(&elem).unwrap();
         assert_eq!(encryption.namespace, "some.unknown.mechanism");
         assert_eq!(encryption.name, Some(String::from("SuperMechanism")));
     }
@@ -61,7 +67,7 @@ mod tests {
     #[test]
     fn test_unknown() {
         let elem: Element = "<replace xmlns='urn:xmpp:message-correct:0'/>".parse().unwrap();
-        let error = eme::parse_explicit_message_encryption(&elem).unwrap_err();
+        let error = ExplicitMessageEncryption::try_from(&elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -72,7 +78,7 @@ mod tests {
     #[test]
     fn test_invalid_child() {
         let elem: Element = "<encryption xmlns='urn:xmpp:eme:0'><coucou/></encryption>".parse().unwrap();
-        let error = eme::parse_explicit_message_encryption(&elem).unwrap_err();
+        let error = ExplicitMessageEncryption::try_from(&elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -83,8 +89,8 @@ mod tests {
     #[test]
     fn test_serialise() {
         let elem: Element = "<encryption xmlns='urn:xmpp:eme:0' namespace='coucou'/>".parse().unwrap();
-        let eme = eme::ExplicitMessageEncryption { namespace: String::from("coucou"), name: None };
-        let elem2 = eme::serialise(&eme);
+        let eme = ExplicitMessageEncryption { namespace: String::from("coucou"), name: None };
+        let elem2 = (&eme).into();
         assert_eq!(elem, elem2);
     }
 }

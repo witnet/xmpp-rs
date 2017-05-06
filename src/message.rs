@@ -22,7 +22,7 @@ use receipts::Receipt;
 use delay::Delay;
 use attention::Attention;
 use message_correct::Replace;
-use eme;
+use eme::ExplicitMessageEncryption;
 
 /// Lists every known payload of a `<message/>`.
 #[derive(Debug, Clone)]
@@ -34,7 +34,7 @@ pub enum MessagePayload {
     Delay(Delay),
     Attention(Attention),
     MessageCorrect(Replace),
-    ExplicitMessageEncryption(eme::ExplicitMessageEncryption),
+    ExplicitMessageEncryption(ExplicitMessageEncryption),
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -125,7 +125,7 @@ pub fn parse_message(root: &Element) -> Result<Message, Error> {
             Some(MessagePayload::Attention(attention))
         } else if let Ok(replace) = Replace::try_from(elem) {
             Some(MessagePayload::MessageCorrect(replace))
-        } else if let Ok(eme) = eme::parse_explicit_message_encryption(elem) {
+        } else if let Ok(eme) = ExplicitMessageEncryption::try_from(elem) {
             Some(MessagePayload::ExplicitMessageEncryption(eme))
         } else {
             None
@@ -153,7 +153,7 @@ pub fn serialise_payload(payload: &MessagePayload) -> Element {
         MessagePayload::Receipt(ref receipt) => receipt.into(),
         MessagePayload::Delay(ref delay) => delay.into(),
         MessagePayload::MessageCorrect(ref replace) => replace.into(),
-        MessagePayload::ExplicitMessageEncryption(ref eme) => eme::serialise(eme),
+        MessagePayload::ExplicitMessageEncryption(ref eme) => eme.into(),
     }
 }
 
