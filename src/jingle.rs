@@ -150,9 +150,9 @@ pub struct Content {
     pub disposition: String,
     pub name: String,
     pub senders: Senders,
-    pub description: (String, Element),
-    pub transport: (String, Element),
-    pub security: Option<(String, Element)>,
+    pub description: Option<Element>,
+    pub transport: Option<Element>,
+    pub security: Option<Element>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -287,48 +287,19 @@ impl<'a> TryFrom<&'a Element> for Jingle {
                         if description.is_some() {
                             return Err(Error::ParseError("Content must not have more than one description."));
                         }
-                        let namespace = stuff.ns()
-                                             .and_then(|ns| ns.parse().ok())
-                                             // TODO: is this even reachable?
-                                             .ok_or(Error::ParseError("Invalid namespace on description element."))?;
-                        description = Some((
-                            namespace,
-                            stuff.clone(),
-                        ));
+                        description = Some(stuff.clone());
                     } else if stuff.name() == "transport" {
                         if transport.is_some() {
                             return Err(Error::ParseError("Content must not have more than one transport."));
                         }
-                        let namespace = stuff.ns()
-                                             .and_then(|ns| ns.parse().ok())
-                                             // TODO: is this even reachable?
-                                             .ok_or(Error::ParseError("Invalid namespace on transport element."))?;
-                        transport = Some((
-                            namespace,
-                            stuff.clone(),
-                        ));
+                        transport = Some(stuff.clone());
                     } else if stuff.name() == "security" {
                         if security.is_some() {
                             return Err(Error::ParseError("Content must not have more than one security."));
                         }
-                        let namespace = stuff.ns()
-                                             .and_then(|ns| ns.parse().ok())
-                                             // TODO: is this even reachable?
-                                             .ok_or(Error::ParseError("Invalid namespace on security element."))?;
-                        security = Some((
-                            namespace,
-                            stuff.clone(),
-                        ));
+                        security = Some(stuff.clone());
                     }
                 }
-                if description.is_none() {
-                    return Err(Error::ParseError("Content must have one description."));
-                }
-                if transport.is_none() {
-                    return Err(Error::ParseError("Content must have one transport."));
-                }
-                let description = description.unwrap().to_owned();
-                let transport = transport.unwrap().to_owned();
                 contents.push(Content {
                     creator: creator,
                     disposition: disposition.to_owned(),
@@ -391,10 +362,14 @@ impl<'a> Into<Element> for &'a Content {
                                .attr("name", self.name.clone())
                                .attr("senders", String::from(self.senders.clone()))
                                .build();
-        root.append_child(self.description.1.clone());
-        root.append_child(self.transport.1.clone());
+        if let Some(description) = self.description.clone() {
+            root.append_child(description);
+        }
+        if let Some(transport) = self.transport.clone() {
+            root.append_child(transport);
+        }
         if let Some(security) = self.security.clone() {
-            root.append_child(security.1.clone());
+            root.append_child(security);
         }
         root
     }
@@ -529,22 +504,6 @@ mod tests {
             _ => panic!(),
         };
         assert_eq!(message, "Unknown senders.");
-
-        let elem: Element = "<jingle xmlns='urn:xmpp:jingle:1' action='session-initiate' sid='coucou'><content creator='initiator' name='coucou'/></jingle>".parse().unwrap();
-        let error = Jingle::try_from(&elem).unwrap_err();
-        let message = match error {
-            Error::ParseError(string) => string,
-            _ => panic!(),
-        };
-        assert_eq!(message, "Content must have one description.");
-
-        let elem: Element = "<jingle xmlns='urn:xmpp:jingle:1' action='session-initiate' sid='coucou'><content creator='initiator' name='coucou'><description/></content></jingle>".parse().unwrap();
-        let error = Jingle::try_from(&elem).unwrap_err();
-        let message = match error {
-            Error::ParseError(string) => string,
-            _ => panic!(),
-        };
-        assert_eq!(message, "Content must have one transport.");
     }
 
     #[test]
