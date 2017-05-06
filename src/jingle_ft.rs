@@ -4,6 +4,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+use std::convert::TryFrom;
+
 use hashes;
 use hashes::{Hash, parse_hash};
 
@@ -85,150 +87,158 @@ impl IntoElements for Received {
     }
 }
 
-pub fn parse_jingle_ft(root: &Element) -> Result<Description, Error> {
-    if !root.is("description", ns::JINGLE_FT) {
-        return Err(Error::ParseError("This is not a JingleFT description element."));
-    }
-    if root.children().collect::<Vec<_>>().len() != 1 {
-        return Err(Error::ParseError("JingleFT description element must have exactly one child."));
-    }
+impl<'a> TryFrom<&'a Element> for Description {
+    type Error = Error;
 
-    let mut date = None;
-    let mut media_type = None;
-    let mut name = None;
-    let mut desc = None;
-    let mut size = None;
-    let mut range = None;
-    let mut hashes = vec!();
-    for description_payload in root.children() {
-        if !description_payload.is("file", ns::JINGLE_FT) {
-            return Err(Error::ParseError("Unknown element in JingleFT description."));
+    fn try_from(elem: &'a Element) -> Result<Description, Error> {
+        if !elem.is("description", ns::JINGLE_FT) {
+            return Err(Error::ParseError("This is not a JingleFT description element."));
         }
-        for file_payload in description_payload.children() {
-            if file_payload.is("date", ns::JINGLE_FT) {
-                if date.is_some() {
-                    return Err(Error::ParseError("File must not have more than one date."));
-                }
-                date = Some(file_payload.text());
-            } else if file_payload.is("media-type", ns::JINGLE_FT) {
-                if media_type.is_some() {
-                    return Err(Error::ParseError("File must not have more than one media-type."));
-                }
-                media_type = Some(file_payload.text());
-            } else if file_payload.is("name", ns::JINGLE_FT) {
-                if name.is_some() {
-                    return Err(Error::ParseError("File must not have more than one name."));
-                }
-                name = Some(file_payload.text());
-            } else if file_payload.is("desc", ns::JINGLE_FT) {
-                if desc.is_some() {
-                    return Err(Error::ParseError("File must not have more than one desc."));
-                }
-                desc = Some(file_payload.text());
-            } else if file_payload.is("size", ns::JINGLE_FT) {
-                if size.is_some() {
-                    return Err(Error::ParseError("File must not have more than one size."));
-                }
-                size = Some(file_payload.text().parse()?);
-            } else if file_payload.is("range", ns::JINGLE_FT) {
-                if range.is_some() {
-                    return Err(Error::ParseError("File must not have more than one range."));
-                }
-                let offset = file_payload.attr("offset").unwrap_or("0").parse()?;
-                let length = match file_payload.attr("length") {
-                    Some(length) => Some(length.parse()?),
-                    None => None,
-                };
-                let mut range_hashes = vec!();
-                for hash_element in file_payload.children() {
-                    if !hash_element.is("hash", ns::HASHES) {
-                        return Err(Error::ParseError("Unknown element in JingleFT range."));
+        if elem.children().collect::<Vec<_>>().len() != 1 {
+            return Err(Error::ParseError("JingleFT description element must have exactly one child."));
+        }
+
+        let mut date = None;
+        let mut media_type = None;
+        let mut name = None;
+        let mut desc = None;
+        let mut size = None;
+        let mut range = None;
+        let mut hashes = vec!();
+        for description_payload in elem.children() {
+            if !description_payload.is("file", ns::JINGLE_FT) {
+                return Err(Error::ParseError("Unknown element in JingleFT description."));
+            }
+            for file_payload in description_payload.children() {
+                if file_payload.is("date", ns::JINGLE_FT) {
+                    if date.is_some() {
+                        return Err(Error::ParseError("File must not have more than one date."));
                     }
-                    range_hashes.push(parse_hash(hash_element)?);
+                    date = Some(file_payload.text());
+                } else if file_payload.is("media-type", ns::JINGLE_FT) {
+                    if media_type.is_some() {
+                        return Err(Error::ParseError("File must not have more than one media-type."));
+                    }
+                    media_type = Some(file_payload.text());
+                } else if file_payload.is("name", ns::JINGLE_FT) {
+                    if name.is_some() {
+                        return Err(Error::ParseError("File must not have more than one name."));
+                    }
+                    name = Some(file_payload.text());
+                } else if file_payload.is("desc", ns::JINGLE_FT) {
+                    if desc.is_some() {
+                        return Err(Error::ParseError("File must not have more than one desc."));
+                    }
+                    desc = Some(file_payload.text());
+                } else if file_payload.is("size", ns::JINGLE_FT) {
+                    if size.is_some() {
+                        return Err(Error::ParseError("File must not have more than one size."));
+                    }
+                    size = Some(file_payload.text().parse()?);
+                } else if file_payload.is("range", ns::JINGLE_FT) {
+                    if range.is_some() {
+                        return Err(Error::ParseError("File must not have more than one range."));
+                    }
+                    let offset = file_payload.attr("offset").unwrap_or("0").parse()?;
+                    let length = match file_payload.attr("length") {
+                        Some(length) => Some(length.parse()?),
+                        None => None,
+                    };
+                    let mut range_hashes = vec!();
+                    for hash_element in file_payload.children() {
+                        if !hash_element.is("hash", ns::HASHES) {
+                            return Err(Error::ParseError("Unknown element in JingleFT range."));
+                        }
+                        range_hashes.push(parse_hash(hash_element)?);
+                    }
+                    range = Some(Range {
+                        offset: offset,
+                        length: length,
+                        hashes: range_hashes,
+                    });
+                } else if file_payload.is("hash", ns::HASHES) {
+                    hashes.push(parse_hash(file_payload)?);
+                } else {
+                    return Err(Error::ParseError("Unknown element in JingleFT file."));
                 }
-                range = Some(Range {
-                    offset: offset,
-                    length: length,
-                    hashes: range_hashes,
-                });
-            } else if file_payload.is("hash", ns::HASHES) {
-                hashes.push(parse_hash(file_payload)?);
-            } else {
-                return Err(Error::ParseError("Unknown element in JingleFT file."));
             }
         }
-    }
 
-    Ok(Description {
-        file: File {
-            date: date,
-            media_type: media_type,
-            name: name,
-            desc: desc,
-            size: size,
-            range: range,
-            hashes: hashes,
-        },
-    })
+        Ok(Description {
+            file: File {
+                date: date,
+                media_type: media_type,
+                name: name,
+                desc: desc,
+                size: size,
+                range: range,
+                hashes: hashes,
+            },
+        })
+    }
 }
 
-pub fn serialise_file(file: &File) -> Element {
-    let mut root = Element::builder("file")
-                           .ns(ns::JINGLE_FT)
-                           .build();
-    if let Some(ref date) = file.date {
-        root.append_child(Element::builder("date")
-                                  .ns(ns::JINGLE_FT)
-                                  .append(date.clone())
-                                  .build());
+impl<'a> Into<Element> for &'a File {
+    fn into(self) -> Element {
+        let mut root = Element::builder("file")
+                               .ns(ns::JINGLE_FT)
+                               .build();
+        if let Some(ref date) = self.date {
+            root.append_child(Element::builder("date")
+                                      .ns(ns::JINGLE_FT)
+                                      .append(date.clone())
+                                      .build());
+        }
+        if let Some(ref media_type) = self.media_type {
+            root.append_child(Element::builder("media-type")
+                                      .ns(ns::JINGLE_FT)
+                                      .append(media_type.clone())
+                                      .build());
+        }
+        if let Some(ref name) = self.name {
+            root.append_child(Element::builder("name")
+                                      .ns(ns::JINGLE_FT)
+                                      .append(name.clone())
+                                      .build());
+        }
+        if let Some(ref desc) = self.desc {
+            root.append_child(Element::builder("desc")
+                                      .ns(ns::JINGLE_FT)
+                                      .append(desc.clone())
+                                      .build());
+        }
+        if let Some(ref size) = self.size {
+            root.append_child(Element::builder("size")
+                                      .ns(ns::JINGLE_FT)
+                                      .append(format!("{}", size))
+                                      .build());
+        }
+        if let Some(ref range) = self.range {
+            root.append_child(Element::builder("range")
+                                      .ns(ns::JINGLE_FT)
+                                      .append(range.clone())
+                                      .build());
+        }
+        for hash in self.hashes.clone() {
+            root.append_child(hashes::serialise(&hash));
+        }
+        root
     }
-    if let Some(ref media_type) = file.media_type {
-        root.append_child(Element::builder("media-type")
-                                  .ns(ns::JINGLE_FT)
-                                  .append(media_type.clone())
-                                  .build());
-    }
-    if let Some(ref name) = file.name {
-        root.append_child(Element::builder("name")
-                                  .ns(ns::JINGLE_FT)
-                                  .append(name.clone())
-                                  .build());
-    }
-    if let Some(ref desc) = file.desc {
-        root.append_child(Element::builder("desc")
-                                  .ns(ns::JINGLE_FT)
-                                  .append(desc.clone())
-                                  .build());
-    }
-    if let Some(ref size) = file.size {
-        root.append_child(Element::builder("size")
-                                  .ns(ns::JINGLE_FT)
-                                  .append(format!("{}", size))
-                                  .build());
-    }
-    if let Some(ref range) = file.range {
-        root.append_child(Element::builder("range")
-                                  .ns(ns::JINGLE_FT)
-                                  .append(range.clone())
-                                  .build());
-    }
-    for hash in file.hashes.clone() {
-        root.append_child(hashes::serialise(&hash));
-    }
-    root
 }
 
-pub fn serialise(desc: &Description) -> Element {
-    Element::builder("description")
-            .ns(ns::JINGLE_FT)
-            .append(serialise_file(&desc.file))
-            .build()
+impl<'a> Into<Element> for &'a Description {
+    fn into(self) -> Element {
+        let file: Element = (&self.file).into();
+        Element::builder("description")
+                .ns(ns::JINGLE_FT)
+                .append(file)
+                .build()
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use minidom::Element;
-    use jingle_ft;
+    use super::*;
 
     #[test]
     fn test_description() {
@@ -245,7 +255,7 @@ mod tests {
 </description>
 "#.parse().unwrap();
 
-        let desc = jingle_ft::parse_jingle_ft(&elem).unwrap();
+        let desc = Description::try_from(&elem).unwrap();
         assert_eq!(desc.file.media_type, Some(String::from("text/plain")));
         assert_eq!(desc.file.name, Some(String::from("test.txt")));
         assert_eq!(desc.file.desc, None);
@@ -267,7 +277,7 @@ mod tests {
 </description>
 "#.parse().unwrap();
 
-        let desc = jingle_ft::parse_jingle_ft(&elem).unwrap();
+        let desc = Description::try_from(&elem).unwrap();
         assert_eq!(desc.file.media_type, None);
         assert_eq!(desc.file.name, None);
         assert_eq!(desc.file.desc, None);
