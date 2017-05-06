@@ -4,6 +4,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+use std::convert::TryFrom;
+
 use minidom::Element;
 
 use error::Error;
@@ -16,59 +18,62 @@ pub enum Receipt {
     Received(String),
 }
 
-pub fn parse_receipt(root: &Element) -> Result<Receipt, Error> {
-    for _ in root.children() {
-        return Err(Error::ParseError("Unknown child in receipt element."));
-    }
-    if root.is("request", ns::RECEIPTS) {
-        Ok(Receipt::Request)
-    } else if root.is("received", ns::RECEIPTS) {
-        let id = root.attr("id").unwrap_or("").to_owned();
-        Ok(Receipt::Received(id))
-    } else {
-        Err(Error::ParseError("This is not a receipt element."))
+impl<'a> TryFrom<&'a Element> for Receipt {
+    type Error = Error;
+
+    fn try_from(elem: &'a Element) -> Result<Receipt, Error> {
+        for _ in elem.children() {
+            return Err(Error::ParseError("Unknown child in receipt element."));
+        }
+        if elem.is("request", ns::RECEIPTS) {
+            Ok(Receipt::Request)
+        } else if elem.is("received", ns::RECEIPTS) {
+            let id = elem.attr("id").unwrap_or("").to_owned();
+            Ok(Receipt::Received(id))
+        } else {
+            Err(Error::ParseError("This is not a receipt element."))
+        }
     }
 }
 
-pub fn serialise(receipt: &Receipt) -> Element {
-    match *receipt {
-        Receipt::Request => Element::builder("request")
-                                    .ns(ns::RECEIPTS)
-                                    .build(),
-        Receipt::Received(ref id) => Element::builder("received")
-                                             .ns(ns::RECEIPTS)
-                                             .attr("id", id.clone())
-                                             .build(),
+impl<'a> Into<Element> for &'a Receipt {
+    fn into(self) -> Element {
+        match *self {
+            Receipt::Request => Element::builder("request")
+                                        .ns(ns::RECEIPTS)
+                                        .build(),
+            Receipt::Received(ref id) => Element::builder("received")
+                                                 .ns(ns::RECEIPTS)
+                                                 .attr("id", id.clone())
+                                                 .build(),
+        }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use minidom::Element;
-    //use error::Error;
-    use receipts;
-    use ns;
+    use super::*;
 
     #[test]
     fn test_simple() {
         let elem: Element = "<request xmlns='urn:xmpp:receipts'/>".parse().unwrap();
-        receipts::parse_receipt(&elem).unwrap();
+        Receipt::try_from(&elem).unwrap();
 
         let elem: Element = "<received xmlns='urn:xmpp:receipts'/>".parse().unwrap();
-        receipts::parse_receipt(&elem).unwrap();
+        Receipt::try_from(&elem).unwrap();
 
         let elem: Element = "<received xmlns='urn:xmpp:receipts' id='coucou'/>".parse().unwrap();
-        receipts::parse_receipt(&elem).unwrap();
+        Receipt::try_from(&elem).unwrap();
     }
 
     #[test]
     fn test_serialise() {
-        let receipt = receipts::Receipt::Request;
-        let elem = receipts::serialise(&receipt);
+        let receipt = Receipt::Request;
+        let elem: Element = (&receipt).into();
         assert!(elem.is("request", ns::RECEIPTS));
 
-        let receipt = receipts::Receipt::Received("coucou".to_owned());
-        let elem = receipts::serialise(&receipt);
+        let receipt = Receipt::Received("coucou".to_owned());
+        let elem: Element = (&receipt).into();
         assert!(elem.is("received", ns::RECEIPTS));
         assert_eq!(elem.attr("id"), Some("coucou"));
     }
