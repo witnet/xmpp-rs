@@ -6,8 +6,7 @@
 
 use std::convert::TryFrom;
 
-use hashes;
-use hashes::{Hash, parse_hash};
+use hashes::Hash;
 
 use minidom::{Element, IntoElements, ElementEmitter};
 
@@ -32,7 +31,7 @@ impl IntoElements for Range {
                                 })
                                .build();
         for hash in self.hashes {
-            elem.append_child(hashes::serialise(&hash));
+            elem.append_child((&hash).into());
         }
         emitter.append_child(elem);
     }
@@ -149,7 +148,7 @@ impl<'a> TryFrom<&'a Element> for Description {
                         if !hash_element.is("hash", ns::HASHES) {
                             return Err(Error::ParseError("Unknown element in JingleFT range."));
                         }
-                        range_hashes.push(parse_hash(hash_element)?);
+                        range_hashes.push(Hash::try_from(hash_element)?);
                     }
                     range = Some(Range {
                         offset: offset,
@@ -157,7 +156,7 @@ impl<'a> TryFrom<&'a Element> for Description {
                         hashes: range_hashes,
                     });
                 } else if file_payload.is("hash", ns::HASHES) {
-                    hashes.push(parse_hash(file_payload)?);
+                    hashes.push(Hash::try_from(file_payload)?);
                 } else {
                     return Err(Error::ParseError("Unknown element in JingleFT file."));
                 }
@@ -220,7 +219,7 @@ impl<'a> Into<Element> for &'a File {
                                       .build());
         }
         for hash in self.hashes.clone() {
-            root.append_child(hashes::serialise(&hash));
+            root.append_child((&hash).into());
         }
         root
     }

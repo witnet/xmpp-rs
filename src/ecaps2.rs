@@ -4,10 +4,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+use std::convert::TryFrom;
+
 use disco::{Feature, Identity, Disco};
 use data_forms::DataForm;
-use hashes;
-use hashes::{Hash, parse_hash};
+use hashes::Hash;
 
 use minidom::Element;
 use error::Error;
@@ -31,7 +32,7 @@ pub fn parse_ecaps2(root: &Element) -> Result<ECaps2, Error> {
     let mut hashes = vec!();
     for child in root.children() {
         if child.is("hash", ns::HASHES) {
-            let hash = parse_hash(child)?;
+            let hash = Hash::try_from(child)?;
             hashes.push(hash);
         } else {
             return Err(Error::ParseError("Unknown child in ecaps2 element."));
@@ -47,7 +48,7 @@ pub fn serialise(ecaps2: &ECaps2) -> Element {
                         .ns(ns::ECAPS2)
                         .build();
     for hash in ecaps2.hashes.clone() {
-        let hash_elem = hashes::serialise(&hash);
+        let hash_elem = (&hash).into();
         c.append_child(hash_elem);
     }
     c
