@@ -118,6 +118,7 @@ pub enum TransportPayload {
     CandidateError,
     CandidateUsed(String),
     ProxyError,
+    None,
 }
 
 #[derive(Debug, Clone)]
@@ -210,7 +211,7 @@ impl<'a> TryFrom<&'a Element> for Transport {
                     return Err(Error::ParseError("Unknown child in JingleS5B transport element."));
                 });
             }
-            let payload = payload.ok_or(Error::ParseError("No child in JingleS5B transport element."))?;
+            let payload = payload.unwrap_or(TransportPayload::None);
             Ok(Transport {
                 sid: sid,
                 dstaddr: dstaddr,
@@ -258,6 +259,7 @@ impl<'a> Into<Element> for &'a Transport {
                                       .ns(ns::JINGLE_S5B)
                                       .build())
                      },
+                     TransportPayload::None => vec!(),
                  })
                 .build()
     }
@@ -269,13 +271,13 @@ mod tests {
 
     #[test]
     fn test_simple() {
-        let elem: Element = "<transport xmlns='urn:xmpp:jingle:transports:s5b:1' sid='coucou'><proxy-error/></transport>".parse().unwrap();
+        let elem: Element = "<transport xmlns='urn:xmpp:jingle:transports:s5b:1' sid='coucou'/>".parse().unwrap();
         let transport = Transport::try_from(&elem).unwrap();
         assert_eq!(transport.sid, "coucou");
         assert_eq!(transport.dstaddr, None);
         assert_eq!(transport.mode, Mode::Tcp);
         match transport.payload {
-            TransportPayload::ProxyError => (),
+            TransportPayload::None => (),
             _ => panic!("Wrong element inside transport!"),
         }
     }
