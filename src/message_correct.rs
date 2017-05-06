@@ -4,6 +4,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+use std::convert::TryFrom;
+
 use minidom::Element;
 
 use error::Error;
@@ -15,43 +17,47 @@ pub struct Replace {
     pub id: String,
 }
 
-pub fn parse_replace(root: &Element) -> Result<Replace, Error> {
-    if !root.is("replace", ns::MESSAGE_CORRECT) {
-        return Err(Error::ParseError("This is not a replace element."));
+impl<'a> TryFrom<&'a Element> for Replace {
+    type Error = Error;
+
+    fn try_from(elem: &'a Element) -> Result<Replace, Error> {
+        if !elem.is("replace", ns::MESSAGE_CORRECT) {
+            return Err(Error::ParseError("This is not a replace element."));
+        }
+        for _ in elem.children() {
+            return Err(Error::ParseError("Unknown child in replace element."));
+        }
+        let id = match elem.attr("id") {
+            Some(id) => id.to_owned(),
+            None => return Err(Error::ParseError("No 'id' attribute present in replace.")),
+        };
+        Ok(Replace { id: id })
     }
-    for _ in root.children() {
-        return Err(Error::ParseError("Unknown child in replace element."));
-    }
-    let id = match root.attr("id") {
-        Some(id) => id.to_owned(),
-        None => return Err(Error::ParseError("No 'id' attribute present in replace.")),
-    };
-    Ok(Replace { id: id })
 }
 
-pub fn serialise(replace: &Replace) -> Element {
-    Element::builder("replace")
-            .ns(ns::MESSAGE_CORRECT)
-            .attr("id", replace.id.clone())
-            .build()
+impl<'a> Into<Element> for &'a Replace {
+    fn into(self) -> Element {
+        Element::builder("replace")
+                .ns(ns::MESSAGE_CORRECT)
+                .attr("id", self.id.clone())
+                .build()
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use minidom::Element;
-    use error::Error;
-    use message_correct;
+    use super::*;
 
     #[test]
     fn test_simple() {
         let elem: Element = "<replace xmlns='urn:xmpp:message-correct:0' id='coucou'/>".parse().unwrap();
-        message_correct::parse_replace(&elem).unwrap();
+        Replace::try_from(&elem).unwrap();
     }
 
     #[test]
     fn test_invalid_child() {
         let elem: Element = "<replace xmlns='urn:xmpp:message-correct:0'><coucou/></replace>".parse().unwrap();
-        let error = message_correct::parse_replace(&elem).unwrap_err();
+        let error = Replace::try_from(&elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -62,7 +68,7 @@ mod tests {
     #[test]
     fn test_invalid_id() {
         let elem: Element = "<replace xmlns='urn:xmpp:message-correct:0'/>".parse().unwrap();
-        let error = message_correct::parse_replace(&elem).unwrap_err();
+        let error = Replace::try_from(&elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -73,8 +79,8 @@ mod tests {
     #[test]
     fn test_serialise() {
         let elem: Element = "<replace xmlns='urn:xmpp:message-correct:0' id='coucou'/>".parse().unwrap();
-        let replace = message_correct::Replace { id: String::from("coucou") };
-        let elem2 = message_correct::serialise(&replace);
+        let replace = Replace { id: String::from("coucou") };
+        let elem2 = (&replace).into();
         assert_eq!(elem, elem2);
     }
 }
