@@ -88,6 +88,7 @@ pub enum MessagePayloadType {
 type Lang = String;
 type Body = String;
 type Subject = String;
+type Thread = String;
 
 #[derive(Debug, Clone)]
 pub struct Message {
@@ -97,6 +98,7 @@ pub struct Message {
     pub type_: MessageType,
     pub bodies: BTreeMap<Lang, Body>,
     pub subjects: BTreeMap<Lang, Subject>,
+    pub thread: Option<Thread>,
     pub payloads: Vec<MessagePayloadType>,
 }
 
@@ -119,6 +121,7 @@ impl<'a> TryFrom<&'a Element> for Message {
         };
         let mut bodies = BTreeMap::new();
         let mut subjects = BTreeMap::new();
+        let mut thread = None;
         let mut payloads = vec!();
         for elem in root.children() {
             if elem.is("body", ns::JABBER_CLIENT) {
@@ -137,6 +140,14 @@ impl<'a> TryFrom<&'a Element> for Message {
                 if let Some(_) = subjects.insert(lang, elem.text()) {
                     return Err(Error::ParseError("Subject element present twice for the same xml:lang."));
                 }
+            } else if elem.is("thread", ns::JABBER_CLIENT) {
+                if thread.is_some() {
+                    return Err(Error::ParseError("Thread element present twice."));
+                }
+                for _ in elem.children() {
+                    return Err(Error::ParseError("Unknown child in thread element."));
+                }
+                thread = Some(elem.text());
             } else {
                 let payload = if let Ok(stanza_error) = StanzaError::try_from(elem) {
                     Some(MessagePayload::StanzaError(stanza_error))
@@ -168,6 +179,7 @@ impl<'a> TryFrom<&'a Element> for Message {
             type_: type_,
             bodies: bodies,
             subjects: subjects,
+            thread: thread,
             payloads: payloads,
         })
     }
@@ -254,6 +266,7 @@ mod tests {
             type_: MessageType::Normal,
             bodies: BTreeMap::new(),
             subjects: BTreeMap::new(),
+            thread: None,
             payloads: vec!(),
         };
         let elem2 = (&message).into();
@@ -282,6 +295,7 @@ mod tests {
             type_: MessageType::Chat,
             bodies: bodies,
             subjects: BTreeMap::new(),
+            thread: None,
             payloads: vec!(),
         };
         let elem2 = (&message).into();
