@@ -217,10 +217,7 @@ impl<'a> Into<Element> for &'a Fin {
     fn into(self) -> Element {
         let mut elem = Element::builder("fin")
                                .ns(ns::MAM)
-                               .attr("complete", match self.complete {
-                                    true => Some("true"),
-                                    false => None,
-                                })
+                               .attr("complete", if self.complete { Some("true") } else { None })
                                .build();
         elem.append_child((&self.set).into());
         elem

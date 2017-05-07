@@ -170,7 +170,7 @@ impl<'a> TryFrom<&'a Element> for Presence {
                     return Err(Error::ParseError("Unknown child in status element."));
                 }
                 let lang = elem.attr("xml:lang").unwrap_or("").to_owned();
-                if let Some(_) = statuses.insert(lang, elem.text()) {
+                if statuses.insert(lang, elem.text()).is_some() {
                     return Err(Error::ParseError("Status element present twice for the same xml:lang."));
                 }
             } else if elem.is("priority", ns::JABBER_CLIENT) {

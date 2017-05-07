@@ -173,7 +173,7 @@ impl<'a> TryFrom<&'a Element> for StanzaError {
                     return Err(Error::ParseError("Unknown element in error text."));
                 }
                 let lang = child.attr("xml:lang").unwrap_or("").to_owned();
-                if let Some(_) = texts.insert(lang, child.text()) {
+                if texts.insert(lang, child.text()).is_some() {
                     return Err(Error::ParseError("Text element present twice for the same xml:lang."));
                 }
             } else if child.ns() == Some(ns::XMPP_STANZAS) {

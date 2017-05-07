@@ -182,7 +182,7 @@ impl<'a> TryFrom<&'a Element> for Transport {
                     });
                     TransportPayload::Candidates(candidates)
                 } else if child.is("activated", ns::JINGLE_S5B) {
-                    if let Some(_) = payload {
+                    if payload.is_some() {
                         return Err(Error::ParseError("Non-activated child already present in JingleS5B transport element."));
                     }
                     let cid = child.attr("cid")
@@ -190,12 +190,12 @@ impl<'a> TryFrom<&'a Element> for Transport {
                                    .parse()?;
                     TransportPayload::Activated(cid)
                 } else if child.is("candidate-error", ns::JINGLE_S5B) {
-                    if let Some(_) = payload {
+                    if payload.is_some() {
                         return Err(Error::ParseError("Non-candidate-error child already present in JingleS5B transport element."));
                     }
                     TransportPayload::CandidateError
                 } else if child.is("candidate-used", ns::JINGLE_S5B) {
-                    if let Some(_) = payload {
+                    if payload.is_some() {
                         return Err(Error::ParseError("Non-candidate-used child already present in JingleS5B transport element."));
                     }
                     let cid = child.attr("cid")
@@ -203,7 +203,7 @@ impl<'a> TryFrom<&'a Element> for Transport {
                                    .parse()?;
                     TransportPayload::CandidateUsed(cid)
                 } else if child.is("proxy-error", ns::JINGLE_S5B) {
-                    if let Some(_) = payload {
+                    if payload.is_some() {
                         return Err(Error::ParseError("Non-proxy-error child already present in JingleS5B transport element."));
                     }
                     TransportPayload::ProxyError

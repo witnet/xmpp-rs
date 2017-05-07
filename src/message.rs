@@ -129,7 +129,7 @@ impl<'a> TryFrom<&'a Element> for Message {
                     return Err(Error::ParseError("Unknown child in body element."));
                 }
                 let lang = elem.attr("xml:lang").unwrap_or("").to_owned();
-                if let Some(_) = bodies.insert(lang, elem.text()) {
+                if bodies.insert(lang, elem.text()).is_some() {
                     return Err(Error::ParseError("Body element present twice for the same xml:lang."));
                 }
             } else if elem.is("subject", ns::JABBER_CLIENT) {
@@ -137,7 +137,7 @@ impl<'a> TryFrom<&'a Element> for Message {
                     return Err(Error::ParseError("Unknown child in subject element."));
                 }
                 let lang = elem.attr("xml:lang").unwrap_or("").to_owned();
-                if let Some(_) = subjects.insert(lang, elem.text()) {
+                if subjects.insert(lang, elem.text()).is_some() {
                     return Err(Error::ParseError("Subject element present twice for the same xml:lang."));
                 }
             } else if elem.is("thread", ns::JABBER_CLIENT) {
