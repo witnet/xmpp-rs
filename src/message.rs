@@ -87,6 +87,7 @@ pub enum MessagePayloadType {
 
 type Lang = String;
 type Body = String;
+type Subject = String;
 
 #[derive(Debug, Clone)]
 pub struct Message {
@@ -95,6 +96,7 @@ pub struct Message {
     pub id: Option<String>,
     pub type_: MessageType,
     pub bodies: BTreeMap<Lang, Body>,
+    pub subjects: BTreeMap<Lang, Subject>,
     pub payloads: Vec<MessagePayloadType>,
 }
 
@@ -116,6 +118,7 @@ impl<'a> TryFrom<&'a Element> for Message {
             None => Default::default(),
         };
         let mut bodies = BTreeMap::new();
+        let mut subjects = BTreeMap::new();
         let mut payloads = vec!();
         for elem in root.children() {
             if elem.is("body", ns::JABBER_CLIENT) {
@@ -125,6 +128,14 @@ impl<'a> TryFrom<&'a Element> for Message {
                 let lang = elem.attr("xml:lang").unwrap_or("").to_owned();
                 if let Some(_) = bodies.insert(lang, elem.text()) {
                     return Err(Error::ParseError("Body element present twice for the same xml:lang."));
+                }
+            } else if elem.is("subject", ns::JABBER_CLIENT) {
+                for _ in elem.children() {
+                    return Err(Error::ParseError("Unknown child in subject element."));
+                }
+                let lang = elem.attr("xml:lang").unwrap_or("").to_owned();
+                if let Some(_) = subjects.insert(lang, elem.text()) {
+                    return Err(Error::ParseError("Subject element present twice for the same xml:lang."));
                 }
             } else {
                 let payload = if let Ok(stanza_error) = StanzaError::try_from(elem) {
@@ -156,6 +167,7 @@ impl<'a> TryFrom<&'a Element> for Message {
             id: id,
             type_: type_,
             bodies: BTreeMap::new(),
+            subjects: subjects,
             payloads: payloads,
         })
     }
@@ -183,6 +195,17 @@ impl<'a> Into<Element> for &'a Message {
                                  .attr("to", self.to.clone().and_then(|value| Some(String::from(value))))
                                  .attr("id", self.id.clone())
                                  .attr("type", self.type_.clone())
+                                 .append(self.subjects.iter()
+                                                    .map(|(lang, subject)| {
+                                                         Element::builder("subject")
+                                                                 .ns(ns::JABBER_CLIENT)
+                                                                 .attr("xml:lang", match lang.as_ref() {
+                                                                      "" => None,
+                                                                      lang => Some(lang),
+                                                                  })
+                                                                 .append(subject.clone())
+                                                                 .build() })
+                                                    .collect::<Vec<_>>())
                                  .append(self.bodies.iter()
                                                     .map(|(lang, body)| {
                                                          Element::builder("body")
@@ -230,6 +253,7 @@ mod tests {
             id: None,
             type_: MessageType::Normal,
             bodies: BTreeMap::new(),
+            subjects: BTreeMap::new(),
             payloads: vec!(),
         };
         let elem2 = (&message).into();
@@ -253,8 +277,19 @@ mod tests {
             id: None,
             type_: MessageType::Chat,
             bodies: bodies,
+            subjects: BTreeMap::new(),
             payloads: vec!(),
         };
+        let elem2 = (&message).into();
+        assert_eq!(elem, elem2);
+    }
+
+    #[test]
+    fn test_subject() {
+        let elem: Element = "<message xmlns='jabber:client' to='coucou@example.org' type='chat'><subject>Hello world!</subject></message>".parse().unwrap();
+        let message = Message::try_from(&elem).unwrap();
+        assert_eq!(message.subjects[""], "Hello world!");
+
         let elem2 = (&message).into();
         assert_eq!(elem, elem2);
     }
