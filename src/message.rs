@@ -166,7 +166,7 @@ impl<'a> TryFrom<&'a Element> for Message {
             to: to,
             id: id,
             type_: type_,
-            bodies: BTreeMap::new(),
+            bodies: bodies,
             subjects: subjects,
             payloads: payloads,
         })
@@ -263,7 +263,11 @@ mod tests {
     #[test]
     fn test_body() {
         let elem: Element = "<message xmlns='jabber:client' to='coucou@example.org' type='chat'><body>Hello world!</body></message>".parse().unwrap();
-        Message::try_from(&elem).unwrap();
+        let message = Message::try_from(&elem).unwrap();
+        assert_eq!(message.bodies[""], "Hello world!");
+
+        let elem2 = (&message).into();
+        assert_eq!(elem, elem2);
     }
 
     #[test]
