@@ -1,9 +1,9 @@
+use xml;
 use jid::Jid;
 use transport::{Transport, SslTransport};
 use error::Error;
 use ns;
-use plugin::{Plugin, PluginProxyBinding};
-use event::AbstractEvent;
+use plugin::{Plugin, PluginInit, PluginProxyBinding};
 use connection::{Connection, C2S};
 use sasl::client::Mechanism as SaslMechanism;
 use sasl::client::mechanisms::{Plain, Scram};
@@ -11,6 +11,7 @@ use sasl::common::{Credentials as SaslCredentials, Identity, Secret, ChannelBind
 use sasl::common::scram::{Sha1, Sha256};
 use components::sasl_error::SaslError;
 use util::FromElement;
+use event::{Dispatcher, Propagation, SendElement, ReceiveElement, Priority};
 
 use base64;
 
@@ -18,9 +19,11 @@ use minidom::Element;
 
 use xml::reader::XmlEvent as ReaderEvent;
 
-use std::sync::mpsc::{Receiver, channel};
+use std::sync::{Mutex, Arc};
 
-use std::collections::HashSet;
+use std::collections::{HashSet, HashMap};
+
+use std::any::TypeId;
 
 /// Struct that should be moved somewhere else and cleaned up.
 #[derive(Debug)]
@@ -74,18 +77,22 @@ impl ClientBuilder {
         let host = &self.host.unwrap_or(self.jid.domain.clone());
         let mut transport = SslTransport::connect(host, self.port)?;
         C2S::init(&mut transport, &self.jid.domain, "before_sasl")?;
-        let (sender_out, sender_in) = channel();
-        let (dispatcher_out, dispatcher_in) = channel();
+        let dispatcher = Arc::new(Mutex::new(Dispatcher::new()));
         let mut credentials = self.credentials;
         credentials.channel_binding = transport.channel_bind();
+        let transport = Arc::new(Mutex::new(transport));
         let mut client = Client {
             jid: self.jid,
-            transport: transport,
-            plugins: Vec::new(),
-            binding: PluginProxyBinding::new(sender_out, dispatcher_out),
-            sender_in: sender_in,
-            dispatcher_in: dispatcher_in,
+            transport: transport.clone(),
+            plugins: HashMap::new(),
+            binding: PluginProxyBinding::new(dispatcher.clone()),
+            dispatcher: dispatcher,
         };
+        client.dispatcher.lock().unwrap().register(Priority::Default, Box::new(move |evt: &SendElement| {
+            let mut t = transport.lock().unwrap();
+            t.write_element(&evt.0).unwrap();
+            Propagation::Continue
+        }));
         client.connect(credentials)?;
         client.bind()?;
         Ok(client)
@@ -95,11 +102,10 @@ impl ClientBuilder {
 /// An XMPP client.
 pub struct Client {
     jid: Jid,
-    transport: SslTransport,
-    plugins: Vec<Box<Plugin>>,
+    transport: Arc<Mutex<SslTransport>>,
+    plugins: HashMap<TypeId, Arc<Box<Plugin>>>,
     binding: PluginProxyBinding,
-    sender_in: Receiver<Element>,
-    dispatcher_in: Receiver<AbstractEvent>,
+    dispatcher: Arc<Mutex<Dispatcher>>,
 }
 
 impl Client {
@@ -109,46 +115,55 @@ impl Client {
     }
 
     /// Registers a plugin.
-    pub fn register_plugin<P: Plugin + 'static>(&mut self, mut plugin: P) {
-        plugin.bind(self.binding.clone());
-        self.plugins.push(Box::new(plugin));
+    pub fn register_plugin<P: Plugin + PluginInit + 'static>(&mut self, mut plugin: P) {
+        let binding = self.binding.clone();
+        plugin.bind(binding);
+        let p = Arc::new(Box::new(plugin) as Box<Plugin>);
+        {
+            let mut disp = self.dispatcher.lock().unwrap();
+            P::init(&mut disp, p.clone());
+        }
+        if self.plugins.insert(TypeId::of::<P>(), p).is_some() {
+            panic!("registering a plugin that's already registered");
+        }
     }
 
     /// Returns the plugin given by the type parameter, if it exists, else panics.
     pub fn plugin<P: Plugin>(&self) -> &P {
-        for plugin in &self.plugins {
-            let any = plugin.as_any();
-            if let Some(ret) = any.downcast_ref::<P>() {
-                return ret;
-            }
-        }
-        panic!("plugin does not exist!");
+        self.plugins.get(&TypeId::of::<P>())
+                    .expect("the requested plugin was not registered")
+                    .as_any()
+                    .downcast_ref::<P>()
+                    .expect("plugin downcast failure (should not happen!!)")
     }
 
     /// Returns the next event and flush the send queue.
-    pub fn next_event(&mut self) -> Result<AbstractEvent, Error> {
-        self.flush_send_queue()?;
+    pub fn main(&mut self) -> Result<(), Error> {
+        self.dispatcher.lock().unwrap().flush_all();
         loop {
-            if let Ok(evt) = self.dispatcher_in.try_recv() {
-                return Ok(evt);
+            let elem = self.read_element()?;
+            {
+                let mut disp = self.dispatcher.lock().unwrap();
+                disp.dispatch(ReceiveElement(elem));
+                disp.flush_all();
             }
-            let elem = self.transport.read_element()?;
-            for plugin in self.plugins.iter_mut() {
-                plugin.handle(&elem);
-                // TODO: handle plugin return
-            }
-            self.flush_send_queue()?;
         }
     }
 
-    /// Flushes the send queue, sending all queued up stanzas.
-    pub fn flush_send_queue(&mut self) -> Result<(), Error> { // TODO: not sure how great of an
-                                                              //       idea it is to flush in this
-                                                              //       manner…
-        while let Ok(elem) = self.sender_in.try_recv() {
-            self.transport.write_element(&elem)?;
-        }
-        Ok(())
+    fn reset_stream(&self) {
+        self.transport.lock().unwrap().reset_stream()
+    }
+
+    fn read_element(&self) -> Result<Element, Error> {
+        self.transport.lock().unwrap().read_element()
+    }
+
+    fn write_element(&self, elem: &Element) -> Result<(), Error> {
+        self.transport.lock().unwrap().write_element(elem)
+    }
+
+    fn read_event(&self) -> Result<xml::reader::XmlEvent, Error> {
+        self.transport.lock().unwrap().read_event()
     }
 
     fn connect(&mut self, mut credentials: SaslCredentials) -> Result<(), Error> {
@@ -188,9 +203,9 @@ impl Client {
         if !auth.is_empty() {
             elem.append_text_node(base64::encode(&auth));
         }
-        self.transport.write_element(&elem)?;
+        self.write_element(&elem)?;
         loop {
-            let n = self.transport.read_element()?;
+            let n = self.read_element()?;
             if n.is("challenge", ns::SASL) {
                 let text = n.text();
                 let challenge = if text == "" {
@@ -206,7 +221,7 @@ impl Client {
                 if !response.is_empty() {
                     elem.append_text_node(base64::encode(&response));
                 }
-                self.transport.write_element(&elem)?;
+                self.write_element(&elem)?;
             }
             else if n.is("success", ns::SASL) {
                 let text = n.text();
@@ -217,8 +232,11 @@ impl Client {
                     base64::decode(&text)?
                 };
                 mechanism.success(&data).map_err(|x| Error::SaslError(Some(x)))?;
-                self.transport.reset_stream();
-                C2S::init(&mut self.transport, &self.jid.domain, "after_sasl")?;
+                self.reset_stream();
+                {
+                    let mut g = self.transport.lock().unwrap();
+                    C2S::init(&mut *g, &self.jid.domain, "after_sasl")?;
+                }
                 self.wait_for_features()?;
                 return Ok(());
             }
@@ -245,9 +263,9 @@ impl Client {
             bind.append_child(res);
         }
         elem.append_child(bind);
-        self.transport.write_element(&elem)?;
+        self.write_element(&elem)?;
         loop {
-            let n = self.transport.read_element()?;
+            let n = self.read_element()?;
             if n.is("iq", ns::CLIENT) && n.has_child("bind", ns::BIND) {
                 return Ok(());
             }
@@ -257,7 +275,7 @@ impl Client {
     fn wait_for_features(&mut self) -> Result<StreamFeatures, Error> {
         // TODO: this is very ugly
         loop {
-            let e = self.transport.read_event()?;
+            let e = self.read_event()?;
             match e {
                 ReaderEvent::StartElement { .. } => {
                     break;
@@ -266,7 +284,7 @@ impl Client {
             }
         }
         loop {
-            let n = self.transport.read_element()?;
+            let n = self.read_element()?;
             if n.is("features", ns::STREAM) {
                 let mut features = StreamFeatures {
                     sasl_mechanisms: None,

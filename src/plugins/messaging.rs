@@ -1,5 +1,5 @@
-use plugin::{Plugin, PluginReturn, PluginProxy};
-use event::Event;
+use plugin::{PluginProxy};
+use event::{Event, EventHandler, ReceiveElement, Priority, Propagation};
 use minidom::Element;
 use error::Error;
 use jid::Jid;
@@ -36,12 +36,13 @@ impl MessagingPlugin {
     }
 }
 
-impl Plugin for MessagingPlugin {
-    fn get_proxy(&mut self) -> &mut PluginProxy {
-        &mut self.proxy
-    }
+impl_plugin!(MessagingPlugin, proxy, [
+    ReceiveElement => Priority::Default,
+]);
 
-    fn handle(&mut self, elem: &Element) -> PluginReturn {
+impl EventHandler<ReceiveElement> for MessagingPlugin {
+    fn handle(&self, evt: &ReceiveElement) -> Propagation {
+        let elem = &evt.0;
         if elem.is("message", ns::CLIENT) && elem.attr("type") == Some("chat") {
             if let Some(body) = elem.get_child("body", ns::CLIENT) {
                 self.proxy.dispatch(MessageEvent { // TODO: safety!!!
@@ -51,6 +52,6 @@ impl Plugin for MessagingPlugin {
                 });
             }
         }
-        PluginReturn::Continue
+        Propagation::Continue
     }
 }

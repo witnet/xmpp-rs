@@ -1,8 +1,8 @@
 use std::fmt::Debug;
 use std::any::Any;
 
-use plugin::{Plugin, PluginReturn, PluginProxy};
-use event::Event;
+use plugin::PluginProxy;
+use event::{Event, EventHandler, ReceiveElement, Propagation, Priority};
 use minidom::Element;
 use jid::Jid;
 use ns;
@@ -52,12 +52,14 @@ impl StanzaPlugin {
     }
 }
 
-impl Plugin for StanzaPlugin {
-    fn get_proxy(&mut self) -> &mut PluginProxy {
-        &mut self.proxy
-    }
+impl_plugin!(StanzaPlugin, proxy, [
+    ReceiveElement => Priority::Default,
+]);
 
-    fn handle(&mut self, elem: &Element) -> PluginReturn {
+impl EventHandler<ReceiveElement> for StanzaPlugin {
+    fn handle(&self, evt: &ReceiveElement) -> Propagation {
+        let elem = &evt.0;
+
         let from = match elem.attr("from") { Some(from) => Some(from.parse().unwrap()), None => None };
         let to = match elem.attr("to") { Some(to) => Some(to.parse().unwrap()), None => None };
         let id = match elem.attr("id") { Some(id) => Some(id.parse().unwrap()), None => None };
@@ -89,6 +91,7 @@ impl Plugin for StanzaPlugin {
                 payloads: payloads,
             });
         }
-        PluginReturn::Continue
+
+        Propagation::Continue
     }
 }

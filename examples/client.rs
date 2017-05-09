@@ -19,7 +19,8 @@ fn main() {
     client.register_plugin(PresencePlugin::new());
     client.register_plugin(PingPlugin::new());
     client.plugin::<PresencePlugin>().set_presence(Show::Available, None).unwrap();
-    loop {
+    client.main().unwrap();
+    /*loop {
         let event = client.next_event().unwrap();
         if let Some(evt) = event.downcast::<MessageEvent>() {
             println!("{:?}", evt);
@@ -28,5 +29,5 @@ fn main() {
             println!("{:?}", evt);
             client.plugin::<PingPlugin>().reply_ping(evt);
         }
-    }
+    }*/
 }

@@ -1,3 +1,5 @@
+#![feature(raw)]
+
 extern crate xml;
 extern crate openssl;
 extern crate minidom;
@@ -10,8 +12,9 @@ pub mod ns;
 pub mod transport;
 pub mod error;
 pub mod client;
-pub mod component;
+//pub mod component;
 pub mod plugin;
+#[macro_use] pub mod plugin_macro;
 pub mod event;
 pub mod plugins;
 pub mod connection;
