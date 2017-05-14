@@ -3,6 +3,7 @@
 use std::io::prelude::*;
 use std::io::Cursor;
 use std::collections::BTreeMap;
+use std::collections::btree_map;
 
 use std::fmt;
 
@@ -19,6 +20,57 @@ use std::slice;
 
 use convert::{IntoElements, IntoAttributeValue, ElementEmitter};
 
+/// A node in an element tree.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum Node {
+    /// An `Element`.
+    Element(Element),
+    /// A text node.
+    Text(String),
+}
+
+impl Node {
+    /// Turns this into an `Element` if possible, else returns None.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use minidom::Node;
+    ///
+    /// let elm = Node::Element("<meow />".parse().unwrap());
+    /// let txt = Node::Text("meow".to_owned());
+    ///
+    /// assert_eq!(elm.as_element().unwrap().name(), "meow");
+    /// assert_eq!(txt.as_element(), None);
+    /// ```
+    pub fn as_element<'a>(&'a self) -> Option<&'a Element> {
+        match *self {
+            Node::Element(ref e) => Some(e),
+            Node::Text(_) => None,
+        }
+    }
+
+    /// Turns this into a `String` if possible, else returns None.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use minidom::Node;
+    ///
+    /// let elm = Node::Element("<meow />".parse().unwrap());
+    /// let txt = Node::Text("meow".to_owned());
+    ///
+    /// assert_eq!(elm.as_text(), None);
+    /// assert_eq!(txt.as_text().unwrap(), "meow");
+    /// ```
+    pub fn as_text<'a>(&'a self) -> Option<&'a str> {
+        match *self {
+            Node::Element(_) => None,
+            Node::Text(ref s) => Some(s),
+        }
+    }
+}
+
 #[derive(Clone, PartialEq, Eq)]
 /// A struct representing a DOM Element.
 pub struct Element {
@@ -27,7 +79,6 @@ pub struct Element {
     attributes: BTreeMap<String, String>,
     children: Vec<Node>,
 }
-
 
 impl<'a> From<&'a Element> for String {
     fn from(elem: &'a Element) -> String {
@@ -55,15 +106,6 @@ impl FromStr for Element {
     }
 }
 
-/// A node in an element tree.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum Node {
-    /// An `Element`.
-    Element(Element),
-    /// A text node.
-    Text(String),
-}
-
 impl Element {
     fn new(name: String, namespace: Option<String>, attributes: BTreeMap<String, String>, children: Vec<Node>) -> Element {
         Element {
@@ -78,7 +120,7 @@ impl Element {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust
     /// use minidom::Element;
     ///
     /// let elem = Element::builder("name")
@@ -103,7 +145,7 @@ impl Element {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust
     /// use minidom::Element;
     ///
     /// let bare = Element::bare("name");
@@ -141,6 +183,34 @@ impl Element {
         None
     }
 
+    /// Returns an iterator over the attributes of this element.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use minidom::Element;
+    ///
+    /// let elm: Element = "<elem a=\"b\" />".parse().unwrap();
+    ///
+    /// let mut iter = elm.attrs();
+    ///
+    /// assert_eq!(iter.next().unwrap(), ("a", "b"));
+    /// assert_eq!(iter.next(), None);
+    /// ```
+    pub fn attrs<'a>(&'a self) -> Attrs<'a> {
+        Attrs {
+            iter: self.attributes.iter(),
+        }
+    }
+
+    /// Returns an iterator over the attributes of this element, with the value being a mutable
+    /// reference.
+    pub fn attrs_mut<'a>(&'a mut self) -> AttrsMut<'a> {
+        AttrsMut {
+            iter: self.attributes.iter_mut(),
+        }
+    }
+
     /// Modifies the value of an attribute.
     pub fn set_attr<S: Into<String>, V: IntoAttributeValue>(&mut self, name: S, val: V) {
         let name = name.into();
@@ -160,7 +230,7 @@ impl Element {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust
     /// use minidom::Element;
     ///
     /// let elem = Element::builder("name").ns("namespace").build();
@@ -281,14 +351,41 @@ impl Element {
         Ok(())
     }
 
-    /// Returns an iterator over references to the children of this element.
+    /// Returns an iterator over references to every child node of this element.
     ///
     /// # Examples
     ///
+    /// ```rust
+    /// use minidom::{Element, Node};
+    ///
+    /// let elem: Element = "<root>a<c1 />b<c2 />c</root>".parse().unwrap();
+    ///
+    /// let mut iter = elem.nodes();
+    ///
+    /// assert_eq!(iter.next().unwrap().as_text().unwrap(), "a");
+    /// assert_eq!(iter.next().unwrap().as_element().unwrap().name(), "c1");
+    /// assert_eq!(iter.next().unwrap().as_text().unwrap(), "b");
+    /// assert_eq!(iter.next().unwrap().as_element().unwrap().name(), "c2");
+    /// assert_eq!(iter.next().unwrap().as_text().unwrap(), "c");
+    /// assert_eq!(iter.next(), None);
     /// ```
+    #[inline] pub fn nodes<'a>(&'a self) -> Nodes<'a> {
+        self.children.iter()
+    }
+
+    /// Returns an iterator over mutable references to every child node of this element.
+    #[inline] pub fn nodes_mut<'a>(&'a mut self) -> NodesMut<'a> {
+        self.children.iter_mut()
+    }
+
+    /// Returns an iterator over references to every child element of this element.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
     /// use minidom::Element;
     ///
-    /// let elem: Element = "<root><child1 /><child2 /><child3 /></root>".parse().unwrap();
+    /// let elem: Element = "<root>hello<child1 />this<child2 />is<child3 />ignored</root>".parse().unwrap();
     ///
     /// let mut iter = elem.children();
     /// assert_eq!(iter.next().unwrap().name(), "child1");
@@ -296,26 +393,43 @@ impl Element {
     /// assert_eq!(iter.next().unwrap().name(), "child3");
     /// assert_eq!(iter.next(), None);
     /// ```
-    pub fn children<'a>(&'a self) -> Children<'a> {
+    #[inline] pub fn children<'a>(&'a self) -> Children<'a> {
         Children {
             iter: self.children.iter(),
         }
     }
 
-    /// Returns an iterator over mutable references to the children of this element.
-    pub fn children_mut<'a>(&'a mut self) -> ChildrenMut<'a> {
+    /// Returns an iterator over mutable references to every child element of this element.
+    #[inline] pub fn children_mut<'a>(&'a mut self) -> ChildrenMut<'a> {
         ChildrenMut {
             iter: self.children.iter_mut(),
         }
     }
 
-    fn propagate_namespaces(&mut self) {
-        let ns = self.namespace.clone();
-        for child in self.children_mut() {
-            if child.namespace.is_none() {
-                child.namespace = ns.clone();
-                child.propagate_namespaces();
-            }
+    /// Returns an iterator over references to every text node of this element.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use minidom::Element;
+    ///
+    /// let elem: Element = "<root>hello<c /> world!</root>".parse().unwrap();
+    ///
+    /// let mut iter = elem.texts();
+    /// assert_eq!(iter.next().unwrap(), "hello");
+    /// assert_eq!(iter.next().unwrap(), " world!");
+    /// assert_eq!(iter.next(), None);
+    /// ```
+    #[inline] pub fn texts<'a>(&'a self) -> Texts<'a> {
+        Texts {
+            iter: self.children.iter(),
+        }
+    }
+
+    /// Returns an iterator over mutable references to every text node of this element.
+    #[inline] pub fn texts_mut<'a>(&'a mut self) -> TextsMut<'a> {
+        TextsMut {
+            iter: self.children.iter_mut(),
         }
     }
 
@@ -323,7 +437,7 @@ impl Element {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust
     /// use minidom::Element;
     ///
     /// let mut elem = Element::bare("root");
@@ -356,11 +470,21 @@ impl Element {
         }
     }
 
+    fn propagate_namespaces(&mut self) {
+        let ns = self.namespace.clone();
+        for child in self.children_mut() {
+            if child.namespace.is_none() {
+                child.namespace = ns.clone();
+                child.propagate_namespaces();
+            }
+        }
+    }
+
     /// Appends a text node to an `Element`.
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust
     /// use minidom::Element;
     ///
     /// let mut elem = Element::bare("node");
@@ -379,7 +503,7 @@ impl Element {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust
     /// use minidom::{Element, Node};
     ///
     /// let mut elem = Element::bare("node");
@@ -396,21 +520,15 @@ impl Element {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust
     /// use minidom::Element;
     ///
-    /// let elem: Element = "<node>hello, world!</node>".parse().unwrap();
+    /// let elem: Element = "<node>hello,<split /> world!</node>".parse().unwrap();
     ///
     /// assert_eq!(elem.text(), "hello, world!");
     /// ```
     pub fn text(&self) -> String {
-        let mut ret = String::new();
-        for fork in &self.children {
-            if let Node::Text(ref s) = *fork {
-                ret += s;
-            }
-        }
-        ret
+        self.texts().fold(String::new(), |ret, new| ret + new)
     }
 
     /// Returns a reference to the first child element with the specific name and namespace, if it
@@ -418,7 +536,7 @@ impl Element {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust
     /// use minidom::Element;
     ///
     /// let elem: Element = r#"<node xmlns="ns"><a /><a xmlns="other_ns" /><b /></node>"#.parse().unwrap();
@@ -459,7 +577,7 @@ impl Element {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust
     /// use minidom::Element;
     ///
     /// let elem: Element = r#"<node xmlns="ns"><a /><a xmlns="other_ns" /><b /></node>"#.parse().unwrap();
@@ -476,7 +594,7 @@ impl Element {
     }
 }
 
-/// An iterator over references to children of an `Element`.
+/// An iterator over references to child elements of an `Element`.
 pub struct Children<'a> {
     iter: slice::Iter<'a, Node>,
 }
@@ -494,7 +612,7 @@ impl<'a> Iterator for Children<'a> {
     }
 }
 
-/// An iterator over mutable references to children of an `Element`.
+/// An iterator over mutable references to child elements of an `Element`.
 pub struct ChildrenMut<'a> {
     iter: slice::IterMut<'a, Node>,
 }
@@ -509,6 +627,74 @@ impl<'a> Iterator for ChildrenMut<'a> {
             }
         }
         None
+    }
+}
+
+/// An iterator over references to child text nodes of an `Element`.
+pub struct Texts<'a> {
+    iter: slice::Iter<'a, Node>,
+}
+
+impl<'a> Iterator for Texts<'a> {
+    type Item = &'a str;
+
+    fn next(&mut self) -> Option<&'a str> {
+        while let Some(item) = self.iter.next() {
+            if let Node::Text(ref child) = *item {
+                return Some(child);
+            }
+        }
+        None
+    }
+}
+
+/// An iterator over mutable references to child text nodes of an `Element`.
+pub struct TextsMut<'a> {
+    iter: slice::IterMut<'a, Node>,
+}
+
+impl<'a> Iterator for TextsMut<'a> {
+    type Item = &'a mut String;
+
+    fn next(&mut self) -> Option<&'a mut String> {
+        while let Some(item) = self.iter.next() {
+            if let Node::Text(ref mut child) = *item {
+                return Some(child);
+            }
+        }
+        None
+    }
+}
+
+/// An iterator over references to all child nodes of an `Element`.
+pub type Nodes<'a> = slice::Iter<'a, Node>;
+
+/// An iterator over mutable references to all child nodes of an `Element`.
+pub type NodesMut<'a> = slice::IterMut<'a, Node>;
+
+/// An iterator over the attributes of an `Element`.
+pub struct Attrs<'a> {
+    iter: btree_map::Iter<'a, String, String>,
+}
+
+impl<'a> Iterator for Attrs<'a> {
+    type Item = (&'a str, &'a str);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.iter.next().map(|(x, y)| (x.as_ref(), y.as_ref()))
+    }
+}
+
+/// An iterator over the attributes of an `Element`, with the values mutable.
+pub struct AttrsMut<'a> {
+    iter: btree_map::IterMut<'a, String, String>,
+}
+
+impl<'a> Iterator for AttrsMut<'a> {
+    type Item = (&'a str, &'a mut String);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.iter.next().map(|(x, y)| (x.as_ref(), y))
     }
 }
 
