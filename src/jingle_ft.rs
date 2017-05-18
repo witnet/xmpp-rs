@@ -238,6 +238,7 @@ impl<'a> Into<Element> for &'a Description {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hashes::Algo;
 
     #[test]
     fn test_description() {
@@ -261,7 +262,7 @@ mod tests {
         assert_eq!(desc.file.date, Some(String::from("2015-07-26T21:46:00")));
         assert_eq!(desc.file.size, Some(6144u64));
         assert_eq!(desc.file.range, None);
-        assert_eq!(desc.file.hashes[0].algo, "sha-1");
+        assert_eq!(desc.file.hashes[0].algo, Algo::Sha_1);
         assert_eq!(desc.file.hashes[0].hash, "w0mcJylzCn+AfvuGdqkty2+KP48=");
     }
 
@@ -283,7 +284,7 @@ mod tests {
         assert_eq!(desc.file.date, None);
         assert_eq!(desc.file.size, None);
         assert_eq!(desc.file.range, None);
-        assert_eq!(desc.file.hashes[0].algo, "sha-1");
+        assert_eq!(desc.file.hashes[0].algo, Algo::Sha_1);
         assert_eq!(desc.file.hashes[0].hash, "w0mcJylzCn+AfvuGdqkty2+KP48=");
     }
 }

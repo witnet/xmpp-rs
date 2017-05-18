@@ -5,16 +5,64 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use std::convert::TryFrom;
+use std::str::FromStr;
 
-use minidom::Element;
+use minidom::{Element, IntoAttributeValue};
 
 use error::Error;
 
 use ns;
 
+#[allow(non_camel_case_types)]
+#[derive(Debug, Clone, PartialEq)]
+pub enum Algo {
+    Sha_1,
+    Sha_256,
+    Sha_512,
+    Sha3_256,
+    Sha3_512,
+    Blake2b_256,
+    Blake2b_512,
+    Unknown(String),
+}
+
+impl FromStr for Algo {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Algo, Error> {
+        Ok(match s {
+            "" => return Err(Error::ParseError("'algo' argument can’t be empty.")),
+
+            "sha-1" => Algo::Sha_1,
+            "sha-256" => Algo::Sha_256,
+            "sha-512" => Algo::Sha_512,
+            "sha3-256" => Algo::Sha3_256,
+            "sha3-512" => Algo::Sha3_512,
+            "blake2b-256" => Algo::Blake2b_256,
+            "blake2b-512" => Algo::Blake2b_512,
+            value => Algo::Unknown(value.to_owned()),
+        })
+    }
+}
+
+impl IntoAttributeValue for Algo {
+    fn into_attribute_value(self) -> Option<String> {
+        Some(String::from(match self {
+            Algo::Sha_1 => "sha-1",
+            Algo::Sha_256 => "sha-256",
+            Algo::Sha_512 => "sha-512",
+            Algo::Sha3_256 => "sha3-256",
+            Algo::Sha3_512 => "sha3-512",
+            Algo::Blake2b_256 => "blake2b-256",
+            Algo::Blake2b_512 => "blake2b-512",
+            Algo::Unknown(text) => return Some(text),
+        }))
+    }
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct Hash {
-    pub algo: String,
+    pub algo: Algo,
     pub hash: String,
 }
 
@@ -28,7 +76,10 @@ impl<'a> TryFrom<&'a Element> for Hash {
         for _ in elem.children() {
             return Err(Error::ParseError("Unknown child in hash element."));
         }
-        let algo = elem.attr("algo").ok_or(Error::ParseError("Mandatory argument 'algo' not present in hash element."))?.to_owned();
+        let algo = match elem.attr("algo") {
+            None => Err(Error::ParseError("Mandatory argument 'algo' not present in hash element.")),
+            Some(text) => Algo::from_str(text),
+        }?;
         let hash = match elem.text().as_ref() {
             "" => return Err(Error::ParseError("Hash element shouldn’t be empty.")),
             text => text.to_owned(),
@@ -58,7 +109,7 @@ mod tests {
     fn test_simple() {
         let elem: Element = "<hash xmlns='urn:xmpp:hashes:2' algo='sha-256'>2XarmwTlNxDAMkvymloX3S5+VbylNrJt/l5QyPa+YoU=</hash>".parse().unwrap();
         let hash = Hash::try_from(&elem).unwrap();
-        assert_eq!(hash.algo, "sha-256");
+        assert_eq!(hash.algo, Algo::Sha_256);
         assert_eq!(hash.hash, "2XarmwTlNxDAMkvymloX3S5+VbylNrJt/l5QyPa+YoU=");
     }
 

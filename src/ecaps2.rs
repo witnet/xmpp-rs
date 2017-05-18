@@ -8,7 +8,7 @@ use std::convert::TryFrom;
 
 use disco::{Feature, Identity, Disco};
 use data_forms::DataForm;
-use hashes::Hash;
+use hashes::{Hash, Algo};
 
 use minidom::Element;
 use error::Error;
@@ -118,49 +118,52 @@ pub fn compute_disco(disco: &Disco) -> Vec<u8> {
     final_string
 }
 
-// TODO: make algo into an enum.
-pub fn hash_ecaps2(data: &[u8], algo: &str) -> String {
-    match algo {
-        "sha-256" => {
-            let mut hasher = Sha256::default();
-            hasher.input(data);
-            let hash = hasher.result();
-            base64::encode(&hash.as_slice())
+pub fn hash_ecaps2(data: &[u8], algo: Algo) -> Result<Hash, String> {
+    Ok(Hash {
+        algo: algo.clone(),
+        hash: match algo {
+            Algo::Sha_256 => {
+                let mut hasher = Sha256::default();
+                hasher.input(data);
+                let hash = hasher.result();
+                base64::encode(&hash.as_slice())
+            },
+            Algo::Sha_512 => {
+                let mut hasher = Sha512::default();
+                hasher.input(data);
+                let hash = hasher.result();
+                base64::encode(&hash.as_slice())
+            },
+            Algo::Sha3_256 => {
+                let mut hasher = Sha3_256::default();
+                hasher.input(data);
+                let hash = hasher.result();
+                base64::encode(&hash.as_slice())
+            },
+            Algo::Sha3_512 => {
+                let mut hasher = Sha3_512::default();
+                hasher.input(data);
+                let hash = hasher.result();
+                base64::encode(&hash.as_slice())
+            },
+            Algo::Blake2b_256 => {
+                let mut hasher = Blake2b::default();
+                hasher.input(data);
+                let mut buf: [u8; 32] = [0; 32];
+                let hash = hasher.variable_result(&mut buf).unwrap();
+                base64::encode(hash)
+            },
+            Algo::Blake2b_512 => {
+                let mut hasher = Blake2b::default();
+                hasher.input(data);
+                let mut buf: [u8; 64] = [0; 64];
+                let hash = hasher.variable_result(&mut buf).unwrap();
+                base64::encode(hash)
+            },
+            Algo::Sha_1 => return Err(String::from("Disabled algorithm sha-1: unsafe.")),
+            Algo::Unknown(algo) => return Err(format!("Unknown algorithm: {}.", algo)),
         },
-        "sha-512" => {
-            let mut hasher = Sha512::default();
-            hasher.input(data);
-            let hash = hasher.result();
-            base64::encode(&hash.as_slice())
-        },
-        "sha3-256" => {
-            let mut hasher = Sha3_256::default();
-            hasher.input(data);
-            let hash = hasher.result();
-            base64::encode(&hash.as_slice())
-        },
-        "sha3-512" => {
-            let mut hasher = Sha3_512::default();
-            hasher.input(data);
-            let hash = hasher.result();
-            base64::encode(&hash.as_slice())
-        },
-        "blake2b-256" => {
-            let mut hasher = Blake2b::default();
-            hasher.input(data);
-            let mut buf: [u8; 32] = [0; 32];
-            let hash = hasher.variable_result(&mut buf).unwrap();
-            base64::encode(hash)
-        },
-        "blake2b-512" => {
-            let mut hasher = Blake2b::default();
-            hasher.input(data);
-            let mut buf: [u8; 64] = [0; 64];
-            let hash = hasher.variable_result(&mut buf).unwrap();
-            base64::encode(hash)
-        },
-        _ => panic!(),
-    }
+    })
 }
 
 #[cfg(test)]
@@ -174,9 +177,9 @@ mod tests {
         let elem: Element = "<c xmlns='urn:xmpp:caps'><hash xmlns='urn:xmpp:hashes:2' algo='sha-256'>K1Njy3HZBThlo4moOD5gBGhn0U0oK7/CbfLlIUDi6o4=</hash><hash xmlns='urn:xmpp:hashes:2' algo='sha3-256'>+sDTQqBmX6iG/X3zjt06fjZMBBqL/723knFIyRf0sg8=</hash></c>".parse().unwrap();
         let ecaps2 = ECaps2::try_from(&elem).unwrap();
         assert_eq!(ecaps2.hashes.len(), 2);
-        assert_eq!(ecaps2.hashes[0].algo, "sha-256");
+        assert_eq!(ecaps2.hashes[0].algo, Algo::Sha_256);
         assert_eq!(ecaps2.hashes[0].hash, "K1Njy3HZBThlo4moOD5gBGhn0U0oK7/CbfLlIUDi6o4=");
-        assert_eq!(ecaps2.hashes[1].algo, "sha3-256");
+        assert_eq!(ecaps2.hashes[1].algo, Algo::Sha3_256);
         assert_eq!(ecaps2.hashes[1].hash, "+sDTQqBmX6iG/X3zjt06fjZMBBqL/723knFIyRf0sg8=");
     }
 
@@ -262,10 +265,10 @@ mod tests {
         assert_eq!(ecaps2.len(), 0x1d9);
         assert_eq!(ecaps2, expected);
 
-        let sha_256 = ecaps2::hash_ecaps2(&ecaps2, "sha-256");
-        assert_eq!(sha_256, "kzBZbkqJ3ADrj7v08reD1qcWUwNGHaidNUgD7nHpiw8=");
-        let sha3_256 = ecaps2::hash_ecaps2(&ecaps2, "sha3-256");
-        assert_eq!(sha3_256, "79mdYAfU9rEdTOcWDO7UEAt6E56SUzk/g6TnqUeuD9Q=");
+        let sha_256 = ecaps2::hash_ecaps2(&ecaps2, Algo::Sha_256).unwrap();
+        assert_eq!(sha_256.hash, "kzBZbkqJ3ADrj7v08reD1qcWUwNGHaidNUgD7nHpiw8=");
+        let sha3_256 = ecaps2::hash_ecaps2(&ecaps2, Algo::Sha3_256).unwrap();
+        assert_eq!(sha3_256.hash, "79mdYAfU9rEdTOcWDO7UEAt6E56SUzk/g6TnqUeuD9Q=");
     }
 
     #[test]
@@ -434,15 +437,15 @@ mod tests {
         assert_eq!(ecaps2.len(), 0x543);
         assert_eq!(ecaps2, expected);
 
-        let sha_256 = ecaps2::hash_ecaps2(&ecaps2, "sha-256");
-        assert_eq!(sha_256, "u79ZroNJbdSWhdSp311mddz44oHHPsEBntQ5b1jqBSY=");
-        let sha3_256 = ecaps2::hash_ecaps2(&ecaps2, "sha3-256");
-        assert_eq!(sha3_256, "XpUJzLAc93258sMECZ3FJpebkzuyNXDzRNwQog8eycg=");
+        let sha_256 = ecaps2::hash_ecaps2(&ecaps2, Algo::Sha_256).unwrap();
+        assert_eq!(sha_256.hash, "u79ZroNJbdSWhdSp311mddz44oHHPsEBntQ5b1jqBSY=");
+        let sha3_256 = ecaps2::hash_ecaps2(&ecaps2, Algo::Sha3_256).unwrap();
+        assert_eq!(sha3_256.hash, "XpUJzLAc93258sMECZ3FJpebkzuyNXDzRNwQog8eycg=");
     }
 
     #[test]
     fn test_blake2b_512() {
-        let hash = ecaps2::hash_ecaps2("abc".as_bytes(), "blake2b-512");
+        let hash = ecaps2::hash_ecaps2("abc".as_bytes(), Algo::Blake2b_512).unwrap();
         let known_hash: Vec<u8> = vec!(
             0xBA, 0x80, 0xA5, 0x3F, 0x98, 0x1C, 0x4D, 0x0D, 0x6A, 0x27, 0x97, 0xB6, 0x9F, 0x12, 0xF6, 0xE9,
             0x4C, 0x21, 0x2F, 0x14, 0x68, 0x5A, 0xC4, 0xB7, 0x4B, 0x12, 0xBB, 0x6F, 0xDB, 0xFF, 0xA2, 0xD1,
@@ -450,6 +453,6 @@ mod tests {
             0x18, 0xD3, 0x8A, 0xA8, 0xDB, 0xF1, 0x92, 0x5A, 0xB9, 0x23, 0x86, 0xED, 0xD4, 0x00, 0x99, 0x23,
         );
         let known_hash = base64::encode(&known_hash);
-        assert_eq!(hash, known_hash);
+        assert_eq!(hash.hash, known_hash);
     }
 }
