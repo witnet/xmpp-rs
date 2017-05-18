@@ -53,6 +53,34 @@ pub enum PresencePayload {
     ECaps2(ECaps2),
 }
 
+impl<'a> TryFrom<&'a Element> for PresencePayload {
+    type Error = Error;
+
+    fn try_from(elem: &'a Element) -> Result<PresencePayload, Error> {
+        Ok(match (elem.name().as_ref(), elem.ns().unwrap().as_ref()) {
+            ("error", ns::JABBER_CLIENT) => PresencePayload::StanzaError(StanzaError::try_from(elem)?),
+
+            // XEP-0203
+            ("delay", ns::DELAY) => PresencePayload::Delay(Delay::try_from(elem)?),
+
+            // XEP-0390
+            ("c", ns::ECAPS2) => PresencePayload::ECaps2(ECaps2::try_from(elem)?),
+
+            _ => return Err(Error::ParseError("Unknown presence payload."))
+        })
+    }
+}
+
+impl<'a> Into<Element> for &'a PresencePayload {
+    fn into(self) -> Element {
+        match *self {
+            PresencePayload::StanzaError(ref stanza_error) => stanza_error.into(),
+            PresencePayload::Delay(ref delay) => delay.into(),
+            PresencePayload::ECaps2(ref ecaps2) => ecaps2.into(),
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum PresenceType {
     /// This value is not an acceptable 'type' attribute, it is only used
@@ -108,12 +136,6 @@ impl IntoAttributeValue for PresenceType {
 }
 
 #[derive(Debug, Clone)]
-pub enum PresencePayloadType {
-    XML(Element),
-    Parsed(PresencePayload),
-}
-
-#[derive(Debug, Clone)]
 pub struct Presence {
     pub from: Option<Jid>,
     pub to: Option<Jid>,
@@ -122,7 +144,7 @@ pub struct Presence {
     pub show: Option<Show>,
     pub statuses: BTreeMap<Lang, Status>,
     pub priority: Priority,
-    pub payloads: Vec<PresencePayloadType>,
+    pub payloads: Vec<Element>,
 }
 
 impl<'a> TryFrom<&'a Element> for Presence {
@@ -179,19 +201,7 @@ impl<'a> TryFrom<&'a Element> for Presence {
                 }
                 priority = Some(Priority::from_str(elem.text().as_ref())?);
             } else {
-                let payload = if let Ok(stanza_error) = StanzaError::try_from(elem) {
-                    Some(PresencePayload::StanzaError(stanza_error))
-                } else if let Ok(delay) = Delay::try_from(elem) {
-                    Some(PresencePayload::Delay(delay))
-                } else if let Ok(ecaps2) = ECaps2::try_from(elem) {
-                    Some(PresencePayload::ECaps2(ecaps2))
-                } else {
-                    None
-                };
-                payloads.push(match payload {
-                    Some(payload) => PresencePayloadType::Parsed(payload),
-                    None => PresencePayloadType::XML(elem.clone()),
-                });
+                payloads.push(elem.clone());
             }
         }
         Ok(Presence {
@@ -207,16 +217,6 @@ impl<'a> TryFrom<&'a Element> for Presence {
     }
 }
 
-impl<'a> Into<Element> for &'a PresencePayload {
-    fn into(self) -> Element {
-        match *self {
-            PresencePayload::StanzaError(ref stanza_error) => stanza_error.into(),
-            PresencePayload::Delay(ref delay) => delay.into(),
-            PresencePayload::ECaps2(ref ecaps2) => ecaps2.into(),
-        }
-    }
-}
-
 impl<'a> Into<Element> for &'a Presence {
     fn into(self) -> Element {
         let mut stanza = Element::builder("presence")
@@ -225,13 +225,20 @@ impl<'a> Into<Element> for &'a Presence {
                                  .attr("to", self.to.clone().and_then(|value| Some(String::from(value))))
                                  .attr("id", self.id.clone())
                                  .attr("type", self.type_.clone())
+                                 .append(self.show.clone())
+                                 .append(self.statuses.iter().map(|(lang, status)| {
+                                      Element::builder("status")
+                                              .attr("xml:lang", match lang.as_ref() {
+                                                   "" => None,
+                                                   lang => Some(lang),
+                                               })
+                                              .append(status.clone())
+                                              .build()
+                                  }).collect::<Vec<_>>())
+                                 .append(if self.priority == 0 { None } else { Some(format!("{}", self.priority)) })
                                  .build();
         for child in self.payloads.clone() {
-            let elem = match child {
-                PresencePayloadType::XML(elem) => elem,
-                PresencePayloadType::Parsed(payload) => (&payload).into(),
-            };
-            stanza.append_child(elem);
+            stanza.append_child(child);
         }
         stanza
     }
@@ -241,7 +248,6 @@ impl<'a> Into<Element> for &'a Presence {
 mod tests {
     use std::collections::BTreeMap;
     use super::*;
-    use ns;
 
     #[test]
     fn test_simple() {
@@ -364,11 +370,8 @@ mod tests {
     fn test_unknown_child() {
         let elem: Element = "<presence xmlns='jabber:client'><test xmlns='invalid'/></presence>".parse().unwrap();
         let presence = Presence::try_from(&elem).unwrap();
-        if let PresencePayloadType::XML(ref payload) = presence.payloads[0] {
-            assert!(payload.is("test", "invalid"));
-        } else {
-            panic!("Did successfully parse an invalid element.");
-        }
+        let payload = &presence.payloads[0];
+        assert!(payload.is("test", "invalid"));
     }
 
     #[test]
@@ -398,16 +401,17 @@ mod tests {
     #[test]
     fn test_serialise_status() {
         let status = Status::from("Hello world!");
-        let payloads = vec!(PresencePayloadType::Parsed(PresencePayload::Status(status)));
+        let mut statuses = BTreeMap::new();
+        statuses.insert(String::from(""), status);
         let presence = Presence {
             from: None,
             to: None,
             id: None,
             type_: PresenceType::Unavailable,
             show: None,
-            statuses: BTreeMap::new(),
+            statuses: statuses,
             priority: 0i8,
-            payloads: payloads,
+            payloads: vec!(),
         };
         let elem: Element = (&presence).into();
         assert!(elem.is("presence", ns::JABBER_CLIENT));
