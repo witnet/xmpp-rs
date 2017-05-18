@@ -31,6 +31,30 @@ pub enum IqPayload {
     Ping(Ping),
 }
 
+impl<'a> TryFrom<&'a Element> for IqPayload {
+    type Error = Error;
+
+    fn try_from(elem: &'a Element) -> Result<IqPayload, Error> {
+        Ok(match (elem.name().as_ref(), elem.ns().unwrap().as_ref()) {
+            // XEP-0030
+            ("query", ns::DISCO_INFO) => IqPayload::Disco(Disco::try_from(elem)?),
+
+            // XEP-0047
+            ("open", ns::IBB)
+          | ("data", ns::IBB)
+          | ("close", ns::IBB) => IqPayload::IBB(IBB::try_from(elem)?),
+
+            // XEP-0166
+            ("jingle", ns::JINGLE) => IqPayload::Jingle(Jingle::try_from(elem)?),
+
+            // XEP-0199
+            ("ping", ns::PING) => IqPayload::Ping(Ping::try_from(elem)?),
+
+            _ => return Err(Error::ParseError("Unknown iq payload."))
+        })
+    }
+}
+
 #[derive(Debug, Clone)]
 pub enum IqPayloadType {
     XML(Element),
@@ -98,22 +122,11 @@ impl<'a> TryFrom<&'a Element> for Iq {
                     return Err(Error::ParseError("Wrong number of children in iq element."));
                 }
             } else {
-                let parsed_payload = if let Ok(disco) = Disco::try_from(elem) {
-                    Some(IqPayload::Disco(disco))
-                } else if let Ok(ibb) = IBB::try_from(elem) {
-                    Some(IqPayload::IBB(ibb))
-                } else if let Ok(jingle) = Jingle::try_from(elem) {
-                    Some(IqPayload::Jingle(jingle))
-                } else if let Ok(ping) = Ping::try_from(elem) {
-                    Some(IqPayload::Ping(ping))
-                } else {
-                    None
-                };
-
-                payload = match parsed_payload {
-                    Some(payload) => Some(IqPayloadType::Parsed(payload)),
-                    None => Some(IqPayloadType::XML(elem.clone())),
-                };
+                payload = match IqPayload::try_from(elem) {
+                    Ok(payload) => Some(IqPayloadType::Parsed(payload)),
+                    // TODO: fix the API to avoid having to swallow the error here.
+                    Err(_) => Some(IqPayloadType::XML(elem.clone())),
+                }
             }
         }
 
