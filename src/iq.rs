@@ -145,7 +145,7 @@ impl<'a> TryFrom<&'a Element> for Iq {
                 return Err(Error::ParseError("Wrong number of children in iq element."));
             }
         } else {
-            panic!()
+            return Err(Error::ParseError("Unknown iq type."));
         };
 
         Ok(Iq {
