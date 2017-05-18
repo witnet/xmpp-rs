@@ -116,31 +116,31 @@ impl<'a> TryFrom<&'a Element> for Iq {
                     return Err(Error::ParseError("Wrong number of children in iq element."));
                 }
             } else {
-                payload = Some(elem);
+                payload = Some(elem.clone());
             }
         }
 
         let type_ = if type_ == "get" {
-            if let Some(payload) = payload.clone() {
-                IqType::Get(payload.clone())
+            if let Some(payload) = payload {
+                IqType::Get(payload)
             } else {
                 return Err(Error::ParseError("Wrong number of children in iq element."));
             }
         } else if type_ == "set" {
-            if let Some(payload) = payload.clone() {
-                IqType::Set(payload.clone())
+            if let Some(payload) = payload {
+                IqType::Set(payload)
             } else {
                 return Err(Error::ParseError("Wrong number of children in iq element."));
             }
         } else if type_ == "result" {
-            if let Some(payload) = payload.clone() {
-                IqType::Result(Some(payload.clone()))
+            if let Some(payload) = payload {
+                IqType::Result(Some(payload))
             } else {
                 IqType::Result(None)
             }
         } else if type_ == "error" {
             if let Some(payload) = error_payload.clone() {
-                IqType::Error(payload.clone())
+                IqType::Error(payload)
             } else {
                 return Err(Error::ParseError("Wrong number of children in iq element."));
             }
