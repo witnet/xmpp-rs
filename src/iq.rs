@@ -56,16 +56,10 @@ impl<'a> TryFrom<&'a Element> for IqPayload {
 }
 
 #[derive(Debug, Clone)]
-pub enum IqPayloadType {
-    XML(Element),
-    Parsed(IqPayload),
-}
-
-#[derive(Debug, Clone)]
 pub enum IqType {
-    Get(IqPayloadType),
-    Set(IqPayloadType),
-    Result(Option<IqPayloadType>),
+    Get(Element),
+    Set(Element),
+    Result(Option<Element>),
     Error(StanzaError),
 }
 
@@ -122,11 +116,7 @@ impl<'a> TryFrom<&'a Element> for Iq {
                     return Err(Error::ParseError("Wrong number of children in iq element."));
                 }
             } else {
-                payload = match IqPayload::try_from(elem) {
-                    Ok(payload) => Some(IqPayloadType::Parsed(payload)),
-                    // TODO: fix the API to avoid having to swallow the error here.
-                    Err(_) => Some(IqPayloadType::XML(elem.clone())),
-                }
+                payload = Some(elem);
             }
         }
 
@@ -188,13 +178,10 @@ impl<'a> Into<Element> for &'a Iq {
                                  .attr("type", self.payload.clone())
                                  .build();
         let elem = match self.payload.clone() {
-            IqType::Get(IqPayloadType::XML(elem))
-          | IqType::Set(IqPayloadType::XML(elem))
-          | IqType::Result(Some(IqPayloadType::XML(elem))) => elem,
+            IqType::Get(elem)
+          | IqType::Set(elem)
+          | IqType::Result(Some(elem)) => elem,
             IqType::Error(error) => (&error).into(),
-            IqType::Get(IqPayloadType::Parsed(payload))
-          | IqType::Set(IqPayloadType::Parsed(payload))
-          | IqType::Result(Some(IqPayloadType::Parsed(payload))) => (&payload).into(),
             IqType::Result(None) => return stanza,
         };
         stanza.append_child(elem);
@@ -229,7 +216,7 @@ mod tests {
         assert_eq!(iq.to, None);
         assert_eq!(iq.id, None);
         assert!(match iq.payload {
-            IqType::Get(IqPayloadType::XML(element)) => element == query,
+            IqType::Get(element) => element == query,
             _ => false
         });
     }
@@ -245,7 +232,7 @@ mod tests {
         assert_eq!(iq.to, None);
         assert_eq!(iq.id, None);
         assert!(match iq.payload {
-            IqType::Set(IqPayloadType::XML(element)) => element == vcard,
+            IqType::Set(element) => element == vcard,
             _ => false
         });
     }
@@ -274,7 +261,7 @@ mod tests {
         assert_eq!(iq.to, None);
         assert_eq!(iq.id, None);
         assert!(match iq.payload {
-            IqType::Result(Some(IqPayloadType::XML(element))) => element == query,
+            IqType::Result(Some(element)) => element == query,
             _ => false,
         });
     }
@@ -331,8 +318,12 @@ mod tests {
     fn test_disco() {
         let elem: Element = "<iq xmlns='jabber:client' type='get'><query xmlns='http://jabber.org/protocol/disco#info'/></iq>".parse().unwrap();
         let iq = Iq::try_from(&elem).unwrap();
-        assert!(match iq.payload {
-            IqType::Get(IqPayloadType::Parsed(IqPayload::Disco(Disco { .. }))) => true,
+        let payload = match iq.payload {
+            IqType::Get(ref payload) => IqPayload::try_from(payload).unwrap(),
+            _ => panic!(),
+        };
+        assert!(match payload {
+            IqPayload::Disco(Disco { .. }) => true,
             _ => false,
         });
     }
