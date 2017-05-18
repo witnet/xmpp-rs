@@ -38,6 +38,59 @@ pub enum MessagePayload {
     StanzaId(StanzaId),
 }
 
+impl<'a> TryFrom<&'a Element> for MessagePayload {
+    type Error = Error;
+
+    fn try_from(elem: &'a Element) -> Result<MessagePayload, Error> {
+        Ok(match (elem.name().as_ref(), elem.ns().unwrap().as_ref()) {
+            ("error", ns::JABBER_CLIENT) => MessagePayload::StanzaError(StanzaError::try_from(elem)?),
+
+            // XEP-0085
+            ("active", ns::CHATSTATES) => MessagePayload::ChatState(ChatState::try_from(elem)?),
+            ("inactive", ns::CHATSTATES) => MessagePayload::ChatState(ChatState::try_from(elem)?),
+            ("composing", ns::CHATSTATES) => MessagePayload::ChatState(ChatState::try_from(elem)?),
+            ("paused", ns::CHATSTATES) => MessagePayload::ChatState(ChatState::try_from(elem)?),
+            ("gone", ns::CHATSTATES) => MessagePayload::ChatState(ChatState::try_from(elem)?),
+
+            // XEP-0184
+            ("request", ns::RECEIPTS) => MessagePayload::Receipt(Receipt::try_from(elem)?),
+            ("received", ns::RECEIPTS) => MessagePayload::Receipt(Receipt::try_from(elem)?),
+
+            // XEP-0203
+            ("delay", ns::DELAY) => MessagePayload::Delay(Delay::try_from(elem)?),
+
+            // XEP-0224
+            ("attention", ns::ATTENTION) => MessagePayload::Attention(Attention::try_from(elem)?),
+
+            // XEP-0308
+            ("replace", ns::MESSAGE_CORRECT) => MessagePayload::MessageCorrect(Replace::try_from(elem)?),
+
+            // XEP-0359
+            ("stanza-id", ns::SID) => MessagePayload::StanzaId(StanzaId::try_from(elem)?),
+
+            // XEP-0380
+            ("encryption", ns::EME) => MessagePayload::ExplicitMessageEncryption(ExplicitMessageEncryption::try_from(elem)?),
+
+            _ => return Err(Error::ParseError("Unknown message payload."))
+        })
+    }
+}
+
+impl<'a> Into<Element> for &'a MessagePayload {
+    fn into(self) -> Element {
+        match *self {
+            MessagePayload::StanzaError(ref stanza_error) => stanza_error.into(),
+            MessagePayload::Attention(ref attention) => attention.into(),
+            MessagePayload::ChatState(ref chatstate) => chatstate.into(),
+            MessagePayload::Receipt(ref receipt) => receipt.into(),
+            MessagePayload::Delay(ref delay) => delay.into(),
+            MessagePayload::MessageCorrect(ref replace) => replace.into(),
+            MessagePayload::ExplicitMessageEncryption(ref eme) => eme.into(),
+            MessagePayload::StanzaId(ref stanza_id) => stanza_id.into(),
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum MessageType {
     Chat,
@@ -81,12 +134,6 @@ impl IntoAttributeValue for MessageType {
     }
 }
 
-#[derive(Debug, Clone)]
-pub enum MessagePayloadType {
-    XML(Element),
-    Parsed(MessagePayload),
-}
-
 type Lang = String;
 type Body = String;
 type Subject = String;
@@ -101,7 +148,7 @@ pub struct Message {
     pub bodies: BTreeMap<Lang, Body>,
     pub subjects: BTreeMap<Lang, Subject>,
     pub thread: Option<Thread>,
-    pub payloads: Vec<MessagePayloadType>,
+    pub payloads: Vec<Element>,
 }
 
 impl<'a> TryFrom<&'a Element> for Message {
@@ -151,29 +198,7 @@ impl<'a> TryFrom<&'a Element> for Message {
                 }
                 thread = Some(elem.text());
             } else {
-                let payload = if let Ok(stanza_error) = StanzaError::try_from(elem) {
-                    Some(MessagePayload::StanzaError(stanza_error))
-                } else if let Ok(chatstate) = ChatState::try_from(elem) {
-                    Some(MessagePayload::ChatState(chatstate))
-                } else if let Ok(receipt) = Receipt::try_from(elem) {
-                    Some(MessagePayload::Receipt(receipt))
-                } else if let Ok(delay) = Delay::try_from(elem) {
-                    Some(MessagePayload::Delay(delay))
-                } else if let Ok(attention) = Attention::try_from(elem) {
-                    Some(MessagePayload::Attention(attention))
-                } else if let Ok(replace) = Replace::try_from(elem) {
-                    Some(MessagePayload::MessageCorrect(replace))
-                } else if let Ok(eme) = ExplicitMessageEncryption::try_from(elem) {
-                    Some(MessagePayload::ExplicitMessageEncryption(eme))
-                } else if let Ok(stanza_id) = StanzaId::try_from(elem) {
-                    Some(MessagePayload::StanzaId(stanza_id))
-                } else {
-                    None
-                };
-                payloads.push(match payload {
-                    Some(payload) => MessagePayloadType::Parsed(payload),
-                    None => MessagePayloadType::XML(elem.clone()),
-                });
+                payloads.push(elem.clone())
             }
         }
         Ok(Message {
@@ -186,21 +211,6 @@ impl<'a> TryFrom<&'a Element> for Message {
             thread: thread,
             payloads: payloads,
         })
-    }
-}
-
-impl<'a> Into<Element> for &'a MessagePayload {
-    fn into(self) -> Element {
-        match *self {
-            MessagePayload::StanzaError(ref stanza_error) => stanza_error.into(),
-            MessagePayload::Attention(ref attention) => attention.into(),
-            MessagePayload::ChatState(ref chatstate) => chatstate.into(),
-            MessagePayload::Receipt(ref receipt) => receipt.into(),
-            MessagePayload::Delay(ref delay) => delay.into(),
-            MessagePayload::MessageCorrect(ref replace) => replace.into(),
-            MessagePayload::ExplicitMessageEncryption(ref eme) => eme.into(),
-            MessagePayload::StanzaId(ref stanza_id) => stanza_id.into(),
-        }
     }
 }
 
@@ -236,11 +246,7 @@ impl<'a> Into<Element> for &'a Message {
                                                     .collect::<Vec<_>>())
                                  .build();
         for child in self.payloads.clone() {
-            let elem = match child {
-                MessagePayloadType::XML(elem) => elem,
-                MessagePayloadType::Parsed(payload) => (&payload).into(),
-            };
-            stanza.append_child(elem);
+            stanza.append_child(child);
         }
         stanza
     }
