@@ -48,9 +48,6 @@ pub type Priority = i8;
 /// Lists every known payload of a `<presence/>`.
 #[derive(Debug, Clone)]
 pub enum PresencePayload {
-    Show(Show),
-    Status(Status),
-    Priority(Priority),
     StanzaError(StanzaError),
     Delay(Delay),
     ECaps2(ECaps2),
@@ -213,24 +210,6 @@ impl<'a> TryFrom<&'a Element> for Presence {
 impl<'a> Into<Element> for &'a PresencePayload {
     fn into(self) -> Element {
         match *self {
-            PresencePayload::Show(ref show) => {
-                Element::builder("status")
-                        .ns(ns::JABBER_CLIENT)
-                        .append(show.to_owned())
-                        .build()
-            },
-            PresencePayload::Status(ref status) => {
-                Element::builder("status")
-                        .ns(ns::JABBER_CLIENT)
-                        .append(status.to_owned())
-                        .build()
-            },
-            PresencePayload::Priority(ref priority) => {
-                Element::builder("status")
-                        .ns(ns::JABBER_CLIENT)
-                        .append(format!("{}", priority))
-                        .build()
-            },
             PresencePayload::StanzaError(ref stanza_error) => stanza_error.into(),
             PresencePayload::Delay(ref delay) => delay.into(),
             PresencePayload::ECaps2(ref ecaps2) => ecaps2.into(),
