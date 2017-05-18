@@ -46,15 +46,15 @@ impl<'a> TryFrom<&'a Element> for MessagePayload {
             ("error", ns::JABBER_CLIENT) => MessagePayload::StanzaError(StanzaError::try_from(elem)?),
 
             // XEP-0085
-            ("active", ns::CHATSTATES) => MessagePayload::ChatState(ChatState::try_from(elem)?),
-            ("inactive", ns::CHATSTATES) => MessagePayload::ChatState(ChatState::try_from(elem)?),
-            ("composing", ns::CHATSTATES) => MessagePayload::ChatState(ChatState::try_from(elem)?),
-            ("paused", ns::CHATSTATES) => MessagePayload::ChatState(ChatState::try_from(elem)?),
-            ("gone", ns::CHATSTATES) => MessagePayload::ChatState(ChatState::try_from(elem)?),
+            ("active", ns::CHATSTATES)
+          | ("inactive", ns::CHATSTATES)
+          | ("composing", ns::CHATSTATES)
+          | ("paused", ns::CHATSTATES)
+          | ("gone", ns::CHATSTATES) => MessagePayload::ChatState(ChatState::try_from(elem)?),
 
             // XEP-0184
-            ("request", ns::RECEIPTS) => MessagePayload::Receipt(Receipt::try_from(elem)?),
-            ("received", ns::RECEIPTS) => MessagePayload::Receipt(Receipt::try_from(elem)?),
+            ("request", ns::RECEIPTS)
+          | ("received", ns::RECEIPTS) => MessagePayload::Receipt(Receipt::try_from(elem)?),
 
             // XEP-0203
             ("delay", ns::DELAY) => MessagePayload::Delay(Delay::try_from(elem)?),
