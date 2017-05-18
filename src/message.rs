@@ -23,6 +23,7 @@ use delay::Delay;
 use attention::Attention;
 use message_correct::Replace;
 use eme::ExplicitMessageEncryption;
+use stanza_id::StanzaId;
 
 /// Lists every known payload of a `<message/>`.
 #[derive(Debug, Clone)]
@@ -34,6 +35,7 @@ pub enum MessagePayload {
     Attention(Attention),
     MessageCorrect(Replace),
     ExplicitMessageEncryption(ExplicitMessageEncryption),
+    StanzaId(StanzaId),
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -163,6 +165,8 @@ impl<'a> TryFrom<&'a Element> for Message {
                     Some(MessagePayload::MessageCorrect(replace))
                 } else if let Ok(eme) = ExplicitMessageEncryption::try_from(elem) {
                     Some(MessagePayload::ExplicitMessageEncryption(eme))
+                } else if let Ok(stanza_id) = StanzaId::try_from(elem) {
+                    Some(MessagePayload::StanzaId(stanza_id))
                 } else {
                     None
                 };
@@ -195,6 +199,7 @@ impl<'a> Into<Element> for &'a MessagePayload {
             MessagePayload::Delay(ref delay) => delay.into(),
             MessagePayload::MessageCorrect(ref replace) => replace.into(),
             MessagePayload::ExplicitMessageEncryption(ref eme) => eme.into(),
+            MessagePayload::StanzaId(ref stanza_id) => stanza_id.into(),
         }
     }
 }
