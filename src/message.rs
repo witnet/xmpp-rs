@@ -36,6 +36,8 @@ pub enum MessagePayload {
     MessageCorrect(Replace),
     ExplicitMessageEncryption(ExplicitMessageEncryption),
     StanzaId(StanzaId),
+
+    Unknown(Element),
 }
 
 impl<'a> TryFrom<&'a Element> for MessagePayload {
@@ -71,7 +73,7 @@ impl<'a> TryFrom<&'a Element> for MessagePayload {
             // XEP-0380
             ("encryption", ns::EME) => MessagePayload::ExplicitMessageEncryption(ExplicitMessageEncryption::try_from(elem)?),
 
-            _ => return Err(Error::ParseError("Unknown message payload."))
+            _ => MessagePayload::Unknown(elem.clone()),
         })
     }
 }
@@ -87,6 +89,8 @@ impl<'a> Into<Element> for &'a MessagePayload {
             MessagePayload::MessageCorrect(ref replace) => replace.into(),
             MessagePayload::ExplicitMessageEncryption(ref eme) => eme.into(),
             MessagePayload::StanzaId(ref stanza_id) => stanza_id.into(),
+
+            MessagePayload::Unknown(ref elem) => elem.clone(),
         }
     }
 }

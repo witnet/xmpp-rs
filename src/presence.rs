@@ -51,6 +51,8 @@ pub enum PresencePayload {
     StanzaError(StanzaError),
     Delay(Delay),
     ECaps2(ECaps2),
+
+    Unknown(Element),
 }
 
 impl<'a> TryFrom<&'a Element> for PresencePayload {
@@ -66,7 +68,7 @@ impl<'a> TryFrom<&'a Element> for PresencePayload {
             // XEP-0390
             ("c", ns::ECAPS2) => PresencePayload::ECaps2(ECaps2::try_from(elem)?),
 
-            _ => return Err(Error::ParseError("Unknown presence payload."))
+            _ => PresencePayload::Unknown(elem.clone()),
         })
     }
 }
@@ -77,6 +79,8 @@ impl<'a> Into<Element> for &'a PresencePayload {
             PresencePayload::StanzaError(ref stanza_error) => stanza_error.into(),
             PresencePayload::Delay(ref delay) => delay.into(),
             PresencePayload::ECaps2(ref ecaps2) => ecaps2.into(),
+
+            PresencePayload::Unknown(ref elem) => elem.clone(),
         }
     }
 }

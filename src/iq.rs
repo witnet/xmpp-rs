@@ -29,6 +29,8 @@ pub enum IqPayload {
     IBB(IBB),
     Jingle(Jingle),
     Ping(Ping),
+
+    Unknown(Element),
 }
 
 impl<'a> TryFrom<&'a Element> for IqPayload {
@@ -50,7 +52,7 @@ impl<'a> TryFrom<&'a Element> for IqPayload {
             // XEP-0199
             ("ping", ns::PING) => IqPayload::Ping(Ping::try_from(elem)?),
 
-            _ => return Err(Error::ParseError("Unknown iq payload."))
+            _ => IqPayload::Unknown(elem.clone()),
         })
     }
 }
@@ -164,6 +166,8 @@ impl<'a> Into<Element> for &'a IqPayload {
             IqPayload::IBB(ref ibb) => ibb.into(),
             IqPayload::Jingle(ref jingle) => jingle.into(),
             IqPayload::Ping(ref ping) => ping.into(),
+
+            IqPayload::Unknown(ref elem) => elem.clone(),
         }
     }
 }
