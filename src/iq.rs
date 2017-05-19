@@ -21,6 +21,7 @@ use disco::Disco;
 use ibb::IBB;
 use jingle::Jingle;
 use ping::Ping;
+use mam::{Query as MamQuery, Fin as MamFin, Prefs as MamPrefs};
 
 /// Lists every known payload of a `<iq/>`.
 #[derive(Debug, Clone)]
@@ -29,6 +30,9 @@ pub enum IqPayload {
     IBB(IBB),
     Jingle(Jingle),
     Ping(Ping),
+    MamQuery(MamQuery),
+    MamFin(MamFin),
+    MamPrefs(MamPrefs),
 
     Unknown(Element),
 }
@@ -51,6 +55,11 @@ impl<'a> TryFrom<&'a Element> for IqPayload {
 
             // XEP-0199
             ("ping", ns::PING) => IqPayload::Ping(Ping::try_from(elem)?),
+
+            // XEP-0313
+            ("query", ns::MAM) => IqPayload::MamQuery(MamQuery::try_from(elem)?),
+            ("fin", ns::MAM) => IqPayload::MamFin(MamFin::try_from(elem)?),
+            ("prefs", ns::MAM) => IqPayload::MamPrefs(MamPrefs::try_from(elem)?),
 
             _ => IqPayload::Unknown(elem.clone()),
         })
@@ -166,6 +175,9 @@ impl<'a> Into<Element> for &'a IqPayload {
             IqPayload::IBB(ref ibb) => ibb.into(),
             IqPayload::Jingle(ref jingle) => jingle.into(),
             IqPayload::Ping(ref ping) => ping.into(),
+            IqPayload::MamQuery(ref query) => query.into(),
+            IqPayload::MamFin(ref fin) => fin.into(),
+            IqPayload::MamPrefs(ref prefs) => prefs.into(),
 
             IqPayload::Unknown(ref elem) => elem.clone(),
         }

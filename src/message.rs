@@ -24,6 +24,7 @@ use attention::Attention;
 use message_correct::Replace;
 use eme::ExplicitMessageEncryption;
 use stanza_id::StanzaId;
+use mam::Result_ as MamResult;
 
 /// Lists every known payload of a `<message/>`.
 #[derive(Debug, Clone)]
@@ -36,6 +37,7 @@ pub enum MessagePayload {
     MessageCorrect(Replace),
     ExplicitMessageEncryption(ExplicitMessageEncryption),
     StanzaId(StanzaId),
+    MamResult(MamResult),
 
     Unknown(Element),
 }
@@ -67,6 +69,9 @@ impl<'a> TryFrom<&'a Element> for MessagePayload {
             // XEP-0308
             ("replace", ns::MESSAGE_CORRECT) => MessagePayload::MessageCorrect(Replace::try_from(elem)?),
 
+            // XEP-0313
+            ("result", ns::MAM) => MessagePayload::MamResult(MamResult::try_from(elem)?),
+
             // XEP-0359
             ("stanza-id", ns::SID) => MessagePayload::StanzaId(StanzaId::try_from(elem)?),
 
@@ -89,6 +94,7 @@ impl<'a> Into<Element> for &'a MessagePayload {
             MessagePayload::MessageCorrect(ref replace) => replace.into(),
             MessagePayload::ExplicitMessageEncryption(ref eme) => eme.into(),
             MessagePayload::StanzaId(ref stanza_id) => stanza_id.into(),
+            MessagePayload::MamResult(ref result) => result.into(),
 
             MessagePayload::Unknown(ref elem) => elem.clone(),
         }
