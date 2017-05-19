@@ -15,7 +15,7 @@ use ns;
 #[derive(Debug, Clone)]
 pub struct First {
     pub index: Option<usize>,
-    pub base: String,
+    pub id: String,
 }
 
 #[derive(Debug, Clone)]
@@ -68,7 +68,7 @@ impl<'a> TryFrom<&'a Element> for Set {
                         Some(index) => Some(index.parse()?),
                         None => None,
                     },
-                    base: child.text(),
+                    id: child.text(),
                 });
             } else if child.is("index", ns::RSM) {
                 if index.is_some() {
@@ -123,7 +123,7 @@ impl<'a> Into<Element> for &'a Set {
                                            Some(index) => Some(format!("{}", index)),
                                            None => None,
                                        })
-                                      .append(first.base.clone()).build());
+                                      .append(first.id.clone()).build());
         }
         if self.index.is_some() {
             elem.append_child(Element::builder("index").ns(ns::RSM).append(format!("{}", self.index.unwrap())).build());
