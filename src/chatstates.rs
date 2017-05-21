@@ -28,6 +28,9 @@ impl<'a> TryFrom<&'a Element> for ChatState {
         for _ in elem.children() {
             return Err(Error::ParseError("Unknown child in chatstate element."));
         }
+        for _ in elem.attrs() {
+            return Err(Error::ParseError("Unknown attribute in chatstate element."));
+        }
         if elem.is("active", ns::CHATSTATES) {
             Ok(ChatState::Active)
         } else if elem.is("composing", ns::CHATSTATES) {
@@ -90,7 +93,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn test_invalid_attribute() {
         let elem: Element = "<inactive xmlns='http://jabber.org/protocol/chatstates' coucou=''/>".parse().unwrap();
         let error = ChatState::try_from(&elem).unwrap_err();

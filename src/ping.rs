@@ -26,6 +26,9 @@ impl<'a> TryFrom<&'a Element> for Ping {
         for _ in elem.children() {
             return Err(Error::ParseError("Unknown child in ping element."));
         }
+        for _ in elem.attrs() {
+            return Err(Error::ParseError("Unknown attribute in ping element."));
+        }
         Ok(Ping)
     }
 }
@@ -60,7 +63,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn test_invalid_attribute() {
         let elem: Element = "<ping xmlns='urn:xmpp:ping' coucou=''/>".parse().unwrap();
         let error = Ping::try_from(&elem).unwrap_err();

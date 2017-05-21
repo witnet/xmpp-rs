@@ -180,6 +180,9 @@ impl<'a> TryFrom<&'a Element> for Presence {
                 for _ in elem.children() {
                     return Err(Error::ParseError("Unknown child in show element."));
                 }
+                for _ in elem.attrs() {
+                    return Err(Error::ParseError("Unknown attribute in show element."));
+                }
                 show = Some(match elem.text().as_ref() {
                     "away" => Show::Away,
                     "chat" => Show::Chat,
@@ -192,6 +195,11 @@ impl<'a> TryFrom<&'a Element> for Presence {
                 for _ in elem.children() {
                     return Err(Error::ParseError("Unknown child in status element."));
                 }
+                for (attr, _) in elem.attrs() {
+                    if attr != "xml:lang" {
+                        return Err(Error::ParseError("Unknown attribute in status element."));
+                    }
+                }
                 let lang = elem.attr("xml:lang").unwrap_or("").to_owned();
                 if statuses.insert(lang, elem.text()).is_some() {
                     return Err(Error::ParseError("Status element present twice for the same xml:lang."));
@@ -202,6 +210,9 @@ impl<'a> TryFrom<&'a Element> for Presence {
                 }
                 for _ in elem.children() {
                     return Err(Error::ParseError("Unknown child in priority element."));
+                }
+                for _ in elem.attrs() {
+                    return Err(Error::ParseError("Unknown attribute in priority element."));
                 }
                 priority = Some(Priority::from_str(elem.text().as_ref())?);
             } else {
@@ -379,9 +390,8 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn test_invalid_status_child() {
-        let elem: Element = "<presence xmlns='jabber:client'><status xmlns='jabber:client'><coucou/></status></presence>".parse().unwrap();
+        let elem: Element = "<presence xmlns='jabber:client'><status><coucou/></status></presence>".parse().unwrap();
         let error = Presence::try_from(&elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
@@ -391,9 +401,8 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn test_invalid_attribute() {
-        let elem: Element = "<status xmlns='jabber:client' coucou=''/>".parse().unwrap();
+        let elem: Element = "<presence xmlns='jabber:client'><status coucou=''/></presence>".parse().unwrap();
         let error = Presence::try_from(&elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
