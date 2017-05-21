@@ -180,4 +180,25 @@ mod tests {
         let elem2 = (&rsm).into();
         assert_eq!(elem, elem2);
     }
+
+    #[test]
+    fn test_first_index() {
+        let elem: Element = "<set xmlns='http://jabber.org/protocol/rsm'><first index='4'>coucou</first></set>".parse().unwrap();
+        let set = Set::try_from(&elem).unwrap();
+        assert_eq!(set.first, Some(String::from("coucou")));
+        assert_eq!(set.first_index, Some(4));
+
+        let set2 = Set {
+            after: None,
+            before: None,
+            count: None,
+            first: Some(String::from("coucou")),
+            first_index: Some(4),
+            index: None,
+            last: None,
+            max: None,
+        };
+        let elem2 = (&set2).into();
+        assert_eq!(elem, elem2);
+    }
 }
