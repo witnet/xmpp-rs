@@ -138,11 +138,8 @@ impl<'a> TryFrom<&'a Element> for Description {
                     if range.is_some() {
                         return Err(Error::ParseError("File must not have more than one range."));
                     }
-                    let offset = file_payload.attr("offset").unwrap_or("0").parse()?;
-                    let length = match file_payload.attr("length") {
-                        Some(length) => Some(length.parse()?),
-                        None => None,
-                    };
+                    let offset = get_attr!(file_payload, "offset", default);
+                    let length = get_attr!(file_payload, "length", optional);
                     let mut range_hashes = vec!();
                     for hash_element in file_payload.children() {
                         if !hash_element.is("hash", ns::HASHES) {
