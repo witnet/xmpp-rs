@@ -14,6 +14,47 @@ use ns;
 
 use media_element::MediaElement;
 
+#[derive(Debug, Clone, PartialEq)]
+pub enum FieldType {
+    Boolean,
+    Fixed,
+    Hidden,
+    JidMulti,
+    JidSingle,
+    ListMulti,
+    ListSingle,
+    TextMulti,
+    TextPrivate,
+    TextSingle,
+}
+
+impl Default for FieldType {
+    fn default() -> FieldType {
+        FieldType::TextSingle
+    }
+}
+
+impl FromStr for FieldType {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<FieldType, Error> {
+        Ok(match s {
+            "boolean" => FieldType::Boolean,
+            "fixed" => FieldType::Fixed,
+            "hidden" => FieldType::Hidden,
+            "jid-multi" => FieldType::JidMulti,
+            "jid-single" => FieldType::JidSingle,
+            "list-multi" => FieldType::ListMulti,
+            "list-single" => FieldType::ListSingle,
+            "text-multi" => FieldType::TextMulti,
+            "text-private" => FieldType::TextPrivate,
+            "text-single" => FieldType::TextSingle,
+
+            _ => return Err(Error::ParseError("Invalid 'type' attribute in field element.")),
+        })
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct Option_ {
     pub label: Option<String>,
@@ -23,7 +64,7 @@ pub struct Option_ {
 #[derive(Debug, Clone)]
 pub struct Field {
     pub var: String,
-    pub type_: String, // TODO: use an enum here.
+    pub type_: FieldType,
     pub label: Option<String>,
     pub required: bool,
     pub options: Vec<Option_>,
@@ -103,12 +144,11 @@ impl<'a> TryFrom<&'a Element> for DataForm {
                 form.instructions = Some(child.text());
             } else if child.is("field", ns::DATA_FORMS) {
                 let var: String = get_attr!(child, "var", required);
-                // TODO: use Default instead.
-                let field_type: String = get_attr!(child, "type", optional).unwrap_or(String::from("text-single"));
+                let field_type = get_attr!(child, "type", default);
                 let label = get_attr!(child, "label", optional);
 
-                let is_form_type = var == "FORM_TYPE" && field_type == "hidden";
-                let is_list = field_type == "list-single" || field_type == "list-multi";
+                let is_form_type = var == "FORM_TYPE" && field_type == FieldType::Hidden;
+                let is_list = field_type == FieldType::ListSingle || field_type == FieldType::ListMulti;
                 let mut field = Field {
                     var: var,
                     type_: field_type,
