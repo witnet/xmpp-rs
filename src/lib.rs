@@ -22,6 +22,27 @@ extern crate sha2;
 extern crate sha3;
 extern crate blake2;
 
+macro_rules! get_attr {
+    ($elem:ident, $attr:tt, optional, $value:ident, $func:expr) => (
+        match $elem.attr($attr) {
+            Some($value) => Some($func),
+            None => None,
+        }
+    );
+    ($elem:ident, $attr:tt, required, $value:ident, $func:expr) => (
+        match $elem.attr($attr) {
+            Some($value) => $func,
+            None => return Err(Error::ParseError(concat!("Required attribute '", $attr, "' missing."))),
+        }
+    );
+    ($elem:ident, $attr:tt, default, $value:ident, $func:expr) => (
+        match $elem.attr($attr) {
+            Some($value) => $func,
+            None => Default::default(),
+        }
+    );
+}
+
 /// Error type returned by every parser on failure.
 pub mod error;
 /// XML namespace definitions used through XMPP.

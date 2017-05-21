@@ -65,12 +65,6 @@ pub enum IBB {
     },
 }
 
-fn required_attr<T: FromStr>(elem: &Element, attr: &str, err: Error) -> Result<T, Error> {
-    elem.attr(attr)
-        .and_then(|value| value.parse().ok())
-        .ok_or(err)
-}
-
 impl<'a> TryFrom<&'a Element> for IBB {
     type Error = Error;
 
@@ -79,12 +73,9 @@ impl<'a> TryFrom<&'a Element> for IBB {
             for _ in elem.children() {
                 return Err(Error::ParseError("Unknown child in open element."));
             }
-            let block_size = required_attr(elem, "block-size", Error::ParseError("Required attribute 'block-size' missing in open element."))?;
-            let sid = required_attr(elem, "sid", Error::ParseError("Required attribute 'sid' missing in open element."))?;
-            let stanza = match elem.attr("stanza") {
-                Some(stanza) => stanza.parse()?,
-                None => Default::default(),
-            };
+            let block_size = get_attr!(elem, "block-size", required, block_size, block_size.parse()?);
+            let sid = get_attr!(elem, "sid", required, sid, sid.parse()?);
+            let stanza = get_attr!(elem, "stanza", default, stanza, stanza.parse()?);
             Ok(IBB::Open {
                 block_size: block_size,
                 sid: sid,
@@ -94,8 +85,8 @@ impl<'a> TryFrom<&'a Element> for IBB {
             for _ in elem.children() {
                 return Err(Error::ParseError("Unknown child in data element."));
             }
-            let seq = required_attr(elem, "seq", Error::ParseError("Required attribute 'seq' missing in data element."))?;
-            let sid = required_attr(elem, "sid", Error::ParseError("Required attribute 'sid' missing in data element."))?;
+            let seq = get_attr!(elem, "seq", required, seq, seq.parse()?);
+            let sid = get_attr!(elem, "sid", required, sid, sid.parse()?);
             let data = base64::decode(&elem.text())?;
             Ok(IBB::Data {
                 seq: seq,
@@ -103,10 +94,10 @@ impl<'a> TryFrom<&'a Element> for IBB {
                 data: data
             })
         } else if elem.is("close", ns::IBB) {
-            let sid = required_attr(elem, "sid", Error::ParseError("Required attribute 'sid' missing in data element."))?;
             for _ in elem.children() {
                 return Err(Error::ParseError("Unknown child in close element."));
             }
+            let sid = get_attr!(elem, "sid", required, sid, sid.parse()?);
             Ok(IBB::Close {
                 sid: sid,
             })
@@ -148,6 +139,7 @@ impl<'a> Into<Element> for &'a IBB {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::error::Error as StdError;
 
     #[test]
     fn test_simple() {
@@ -191,24 +183,23 @@ mod tests {
             Error::ParseError(string) => string,
             _ => panic!(),
         };
-        assert_eq!(message, "Required attribute 'block-size' missing in open element.");
+        assert_eq!(message, "Required attribute 'block-size' missing.");
 
-        // TODO: maybe make a better error message here.
         let elem: Element = "<open xmlns='http://jabber.org/protocol/ibb' block-size='-5'/>".parse().unwrap();
         let error = IBB::try_from(&elem).unwrap_err();
         let message = match error {
-            Error::ParseError(string) => string,
+            Error::ParseIntError(error) => error,
             _ => panic!(),
         };
-        assert_eq!(message, "Required attribute 'block-size' missing in open element.");
+        assert_eq!(message.description(), "invalid digit found in string");
 
         let elem: Element = "<open xmlns='http://jabber.org/protocol/ibb' block-size='128'/>".parse().unwrap();
         let error = IBB::try_from(&elem).unwrap_err();
         let message = match error {
-            Error::ParseError(string) => string,
+            Error::ParseError(error) => error,
             _ => panic!(),
         };
-        assert_eq!(message, "Required attribute 'sid' missing in open element.");
+        assert_eq!(message, "Required attribute 'sid' missing.");
     }
 
     #[test]
