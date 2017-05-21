@@ -18,6 +18,7 @@ use ns;
 
 use stanza_error::StanzaError;
 use delay::Delay;
+use idle::Idle;
 use ecaps2::ECaps2;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -50,6 +51,7 @@ pub type Priority = i8;
 pub enum PresencePayload {
     StanzaError(StanzaError),
     Delay(Delay),
+    Idle(Idle),
     ECaps2(ECaps2),
 
     Unknown(Element),
@@ -65,6 +67,9 @@ impl<'a> TryFrom<&'a Element> for PresencePayload {
             // XEP-0203
             ("delay", ns::DELAY) => PresencePayload::Delay(Delay::try_from(elem)?),
 
+            // XEP-0319
+            ("idle", ns::IDLE) => PresencePayload::Idle(Idle::try_from(elem)?),
+
             // XEP-0390
             ("c", ns::ECAPS2) => PresencePayload::ECaps2(ECaps2::try_from(elem)?),
 
@@ -78,6 +83,7 @@ impl<'a> Into<Element> for &'a PresencePayload {
         match *self {
             PresencePayload::StanzaError(ref stanza_error) => stanza_error.into(),
             PresencePayload::Delay(ref delay) => delay.into(),
+            PresencePayload::Idle(ref idle) => idle.into(),
             PresencePayload::ECaps2(ref ecaps2) => ecaps2.into(),
 
             PresencePayload::Unknown(ref elem) => elem.clone(),
