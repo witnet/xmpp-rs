@@ -134,15 +134,9 @@ impl<'a> TryFrom<&'a Element> for Transport {
 
     fn try_from(elem: &'a Element) -> Result<Transport, Error> {
         if elem.is("transport", ns::JINGLE_S5B) {
-            let sid = elem.attr("sid")
-                          .ok_or(Error::ParseError("Required attribute 'sid' missing in JingleS5B transport element."))?
-                          .parse()?;
-            let dstaddr = elem.attr("dstaddr")
-                              .and_then(|value| Some(value.to_owned()));
-            let mode = match elem.attr("mode") {
-                None => Default::default(),
-                Some(mode) => mode.parse()?,
-            };
+            let sid = get_attr!(elem, "sid", required);
+            let dstaddr = get_attr!(elem, "dstaddr", optional);
+            let mode = get_attr!(elem, "mode", default);
 
             let mut payload = None;
             for child in elem.children() {
@@ -152,26 +146,12 @@ impl<'a> TryFrom<&'a Element> for Transport {
                         Some(_) => return Err(Error::ParseError("Non-activated child already present in JingleS5B transport element.")),
                         None => vec!(),
                     };
-                    let cid = child.attr("cid")
-                                   .ok_or(Error::ParseError("Required attribute 'cid' missing in JingleS5B candidate element."))?
-                                   .parse()?;
-                    let host = child.attr("host")
-                                    .ok_or(Error::ParseError("Required attribute 'host' missing in JingleS5B candidate element."))?
-                                    .parse()?;
-                    let jid = child.attr("jid")
-                                   .ok_or(Error::ParseError("Required attribute 'jid' missing in JingleS5B candidate element."))?
-                                   .parse()?;
-                    let port = match child.attr("port") {
-                        Some(s) => Some(s.parse()?),
-                        None => None,
-                    };
-                    let priority = child.attr("priority")
-                                       .ok_or(Error::ParseError("Required attribute 'priority' missing in JingleS5B candidate element."))?
-                                       .parse()?;
-                    let type_ = match child.attr("type") {
-                        Some(s) => s.parse()?,
-                        None => Default::default(),
-                    };
+                    let cid = get_attr!(child, "cid", required);
+                    let host = get_attr!(child, "host", required);
+                    let jid = get_attr!(child, "jid", required);
+                    let port = get_attr!(child, "port", optional);
+                    let priority = get_attr!(child, "priority", required);
+                    let type_ = get_attr!(child, "type", default);
                     candidates.push(Candidate {
                         cid: cid,
                         host: host,
@@ -185,9 +165,7 @@ impl<'a> TryFrom<&'a Element> for Transport {
                     if payload.is_some() {
                         return Err(Error::ParseError("Non-activated child already present in JingleS5B transport element."));
                     }
-                    let cid = child.attr("cid")
-                                   .ok_or(Error::ParseError("Required attribute 'cid' missing in JingleS5B activated element."))?
-                                   .parse()?;
+                    let cid = get_attr!(child, "cid", required);
                     TransportPayload::Activated(cid)
                 } else if child.is("candidate-error", ns::JINGLE_S5B) {
                     if payload.is_some() {
@@ -198,9 +176,7 @@ impl<'a> TryFrom<&'a Element> for Transport {
                     if payload.is_some() {
                         return Err(Error::ParseError("Non-candidate-used child already present in JingleS5B transport element."));
                     }
-                    let cid = child.attr("cid")
-                                   .ok_or(Error::ParseError("Required attribute 'cid' missing in JingleS5B candidate-used element."))?
-                                   .parse()?;
+                    let cid = get_attr!(child, "cid", required);
                     TransportPayload::CandidateUsed(cid)
                 } else if child.is("proxy-error", ns::JINGLE_S5B) {
                     if payload.is_some() {
