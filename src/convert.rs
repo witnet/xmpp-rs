@@ -70,6 +70,12 @@ impl IntoElements for String {
     }
 }
 
+impl<'a> IntoElements for &'a String {
+    fn into_elements(self, emitter: &mut ElementEmitter) {
+        emitter.append_text_node(self.to_owned());
+    }
+}
+
 impl<'a> IntoElements for &'a str {
     fn into_elements(self, emitter: &mut ElementEmitter) {
         emitter.append_text_node(self.to_owned());
@@ -85,6 +91,12 @@ pub trait IntoAttributeValue {
 impl IntoAttributeValue for String {
     fn into_attribute_value(self) -> Option<String> {
         Some(self.clone())
+    }
+}
+
+impl<'a> IntoAttributeValue for &'a String {
+    fn into_attribute_value(self) -> Option<String> {
+        Some(self.to_owned())
     }
 }
 
