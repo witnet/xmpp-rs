@@ -73,7 +73,8 @@ impl<'a> TryFrom<&'a Element> for MessagePayload {
             ("result", ns::MAM) => MessagePayload::MamResult(MamResult::try_from(elem)?),
 
             // XEP-0359
-            ("stanza-id", ns::SID) => MessagePayload::StanzaId(StanzaId::try_from(elem)?),
+            ("stanza-id", ns::SID)
+          | ("origin-id", ns::SID) => MessagePayload::StanzaId(StanzaId::try_from(elem)?),
 
             // XEP-0380
             ("encryption", ns::EME) => MessagePayload::ExplicitMessageEncryption(ExplicitMessageEncryption::try_from(elem)?),
