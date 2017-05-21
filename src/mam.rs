@@ -5,8 +5,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use std::convert::TryFrom;
+use std::str::FromStr;
 
-use minidom::Element;
+use minidom::{Element, IntoAttributeValue};
 use jid::Jid;
 
 use error::Error;
@@ -45,9 +46,33 @@ pub enum DefaultPrefs {
     Roster,
 }
 
+impl FromStr for DefaultPrefs {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<DefaultPrefs, Error> {
+        Ok(match s {
+            "always" => DefaultPrefs::Always,
+            "never" => DefaultPrefs::Never,
+            "roster" => DefaultPrefs::Roster,
+
+            _ => return Err(Error::ParseError("Invalid 'default' attribute.")),
+        })
+    }
+}
+
+impl<'a> IntoAttributeValue for &'a DefaultPrefs {
+    fn into_attribute_value(self) -> Option<String> {
+        Some(String::from(match *self {
+            DefaultPrefs::Always => "always",
+            DefaultPrefs::Never => "never",
+            DefaultPrefs::Roster => "roster",
+        }))
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct Prefs {
-    pub default_: Option<DefaultPrefs>,
+    pub default_: DefaultPrefs,
     pub always: Vec<Jid>,
     pub never: Vec<Jid>,
 }
@@ -70,14 +95,8 @@ impl<'a> TryFrom<&'a Element> for Query {
                 return Err(Error::ParseError("Unknown child in query element."));
             }
         }
-        let queryid = match elem.attr("queryid") {
-            Some(queryid) => Some(queryid.to_owned()),
-            None => None,
-        };
-        let node = match elem.attr("node") {
-            Some(node) => Some(node.to_owned()),
-            None => None,
-        };
+        let queryid = get_attr!(elem, "queryid", optional);
+        let node = get_attr!(elem, "node", optional);
         Ok(Query { queryid, node, form, set })
     }
 }
@@ -97,18 +116,9 @@ impl<'a> TryFrom<&'a Element> for Result_ {
                 return Err(Error::ParseError("Unknown child in result element."));
             }
         }
-        let queryid = match elem.attr("queryid") {
-            Some(queryid) => queryid.to_owned(),
-            None => return Err(Error::ParseError("No 'queryid' attribute present in result.")),
-        };
-        let id = match elem.attr("id") {
-            Some(id) => id.to_owned(),
-            None => return Err(Error::ParseError("No 'id' attribute present in result.")),
-        };
-        if forwarded.is_none() {
-            return Err(Error::ParseError("Mandatory forwarded element missing in result."));
-        }
-        let forwarded = forwarded.unwrap();
+        let forwarded = forwarded.ok_or(Error::ParseError("Mandatory forwarded element missing in result."))?;
+        let queryid = get_attr!(elem, "queryid", required);
+        let id = get_attr!(elem, "id", required);
         Ok(Result_ {
             queryid,
             id,
@@ -132,14 +142,13 @@ impl<'a> TryFrom<&'a Element> for Fin {
                 return Err(Error::ParseError("Unknown child in fin element."));
             }
         }
+        let set = set.ok_or(Error::ParseError("Mandatory set element missing in fin."))?;
         let complete = match elem.attr("complete") {
-            Some(complete) => complete == "true",
+            Some(complete) if complete == "true" => true,
+            Some(complete) if complete == "false" => false,
             None => false,
+            Some(_) => return Err(Error::ParseError("Invalid value for 'complete' attribute.")),
         };
-        if set.is_none() {
-            return Err(Error::ParseError("Mandatory set element missing in fin."));
-        }
-        let set = set.unwrap();
         Ok(Fin { complete, set })
     }
 }
@@ -172,14 +181,7 @@ impl<'a> TryFrom<&'a Element> for Prefs {
                 return Err(Error::ParseError("Unknown child in prefs element."));
             }
         }
-        let default_ = match elem.attr("default") {
-            Some("always") => Some(DefaultPrefs::Always),
-            Some("never") => Some(DefaultPrefs::Never),
-            Some("roster") => Some(DefaultPrefs::Roster),
-            None => None,
-
-            _ => return Err(Error::ParseError("Invalid 'default' attribute present in prefs.")),
-        };
+        let default_ = get_attr!(elem, "default", required);
         Ok(Prefs { default_, always, never })
     }
 }
@@ -228,12 +230,7 @@ impl<'a> Into<Element> for &'a Prefs {
     fn into(self) -> Element {
         let mut elem = Element::builder("prefs")
                                .ns(ns::MAM)
-                               .attr("default", match self.default_ {
-                                    Some(DefaultPrefs::Always) => Some("always"),
-                                    Some(DefaultPrefs::Never) => Some("never"),
-                                    Some(DefaultPrefs::Roster) => Some("roster"),
-                                    None => None,
-                                })
+                               .attr("default", &self.default_)
                                .build();
         if !self.always.is_empty() {
             let mut always = Element::builder("always")
@@ -340,7 +337,7 @@ mod tests {
 
     #[test]
     fn test_prefs_get() {
-        let elem: Element = "<prefs xmlns='urn:xmpp:mam:2'/>".parse().unwrap();
+        let elem: Element = "<prefs xmlns='urn:xmpp:mam:2' default='always'/>".parse().unwrap();
         Prefs::try_from(&elem).unwrap();
 
         let elem: Element = r#"
