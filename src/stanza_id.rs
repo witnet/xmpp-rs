@@ -35,15 +35,9 @@ impl<'a> TryFrom<&'a Element> for StanzaId {
         for _ in elem.children() {
             return Err(Error::ParseError("Unknown child in stanza-id or origin-id element."));
         }
-        let id = match elem.attr("id") {
-            Some(id) => id.to_owned(),
-            None => return Err(Error::ParseError("No 'id' attribute present in stanza-id or origin-id.")),
-        };
+        let id = get_attr!(elem, "id", required);
         Ok(if is_stanza_id {
-            let by = match elem.attr("by") {
-                Some(by) => by.parse().unwrap(),
-                None => return Err(Error::ParseError("No 'by' attribute present in stanza-id.")),
-            };
+            let by = get_attr!(elem, "by", required);
             StanzaId::StanzaId { id, by }
         } else {
             StanzaId::OriginId { id }
@@ -115,7 +109,7 @@ mod tests {
             Error::ParseError(string) => string,
             _ => panic!(),
         };
-        assert_eq!(message, "No 'id' attribute present in stanza-id or origin-id.");
+        assert_eq!(message, "Required attribute 'id' missing.");
     }
 
     #[test]
@@ -126,7 +120,7 @@ mod tests {
             Error::ParseError(string) => string,
             _ => panic!(),
         };
-        assert_eq!(message, "No 'by' attribute present in stanza-id.");
+        assert_eq!(message, "Required attribute 'by' missing.");
     }
 
     #[test]
