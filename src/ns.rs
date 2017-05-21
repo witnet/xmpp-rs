@@ -77,6 +77,9 @@ pub const MESSAGE_CORRECT: &'static str = "urn:xmpp:message-correct:0";
 /// XEP-0313: Message Archive Management
 pub const MAM: &'static str = "urn:xmpp:mam:2";
 
+/// XEP-0319: Last User Interaction in Presence
+pub const IDLE: &'static str = "urn:xmpp:idle:1";
+
 /// XEP-0359: Unique and Stable Stanza IDs
 pub const SID: &'static str = "urn:xmpp:sid:0";
 
