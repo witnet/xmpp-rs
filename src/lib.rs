@@ -23,6 +23,9 @@ extern crate sha3;
 extern crate blake2;
 
 macro_rules! get_attr {
+    ($elem:ident, $attr:tt, $type:tt) => (
+        get_attr!($elem, $attr, $type, value, value.parse()?)
+    );
     ($elem:ident, $attr:tt, optional, $value:ident, $func:expr) => (
         match $elem.attr($attr) {
             Some($value) => Some($func),

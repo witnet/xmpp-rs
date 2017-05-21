@@ -5,7 +5,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use std::convert::TryFrom;
-use std::str::FromStr;
 
 use minidom::Element;
 
@@ -22,15 +21,6 @@ pub struct Transport {
     pub stanza: Stanza,
 }
 
-fn optional_attr<T: FromStr>(root: &Element, attr: &str) -> Option<T> {
-    root.attr(attr)
-        .and_then(|value| value.parse().ok())
-}
-
-fn required_attr<T: FromStr>(root: &Element, attr: &str, err: Error) -> Result<T, Error> {
-    optional_attr(root, attr).ok_or(err)
-}
-
 impl<'a> TryFrom<&'a Element> for Transport {
     type Error = Error;
 
@@ -39,11 +29,9 @@ impl<'a> TryFrom<&'a Element> for Transport {
             for _ in elem.children() {
                 return Err(Error::ParseError("Unknown child in JingleIBB element."));
             }
-            let block_size = required_attr(elem, "block-size", Error::ParseError("Required attribute 'block-size' missing in JingleIBB element."))?;
-            let sid = required_attr(elem, "sid", Error::ParseError("Required attribute 'sid' missing in JingleIBB element."))?;
-            let stanza = elem.attr("stanza")
-                             .unwrap_or("iq")
-                             .parse()?;
+            let block_size = get_attr!(elem, "block-size", required);
+            let sid = get_attr!(elem, "sid", required);
+            let stanza = get_attr!(elem, "stanza", default);
             Ok(Transport {
                 block_size: block_size,
                 sid: sid,
@@ -69,6 +57,7 @@ impl<'a> Into<Element> for &'a Transport {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::error::Error as StdError;
 
     #[test]
     fn test_simple() {
@@ -87,16 +76,23 @@ mod tests {
             Error::ParseError(string) => string,
             _ => panic!(),
         };
-        assert_eq!(message, "Required attribute 'block-size' missing in JingleIBB element.");
+        assert_eq!(message, "Required attribute 'block-size' missing.");
 
-        // TODO: maybe make a better error message here.
+        let elem: Element = "<transport xmlns='urn:xmpp:jingle:transports:ibb:1' block-size='65536'/>".parse().unwrap();
+        let error = Transport::try_from(&elem).unwrap_err();
+        let message = match error {
+            Error::ParseIntError(error) => error,
+            _ => panic!(),
+        };
+        assert_eq!(message.description(), "number too large to fit in target type");
+
         let elem: Element = "<transport xmlns='urn:xmpp:jingle:transports:ibb:1' block-size='-5'/>".parse().unwrap();
         let error = Transport::try_from(&elem).unwrap_err();
         let message = match error {
-            Error::ParseError(string) => string,
+            Error::ParseIntError(error) => error,
             _ => panic!(),
         };
-        assert_eq!(message, "Required attribute 'block-size' missing in JingleIBB element.");
+        assert_eq!(message.description(), "invalid digit found in string");
 
         let elem: Element = "<transport xmlns='urn:xmpp:jingle:transports:ibb:1' block-size='128'/>".parse().unwrap();
         let error = Transport::try_from(&elem).unwrap_err();
@@ -104,7 +100,7 @@ mod tests {
             Error::ParseError(string) => string,
             _ => panic!(),
         };
-        assert_eq!(message, "Required attribute 'sid' missing in JingleIBB element.");
+        assert_eq!(message, "Required attribute 'sid' missing.");
     }
 
     #[test]

@@ -73,9 +73,9 @@ impl<'a> TryFrom<&'a Element> for IBB {
             for _ in elem.children() {
                 return Err(Error::ParseError("Unknown child in open element."));
             }
-            let block_size = get_attr!(elem, "block-size", required, block_size, block_size.parse()?);
-            let sid = get_attr!(elem, "sid", required, sid, sid.parse()?);
-            let stanza = get_attr!(elem, "stanza", default, stanza, stanza.parse()?);
+            let block_size = get_attr!(elem, "block-size", required);
+            let sid = get_attr!(elem, "sid", required);
+            let stanza = get_attr!(elem, "stanza", default);
             Ok(IBB::Open {
                 block_size: block_size,
                 sid: sid,
@@ -85,8 +85,8 @@ impl<'a> TryFrom<&'a Element> for IBB {
             for _ in elem.children() {
                 return Err(Error::ParseError("Unknown child in data element."));
             }
-            let seq = get_attr!(elem, "seq", required, seq, seq.parse()?);
-            let sid = get_attr!(elem, "sid", required, sid, sid.parse()?);
+            let seq = get_attr!(elem, "seq", required);
+            let sid = get_attr!(elem, "sid", required);
             let data = base64::decode(&elem.text())?;
             Ok(IBB::Data {
                 seq: seq,
@@ -97,7 +97,7 @@ impl<'a> TryFrom<&'a Element> for IBB {
             for _ in elem.children() {
                 return Err(Error::ParseError("Unknown child in close element."));
             }
-            let sid = get_attr!(elem, "sid", required, sid, sid.parse()?);
+            let sid = get_attr!(elem, "sid", required);
             Ok(IBB::Close {
                 sid: sid,
             })
