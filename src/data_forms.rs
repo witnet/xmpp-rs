@@ -15,10 +15,18 @@ use ns;
 use media_element::MediaElement;
 
 #[derive(Debug, Clone)]
+pub struct Option_ {
+    pub label: Option<String>,
+    pub value: String,
+}
+
+#[derive(Debug, Clone)]
 pub struct Field {
     pub var: String,
     pub type_: String, // TODO: use an enum here.
     pub label: Option<String>,
+    pub required: bool,
+    pub options: Vec<Option_>,
     pub values: Vec<String>,
     pub media: Vec<MediaElement>,
 }
@@ -50,6 +58,8 @@ impl FromStr for DataFormType {
 pub struct DataForm {
     pub type_: DataFormType,
     pub form_type: Option<String>,
+    pub title: Option<String>,
+    pub instructions: Option<String>,
     pub fields: Vec<Field>,
 }
 
@@ -60,53 +70,119 @@ impl<'a> TryFrom<&'a Element> for DataForm {
         if !elem.is("x", ns::DATA_FORMS) {
             return Err(Error::ParseError("This is not a data form element."));
         }
-
-        let type_: DataFormType = match elem.attr("type") {
-            Some(type_) => type_.parse()?,
-            None => return Err(Error::ParseError("Type attribute on data form is mandatory.")),
+        let type_ = get_attr!(elem, "type", required);
+        let mut form = DataForm {
+            type_: type_,
+            form_type: None,
+            title: None,
+            instructions: None,
+            fields: vec!(),
         };
-        let mut fields = vec!();
-        let mut form_type = None;
-        for field in elem.children() {
-            if field.is("field", ns::DATA_FORMS) {
-                let var = field.attr("var").ok_or(Error::ParseError("Field must have a 'var' attribute."))?;
-                let field_type = field.attr("type").unwrap_or("text-single");
-                let label = field.attr("label").and_then(|label| label.parse().ok());
-                let mut values = vec!();
-                let mut media = vec!();
-                for element in field.children() {
+        for child in elem.children() {
+            if child.is("title", ns::DATA_FORMS) {
+                if form.title.is_some() {
+                    return Err(Error::ParseError("More than one title in form element."));
+                }
+                for _ in child.children() {
+                    return Err(Error::ParseError("Title element must not have any child."));
+                }
+                for _ in child.attrs() {
+                    return Err(Error::ParseError("Title element must not have any attribute."));
+                }
+                form.title = Some(child.text());
+            } else if child.is("instructions", ns::DATA_FORMS) {
+                if form.instructions.is_some() {
+                    return Err(Error::ParseError("More than one instructions in form element."));
+                }
+                for _ in child.children() {
+                    return Err(Error::ParseError("instructions element must not have any child."));
+                }
+                for _ in child.attrs() {
+                    return Err(Error::ParseError("instructions element must not have any attribute."));
+                }
+                form.instructions = Some(child.text());
+            } else if child.is("field", ns::DATA_FORMS) {
+                let var: String = get_attr!(child, "var", required);
+                // TODO: use Default instead.
+                let field_type: String = get_attr!(child, "type", optional).unwrap_or(String::from("text-single"));
+                let label = get_attr!(child, "label", optional);
+
+                let is_form_type = var == "FORM_TYPE" && field_type == "hidden";
+                let is_list = field_type == "list-single" || field_type == "list-multi";
+                let mut field = Field {
+                    var: var,
+                    type_: field_type,
+                    label: label,
+                    required: false,
+                    options: vec!(),
+                    values: vec!(),
+                    media: vec!(),
+                };
+                for element in child.children() {
                     if element.is("value", ns::DATA_FORMS) {
-                        values.push(element.text());
+                        for _ in element.children() {
+                            return Err(Error::ParseError("Value element must not have any child."));
+                        }
+                        for _ in element.attrs() {
+                            return Err(Error::ParseError("Value element must not have any attribute."));
+                        }
+                        field.values.push(element.text());
+                    } else if element.is("required", ns::DATA_FORMS) {
+                        if field.required {
+                            return Err(Error::ParseError("More than one required element."));
+                        }
+                        for _ in element.children() {
+                            return Err(Error::ParseError("Required element must not have any child."));
+                        }
+                        for _ in element.attrs() {
+                            return Err(Error::ParseError("Required element must not have any attribute."));
+                        }
+                        field.required = true;
+                    } else if element.is("option", ns::DATA_FORMS) {
+                        if !is_list {
+                            return Err(Error::ParseError("Option element found in non-list field."));
+                        }
+                        let label = get_attr!(element, "label", optional);
+                        let mut value = None;
+                        for child2 in element.children() {
+                            if child2.is("value", ns::DATA_FORMS) {
+                                if value.is_some() {
+                                    return Err(Error::ParseError("More than one value element in option element"));
+                                }
+                                value = Some(child2.text());
+                            } else {
+                                return Err(Error::ParseError("Non-value element in option element"));
+                            }
+                        }
+                        let value = value.ok_or(Error::ParseError("No value element in option element"))?;
+                        field.options.push(Option_ {
+                            label: label,
+                            value: value,
+                        });
                     } else if element.is("media", ns::MEDIA_ELEMENT) {
                         match MediaElement::try_from(element) {
-                            Ok(media_element) => media.push(media_element),
+                            Ok(media_element) => field.media.push(media_element),
                             Err(_) => (), // TODO: is it really nice to swallow this error?
                         }
                     } else {
                         return Err(Error::ParseError("Field child isn’t a value or media element."));
                     }
                 }
-                if var == "FORM_TYPE" && field_type == "hidden" {
-                    if form_type != None {
+                if is_form_type {
+                    if form.form_type.is_some() {
                         return Err(Error::ParseError("More than one FORM_TYPE in a data form."));
                     }
-                    if values.len() != 1 {
+                    if field.values.len() != 1 {
                         return Err(Error::ParseError("Wrong number of values in FORM_TYPE."));
                     }
-                    form_type = Some(values[0].clone());
+                    form.form_type = Some(field.values[0].clone());
                 }
-                fields.push(Field {
-                    var: var.to_owned(),
-                    type_: field_type.to_owned(),
-                    label: label,
-                    values: values,
-                    media: media,
-                });
+                form.fields.push(field);
             } else {
-                return Err(Error::ParseError("Unknown field type in data form."));
+                return Err(Error::ParseError("Unknown child in data form element."));
             }
         }
-        Ok(DataForm { type_: type_, form_type: form_type, fields: fields })
+        Ok(form)
     }
 }
 
@@ -131,7 +207,7 @@ mod tests {
             Error::ParseError(string) => string,
             _ => panic!(),
         };
-        assert_eq!(message, "Type attribute on data form is mandatory.");
+        assert_eq!(message, "Required attribute 'type' missing.");
 
         let elem: Element = "<x xmlns='jabber:x:data' type='coucou'/>".parse().unwrap();
         let error = DataForm::try_from(&elem).unwrap_err();
@@ -150,6 +226,6 @@ mod tests {
             Error::ParseError(string) => string,
             _ => panic!(),
         };
-        assert_eq!(message, "Unknown field type in data form.");
+        assert_eq!(message, "Unknown child in data form element.");
     }
 }
