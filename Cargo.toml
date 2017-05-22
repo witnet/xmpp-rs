@@ -1,6 +1,6 @@
 [package]
 name = "minidom"
-version = "0.3.1"
+version = "0.3.2"
 authors = ["lumi <lumi@pew.im>", "Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>", "Bastien Orivel <eijebong+minidom@bananium.fr>"]
 description = "A small, simple DOM implementation on top of xml-rs."
 homepage = "https://gitlab.com/lumi/minidom-rs"
