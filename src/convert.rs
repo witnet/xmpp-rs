@@ -90,7 +90,7 @@ pub trait IntoAttributeValue {
 
 impl IntoAttributeValue for String {
     fn into_attribute_value(self) -> Option<String> {
-        Some(self.clone())
+        Some(self)
     }
 }
 
