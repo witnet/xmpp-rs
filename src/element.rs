@@ -600,9 +600,8 @@ pub struct Children<'a> {
 impl<'a> Iterator for Children<'a> {
     type Item = &'a Element;
 
-    #[cfg_attr(feature = "cargo-clippy", allow(while_let_on_iterator))]
     fn next(&mut self) -> Option<&'a Element> {
-        while let Some(item) = self.iter.next() {
+        for item in &mut self.iter {
             if let Node::Element(ref child) = *item {
                 return Some(child);
             }
@@ -619,9 +618,8 @@ pub struct ChildrenMut<'a> {
 impl<'a> Iterator for ChildrenMut<'a> {
     type Item = &'a mut Element;
 
-    #[cfg_attr(feature = "cargo-clippy", allow(while_let_on_iterator))]
     fn next(&mut self) -> Option<&'a mut Element> {
-        while let Some(item) = self.iter.next() {
+        for item in &mut self.iter {
             if let Node::Element(ref mut child) = *item {
                 return Some(child);
             }
@@ -638,9 +636,8 @@ pub struct Texts<'a> {
 impl<'a> Iterator for Texts<'a> {
     type Item = &'a str;
 
-    #[cfg_attr(feature = "cargo-clippy", allow(while_let_on_iterator))]
     fn next(&mut self) -> Option<&'a str> {
-        while let Some(item) = self.iter.next() {
+        for item in &mut self.iter {
             if let Node::Text(ref child) = *item {
                 return Some(child);
             }
@@ -657,9 +654,8 @@ pub struct TextsMut<'a> {
 impl<'a> Iterator for TextsMut<'a> {
     type Item = &'a mut String;
 
-    #[cfg_attr(feature = "cargo-clippy", allow(while_let_on_iterator))]
     fn next(&mut self) -> Option<&'a mut String> {
-        while let Some(item) = self.iter.next() {
+        for item in &mut self.iter {
             if let Node::Text(ref mut child) = *item {
                 return Some(child);
             }
