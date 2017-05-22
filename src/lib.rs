@@ -73,6 +73,6 @@ pub mod convert;
 
 #[cfg(test)] mod tests;
 
-pub use error::Error;
+pub use error::{Error, ErrorKind, Result, ResultExt};
 pub use element::{Element, Node, Children, ChildrenMut, ElementBuilder};
 pub use convert::{IntoElements, IntoAttributeValue, ElementEmitter};
