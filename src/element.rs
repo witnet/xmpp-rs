@@ -43,7 +43,7 @@ impl Node {
     /// assert_eq!(elm.as_element().unwrap().name(), "meow");
     /// assert_eq!(txt.as_element(), None);
     /// ```
-    pub fn as_element<'a>(&'a self) -> Option<&'a Element> {
+    pub fn as_element(&self) -> Option<&Element> {
         match *self {
             Node::Element(ref e) => Some(e),
             Node::Text(_) => None,
@@ -63,7 +63,7 @@ impl Node {
     /// assert_eq!(elm.as_text(), None);
     /// assert_eq!(txt.as_text().unwrap(), "meow");
     /// ```
-    pub fn as_text<'a>(&'a self) -> Option<&'a str> {
+    pub fn as_text(&self) -> Option<&str> {
         match *self {
             Node::Element(_) => None,
             Node::Text(ref s) => Some(s),
@@ -178,7 +178,7 @@ impl Element {
     /// Returns a reference to the value of the given attribute, if it exists, else `None`.
     pub fn attr(&self, name: &str) -> Option<&str> {
         if let Some(value) = self.attributes.get(name) {
-            return Some(&value)
+            return Some(value)
         }
         None
     }
@@ -197,7 +197,7 @@ impl Element {
     /// assert_eq!(iter.next().unwrap(), ("a", "b"));
     /// assert_eq!(iter.next(), None);
     /// ```
-    pub fn attrs<'a>(&'a self) -> Attrs<'a> {
+    pub fn attrs(&self) -> Attrs {
         Attrs {
             iter: self.attributes.iter(),
         }
@@ -205,7 +205,7 @@ impl Element {
 
     /// Returns an iterator over the attributes of this element, with the value being a mutable
     /// reference.
-    pub fn attrs_mut<'a>(&'a mut self) -> AttrsMut<'a> {
+    pub fn attrs_mut(&mut self) -> AttrsMut {
         AttrsMut {
             iter: self.attributes.iter_mut(),
         }
@@ -279,6 +279,7 @@ impl Element {
         }
     }
 
+    #[cfg_attr(feature = "cargo-clippy", allow(wrong_self_convention))]
     fn from_reader_inner<R: Read>(&mut self, reader: &mut EventReader<R>) -> Result<(), Error> {
         loop {
             let e = reader.next()?;
@@ -307,10 +308,7 @@ impl Element {
                     // TODO: may want to check whether we're closing the correct element
                     return Ok(());
                 },
-                ReaderEvent::Characters(s) => {
-                    self.append_text_node(s);
-                },
-                ReaderEvent::CData(s) => {
+                ReaderEvent::Characters(s) | ReaderEvent::CData(s) => {
                     self.append_text_node(s);
                 },
                 ReaderEvent::EndDocument => {
@@ -324,7 +322,7 @@ impl Element {
     /// Output a document to an `EventWriter`.
     pub fn write_to<W: Write>(&self, writer: &mut EventWriter<W>) -> Result<(), Error> {
         let name = if let Some(ref ns) = self.namespace {
-            Name::qualified(&self.name, &ns, None)
+            Name::qualified(&self.name, ns, None)
         }
         else {
             Name::local(&self.name)
@@ -334,7 +332,7 @@ impl Element {
             start = start.default_ns(ns.clone());
         }
         for attr in &self.attributes { // TODO: I think this could be done a lot more efficiently
-            start = start.attr(Name::local(&attr.0), &attr.1);
+            start = start.attr(Name::local(attr.0), attr.1);
         }
         writer.write(start)?;
         for child in &self.children {
@@ -369,12 +367,12 @@ impl Element {
     /// assert_eq!(iter.next().unwrap().as_text().unwrap(), "c");
     /// assert_eq!(iter.next(), None);
     /// ```
-    #[inline] pub fn nodes<'a>(&'a self) -> Nodes<'a> {
+    #[inline] pub fn nodes(&self) -> Nodes {
         self.children.iter()
     }
 
     /// Returns an iterator over mutable references to every child node of this element.
-    #[inline] pub fn nodes_mut<'a>(&'a mut self) -> NodesMut<'a> {
+    #[inline] pub fn nodes_mut(&mut self) -> NodesMut {
         self.children.iter_mut()
     }
 
@@ -393,14 +391,14 @@ impl Element {
     /// assert_eq!(iter.next().unwrap().name(), "child3");
     /// assert_eq!(iter.next(), None);
     /// ```
-    #[inline] pub fn children<'a>(&'a self) -> Children<'a> {
+    #[inline] pub fn children(&self) -> Children {
         Children {
             iter: self.children.iter(),
         }
     }
 
     /// Returns an iterator over mutable references to every child element of this element.
-    #[inline] pub fn children_mut<'a>(&'a mut self) -> ChildrenMut<'a> {
+    #[inline] pub fn children_mut(&mut self) -> ChildrenMut {
         ChildrenMut {
             iter: self.children.iter_mut(),
         }
@@ -420,14 +418,14 @@ impl Element {
     /// assert_eq!(iter.next().unwrap(), " world!");
     /// assert_eq!(iter.next(), None);
     /// ```
-    #[inline] pub fn texts<'a>(&'a self) -> Texts<'a> {
+    #[inline] pub fn texts(&self) -> Texts {
         Texts {
             iter: self.children.iter(),
         }
     }
 
     /// Returns an iterator over mutable references to every text node of this element.
-    #[inline] pub fn texts_mut<'a>(&'a mut self) -> TextsMut<'a> {
+    #[inline] pub fn texts_mut(&mut self) -> TextsMut {
         TextsMut {
             iter: self.children.iter_mut(),
         }
@@ -602,6 +600,7 @@ pub struct Children<'a> {
 impl<'a> Iterator for Children<'a> {
     type Item = &'a Element;
 
+    #[cfg_attr(feature = "cargo-clippy", allow(while_let_on_iterator))]
     fn next(&mut self) -> Option<&'a Element> {
         while let Some(item) = self.iter.next() {
             if let Node::Element(ref child) = *item {
@@ -620,6 +619,7 @@ pub struct ChildrenMut<'a> {
 impl<'a> Iterator for ChildrenMut<'a> {
     type Item = &'a mut Element;
 
+    #[cfg_attr(feature = "cargo-clippy", allow(while_let_on_iterator))]
     fn next(&mut self) -> Option<&'a mut Element> {
         while let Some(item) = self.iter.next() {
             if let Node::Element(ref mut child) = *item {
@@ -638,6 +638,7 @@ pub struct Texts<'a> {
 impl<'a> Iterator for Texts<'a> {
     type Item = &'a str;
 
+    #[cfg_attr(feature = "cargo-clippy", allow(while_let_on_iterator))]
     fn next(&mut self) -> Option<&'a str> {
         while let Some(item) = self.iter.next() {
             if let Node::Text(ref child) = *item {
@@ -656,6 +657,7 @@ pub struct TextsMut<'a> {
 impl<'a> Iterator for TextsMut<'a> {
     type Item = &'a mut String;
 
+    #[cfg_attr(feature = "cargo-clippy", allow(while_let_on_iterator))]
     fn next(&mut self) -> Option<&'a mut String> {
         while let Some(item) = self.iter.next() {
             if let Node::Text(ref mut child) = *item {

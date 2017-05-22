@@ -45,9 +45,8 @@ impl<'a, T: IntoElements + Clone> IntoElements for &'a [T] {
 
 impl<T: IntoElements> IntoElements for Option<T> {
     fn into_elements(self, emitter: &mut ElementEmitter) {
-        match self {
-            Some(e) => e.into_elements(emitter),
-            None => (),
+        if let Some(e) = self {
+            e.into_elements(emitter);
         }
     }
 }
