@@ -7,7 +7,7 @@ use std::collections::btree_map;
 
 use std::fmt;
 
-use error::Error;
+use error::{Error, ErrorKind, Result};
 
 use xml::reader::{XmlEvent as ReaderEvent, EventReader};
 use xml::writer::{XmlEvent as WriterEvent, EventWriter, EmitterConfig};
@@ -100,7 +100,7 @@ impl fmt::Debug for Element {
 impl FromStr for Element {
     type Err = Error;
 
-    fn from_str(s: &str) -> Result<Element, Error> {
+    fn from_str(s: &str) -> Result<Element> {
         let mut reader = EventReader::new(Cursor::new(s));
         Element::from_reader(&mut reader)
     }
@@ -246,7 +246,7 @@ impl Element {
     }
 
     /// Parse a document from an `EventReader`.
-    pub fn from_reader<R: Read>(reader: &mut EventReader<R>) -> Result<Element, Error> {
+    pub fn from_reader<R: Read>(reader: &mut EventReader<R>) -> Result<Element> {
         loop {
             let e = reader.next()?;
             match e {
@@ -272,7 +272,7 @@ impl Element {
                     return Ok(root);
                 },
                 ReaderEvent::EndDocument => {
-                    return Err(Error::EndOfDocument);
+                    bail!(ErrorKind::EndOfDocument);
                 },
                 _ => () // TODO: may need more errors
             }
@@ -280,7 +280,7 @@ impl Element {
     }
 
     #[cfg_attr(feature = "cargo-clippy", allow(wrong_self_convention))]
-    fn from_reader_inner<R: Read>(&mut self, reader: &mut EventReader<R>) -> Result<(), Error> {
+    fn from_reader_inner<R: Read>(&mut self, reader: &mut EventReader<R>) -> Result<()> {
         loop {
             let e = reader.next()?;
             match e {
@@ -312,7 +312,7 @@ impl Element {
                     self.append_text_node(s);
                 },
                 ReaderEvent::EndDocument => {
-                    return Err(Error::EndOfDocument);
+                    bail!(ErrorKind::EndOfDocument);
                 },
                 _ => (), // TODO: may need to implement more
             }
@@ -320,7 +320,7 @@ impl Element {
     }
 
     /// Output a document to an `EventWriter`.
-    pub fn write_to<W: Write>(&self, writer: &mut EventWriter<W>) -> Result<(), Error> {
+    pub fn write_to<W: Write>(&self, writer: &mut EventWriter<W>) -> Result<()> {
         let name = if let Some(ref ns) = self.namespace {
             Name::qualified(&self.name, ns, None)
         }
