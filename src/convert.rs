@@ -102,7 +102,7 @@ impl<'a> IntoAttributeValue for &'a String {
 
 impl<'a> IntoAttributeValue for &'a str {
     fn into_attribute_value(self) -> Option<String> {
-        Some((*self).to_owned())
+        Some(self.to_owned())
     }
 }
 
