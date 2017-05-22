@@ -46,43 +46,37 @@ impl<'a> TryFrom<&'a Element> for Disco {
         let mut features: Vec<Feature> = vec!();
         let mut extensions: Vec<DataForm> = vec!();
 
-        let node = elem.attr("node")
-                       .and_then(|node| node.parse().ok());
+        let node = get_attr!(elem, "node", optional);
 
         for child in elem.children() {
             if child.is("feature", ns::DISCO_INFO) {
-                let feature = child.attr("var")
-                                   .ok_or(Error::ParseError("Feature must have a 'var' attribute."))?;
+                let feature = get_attr!(child, "var", required);
                 features.push(Feature {
-                    var: feature.to_owned(),
+                    var: feature,
                 });
             } else if child.is("identity", ns::DISCO_INFO) {
-                let category = child.attr("category")
-                                    .ok_or(Error::ParseError("Identity must have a 'category' attribute."))?;
+                let category = get_attr!(child, "category", required);
                 if category == "" {
                     return Err(Error::ParseError("Identity must have a non-empty 'category' attribute."))
                 }
 
-                let type_ = child.attr("type")
-                                 .ok_or(Error::ParseError("Identity must have a 'type' attribute."))?;
+                let type_ = get_attr!(child, "type", required);
                 if type_ == "" {
                     return Err(Error::ParseError("Identity must have a non-empty 'type' attribute."))
                 }
 
-                let xml_lang = child.attr("xml:lang").unwrap_or("");
-                let name = child.attr("name")
-                                .and_then(|name| name.parse().ok());
+                let lang = get_attr!(child, "xml:lang", default);
+                let name = get_attr!(child, "name", optional);
                 identities.push(Identity {
-                    category: category.to_owned(),
-                    type_: type_.to_owned(),
-                    xml_lang: xml_lang.to_owned(),
+                    category: category,
+                    type_: type_,
+                    xml_lang: lang,
                     name: name,
                 });
             } else if child.is("x", ns::DATA_FORMS) {
                 let data_form = DataForm::try_from(child)?;
-                match data_form.type_ {
-                    DataFormType::Result_ => (),
-                    _ => return Err(Error::ParseError("Data form must have a 'result' type in disco#info.")),
+                if data_form.type_ != DataFormType::Result_ {
+                    return Err(Error::ParseError("Data form must have a 'result' type in disco#info."));
                 }
                 match data_form.form_type {
                     Some(_) => extensions.push(data_form),
@@ -178,7 +172,7 @@ mod tests {
             Error::ParseError(string) => string,
             _ => panic!(),
         };
-        assert_eq!(message, "Identity must have a 'category' attribute.");
+        assert_eq!(message, "Required attribute 'category' missing.");
 
         let elem: Element = "<query xmlns='http://jabber.org/protocol/disco#info'><identity category=''/></query>".parse().unwrap();
         let error = Disco::try_from(&elem).unwrap_err();
@@ -194,7 +188,7 @@ mod tests {
             Error::ParseError(string) => string,
             _ => panic!(),
         };
-        assert_eq!(message, "Identity must have a 'type' attribute.");
+        assert_eq!(message, "Required attribute 'type' missing.");
 
         let elem: Element = "<query xmlns='http://jabber.org/protocol/disco#info'><identity category='coucou' type=''/></query>".parse().unwrap();
         let error = Disco::try_from(&elem).unwrap_err();
@@ -213,7 +207,7 @@ mod tests {
             Error::ParseError(string) => string,
             _ => panic!(),
         };
-        assert_eq!(message, "Feature must have a 'var' attribute.");
+        assert_eq!(message, "Required attribute 'var' missing.");
     }
 
     #[test]

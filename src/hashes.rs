@@ -76,10 +76,7 @@ impl<'a> TryFrom<&'a Element> for Hash {
         for _ in elem.children() {
             return Err(Error::ParseError("Unknown child in hash element."));
         }
-        let algo = match elem.attr("algo") {
-            None => Err(Error::ParseError("Mandatory argument 'algo' not present in hash element.")),
-            Some(text) => Algo::from_str(text),
-        }?;
+        let algo = get_attr!(elem, "algo", required);
         let hash = match elem.text().as_ref() {
             "" => return Err(Error::ParseError("Hash element shouldn’t be empty.")),
             text => text.to_owned(),

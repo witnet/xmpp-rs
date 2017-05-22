@@ -100,16 +100,10 @@ impl<'a> TryFrom<&'a Element> for Iq {
         if !root.is("iq", ns::JABBER_CLIENT) {
             return Err(Error::ParseError("This is not an iq element."));
         }
-        let from = root.attr("from")
-            .and_then(|value| value.parse().ok());
-        let to = root.attr("to")
-            .and_then(|value| value.parse().ok());
-        let id = root.attr("id")
-            .and_then(|value| value.parse().ok());
-        let type_ = match root.attr("type") {
-            Some(type_) => type_,
-            None => return Err(Error::ParseError("Iq element requires a 'type' attribute.")),
-        };
+        let from = get_attr!(root, "from", optional);
+        let to = get_attr!(root, "to", optional);
+        let id = get_attr!(root, "id", optional);
+        let type_: String = get_attr!(root, "type", required);
 
         let mut payload = None;
         let mut error_payload = None;
@@ -218,7 +212,7 @@ mod tests {
             Error::ParseError(string) => string,
             _ => panic!(),
         };
-        assert_eq!(message, "Iq element requires a 'type' attribute.");
+        assert_eq!(message, "Required attribute 'type' missing.");
     }
 
     #[test]

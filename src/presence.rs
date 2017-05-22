@@ -164,16 +164,10 @@ impl<'a> TryFrom<&'a Element> for Presence {
         if !root.is("presence", ns::JABBER_CLIENT) {
             return Err(Error::ParseError("This is not a presence element."));
         }
-        let from = root.attr("from")
-            .and_then(|value| value.parse().ok());
-        let to = root.attr("to")
-            .and_then(|value| value.parse().ok());
-        let id = root.attr("id")
-            .and_then(|value| value.parse().ok());
-        let type_ = match root.attr("type") {
-            Some(type_) => type_.parse()?,
-            None => Default::default(),
-        };
+        let from = get_attr!(root, "from", optional);
+        let to = get_attr!(root, "to", optional);
+        let id = get_attr!(root, "id", optional);
+        let type_ = get_attr!(root, "type", default);
         let mut show = None;
         let mut statuses = BTreeMap::new();
         let mut priority = None;
@@ -206,7 +200,7 @@ impl<'a> TryFrom<&'a Element> for Presence {
                         return Err(Error::ParseError("Unknown attribute in status element."));
                     }
                 }
-                let lang = elem.attr("xml:lang").unwrap_or("").to_owned();
+                let lang = get_attr!(elem, "xml:lang", default);
                 if statuses.insert(lang, elem.text()).is_some() {
                     return Err(Error::ParseError("Status element present twice for the same xml:lang."));
                 }
