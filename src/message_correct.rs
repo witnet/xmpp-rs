@@ -27,11 +27,8 @@ impl<'a> TryFrom<&'a Element> for Replace {
         for _ in elem.children() {
             return Err(Error::ParseError("Unknown child in replace element."));
         }
-        let id = match elem.attr("id") {
-            Some(id) => id.to_owned(),
-            None => return Err(Error::ParseError("No 'id' attribute present in replace.")),
-        };
-        Ok(Replace { id: id })
+        let id = get_attr!(elem, "id", required);
+        Ok(Replace { id })
     }
 }
 
@@ -73,7 +70,7 @@ mod tests {
             Error::ParseError(string) => string,
             _ => panic!(),
         };
-        assert_eq!(message, "No 'id' attribute present in replace.");
+        assert_eq!(message, "Required attribute 'id' missing.");
     }
 
     #[test]

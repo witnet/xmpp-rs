@@ -158,11 +158,8 @@ impl<'a> TryFrom<&'a Element> for StanzaError {
             return Err(Error::ParseError("This is not an error element."));
         }
 
-        let type_ = elem.attr("type")
-                        .ok_or(Error::ParseError("Error must have a 'type' attribute."))?
-                        .parse()?;
-        let by = elem.attr("by")
-                     .and_then(|by| by.parse().ok());
+        let type_ = get_attr!(elem, "type", required);
+        let by = get_attr!(elem, "by", optional);
         let mut defined_condition = None;
         let mut texts = BTreeMap::new();
         let mut other = None;
@@ -172,7 +169,7 @@ impl<'a> TryFrom<&'a Element> for StanzaError {
                 for _ in child.children() {
                     return Err(Error::ParseError("Unknown element in error text."));
                 }
-                let lang = child.attr("xml:lang").unwrap_or("").to_owned();
+                let lang = get_attr!(elem, "xml:lang", default);
                 if texts.insert(lang, child.text()).is_some() {
                     return Err(Error::ParseError("Text element present twice for the same xml:lang."));
                 }
@@ -256,7 +253,7 @@ mod tests {
             Error::ParseError(string) => string,
             _ => panic!(),
         };
-        assert_eq!(message, "Error must have a 'type' attribute.");
+        assert_eq!(message, "Required attribute 'type' missing.");
 
         let elem: Element = "<error xmlns='jabber:client' type='coucou'/>".parse().unwrap();
         let error = StanzaError::try_from(&elem).unwrap_err();

@@ -30,8 +30,8 @@ impl<'a> TryFrom<&'a Element> for Delay {
         for _ in elem.children() {
             return Err(Error::ParseError("Unknown child in delay element."));
         }
-        let from = elem.attr("from").and_then(|value| value.parse().ok());
-        let stamp = elem.attr("stamp").ok_or(Error::ParseError("Mandatory argument 'stamp' not present in delay element."))?.to_owned();
+        let from = get_attr!(elem, "from", optional);
+        let stamp = get_attr!(elem, "stamp", required);
         let data = match elem.text().as_ref() {
             "" => None,
             text => Some(text.to_owned()),

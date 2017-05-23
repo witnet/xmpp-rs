@@ -28,8 +28,8 @@ impl<'a> TryFrom<&'a Element> for ExplicitMessageEncryption {
         for _ in elem.children() {
             return Err(Error::ParseError("Unknown child in encryption element."));
         }
-        let namespace = elem.attr("namespace").ok_or(Error::ParseError("Mandatory argument 'namespace' not present in encryption element."))?.to_owned();
-        let name = elem.attr("name").and_then(|value| value.parse().ok());
+        let namespace = get_attr!(elem, "namespace", required);
+        let name = get_attr!(elem, "name", optional);
         Ok(ExplicitMessageEncryption {
             namespace: namespace,
             name: name,
