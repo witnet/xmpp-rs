@@ -19,10 +19,10 @@ pub struct Idle {
     pub since: Date,
 }
 
-impl<'a> TryFrom<&'a Element> for Idle {
+impl TryFrom<Element> for Idle {
     type Error = Error;
 
-    fn try_from(elem: &'a Element) -> Result<Idle, Error> {
+    fn try_from(elem: Element) -> Result<Idle, Error> {
         if !elem.is("idle", ns::IDLE) {
             return Err(Error::ParseError("This is not an idle element."));
         }
@@ -34,7 +34,7 @@ impl<'a> TryFrom<&'a Element> for Idle {
     }
 }
 
-impl<'a> Into<Element> for &'a Idle {
+impl Into<Element> for Idle {
     fn into(self) -> Element {
         Element::builder("idle")
                 .ns(ns::IDLE)
@@ -50,13 +50,13 @@ mod tests {
     #[test]
     fn test_simple() {
         let elem: Element = "<idle xmlns='urn:xmpp:idle:1' since='2017-05-21T20:19:55+01:00'/>".parse().unwrap();
-        Idle::try_from(&elem).unwrap();
+        Idle::try_from(elem).unwrap();
     }
 
     #[test]
     fn test_invalid_child() {
         let elem: Element = "<idle xmlns='urn:xmpp:idle:1'><coucou/></idle>".parse().unwrap();
-        let error = Idle::try_from(&elem).unwrap_err();
+        let error = Idle::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -67,7 +67,7 @@ mod tests {
     #[test]
     fn test_invalid_id() {
         let elem: Element = "<idle xmlns='urn:xmpp:idle:1'/>".parse().unwrap();
-        let error = Idle::try_from(&elem).unwrap_err();
+        let error = Idle::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -79,7 +79,7 @@ mod tests {
     fn test_serialise() {
         let elem: Element = "<idle xmlns='urn:xmpp:idle:1' since='2017-05-21T20:19:55+01:00'/>".parse().unwrap();
         let idle = Idle { since: Date::from("2017-05-21T20:19:55+01:00") };
-        let elem2 = (&idle).into();
+        let elem2 = idle.into();
         assert_eq!(elem, elem2);
     }
 }

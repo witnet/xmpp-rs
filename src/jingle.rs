@@ -204,9 +204,9 @@ impl FromStr for Reason {
     }
 }
 
-impl<'a> Into<Element> for &'a Reason {
+impl Into<Element> for Reason {
     fn into(self) -> Element {
-        Element::builder(match *self {
+        Element::builder(match self {
             Reason::AlternativeSession => "alternative-session",
             Reason::Busy => "busy",
             Reason::Cancel => "cancel",
@@ -245,10 +245,10 @@ pub struct Jingle {
     pub other: Vec<Element>,
 }
 
-impl<'a> TryFrom<&'a Element> for Jingle {
+impl TryFrom<Element> for Jingle {
     type Error = Error;
 
-    fn try_from(root: &'a Element) -> Result<Jingle, Error> {
+    fn try_from(root: Element) -> Result<Jingle, Error> {
         if !root.is("jingle", ns::JINGLE) {
             return Err(Error::ParseError("This is not a Jingle element."));
         }
@@ -353,7 +353,7 @@ impl<'a> TryFrom<&'a Element> for Jingle {
     }
 }
 
-impl<'a> Into<Element> for &'a Content {
+impl Into<Element> for Content {
     fn into(self) -> Element {
         let mut root = Element::builder("content")
                                .ns(ns::JINGLE)
@@ -375,7 +375,7 @@ impl<'a> Into<Element> for &'a Content {
     }
 }
 
-impl<'a> Into<Element> for &'a Jingle {
+impl Into<Element> for Jingle {
     fn into(self) -> Element {
         let mut root = Element::builder("jingle")
                                .ns(ns::JINGLE)
@@ -384,25 +384,19 @@ impl<'a> Into<Element> for &'a Jingle {
                                .attr("responder", self.responder.clone())
                                .attr("sid", self.sid.clone())
                                .build();
-        for content in self.contents.clone() {
-            let content_elem = (&content).into();
+        for content in self.contents {
+            let content_elem = content.into();
             root.append_child(content_elem);
         }
-        if let Some(ref reason) = self.reason {
-            let reason2: Element = (&reason.reason).into();
+        if let Some(reason) = self.reason {
+            let reason2: Element = reason.reason.into();
             let reason_elem = Element::builder("reason")
                                       .append(reason2)
-                                      .append(reason.text.clone())
+                                      .append(reason.text)
                                       .build();
             root.append_child(reason_elem);
         }
         root
-    }
-}
-
-impl Into<Element> for Jingle {
-    fn into(self) -> Element {
-        (&self).into()
     }
 }
 
@@ -413,7 +407,7 @@ mod tests {
     #[test]
     fn test_simple() {
         let elem: Element = "<jingle xmlns='urn:xmpp:jingle:1' action='session-initiate' sid='coucou'/>".parse().unwrap();
-        let jingle = Jingle::try_from(&elem).unwrap();
+        let jingle = Jingle::try_from(elem).unwrap();
         assert_eq!(jingle.action, Action::SessionInitiate);
         assert_eq!(jingle.sid, "coucou");
     }
@@ -421,7 +415,7 @@ mod tests {
     #[test]
     fn test_invalid_jingle() {
         let elem: Element = "<jingle xmlns='urn:xmpp:jingle:1'/>".parse().unwrap();
-        let error = Jingle::try_from(&elem).unwrap_err();
+        let error = Jingle::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -429,7 +423,7 @@ mod tests {
         assert_eq!(message, "Jingle must have an 'action' attribute.");
 
         let elem: Element = "<jingle xmlns='urn:xmpp:jingle:1' action='session-info'/>".parse().unwrap();
-        let error = Jingle::try_from(&elem).unwrap_err();
+        let error = Jingle::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -437,7 +431,7 @@ mod tests {
         assert_eq!(message, "Jingle must have a 'sid' attribute.");
 
         let elem: Element = "<jingle xmlns='urn:xmpp:jingle:1' action='coucou' sid='coucou'/>".parse().unwrap();
-        let error = Jingle::try_from(&elem).unwrap_err();
+        let error = Jingle::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -448,25 +442,25 @@ mod tests {
     #[test]
     fn test_content() {
         let elem: Element = "<jingle xmlns='urn:xmpp:jingle:1' action='session-initiate' sid='coucou'><content creator='initiator' name='coucou'><description/><transport/></content></jingle>".parse().unwrap();
-        let jingle = Jingle::try_from(&elem).unwrap();
+        let jingle = Jingle::try_from(elem).unwrap();
         assert_eq!(jingle.contents[0].creator, Creator::Initiator);
         assert_eq!(jingle.contents[0].name, "coucou");
         assert_eq!(jingle.contents[0].senders, Senders::Both);
         assert_eq!(jingle.contents[0].disposition, "session");
 
         let elem: Element = "<jingle xmlns='urn:xmpp:jingle:1' action='session-initiate' sid='coucou'><content creator='initiator' name='coucou' senders='both'><description/><transport/></content></jingle>".parse().unwrap();
-        let jingle = Jingle::try_from(&elem).unwrap();
+        let jingle = Jingle::try_from(elem).unwrap();
         assert_eq!(jingle.contents[0].senders, Senders::Both);
 
         let elem: Element = "<jingle xmlns='urn:xmpp:jingle:1' action='session-initiate' sid='coucou'><content creator='initiator' name='coucou' disposition='early-session'><description/><transport/></content></jingle>".parse().unwrap();
-        let jingle = Jingle::try_from(&elem).unwrap();
+        let jingle = Jingle::try_from(elem).unwrap();
         assert_eq!(jingle.contents[0].disposition, "early-session");
     }
 
     #[test]
     fn test_invalid_content() {
         let elem: Element = "<jingle xmlns='urn:xmpp:jingle:1' action='session-initiate' sid='coucou'><content/></jingle>".parse().unwrap();
-        let error = Jingle::try_from(&elem).unwrap_err();
+        let error = Jingle::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -474,7 +468,7 @@ mod tests {
         assert_eq!(message, "Content must have a 'creator' attribute.");
 
         let elem: Element = "<jingle xmlns='urn:xmpp:jingle:1' action='session-initiate' sid='coucou'><content creator='initiator'/></jingle>".parse().unwrap();
-        let error = Jingle::try_from(&elem).unwrap_err();
+        let error = Jingle::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -482,7 +476,7 @@ mod tests {
         assert_eq!(message, "Content must have a 'name' attribute.");
 
         let elem: Element = "<jingle xmlns='urn:xmpp:jingle:1' action='session-initiate' sid='coucou'><content creator='coucou' name='coucou'/></jingle>".parse().unwrap();
-        let error = Jingle::try_from(&elem).unwrap_err();
+        let error = Jingle::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -490,7 +484,7 @@ mod tests {
         assert_eq!(message, "Unknown creator.");
 
         let elem: Element = "<jingle xmlns='urn:xmpp:jingle:1' action='session-initiate' sid='coucou'><content creator='initiator' name='coucou' senders='coucou'/></jingle>".parse().unwrap();
-        let error = Jingle::try_from(&elem).unwrap_err();
+        let error = Jingle::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -498,7 +492,7 @@ mod tests {
         assert_eq!(message, "Unknown senders.");
 
         let elem: Element = "<jingle xmlns='urn:xmpp:jingle:1' action='session-initiate' sid='coucou'><content creator='initiator' name='coucou' senders=''/></jingle>".parse().unwrap();
-        let error = Jingle::try_from(&elem).unwrap_err();
+        let error = Jingle::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -509,13 +503,13 @@ mod tests {
     #[test]
     fn test_reason() {
         let elem: Element = "<jingle xmlns='urn:xmpp:jingle:1' action='session-initiate' sid='coucou'><reason><success/></reason></jingle>".parse().unwrap();
-        let jingle = Jingle::try_from(&elem).unwrap();
+        let jingle = Jingle::try_from(elem).unwrap();
         let reason = jingle.reason.unwrap();
         assert_eq!(reason.reason, Reason::Success);
         assert_eq!(reason.text, None);
 
         let elem: Element = "<jingle xmlns='urn:xmpp:jingle:1' action='session-initiate' sid='coucou'><reason><success/><text>coucou</text></reason></jingle>".parse().unwrap();
-        let jingle = Jingle::try_from(&elem).unwrap();
+        let jingle = Jingle::try_from(elem).unwrap();
         let reason = jingle.reason.unwrap();
         assert_eq!(reason.reason, Reason::Success);
         assert_eq!(reason.text, Some(String::from("coucou")));
@@ -524,7 +518,7 @@ mod tests {
     #[test]
     fn test_invalid_reason() {
         let elem: Element = "<jingle xmlns='urn:xmpp:jingle:1' action='session-initiate' sid='coucou'><reason/></jingle>".parse().unwrap();
-        let error = Jingle::try_from(&elem).unwrap_err();
+        let error = Jingle::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -532,7 +526,7 @@ mod tests {
         assert_eq!(message, "Reason doesn’t contain a valid reason.");
 
         let elem: Element = "<jingle xmlns='urn:xmpp:jingle:1' action='session-initiate' sid='coucou'><reason><a/></reason></jingle>".parse().unwrap();
-        let error = Jingle::try_from(&elem).unwrap_err();
+        let error = Jingle::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -540,7 +534,7 @@ mod tests {
         assert_eq!(message, "Unknown reason.");
 
         let elem: Element = "<jingle xmlns='urn:xmpp:jingle:1' action='session-initiate' sid='coucou'><reason><a xmlns='http://www.w3.org/1999/xhtml'/></reason></jingle>".parse().unwrap();
-        let error = Jingle::try_from(&elem).unwrap_err();
+        let error = Jingle::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -548,7 +542,7 @@ mod tests {
         assert_eq!(message, "Reason contains a foreign element.");
 
         let elem: Element = "<jingle xmlns='urn:xmpp:jingle:1' action='session-initiate' sid='coucou'><reason><decline/></reason><reason/></jingle>".parse().unwrap();
-        let error = Jingle::try_from(&elem).unwrap_err();
+        let error = Jingle::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -556,7 +550,7 @@ mod tests {
         assert_eq!(message, "Jingle must not have more than one reason.");
 
         let elem: Element = "<jingle xmlns='urn:xmpp:jingle:1' action='session-initiate' sid='coucou'><reason><decline/><text/><text/></reason></jingle>".parse().unwrap();
-        let error = Jingle::try_from(&elem).unwrap_err();
+        let error = Jingle::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),

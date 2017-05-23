@@ -66,10 +66,10 @@ pub struct Hash {
     pub hash: String,
 }
 
-impl<'a> TryFrom<&'a Element> for Hash {
+impl TryFrom<Element> for Hash {
     type Error = Error;
 
-    fn try_from(elem: &'a Element) -> Result<Hash, Error> {
+    fn try_from(elem: Element) -> Result<Hash, Error> {
         if !elem.is("hash", ns::HASHES) {
             return Err(Error::ParseError("This is not a hash element."));
         }
@@ -88,11 +88,11 @@ impl<'a> TryFrom<&'a Element> for Hash {
     }
 }
 
-impl<'a> Into<Element> for &'a Hash {
+impl Into<Element> for Hash {
     fn into(self) -> Element {
         Element::builder("hash")
                 .ns(ns::HASHES)
-                .attr("algo", self.algo.clone())
+                .attr("algo", self.algo)
                 .append(self.hash.clone())
                 .build()
     }
@@ -105,7 +105,7 @@ mod tests {
     #[test]
     fn test_simple() {
         let elem: Element = "<hash xmlns='urn:xmpp:hashes:2' algo='sha-256'>2XarmwTlNxDAMkvymloX3S5+VbylNrJt/l5QyPa+YoU=</hash>".parse().unwrap();
-        let hash = Hash::try_from(&elem).unwrap();
+        let hash = Hash::try_from(elem).unwrap();
         assert_eq!(hash.algo, Algo::Sha_256);
         assert_eq!(hash.hash, "2XarmwTlNxDAMkvymloX3S5+VbylNrJt/l5QyPa+YoU=");
     }
@@ -113,7 +113,7 @@ mod tests {
     #[test]
     fn test_unknown() {
         let elem: Element = "<replace xmlns='urn:xmpp:message-correct:0'/>".parse().unwrap();
-        let error = Hash::try_from(&elem).unwrap_err();
+        let error = Hash::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -124,7 +124,7 @@ mod tests {
     #[test]
     fn test_invalid_child() {
         let elem: Element = "<hash xmlns='urn:xmpp:hashes:2'><coucou/></hash>".parse().unwrap();
-        let error = Hash::try_from(&elem).unwrap_err();
+        let error = Hash::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),

@@ -37,13 +37,13 @@ pub enum IqPayload {
     Unknown(Element),
 }
 
-impl<'a> TryFrom<&'a Element> for IqPayload {
+impl TryFrom<Element> for IqPayload {
     type Error = Error;
 
-    fn try_from(elem: &'a Element) -> Result<IqPayload, Error> {
+    fn try_from(elem: Element) -> Result<IqPayload, Error> {
         Ok(match (elem.name().as_ref(), elem.ns().unwrap().as_ref()) {
             // XEP-0030
-            ("query", ns::DISCO_INFO) => IqPayload::Disco(Disco::try_from(elem)?),
+            ("query", ns::DISCO_INFO) => IqPayload::Disco(Disco::try_from(elem.clone())?),
 
             // XEP-0047
             ("open", ns::IBB)
@@ -93,10 +93,10 @@ pub struct Iq {
     pub payload: IqType,
 }
 
-impl<'a> TryFrom<&'a Element> for Iq {
+impl TryFrom<Element> for Iq {
     type Error = Error;
 
-    fn try_from(root: &'a Element) -> Result<Iq, Error> {
+    fn try_from(root: Element) -> Result<Iq, Error> {
         if !root.is("iq", ns::JABBER_CLIENT) {
             return Err(Error::ParseError("This is not an iq element."));
         }
@@ -116,7 +116,7 @@ impl<'a> TryFrom<&'a Element> for Iq {
                     if error_payload.is_some() {
                         return Err(Error::ParseError("Wrong number of children in iq element."));
                     }
-                    error_payload = Some(StanzaError::try_from(elem)?);
+                    error_payload = Some(StanzaError::try_from(elem.clone())?);
                 } else if root.children().collect::<Vec<_>>().len() != 2 {
                     return Err(Error::ParseError("Wrong number of children in iq element."));
                 }
@@ -162,23 +162,23 @@ impl<'a> TryFrom<&'a Element> for Iq {
     }
 }
 
-impl<'a> Into<Element> for &'a IqPayload {
+impl Into<Element> for IqPayload {
     fn into(self) -> Element {
-        match *self {
-            IqPayload::Disco(ref disco) => disco.into(),
-            IqPayload::IBB(ref ibb) => ibb.into(),
-            IqPayload::Jingle(ref jingle) => jingle.into(),
-            IqPayload::Ping(ref ping) => ping.into(),
-            IqPayload::MamQuery(ref query) => query.into(),
-            IqPayload::MamFin(ref fin) => fin.into(),
-            IqPayload::MamPrefs(ref prefs) => prefs.into(),
+        match self {
+            IqPayload::Disco(disco) => disco.into(),
+            IqPayload::IBB(ibb) => ibb.into(),
+            IqPayload::Jingle(jingle) => jingle.into(),
+            IqPayload::Ping(ping) => ping.into(),
+            IqPayload::MamQuery(query) => query.into(),
+            IqPayload::MamFin(fin) => fin.into(),
+            IqPayload::MamPrefs(prefs) => prefs.into(),
 
-            IqPayload::Unknown(ref elem) => elem.clone(),
+            IqPayload::Unknown(elem) => elem.clone(),
         }
     }
 }
 
-impl<'a> Into<Element> for &'a Iq {
+impl Into<Element> for Iq {
     fn into(self) -> Element {
         let mut stanza = Element::builder("iq")
                                  .ns(ns::JABBER_CLIENT)
@@ -191,7 +191,7 @@ impl<'a> Into<Element> for &'a Iq {
             IqType::Get(elem)
           | IqType::Set(elem)
           | IqType::Result(Some(elem)) => elem,
-            IqType::Error(error) => (&error).into(),
+            IqType::Error(error) => error.into(),
             IqType::Result(None) => return stanza,
         };
         stanza.append_child(elem);
@@ -207,7 +207,7 @@ mod tests {
     #[test]
     fn test_require_type() {
         let elem: Element = "<iq xmlns='jabber:client'/>".parse().unwrap();
-        let error = Iq::try_from(&elem).unwrap_err();
+        let error = Iq::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -220,7 +220,7 @@ mod tests {
         let elem: Element = "<iq xmlns='jabber:client' type='get'>
             <foo/>
         </iq>".parse().unwrap();
-        let iq = Iq::try_from(&elem).unwrap();
+        let iq = Iq::try_from(elem).unwrap();
         let query: Element = "<foo xmlns='jabber:client'/>".parse().unwrap();
         assert_eq!(iq.from, None);
         assert_eq!(iq.to, None);
@@ -236,7 +236,7 @@ mod tests {
         let elem: Element = "<iq xmlns='jabber:client' type='set'>
             <vCard xmlns='vcard-temp'/>
         </iq>".parse().unwrap();
-        let iq = Iq::try_from(&elem).unwrap();
+        let iq = Iq::try_from(elem).unwrap();
         let vcard: Element = "<vCard xmlns='vcard-temp'/>".parse().unwrap();
         assert_eq!(iq.from, None);
         assert_eq!(iq.to, None);
@@ -250,7 +250,7 @@ mod tests {
     #[test]
     fn test_result_empty() {
         let elem: Element = "<iq xmlns='jabber:client' type='result'/>".parse().unwrap();
-        let iq = Iq::try_from(&elem).unwrap();
+        let iq = Iq::try_from(elem).unwrap();
         assert_eq!(iq.from, None);
         assert_eq!(iq.to, None);
         assert_eq!(iq.id, None);
@@ -265,7 +265,7 @@ mod tests {
         let elem: Element = "<iq xmlns='jabber:client' type='result'>
             <query xmlns='http://jabber.org/protocol/disco#items'/>
         </iq>".parse().unwrap();
-        let iq = Iq::try_from(&elem).unwrap();
+        let iq = Iq::try_from(elem).unwrap();
         let query: Element = "<query xmlns='http://jabber.org/protocol/disco#items'/>".parse().unwrap();
         assert_eq!(iq.from, None);
         assert_eq!(iq.to, None);
@@ -284,7 +284,7 @@ mod tests {
                 <service-unavailable xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/>
             </error>
         </iq>".parse().unwrap();
-        let iq = Iq::try_from(&elem).unwrap();
+        let iq = Iq::try_from(elem).unwrap();
         assert_eq!(iq.from, None);
         assert_eq!(iq.to, None);
         assert_eq!(iq.id, None);
@@ -303,7 +303,7 @@ mod tests {
     #[test]
     fn test_children_invalid() {
         let elem: Element = "<iq xmlns='jabber:client' type='error'></iq>".parse().unwrap();
-        let error = Iq::try_from(&elem).unwrap_err();
+        let error = Iq::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -320,16 +320,16 @@ mod tests {
             id: None,
             payload: IqType::Result(None),
         };
-        let elem2 = (&iq2).into();
+        let elem2 = iq2.into();
         assert_eq!(elem, elem2);
     }
 
     #[test]
     fn test_disco() {
         let elem: Element = "<iq xmlns='jabber:client' type='get'><query xmlns='http://jabber.org/protocol/disco#info'/></iq>".parse().unwrap();
-        let iq = Iq::try_from(&elem).unwrap();
+        let iq = Iq::try_from(elem).unwrap();
         let payload = match iq.payload {
-            IqType::Get(ref payload) => IqPayload::try_from(payload).unwrap(),
+            IqType::Get(payload) => IqPayload::try_from(payload).unwrap(),
             _ => panic!(),
         };
         assert!(match payload {

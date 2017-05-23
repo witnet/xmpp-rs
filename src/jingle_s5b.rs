@@ -63,7 +63,7 @@ pub struct Candidate {
     pub type_: Type,
 }
 
-impl<'a> Into<Element> for &'a Candidate {
+impl Into<Element> for Candidate {
     fn into(self) -> Element {
         Element::builder("candidate")
                 .ns(ns::JINGLE_S5B)
@@ -129,10 +129,10 @@ pub struct Transport {
     pub payload: TransportPayload,
 }
 
-impl<'a> TryFrom<&'a Element> for Transport {
+impl TryFrom<Element> for Transport {
     type Error = Error;
 
-    fn try_from(elem: &'a Element) -> Result<Transport, Error> {
+    fn try_from(elem: Element) -> Result<Transport, Error> {
         if elem.is("transport", ns::JINGLE_S5B) {
             let sid = get_attr!(elem, "sid", required);
             let dstaddr = get_attr!(elem, "dstaddr", optional);
@@ -200,7 +200,7 @@ impl<'a> TryFrom<&'a Element> for Transport {
     }
 }
 
-impl<'a> Into<Element> for &'a Transport {
+impl Into<Element> for Transport {
     fn into(self) -> Element {
         Element::builder("transport")
                 .ns(ns::JINGLE_S5B)
@@ -208,15 +208,15 @@ impl<'a> Into<Element> for &'a Transport {
                 .attr("dstaddr", self.dstaddr.clone())
                 .attr("mode", self.mode.clone())
                 .append(match self.payload {
-                     TransportPayload::Candidates(ref candidates) => {
+                     TransportPayload::Candidates(candidates) => {
                          candidates.iter()
-                                   .map(|candidate| -> Element { candidate.into() })
+                                   .map(|candidate| -> Element { candidate.clone().into() })
                                    .collect::<Vec<Element>>()
                      },
-                     TransportPayload::Activated(ref cid) => {
+                     TransportPayload::Activated(cid) => {
                          vec!(Element::builder("activated")
                                       .ns(ns::JINGLE_S5B)
-                                      .attr("cid", cid.to_owned())
+                                      .attr("cid", cid)
                                       .build())
                      },
                      TransportPayload::CandidateError => {
@@ -248,7 +248,7 @@ mod tests {
     #[test]
     fn test_simple() {
         let elem: Element = "<transport xmlns='urn:xmpp:jingle:transports:s5b:1' sid='coucou'/>".parse().unwrap();
-        let transport = Transport::try_from(&elem).unwrap();
+        let transport = Transport::try_from(elem).unwrap();
         assert_eq!(transport.sid, "coucou");
         assert_eq!(transport.dstaddr, None);
         assert_eq!(transport.mode, Mode::Tcp);
@@ -267,7 +267,7 @@ mod tests {
             mode: Mode::Tcp,
             payload: TransportPayload::Activated(String::from("coucou")),
         };
-        let elem2: Element = (&transport).into();
+        let elem2: Element = transport.into();
         assert_eq!(elem, elem2);
     }
 
@@ -287,7 +287,7 @@ mod tests {
                 type_: Type::Direct,
             })),
         };
-        let elem2: Element = (&transport).into();
+        let elem2: Element = transport.into();
         assert_eq!(elem, elem2);
     }
 }

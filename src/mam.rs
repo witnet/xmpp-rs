@@ -60,9 +60,9 @@ impl FromStr for DefaultPrefs {
     }
 }
 
-impl<'a> IntoAttributeValue for &'a DefaultPrefs {
+impl IntoAttributeValue for DefaultPrefs {
     fn into_attribute_value(self) -> Option<String> {
-        Some(String::from(match *self {
+        Some(String::from(match self {
             DefaultPrefs::Always => "always",
             DefaultPrefs::Never => "never",
             DefaultPrefs::Roster => "roster",
@@ -77,10 +77,10 @@ pub struct Prefs {
     pub never: Vec<Jid>,
 }
 
-impl<'a> TryFrom<&'a Element> for Query {
+impl TryFrom<Element> for Query {
     type Error = Error;
 
-    fn try_from(elem: &'a Element) -> Result<Query, Error> {
+    fn try_from(elem: Element) -> Result<Query, Error> {
         if !elem.is("query", ns::MAM) {
             return Err(Error::ParseError("This is not a query element."));
         }
@@ -88,9 +88,9 @@ impl<'a> TryFrom<&'a Element> for Query {
         let mut set = None;
         for child in elem.children() {
             if child.is("x", ns::DATA_FORMS) {
-                form = Some(DataForm::try_from(child)?);
+                form = Some(DataForm::try_from(child.clone())?);
             } else if child.is("set", ns::RSM) {
-                set = Some(Set::try_from(child)?);
+                set = Some(Set::try_from(child.clone())?);
             } else {
                 return Err(Error::ParseError("Unknown child in query element."));
             }
@@ -101,17 +101,17 @@ impl<'a> TryFrom<&'a Element> for Query {
     }
 }
 
-impl<'a> TryFrom<&'a Element> for Result_ {
+impl TryFrom<Element> for Result_ {
     type Error = Error;
 
-    fn try_from(elem: &'a Element) -> Result<Result_, Error> {
+    fn try_from(elem: Element) -> Result<Result_, Error> {
         if !elem.is("result", ns::MAM) {
             return Err(Error::ParseError("This is not a result element."));
         }
         let mut forwarded = None;
         for child in elem.children() {
             if child.is("forwarded", ns::FORWARD) {
-                forwarded = Some(Forwarded::try_from(child)?);
+                forwarded = Some(Forwarded::try_from(child.clone())?);
             } else {
                 return Err(Error::ParseError("Unknown child in result element."));
             }
@@ -127,17 +127,17 @@ impl<'a> TryFrom<&'a Element> for Result_ {
     }
 }
 
-impl<'a> TryFrom<&'a Element> for Fin {
+impl TryFrom<Element> for Fin {
     type Error = Error;
 
-    fn try_from(elem: &'a Element) -> Result<Fin, Error> {
+    fn try_from(elem: Element) -> Result<Fin, Error> {
         if !elem.is("fin", ns::MAM) {
             return Err(Error::ParseError("This is not a fin element."));
         }
         let mut set = None;
         for child in elem.children() {
             if child.is("set", ns::RSM) {
-                set = Some(Set::try_from(child)?);
+                set = Some(Set::try_from(child.clone())?);
             } else {
                 return Err(Error::ParseError("Unknown child in fin element."));
             }
@@ -153,10 +153,10 @@ impl<'a> TryFrom<&'a Element> for Fin {
     }
 }
 
-impl<'a> TryFrom<&'a Element> for Prefs {
+impl TryFrom<Element> for Prefs {
     type Error = Error;
 
-    fn try_from(elem: &'a Element) -> Result<Prefs, Error> {
+    fn try_from(elem: Element) -> Result<Prefs, Error> {
         if !elem.is("prefs", ns::MAM) {
             return Err(Error::ParseError("This is not a prefs element."));
         }
@@ -186,7 +186,7 @@ impl<'a> TryFrom<&'a Element> for Prefs {
     }
 }
 
-impl<'a> Into<Element> for &'a Query {
+impl Into<Element> for Query {
     fn into(self) -> Element {
         let mut elem = Element::builder("query")
                                .ns(ns::MAM)
@@ -194,43 +194,43 @@ impl<'a> Into<Element> for &'a Query {
                                .attr("node", self.node.clone())
                                .build();
         //if let Some(form) = self.form {
-        //    elem.append_child((&form).into());
+        //    elem.append_child(form.into());
         //}
-        if let Some(ref set) = self.set {
+        if let Some(set) = self.set {
             elem.append_child(set.into());
         }
         elem
     }
 }
 
-impl<'a> Into<Element> for &'a Result_ {
+impl Into<Element> for Result_ {
     fn into(self) -> Element {
         let mut elem = Element::builder("result")
                                .ns(ns::MAM)
-                               .attr("queryid", self.queryid.clone())
-                               .attr("id", self.id.clone())
+                               .attr("queryid", self.queryid)
+                               .attr("id", self.id)
                                .build();
-        elem.append_child((&self.forwarded).into());
+        elem.append_child(self.forwarded.into());
         elem
     }
 }
 
-impl<'a> Into<Element> for &'a Fin {
+impl Into<Element> for Fin {
     fn into(self) -> Element {
         let mut elem = Element::builder("fin")
                                .ns(ns::MAM)
                                .attr("complete", if self.complete { Some("true") } else { None })
                                .build();
-        elem.append_child((&self.set).into());
+        elem.append_child(self.set.into());
         elem
     }
 }
 
-impl<'a> Into<Element> for &'a Prefs {
+impl Into<Element> for Prefs {
     fn into(self) -> Element {
         let mut elem = Element::builder("prefs")
                                .ns(ns::MAM)
-                               .attr("default", &self.default_)
+                               .attr("default", self.default_)
                                .build();
         if !self.always.is_empty() {
             let mut always = Element::builder("always")
@@ -267,7 +267,7 @@ mod tests {
     #[test]
     fn test_query() {
         let elem: Element = "<query xmlns='urn:xmpp:mam:2'/>".parse().unwrap();
-        Query::try_from(&elem).unwrap();
+        Query::try_from(elem).unwrap();
     }
 
     #[test]
@@ -282,7 +282,7 @@ mod tests {
   </forwarded>
 </result>
 "#.parse().unwrap();
-        Result_::try_from(&elem).unwrap();
+        Result_::try_from(elem).unwrap();
     }
 
     #[test]
@@ -295,7 +295,7 @@ mod tests {
   </set>
 </fin>
 "#.parse().unwrap();
-        Fin::try_from(&elem).unwrap();
+        Fin::try_from(elem).unwrap();
     }
 
     #[test]
@@ -312,7 +312,7 @@ mod tests {
   </x>
 </query>
 "#.parse().unwrap();
-        Query::try_from(&elem).unwrap();
+        Query::try_from(elem).unwrap();
     }
 
     #[test]
@@ -332,13 +332,13 @@ mod tests {
   </set>
 </query>
 "#.parse().unwrap();
-        Query::try_from(&elem).unwrap();
+        Query::try_from(elem).unwrap();
     }
 
     #[test]
     fn test_prefs_get() {
         let elem: Element = "<prefs xmlns='urn:xmpp:mam:2' default='always'/>".parse().unwrap();
-        Prefs::try_from(&elem).unwrap();
+        Prefs::try_from(elem).unwrap();
 
         let elem: Element = r#"
 <prefs xmlns='urn:xmpp:mam:2' default='roster'>
@@ -346,7 +346,7 @@ mod tests {
   <never/>
 </prefs>
 "#.parse().unwrap();
-        Prefs::try_from(&elem).unwrap();
+        Prefs::try_from(elem).unwrap();
     }
 
     #[test]
@@ -361,13 +361,13 @@ mod tests {
   </never>
 </prefs>
 "#.parse().unwrap();
-        Prefs::try_from(&elem).unwrap();
+        Prefs::try_from(elem).unwrap();
     }
 
     #[test]
     fn test_invalid_child() {
         let elem: Element = "<query xmlns='urn:xmpp:mam:2'><coucou/></query>".parse().unwrap();
-        let error = Query::try_from(&elem).unwrap_err();
+        let error = Query::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -379,7 +379,7 @@ mod tests {
     fn test_serialise() {
         let elem: Element = "<query xmlns='urn:xmpp:mam:2'/>".parse().unwrap();
         let replace = Query { queryid: None, node: None, form: None, set: None };
-        let elem2 = (&replace).into();
+        let elem2 = replace.into();
         assert_eq!(elem, elem2);
     }
 }

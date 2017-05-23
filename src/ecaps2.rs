@@ -25,17 +25,17 @@ pub struct ECaps2 {
     hashes: Vec<Hash>,
 }
 
-impl<'a> TryFrom<&'a Element> for ECaps2 {
+impl TryFrom<Element> for ECaps2 {
     type Error = Error;
 
-    fn try_from(elem: &'a Element) -> Result<ECaps2, Error> {
+    fn try_from(elem: Element) -> Result<ECaps2, Error> {
         if !elem.is("c", ns::ECAPS2) {
             return Err(Error::ParseError("This is not an ecaps2 element."));
         }
         let mut hashes = vec!();
         for child in elem.children() {
             if child.is("hash", ns::HASHES) {
-                let hash = Hash::try_from(child)?;
+                let hash = Hash::try_from(child.clone())?;
                 hashes.push(hash);
             } else {
                 return Err(Error::ParseError("Unknown child in ecaps2 element."));
@@ -47,12 +47,12 @@ impl<'a> TryFrom<&'a Element> for ECaps2 {
     }
 }
 
-impl<'a> Into<Element> for &'a ECaps2 {
+impl Into<Element> for ECaps2 {
     fn into(self) -> Element {
         Element::builder("c")
                 .ns(ns::ECAPS2)
                 .append(self.hashes.iter()
-                                   .map(|hash| hash.into())
+                                   .map(|hash| hash.clone().into())
                                    .collect::<Vec<Element>>())
                 .build()
     }
@@ -175,7 +175,7 @@ mod tests {
     #[test]
     fn test_parse() {
         let elem: Element = "<c xmlns='urn:xmpp:caps'><hash xmlns='urn:xmpp:hashes:2' algo='sha-256'>K1Njy3HZBThlo4moOD5gBGhn0U0oK7/CbfLlIUDi6o4=</hash><hash xmlns='urn:xmpp:hashes:2' algo='sha3-256'>+sDTQqBmX6iG/X3zjt06fjZMBBqL/723knFIyRf0sg8=</hash></c>".parse().unwrap();
-        let ecaps2 = ECaps2::try_from(&elem).unwrap();
+        let ecaps2 = ECaps2::try_from(elem).unwrap();
         assert_eq!(ecaps2.hashes.len(), 2);
         assert_eq!(ecaps2.hashes[0].algo, Algo::Sha_256);
         assert_eq!(ecaps2.hashes[0].hash, "K1Njy3HZBThlo4moOD5gBGhn0U0oK7/CbfLlIUDi6o4=");
@@ -186,7 +186,7 @@ mod tests {
     #[test]
     fn test_invalid_child() {
         let elem: Element = "<c xmlns='urn:xmpp:caps'><hash xmlns='urn:xmpp:hashes:2' algo='sha-256'>K1Njy3HZBThlo4moOD5gBGhn0U0oK7/CbfLlIUDi6o4=</hash><hash xmlns='urn:xmpp:hashes:1' algo='sha3-256'>+sDTQqBmX6iG/X3zjt06fjZMBBqL/723knFIyRf0sg8=</hash></c>".parse().unwrap();
-        let error = ECaps2::try_from(&elem).unwrap_err();
+        let error = ECaps2::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -197,7 +197,7 @@ mod tests {
     #[test]
     fn test_simple() {
         let elem: Element = "<query xmlns='http://jabber.org/protocol/disco#info'><identity category='client' type='pc'/><feature var='http://jabber.org/protocol/disco#info'/></query>".parse().unwrap();
-        let disco = Disco::try_from(&elem).unwrap();
+        let disco = Disco::try_from(elem).unwrap();
         let ecaps2 = ecaps2::compute_disco(&disco);
         assert_eq!(ecaps2.len(), 54);
     }
@@ -260,7 +260,7 @@ mod tests {
             105, 109, 101, 31, 28, 99, 108, 105, 101, 110, 116, 31, 109, 111,
             98, 105, 108, 101, 31, 31, 66, 111, 109, 98, 117, 115, 77, 111,
             100, 31, 30, 28, 28];
-        let disco = Disco::try_from(&elem).unwrap();
+        let disco = Disco::try_from(elem).unwrap();
         let ecaps2 = ecaps2::compute_disco(&disco);
         assert_eq!(ecaps2.len(), 0x1d9);
         assert_eq!(ecaps2, expected);
@@ -432,7 +432,7 @@ mod tests {
             111, 110, 31, 48, 46, 49, 49, 46, 49, 45, 115, 118, 110, 45, 50,
             48, 49, 49, 49, 50, 49, 54, 45, 109, 111, 100, 32, 40, 84, 99, 108,
             47, 84, 107, 32, 56, 46,54, 98, 50, 41, 31, 30, 29, 28];
-        let disco = Disco::try_from(&elem).unwrap();
+        let disco = Disco::try_from(elem).unwrap();
         let ecaps2 = ecaps2::compute_disco(&disco);
         assert_eq!(ecaps2.len(), 0x543);
         assert_eq!(ecaps2, expected);

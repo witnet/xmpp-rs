@@ -24,10 +24,10 @@ pub struct Set {
     pub max: Option<usize>,
 }
 
-impl<'a> TryFrom<&'a Element> for Set {
+impl TryFrom<Element> for Set {
     type Error = Error;
 
-    fn try_from(elem: &'a Element) -> Result<Set, Error> {
+    fn try_from(elem: Element) -> Result<Set, Error> {
         if !elem.is("set", ns::RSM) {
             return Err(Error::ParseError("This is not a RSM element."));
         }
@@ -86,7 +86,7 @@ impl<'a> TryFrom<&'a Element> for Set {
     }
 }
 
-impl<'a> Into<Element> for &'a Set {
+impl Into<Element> for Set {
     fn into(self) -> Element {
         let mut elem = Element::builder("set")
                                .ns(ns::RSM)
@@ -126,7 +126,7 @@ mod tests {
     #[test]
     fn test_simple() {
         let elem: Element = "<set xmlns='http://jabber.org/protocol/rsm'/>".parse().unwrap();
-        let set = Set::try_from(&elem).unwrap();
+        let set = Set::try_from(elem).unwrap();
         assert_eq!(set.after, None);
         assert_eq!(set.before, None);
         assert_eq!(set.count, None);
@@ -142,7 +142,7 @@ mod tests {
     #[test]
     fn test_unknown() {
         let elem: Element = "<replace xmlns='urn:xmpp:message-correct:0'/>".parse().unwrap();
-        let error = Set::try_from(&elem).unwrap_err();
+        let error = Set::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -153,7 +153,7 @@ mod tests {
     #[test]
     fn test_invalid_child() {
         let elem: Element = "<set xmlns='http://jabber.org/protocol/rsm'><coucou/></set>".parse().unwrap();
-        let error = Set::try_from(&elem).unwrap_err();
+        let error = Set::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -174,14 +174,15 @@ mod tests {
             last: None,
             max: None,
         };
-        let elem2 = (&rsm).into();
+        let elem2 = rsm.into();
         assert_eq!(elem, elem2);
     }
 
     #[test]
     fn test_first_index() {
         let elem: Element = "<set xmlns='http://jabber.org/protocol/rsm'><first index='4'>coucou</first></set>".parse().unwrap();
-        let set = Set::try_from(&elem).unwrap();
+        let elem1 = elem.clone();
+        let set = Set::try_from(elem).unwrap();
         assert_eq!(set.first, Some(String::from("coucou")));
         assert_eq!(set.first_index, Some(4));
 
@@ -195,7 +196,7 @@ mod tests {
             last: None,
             max: None,
         };
-        let elem2 = (&set2).into();
-        assert_eq!(elem, elem2);
+        let elem2 = set2.into();
+        assert_eq!(elem1, elem2);
     }
 }

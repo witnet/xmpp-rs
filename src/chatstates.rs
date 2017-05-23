@@ -21,10 +21,10 @@ pub enum ChatState {
     Paused,
 }
 
-impl<'a> TryFrom<&'a Element> for ChatState {
+impl TryFrom<Element> for ChatState {
     type Error = Error;
 
-    fn try_from(elem: &'a Element) -> Result<ChatState, Error> {
+    fn try_from(elem: Element) -> Result<ChatState, Error> {
         for _ in elem.children() {
             return Err(Error::ParseError("Unknown child in chatstate element."));
         }
@@ -47,9 +47,9 @@ impl<'a> TryFrom<&'a Element> for ChatState {
     }
 }
 
-impl<'a> Into<Element> for &'a ChatState {
+impl Into<Element> for ChatState {
     fn into(self) -> Element {
-        Element::builder(match *self {
+        Element::builder(match self {
             ChatState::Active => "active",
             ChatState::Composing => "composing",
             ChatState::Gone => "gone",
@@ -67,13 +67,13 @@ mod tests {
     #[test]
     fn test_simple() {
         let elem: Element = "<active xmlns='http://jabber.org/protocol/chatstates'/>".parse().unwrap();
-        ChatState::try_from(&elem).unwrap();
+        ChatState::try_from(elem).unwrap();
     }
 
     #[test]
     fn test_invalid() {
         let elem: Element = "<coucou xmlns='http://jabber.org/protocol/chatstates'/>".parse().unwrap();
-        let error = ChatState::try_from(&elem).unwrap_err();
+        let error = ChatState::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -84,7 +84,7 @@ mod tests {
     #[test]
     fn test_invalid_child() {
         let elem: Element = "<gone xmlns='http://jabber.org/protocol/chatstates'><coucou/></gone>".parse().unwrap();
-        let error = ChatState::try_from(&elem).unwrap_err();
+        let error = ChatState::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -95,7 +95,7 @@ mod tests {
     #[test]
     fn test_invalid_attribute() {
         let elem: Element = "<inactive xmlns='http://jabber.org/protocol/chatstates' coucou=''/>".parse().unwrap();
-        let error = ChatState::try_from(&elem).unwrap_err();
+        let error = ChatState::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -106,7 +106,7 @@ mod tests {
     #[test]
     fn test_serialise() {
         let chatstate = ChatState::Active;
-        let elem: Element = (&chatstate).into();
+        let elem: Element = chatstate.into();
         assert!(elem.is("active", ns::CHATSTATES));
     }
 }

@@ -20,10 +20,10 @@ pub struct Delay {
     pub data: Option<String>,
 }
 
-impl<'a> TryFrom<&'a Element> for Delay {
+impl TryFrom<Element> for Delay {
     type Error = Error;
 
-    fn try_from(elem: &'a Element) -> Result<Delay, Error> {
+    fn try_from(elem: Element) -> Result<Delay, Error> {
         if !elem.is("delay", ns::DELAY) {
             return Err(Error::ParseError("This is not a delay element."));
         }
@@ -44,7 +44,7 @@ impl<'a> TryFrom<&'a Element> for Delay {
     }
 }
 
-impl<'a> Into<Element> for &'a Delay {
+impl Into<Element> for Delay {
     fn into(self) -> Element {
         Element::builder("delay")
                 .ns(ns::DELAY)
@@ -63,7 +63,7 @@ mod tests {
     #[test]
     fn test_simple() {
         let elem: Element = "<delay xmlns='urn:xmpp:delay' from='capulet.com' stamp='2002-09-10T23:08:25Z'/>".parse().unwrap();
-        let delay = Delay::try_from(&elem).unwrap();
+        let delay = Delay::try_from(elem).unwrap();
         assert_eq!(delay.from, Some(Jid::from_str("capulet.com").unwrap()));
         assert_eq!(delay.stamp, "2002-09-10T23:08:25Z");
         assert_eq!(delay.data, None);
@@ -72,7 +72,7 @@ mod tests {
     #[test]
     fn test_unknown() {
         let elem: Element = "<replace xmlns='urn:xmpp:message-correct:0'/>".parse().unwrap();
-        let error = Delay::try_from(&elem).unwrap_err();
+        let error = Delay::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -83,7 +83,7 @@ mod tests {
     #[test]
     fn test_invalid_child() {
         let elem: Element = "<delay xmlns='urn:xmpp:delay'><coucou/></delay>".parse().unwrap();
-        let error = Delay::try_from(&elem).unwrap_err();
+        let error = Delay::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -99,7 +99,7 @@ mod tests {
             stamp: "2002-09-10T23:08:25Z".to_owned(),
             data: None,
         };
-        let elem2 = (&delay).into();
+        let elem2 = delay.into();
         assert_eq!(elem, elem2);
     }
 
@@ -111,7 +111,7 @@ mod tests {
             stamp: "2002-09-10T23:08:25Z".to_owned(),
             data: Some(String::from("Reason")),
         };
-        let elem2 = (&delay).into();
+        let elem2 = delay.into();
         assert_eq!(elem, elem2);
     }
 }

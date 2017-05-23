@@ -57,10 +57,10 @@ pub enum PresencePayload {
     Unknown(Element),
 }
 
-impl<'a> TryFrom<&'a Element> for PresencePayload {
+impl TryFrom<Element> for PresencePayload {
     type Error = Error;
 
-    fn try_from(elem: &'a Element) -> Result<PresencePayload, Error> {
+    fn try_from(elem: Element) -> Result<PresencePayload, Error> {
         Ok(match (elem.name().as_ref(), elem.ns().unwrap().as_ref()) {
             ("error", ns::JABBER_CLIENT) => PresencePayload::StanzaError(StanzaError::try_from(elem)?),
 
@@ -73,20 +73,20 @@ impl<'a> TryFrom<&'a Element> for PresencePayload {
             // XEP-0390
             ("c", ns::ECAPS2) => PresencePayload::ECaps2(ECaps2::try_from(elem)?),
 
-            _ => PresencePayload::Unknown(elem.clone()),
+            _ => PresencePayload::Unknown(elem),
         })
     }
 }
 
-impl<'a> Into<Element> for &'a PresencePayload {
+impl Into<Element> for PresencePayload {
     fn into(self) -> Element {
-        match *self {
-            PresencePayload::StanzaError(ref stanza_error) => stanza_error.into(),
-            PresencePayload::Delay(ref delay) => delay.into(),
-            PresencePayload::Idle(ref idle) => idle.into(),
-            PresencePayload::ECaps2(ref ecaps2) => ecaps2.into(),
+        match self {
+            PresencePayload::StanzaError(stanza_error) => stanza_error.into(),
+            PresencePayload::Delay(delay) => delay.into(),
+            PresencePayload::Idle(idle) => idle.into(),
+            PresencePayload::ECaps2(ecaps2) => ecaps2.into(),
 
-            PresencePayload::Unknown(ref elem) => elem.clone(),
+            PresencePayload::Unknown(elem) => elem.clone(),
         }
     }
 }
@@ -157,10 +157,10 @@ pub struct Presence {
     pub payloads: Vec<Element>,
 }
 
-impl<'a> TryFrom<&'a Element> for Presence {
+impl TryFrom<Element> for Presence {
     type Error = Error;
 
-    fn try_from(root: &'a Element) -> Result<Presence, Error> {
+    fn try_from(root: Element) -> Result<Presence, Error> {
         if !root.is("presence", ns::JABBER_CLIENT) {
             return Err(Error::ParseError("This is not a presence element."));
         }
@@ -232,7 +232,7 @@ impl<'a> TryFrom<&'a Element> for Presence {
     }
 }
 
-impl<'a> Into<Element> for &'a Presence {
+impl Into<Element> for Presence {
     fn into(self) -> Element {
         let mut stanza = Element::builder("presence")
                                  .ns(ns::JABBER_CLIENT)
@@ -267,7 +267,7 @@ mod tests {
     #[test]
     fn test_simple() {
         let elem: Element = "<presence xmlns='jabber:client'/>".parse().unwrap();
-        let presence = Presence::try_from(&elem).unwrap();
+        let presence = Presence::try_from(elem).unwrap();
         assert_eq!(presence.from, None);
         assert_eq!(presence.to, None);
         assert_eq!(presence.id, None);
@@ -288,14 +288,14 @@ mod tests {
             priority: 0i8,
             payloads: vec!(),
         };
-        let elem2 = (&presence).into();
+        let elem2 = presence.into();
         assert_eq!(elem, elem2);
     }
 
     #[test]
     fn test_show() {
         let elem: Element = "<presence xmlns='jabber:client'><show>chat</show></presence>".parse().unwrap();
-        let presence = Presence::try_from(&elem).unwrap();
+        let presence = Presence::try_from(elem).unwrap();
         assert_eq!(presence.payloads.len(), 0);
         assert_eq!(presence.show, Some(Show::Chat));
     }
@@ -304,7 +304,7 @@ mod tests {
     fn test_missing_show_value() {
         // "online" used to be a pretty common mistake.
         let elem: Element = "<presence xmlns='jabber:client'><show/></presence>".parse().unwrap();
-        let error = Presence::try_from(&elem).unwrap_err();
+        let error = Presence::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -316,7 +316,7 @@ mod tests {
     fn test_invalid_show() {
         // "online" used to be a pretty common mistake.
         let elem: Element = "<presence xmlns='jabber:client'><show>online</show></presence>".parse().unwrap();
-        let error = Presence::try_from(&elem).unwrap_err();
+        let error = Presence::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -327,7 +327,7 @@ mod tests {
     #[test]
     fn test_empty_status() {
         let elem: Element = "<presence xmlns='jabber:client'><status/></presence>".parse().unwrap();
-        let presence = Presence::try_from(&elem).unwrap();
+        let presence = Presence::try_from(elem).unwrap();
         assert_eq!(presence.payloads.len(), 0);
         assert_eq!(presence.statuses.len(), 1);
         assert_eq!(presence.statuses[""], "");
@@ -336,7 +336,7 @@ mod tests {
     #[test]
     fn test_status() {
         let elem: Element = "<presence xmlns='jabber:client'><status>Here!</status></presence>".parse().unwrap();
-        let presence = Presence::try_from(&elem).unwrap();
+        let presence = Presence::try_from(elem).unwrap();
         assert_eq!(presence.payloads.len(), 0);
         assert_eq!(presence.statuses.len(), 1);
         assert_eq!(presence.statuses[""], "Here!");
@@ -345,7 +345,7 @@ mod tests {
     #[test]
     fn test_multiple_statuses() {
         let elem: Element = "<presence xmlns='jabber:client'><status>Here!</status><status xml:lang='fr'>Là!</status></presence>".parse().unwrap();
-        let presence = Presence::try_from(&elem).unwrap();
+        let presence = Presence::try_from(elem).unwrap();
         assert_eq!(presence.payloads.len(), 0);
         assert_eq!(presence.statuses.len(), 2);
         assert_eq!(presence.statuses[""], "Here!");
@@ -355,7 +355,7 @@ mod tests {
     #[test]
     fn test_invalid_multiple_statuses() {
         let elem: Element = "<presence xmlns='jabber:client'><status xml:lang='fr'>Here!</status><status xml:lang='fr'>Là!</status></presence>".parse().unwrap();
-        let error = Presence::try_from(&elem).unwrap_err();
+        let error = Presence::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -366,7 +366,7 @@ mod tests {
     #[test]
     fn test_priority() {
         let elem: Element = "<presence xmlns='jabber:client'><priority>-1</priority></presence>".parse().unwrap();
-        let presence = Presence::try_from(&elem).unwrap();
+        let presence = Presence::try_from(elem).unwrap();
         assert_eq!(presence.payloads.len(), 0);
         assert_eq!(presence.priority, -1i8);
     }
@@ -374,7 +374,7 @@ mod tests {
     #[test]
     fn test_invalid_priority() {
         let elem: Element = "<presence xmlns='jabber:client'><priority>128</priority></presence>".parse().unwrap();
-        let error = Presence::try_from(&elem).unwrap_err();
+        let error = Presence::try_from(elem).unwrap_err();
         match error {
             Error::ParseIntError(_) => (),
             _ => panic!(),
@@ -384,7 +384,7 @@ mod tests {
     #[test]
     fn test_unknown_child() {
         let elem: Element = "<presence xmlns='jabber:client'><test xmlns='invalid'/></presence>".parse().unwrap();
-        let presence = Presence::try_from(&elem).unwrap();
+        let presence = Presence::try_from(elem).unwrap();
         let payload = &presence.payloads[0];
         assert!(payload.is("test", "invalid"));
     }
@@ -392,7 +392,7 @@ mod tests {
     #[test]
     fn test_invalid_status_child() {
         let elem: Element = "<presence xmlns='jabber:client'><status><coucou/></status></presence>".parse().unwrap();
-        let error = Presence::try_from(&elem).unwrap_err();
+        let error = Presence::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -403,7 +403,7 @@ mod tests {
     #[test]
     fn test_invalid_attribute() {
         let elem: Element = "<presence xmlns='jabber:client'><status coucou=''/></presence>".parse().unwrap();
-        let error = Presence::try_from(&elem).unwrap_err();
+        let error = Presence::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -426,7 +426,7 @@ mod tests {
             priority: 0i8,
             payloads: vec!(),
         };
-        let elem: Element = (&presence).into();
+        let elem: Element = presence.into();
         assert!(elem.is("presence", ns::JABBER_CLIENT));
         assert!(elem.children().collect::<Vec<_>>()[0].is("status", ns::JABBER_CLIENT));
     }

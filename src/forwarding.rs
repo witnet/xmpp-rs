@@ -22,10 +22,10 @@ pub struct Forwarded {
     pub stanza: Option<Message>,
 }
 
-impl<'a> TryFrom<&'a Element> for Forwarded {
+impl TryFrom<Element> for Forwarded {
     type Error = Error;
 
-    fn try_from(elem: &'a Element) -> Result<Forwarded, Error> {
+    fn try_from(elem: Element) -> Result<Forwarded, Error> {
         if !elem.is("forwarded", ns::FORWARD) {
             return Err(Error::ParseError("This is not a forwarded element."));
         }
@@ -33,9 +33,9 @@ impl<'a> TryFrom<&'a Element> for Forwarded {
         let mut stanza = None;
         for child in elem.children() {
             if child.is("delay", ns::DELAY) {
-                delay = Some(Delay::try_from(child)?);
+                delay = Some(Delay::try_from(child.clone())?);
             } else if child.is("message", ns::JABBER_CLIENT) {
-                stanza = Some(Message::try_from(child)?);
+                stanza = Some(Message::try_from(child.clone())?);
             // TODO: also handle the five other possibilities.
             } else {
                 return Err(Error::ParseError("Unknown child in forwarded element."));
@@ -48,12 +48,12 @@ impl<'a> TryFrom<&'a Element> for Forwarded {
     }
 }
 
-impl<'a> Into<Element> for &'a Forwarded {
+impl Into<Element> for Forwarded {
     fn into(self) -> Element {
         Element::builder("forwarded")
                 .ns(ns::FORWARD)
-                .append(match self.delay { Some(ref delay) => { let elem: Element = delay.into(); Some(elem) }, None => None })
-                .append(match self.stanza { Some(ref stanza) => { let elem: Element = stanza.into(); Some(elem) }, None => None })
+                .append(match self.delay { Some(delay) => { let elem: Element = delay.into(); Some(elem) }, None => None })
+                .append(match self.stanza { Some(stanza) => { let elem: Element = stanza.into(); Some(elem) }, None => None })
                 .build()
     }
 }
@@ -65,13 +65,13 @@ mod tests {
     #[test]
     fn test_simple() {
         let elem: Element = "<forwarded xmlns='urn:xmpp:forward:0'/>".parse().unwrap();
-        Forwarded::try_from(&elem).unwrap();
+        Forwarded::try_from(elem).unwrap();
     }
 
     #[test]
     fn test_invalid_child() {
         let elem: Element = "<forwarded xmlns='urn:xmpp:forward:0'><coucou/></forwarded>".parse().unwrap();
-        let error = Forwarded::try_from(&elem).unwrap_err();
+        let error = Forwarded::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -83,7 +83,7 @@ mod tests {
     fn test_serialise() {
         let elem: Element = "<forwarded xmlns='urn:xmpp:forward:0'/>".parse().unwrap();
         let forwarded = Forwarded { delay: None, stanza: None };
-        let elem2 = (&forwarded).into();
+        let elem2 = forwarded.into();
         assert_eq!(elem, elem2);
     }
 }

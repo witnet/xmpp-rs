@@ -25,10 +25,10 @@ pub struct MediaElement {
     pub uris: Vec<URI>,
 }
 
-impl<'a> TryFrom<&'a Element> for MediaElement {
+impl TryFrom<Element> for MediaElement {
     type Error = Error;
 
-    fn try_from(elem: &'a Element) -> Result<MediaElement, Error> {
+    fn try_from(elem: Element) -> Result<MediaElement, Error> {
         if !elem.is("media", ns::MEDIA_ELEMENT) {
             return Err(Error::ParseError("This is not a media element."));
         }
@@ -60,7 +60,7 @@ mod tests {
     #[test]
     fn test_simple() {
         let elem: Element = "<media xmlns='urn:xmpp:media-element'/>".parse().unwrap();
-        let media = MediaElement::try_from(&elem).unwrap();
+        let media = MediaElement::try_from(elem).unwrap();
         assert!(media.width.is_none());
         assert!(media.height.is_none());
         assert!(media.uris.is_empty());
@@ -69,7 +69,7 @@ mod tests {
     #[test]
     fn test_width_height() {
         let elem: Element = "<media xmlns='urn:xmpp:media-element' width='32' height='32'/>".parse().unwrap();
-        let media = MediaElement::try_from(&elem).unwrap();
+        let media = MediaElement::try_from(elem).unwrap();
         assert_eq!(media.width.unwrap(), 32);
         assert_eq!(media.height.unwrap(), 32);
     }
@@ -77,7 +77,7 @@ mod tests {
     #[test]
     fn test_uri() {
         let elem: Element = "<media xmlns='urn:xmpp:media-element'><uri type='text/html'>https://example.org/</uri></media>".parse().unwrap();
-        let media = MediaElement::try_from(&elem).unwrap();
+        let media = MediaElement::try_from(elem).unwrap();
         assert_eq!(media.uris.len(), 1);
         assert_eq!(media.uris[0].type_, "text/html");
         assert_eq!(media.uris[0].uri, "https://example.org/");
@@ -86,26 +86,26 @@ mod tests {
     #[test]
     fn test_invalid_width_height() {
         let elem: Element = "<media xmlns='urn:xmpp:media-element' width=''/>".parse().unwrap();
-        let media = MediaElement::try_from(&elem).unwrap();
+        let media = MediaElement::try_from(elem).unwrap();
         assert!(media.width.is_none());
 
         let elem: Element = "<media xmlns='urn:xmpp:media-element' width='coucou'/>".parse().unwrap();
-        let media = MediaElement::try_from(&elem).unwrap();
+        let media = MediaElement::try_from(elem).unwrap();
         assert!(media.width.is_none());
 
         let elem: Element = "<media xmlns='urn:xmpp:media-element' height=''/>".parse().unwrap();
-        let media = MediaElement::try_from(&elem).unwrap();
+        let media = MediaElement::try_from(elem).unwrap();
         assert!(media.height.is_none());
 
         let elem: Element = "<media xmlns='urn:xmpp:media-element' height='-10'/>".parse().unwrap();
-        let media = MediaElement::try_from(&elem).unwrap();
+        let media = MediaElement::try_from(elem).unwrap();
         assert!(media.height.is_none());
     }
 
     #[test]
     fn test_unknown_child() {
         let elem: Element = "<media xmlns='urn:xmpp:media-element'><coucou/></media>".parse().unwrap();
-        let error = MediaElement::try_from(&elem).unwrap_err();
+        let error = MediaElement::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -116,7 +116,7 @@ mod tests {
     #[test]
     fn test_bad_uri() {
         let elem: Element = "<media xmlns='urn:xmpp:media-element'><uri>https://example.org/</uri></media>".parse().unwrap();
-        let error = MediaElement::try_from(&elem).unwrap_err();
+        let error = MediaElement::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -124,7 +124,7 @@ mod tests {
         assert_eq!(message, "Attribute type on uri is mandatory.");
 
         let elem: Element = "<media xmlns='urn:xmpp:media-element'><uri type='text/html'/></media>".parse().unwrap();
-        let error = MediaElement::try_from(&elem).unwrap_err();
+        let error = MediaElement::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -146,7 +146,7 @@ mod tests {
     http://victim.example.com/challenges/speech.mp3?F3A6292C
   </uri>
 </media>"#.parse().unwrap();
-        let media = MediaElement::try_from(&elem).unwrap();
+        let media = MediaElement::try_from(elem).unwrap();
         assert!(media.width.is_none());
         assert!(media.height.is_none());
         assert_eq!(media.uris.len(), 3);
@@ -177,7 +177,7 @@ mod tests {
   </field>
   [ ... ]
 </x>"#.parse().unwrap();
-        let form = DataForm::try_from(&elem).unwrap();
+        let form = DataForm::try_from(elem).unwrap();
         assert_eq!(form.fields.len(), 1);
         assert_eq!(form.fields[0].var, "ocr");
         assert_eq!(form.fields[0].media[0].width, Some(290));

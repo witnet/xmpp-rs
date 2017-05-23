@@ -24,10 +24,10 @@ pub enum StanzaId {
     },
 }
 
-impl<'a> TryFrom<&'a Element> for StanzaId {
+impl TryFrom<Element> for StanzaId {
     type Error = Error;
 
-    fn try_from(elem: &'a Element) -> Result<StanzaId, Error> {
+    fn try_from(elem: Element) -> Result<StanzaId, Error> {
         let is_stanza_id = elem.is("stanza-id", ns::SID);
         if !is_stanza_id && !elem.is("origin-id", ns::SID) {
             return Err(Error::ParseError("This is not a stanza-id or origin-id element."));
@@ -45,20 +45,20 @@ impl<'a> TryFrom<&'a Element> for StanzaId {
     }
 }
 
-impl<'a> Into<Element> for &'a StanzaId {
+impl Into<Element> for StanzaId {
     fn into(self) -> Element {
-        match *self {
-            StanzaId::StanzaId { ref id, ref by } => {
+        match self {
+            StanzaId::StanzaId { id, by } => {
                 Element::builder("stanza-id")
                         .ns(ns::SID)
-                        .attr("id", id.clone())
-                        .attr("by", String::from(by.clone()))
+                        .attr("id", id)
+                        .attr("by", String::from(by))
                         .build()
             },
-            StanzaId::OriginId { ref id } => {
+            StanzaId::OriginId { id } => {
                 Element::builder("origin-id")
                         .ns(ns::SID)
-                        .attr("id", id.clone())
+                        .attr("id", id)
                         .build()
             },
         }
@@ -73,7 +73,7 @@ mod tests {
     #[test]
     fn test_simple() {
         let elem: Element = "<stanza-id xmlns='urn:xmpp:sid:0' id='coucou' by='coucou@coucou'/>".parse().unwrap();
-        let stanza_id = StanzaId::try_from(&elem).unwrap();
+        let stanza_id = StanzaId::try_from(elem).unwrap();
         if let StanzaId::StanzaId { id, by } = stanza_id {
             assert_eq!(id, String::from("coucou"));
             assert_eq!(by, Jid::from_str("coucou@coucou").unwrap());
@@ -82,7 +82,7 @@ mod tests {
         }
 
         let elem: Element = "<origin-id xmlns='urn:xmpp:sid:0' id='coucou'/>".parse().unwrap();
-        let stanza_id = StanzaId::try_from(&elem).unwrap();
+        let stanza_id = StanzaId::try_from(elem).unwrap();
         if let StanzaId::OriginId { id } = stanza_id {
             assert_eq!(id, String::from("coucou"));
         } else {
@@ -93,7 +93,7 @@ mod tests {
     #[test]
     fn test_invalid_child() {
         let elem: Element = "<stanza-id xmlns='urn:xmpp:sid:0'><coucou/></stanza-id>".parse().unwrap();
-        let error = StanzaId::try_from(&elem).unwrap_err();
+        let error = StanzaId::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -104,7 +104,7 @@ mod tests {
     #[test]
     fn test_invalid_id() {
         let elem: Element = "<stanza-id xmlns='urn:xmpp:sid:0'/>".parse().unwrap();
-        let error = StanzaId::try_from(&elem).unwrap_err();
+        let error = StanzaId::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -115,7 +115,7 @@ mod tests {
     #[test]
     fn test_invalid_by() {
         let elem: Element = "<stanza-id xmlns='urn:xmpp:sid:0' id='coucou'/>".parse().unwrap();
-        let error = StanzaId::try_from(&elem).unwrap_err();
+        let error = StanzaId::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -127,7 +127,7 @@ mod tests {
     fn test_serialise() {
         let elem: Element = "<stanza-id xmlns='urn:xmpp:sid:0' id='coucou' by='coucou@coucou'/>".parse().unwrap();
         let stanza_id = StanzaId::StanzaId { id: String::from("coucou"), by: Jid::from_str("coucou@coucou").unwrap() };
-        let elem2 = (&stanza_id).into();
+        let elem2 = stanza_id.into();
         assert_eq!(elem, elem2);
     }
 }

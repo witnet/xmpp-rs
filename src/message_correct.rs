@@ -17,10 +17,10 @@ pub struct Replace {
     pub id: String,
 }
 
-impl<'a> TryFrom<&'a Element> for Replace {
+impl TryFrom<Element> for Replace {
     type Error = Error;
 
-    fn try_from(elem: &'a Element) -> Result<Replace, Error> {
+    fn try_from(elem: Element) -> Result<Replace, Error> {
         if !elem.is("replace", ns::MESSAGE_CORRECT) {
             return Err(Error::ParseError("This is not a replace element."));
         }
@@ -32,7 +32,7 @@ impl<'a> TryFrom<&'a Element> for Replace {
     }
 }
 
-impl<'a> Into<Element> for &'a Replace {
+impl Into<Element> for Replace {
     fn into(self) -> Element {
         Element::builder("replace")
                 .ns(ns::MESSAGE_CORRECT)
@@ -48,13 +48,13 @@ mod tests {
     #[test]
     fn test_simple() {
         let elem: Element = "<replace xmlns='urn:xmpp:message-correct:0' id='coucou'/>".parse().unwrap();
-        Replace::try_from(&elem).unwrap();
+        Replace::try_from(elem).unwrap();
     }
 
     #[test]
     fn test_invalid_child() {
         let elem: Element = "<replace xmlns='urn:xmpp:message-correct:0'><coucou/></replace>".parse().unwrap();
-        let error = Replace::try_from(&elem).unwrap_err();
+        let error = Replace::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -65,7 +65,7 @@ mod tests {
     #[test]
     fn test_invalid_id() {
         let elem: Element = "<replace xmlns='urn:xmpp:message-correct:0'/>".parse().unwrap();
-        let error = Replace::try_from(&elem).unwrap_err();
+        let error = Replace::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -77,7 +77,7 @@ mod tests {
     fn test_serialise() {
         let elem: Element = "<replace xmlns='urn:xmpp:message-correct:0' id='coucou'/>".parse().unwrap();
         let replace = Replace { id: String::from("coucou") };
-        let elem2 = (&replace).into();
+        let elem2 = replace.into();
         assert_eq!(elem, elem2);
     }
 }

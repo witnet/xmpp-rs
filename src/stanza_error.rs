@@ -150,10 +150,10 @@ pub struct StanzaError {
     pub other: Option<Element>,
 }
 
-impl<'a> TryFrom<&'a Element> for StanzaError {
+impl TryFrom<Element> for StanzaError {
     type Error = Error;
 
-    fn try_from(elem: &'a Element) -> Result<StanzaError, Error> {
+    fn try_from(elem: Element) -> Result<StanzaError, Error> {
         if !elem.is("error", ns::JABBER_CLIENT) {
             return Err(Error::ParseError("This is not an error element."));
         }
@@ -205,7 +205,7 @@ impl<'a> TryFrom<&'a Element> for StanzaError {
     }
 }
 
-impl<'a> Into<Element> for &'a StanzaError {
+impl Into<Element> for StanzaError {
     fn into(self) -> Element {
         let mut root = Element::builder("error")
                                .ns(ns::JABBER_CLIENT)
@@ -240,7 +240,7 @@ mod tests {
     #[test]
     fn test_simple() {
         let elem: Element = "<error xmlns='jabber:client' type='cancel'><undefined-condition xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/></error>".parse().unwrap();
-        let error = StanzaError::try_from(&elem).unwrap();
+        let error = StanzaError::try_from(elem).unwrap();
         assert_eq!(error.type_, ErrorType::Cancel);
         assert_eq!(error.defined_condition, DefinedCondition::UndefinedCondition);
     }
@@ -248,7 +248,7 @@ mod tests {
     #[test]
     fn test_invalid_type() {
         let elem: Element = "<error xmlns='jabber:client'/>".parse().unwrap();
-        let error = StanzaError::try_from(&elem).unwrap_err();
+        let error = StanzaError::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -256,7 +256,7 @@ mod tests {
         assert_eq!(message, "Required attribute 'type' missing.");
 
         let elem: Element = "<error xmlns='jabber:client' type='coucou'/>".parse().unwrap();
-        let error = StanzaError::try_from(&elem).unwrap_err();
+        let error = StanzaError::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -267,7 +267,7 @@ mod tests {
     #[test]
     fn test_invalid_condition() {
         let elem: Element = "<error xmlns='jabber:client' type='cancel'/>".parse().unwrap();
-        let error = StanzaError::try_from(&elem).unwrap_err();
+        let error = StanzaError::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),

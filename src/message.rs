@@ -42,10 +42,10 @@ pub enum MessagePayload {
     Unknown(Element),
 }
 
-impl<'a> TryFrom<&'a Element> for MessagePayload {
+impl TryFrom<Element> for MessagePayload {
     type Error = Error;
 
-    fn try_from(elem: &'a Element) -> Result<MessagePayload, Error> {
+    fn try_from(elem: Element) -> Result<MessagePayload, Error> {
         Ok(match (elem.name().as_ref(), elem.ns().unwrap().as_ref()) {
             ("error", ns::JABBER_CLIENT) => MessagePayload::StanzaError(StanzaError::try_from(elem)?),
 
@@ -84,20 +84,20 @@ impl<'a> TryFrom<&'a Element> for MessagePayload {
     }
 }
 
-impl<'a> Into<Element> for &'a MessagePayload {
+impl Into<Element> for MessagePayload {
     fn into(self) -> Element {
-        match *self {
-            MessagePayload::StanzaError(ref stanza_error) => stanza_error.into(),
-            MessagePayload::Attention(ref attention) => attention.into(),
-            MessagePayload::ChatState(ref chatstate) => chatstate.into(),
-            MessagePayload::Receipt(ref receipt) => receipt.into(),
-            MessagePayload::Delay(ref delay) => delay.into(),
-            MessagePayload::MessageCorrect(ref replace) => replace.into(),
-            MessagePayload::ExplicitMessageEncryption(ref eme) => eme.into(),
-            MessagePayload::StanzaId(ref stanza_id) => stanza_id.into(),
-            MessagePayload::MamResult(ref result) => result.into(),
+        match self {
+            MessagePayload::StanzaError(stanza_error) => stanza_error.into(),
+            MessagePayload::Attention(attention) => attention.into(),
+            MessagePayload::ChatState(chatstate) => chatstate.into(),
+            MessagePayload::Receipt(receipt) => receipt.into(),
+            MessagePayload::Delay(delay) => delay.into(),
+            MessagePayload::MessageCorrect(replace) => replace.into(),
+            MessagePayload::ExplicitMessageEncryption(eme) => eme.into(),
+            MessagePayload::StanzaId(stanza_id) => stanza_id.into(),
+            MessagePayload::MamResult(result) => result.into(),
 
-            MessagePayload::Unknown(ref elem) => elem.clone(),
+            MessagePayload::Unknown(elem) => elem.clone(),
         }
     }
 }
@@ -162,10 +162,10 @@ pub struct Message {
     pub payloads: Vec<Element>,
 }
 
-impl<'a> TryFrom<&'a Element> for Message {
+impl TryFrom<Element> for Message {
     type Error = Error;
 
-    fn try_from(root: &'a Element) -> Result<Message, Error> {
+    fn try_from(root: Element) -> Result<Message, Error> {
         if !root.is("message", ns::JABBER_CLIENT) {
             return Err(Error::ParseError("This is not a message element."));
         }
@@ -219,7 +219,7 @@ impl<'a> TryFrom<&'a Element> for Message {
     }
 }
 
-impl<'a> Into<Element> for &'a Message {
+impl Into<Element> for Message {
     fn into(self) -> Element {
         let mut stanza = Element::builder("message")
                                  .ns(ns::JABBER_CLIENT)
@@ -264,7 +264,7 @@ mod tests {
     #[test]
     fn test_simple() {
         let elem: Element = "<message xmlns='jabber:client'/>".parse().unwrap();
-        let message = Message::try_from(&elem).unwrap();
+        let message = Message::try_from(elem).unwrap();
         assert_eq!(message.from, None);
         assert_eq!(message.to, None);
         assert_eq!(message.id, None);
@@ -285,18 +285,19 @@ mod tests {
             thread: None,
             payloads: vec!(),
         };
-        let elem2 = (&message).into();
+        let elem2 = message.into();
         assert_eq!(elem, elem2);
     }
 
     #[test]
     fn test_body() {
         let elem: Element = "<message xmlns='jabber:client' to='coucou@example.org' type='chat'><body>Hello world!</body></message>".parse().unwrap();
-        let message = Message::try_from(&elem).unwrap();
+        let elem1 = elem.clone();
+        let message = Message::try_from(elem).unwrap();
         assert_eq!(message.bodies[""], "Hello world!");
 
-        let elem2 = (&message).into();
-        assert_eq!(elem, elem2);
+        let elem2 = message.into();
+        assert_eq!(elem1, elem2);
     }
 
     #[test]
@@ -314,25 +315,27 @@ mod tests {
             thread: None,
             payloads: vec!(),
         };
-        let elem2 = (&message).into();
+        let elem2 = message.into();
         assert_eq!(elem, elem2);
     }
 
     #[test]
     fn test_subject() {
         let elem: Element = "<message xmlns='jabber:client' to='coucou@example.org' type='chat'><subject>Hello world!</subject></message>".parse().unwrap();
-        let message = Message::try_from(&elem).unwrap();
+        let elem1 = elem.clone();
+        let message = Message::try_from(elem).unwrap();
         assert_eq!(message.subjects[""], "Hello world!");
 
-        let elem2 = (&message).into();
-        assert_eq!(elem, elem2);
+        let elem2 = message.into();
+        assert_eq!(elem1, elem2);
     }
 
     #[test]
     fn test_attention() {
         let elem: Element = "<message xmlns='jabber:client' to='coucou@example.org' type='chat'><attention xmlns='urn:xmpp:attention:0'/></message>".parse().unwrap();
-        let message = Message::try_from(&elem).unwrap();
-        let elem2 = (&message).into();
-        assert_eq!(elem, elem2);
+        let elem1 = elem.clone();
+        let message = Message::try_from(elem).unwrap();
+        let elem2 = message.into();
+        assert_eq!(elem1, elem2);
     }
 }

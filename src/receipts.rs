@@ -18,10 +18,10 @@ pub enum Receipt {
     Received(String),
 }
 
-impl<'a> TryFrom<&'a Element> for Receipt {
+impl TryFrom<Element> for Receipt {
     type Error = Error;
 
-    fn try_from(elem: &'a Element) -> Result<Receipt, Error> {
+    fn try_from(elem: Element) -> Result<Receipt, Error> {
         for _ in elem.children() {
             return Err(Error::ParseError("Unknown child in receipt element."));
         }
@@ -36,16 +36,16 @@ impl<'a> TryFrom<&'a Element> for Receipt {
     }
 }
 
-impl<'a> Into<Element> for &'a Receipt {
+impl Into<Element> for Receipt {
     fn into(self) -> Element {
-        match *self {
+        match self {
             Receipt::Request => Element::builder("request")
                                         .ns(ns::RECEIPTS)
                                         .build(),
-            Receipt::Received(ref id) => Element::builder("received")
-                                                 .ns(ns::RECEIPTS)
-                                                 .attr("id", id.clone())
-                                                 .build(),
+            Receipt::Received(id) => Element::builder("received")
+                                             .ns(ns::RECEIPTS)
+                                             .attr("id", id)
+                                             .build(),
         }
     }
 }
@@ -57,23 +57,23 @@ mod tests {
     #[test]
     fn test_simple() {
         let elem: Element = "<request xmlns='urn:xmpp:receipts'/>".parse().unwrap();
-        Receipt::try_from(&elem).unwrap();
+        Receipt::try_from(elem).unwrap();
 
         let elem: Element = "<received xmlns='urn:xmpp:receipts'/>".parse().unwrap();
-        Receipt::try_from(&elem).unwrap();
+        Receipt::try_from(elem).unwrap();
 
         let elem: Element = "<received xmlns='urn:xmpp:receipts' id='coucou'/>".parse().unwrap();
-        Receipt::try_from(&elem).unwrap();
+        Receipt::try_from(elem).unwrap();
     }
 
     #[test]
     fn test_serialise() {
         let receipt = Receipt::Request;
-        let elem: Element = (&receipt).into();
+        let elem: Element = receipt.into();
         assert!(elem.is("request", ns::RECEIPTS));
 
         let receipt = Receipt::Received("coucou".to_owned());
-        let elem: Element = (&receipt).into();
+        let elem: Element = receipt.into();
         assert!(elem.is("received", ns::RECEIPTS));
         assert_eq!(elem.attr("id"), Some("coucou"));
     }

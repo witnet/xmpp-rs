@@ -31,7 +31,7 @@ impl IntoElements for Range {
                                 })
                                .build();
         for hash in self.hashes {
-            elem.append_child((&hash).into());
+            elem.append_child(hash.into());
         }
         emitter.append_child(elem);
     }
@@ -86,10 +86,10 @@ impl IntoElements for Received {
     }
 }
 
-impl<'a> TryFrom<&'a Element> for Description {
+impl TryFrom<Element> for Description {
     type Error = Error;
 
-    fn try_from(elem: &'a Element) -> Result<Description, Error> {
+    fn try_from(elem: Element) -> Result<Description, Error> {
         if !elem.is("description", ns::JINGLE_FT) {
             return Err(Error::ParseError("This is not a JingleFT description element."));
         }
@@ -145,7 +145,7 @@ impl<'a> TryFrom<&'a Element> for Description {
                         if !hash_element.is("hash", ns::HASHES) {
                             return Err(Error::ParseError("Unknown element in JingleFT range."));
                         }
-                        range_hashes.push(Hash::try_from(hash_element)?);
+                        range_hashes.push(Hash::try_from(hash_element.clone())?);
                     }
                     range = Some(Range {
                         offset: offset,
@@ -153,7 +153,7 @@ impl<'a> TryFrom<&'a Element> for Description {
                         hashes: range_hashes,
                     });
                 } else if file_payload.is("hash", ns::HASHES) {
-                    hashes.push(Hash::try_from(file_payload)?);
+                    hashes.push(Hash::try_from(file_payload.clone())?);
                 } else {
                     return Err(Error::ParseError("Unknown element in JingleFT file."));
                 }
@@ -174,57 +174,57 @@ impl<'a> TryFrom<&'a Element> for Description {
     }
 }
 
-impl<'a> Into<Element> for &'a File {
+impl Into<Element> for File {
     fn into(self) -> Element {
         let mut root = Element::builder("file")
                                .ns(ns::JINGLE_FT)
                                .build();
-        if let Some(ref date) = self.date {
+        if let Some(date) = self.date {
             root.append_child(Element::builder("date")
                                       .ns(ns::JINGLE_FT)
-                                      .append(date.clone())
+                                      .append(date)
                                       .build());
         }
-        if let Some(ref media_type) = self.media_type {
+        if let Some(media_type) = self.media_type {
             root.append_child(Element::builder("media-type")
                                       .ns(ns::JINGLE_FT)
-                                      .append(media_type.clone())
+                                      .append(media_type)
                                       .build());
         }
-        if let Some(ref name) = self.name {
+        if let Some(name) = self.name {
             root.append_child(Element::builder("name")
                                       .ns(ns::JINGLE_FT)
-                                      .append(name.clone())
+                                      .append(name)
                                       .build());
         }
-        if let Some(ref desc) = self.desc {
+        if let Some(desc) = self.desc {
             root.append_child(Element::builder("desc")
                                       .ns(ns::JINGLE_FT)
-                                      .append(desc.clone())
+                                      .append(desc)
                                       .build());
         }
-        if let Some(ref size) = self.size {
+        if let Some(size) = self.size {
             root.append_child(Element::builder("size")
                                       .ns(ns::JINGLE_FT)
                                       .append(format!("{}", size))
                                       .build());
         }
-        if let Some(ref range) = self.range {
+        if let Some(range) = self.range {
             root.append_child(Element::builder("range")
                                       .ns(ns::JINGLE_FT)
-                                      .append(range.clone())
+                                      .append(range)
                                       .build());
         }
-        for hash in self.hashes.clone() {
-            root.append_child((&hash).into());
+        for hash in self.hashes {
+            root.append_child(hash.into());
         }
         root
     }
 }
 
-impl<'a> Into<Element> for &'a Description {
+impl Into<Element> for Description {
     fn into(self) -> Element {
-        let file: Element = (&self.file).into();
+        let file: Element = self.file.into();
         Element::builder("description")
                 .ns(ns::JINGLE_FT)
                 .append(file)
@@ -252,7 +252,7 @@ mod tests {
 </description>
 "#.parse().unwrap();
 
-        let desc = Description::try_from(&elem).unwrap();
+        let desc = Description::try_from(elem).unwrap();
         assert_eq!(desc.file.media_type, Some(String::from("text/plain")));
         assert_eq!(desc.file.name, Some(String::from("test.txt")));
         assert_eq!(desc.file.desc, None);
@@ -274,7 +274,7 @@ mod tests {
 </description>
 "#.parse().unwrap();
 
-        let desc = Description::try_from(&elem).unwrap();
+        let desc = Description::try_from(elem).unwrap();
         assert_eq!(desc.file.media_type, None);
         assert_eq!(desc.file.name, None);
         assert_eq!(desc.file.desc, None);

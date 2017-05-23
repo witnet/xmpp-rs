@@ -16,10 +16,10 @@ use ns;
 #[derive(Debug, Clone)]
 pub struct Ping;
 
-impl<'a> TryFrom<&'a Element> for Ping {
+impl TryFrom<Element> for Ping {
     type Error = Error;
 
-    fn try_from(elem: &'a Element) -> Result<Ping, Error> {
+    fn try_from(elem: Element) -> Result<Ping, Error> {
         if !elem.is("ping", ns::PING) {
             return Err(Error::ParseError("This is not a ping element."));
         }
@@ -33,7 +33,7 @@ impl<'a> TryFrom<&'a Element> for Ping {
     }
 }
 
-impl<'a> Into<Element> for &'a Ping {
+impl Into<Element> for Ping {
     fn into(self) -> Element {
         Element::builder("ping")
                 .ns(ns::PING)
@@ -48,13 +48,13 @@ mod tests {
     #[test]
     fn test_simple() {
         let elem: Element = "<ping xmlns='urn:xmpp:ping'/>".parse().unwrap();
-        Ping::try_from(&elem).unwrap();
+        Ping::try_from(elem).unwrap();
     }
 
     #[test]
     fn test_invalid() {
         let elem: Element = "<ping xmlns='urn:xmpp:ping'><coucou/></ping>".parse().unwrap();
-        let error = Ping::try_from(&elem).unwrap_err();
+        let error = Ping::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -65,7 +65,7 @@ mod tests {
     #[test]
     fn test_invalid_attribute() {
         let elem: Element = "<ping xmlns='urn:xmpp:ping' coucou=''/>".parse().unwrap();
-        let error = Ping::try_from(&elem).unwrap_err();
+        let error = Ping::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),

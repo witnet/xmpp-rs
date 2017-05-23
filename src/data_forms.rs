@@ -104,10 +104,10 @@ pub struct DataForm {
     pub fields: Vec<Field>,
 }
 
-impl<'a> TryFrom<&'a Element> for DataForm {
+impl TryFrom<Element> for DataForm {
     type Error = Error;
 
-    fn try_from(elem: &'a Element) -> Result<DataForm, Error> {
+    fn try_from(elem: Element) -> Result<DataForm, Error> {
         if !elem.is("x", ns::DATA_FORMS) {
             return Err(Error::ParseError("This is not a data form element."));
         }
@@ -200,7 +200,7 @@ impl<'a> TryFrom<&'a Element> for DataForm {
                             value: value,
                         });
                     } else if element.is("media", ns::MEDIA_ELEMENT) {
-                        match MediaElement::try_from(element) {
+                        match MediaElement::try_from(element.clone()) {
                             Ok(media_element) => field.media.push(media_element),
                             Err(_) => (), // TODO: is it really nice to swallow this error?
                         }
@@ -233,7 +233,7 @@ mod tests {
     #[test]
     fn test_simple() {
         let elem: Element = "<x xmlns='jabber:x:data' type='result'/>".parse().unwrap();
-        let form = DataForm::try_from(&elem).unwrap();
+        let form = DataForm::try_from(elem).unwrap();
         assert_eq!(form.type_, DataFormType::Result_);
         assert!(form.form_type.is_none());
         assert!(form.fields.is_empty());
@@ -242,7 +242,7 @@ mod tests {
     #[test]
     fn test_invalid() {
         let elem: Element = "<x xmlns='jabber:x:data'/>".parse().unwrap();
-        let error = DataForm::try_from(&elem).unwrap_err();
+        let error = DataForm::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -250,7 +250,7 @@ mod tests {
         assert_eq!(message, "Required attribute 'type' missing.");
 
         let elem: Element = "<x xmlns='jabber:x:data' type='coucou'/>".parse().unwrap();
-        let error = DataForm::try_from(&elem).unwrap_err();
+        let error = DataForm::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -261,7 +261,7 @@ mod tests {
     #[test]
     fn test_wrong_child() {
         let elem: Element = "<x xmlns='jabber:x:data' type='cancel'><coucou/></x>".parse().unwrap();
-        let error = DataForm::try_from(&elem).unwrap_err();
+        let error = DataForm::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),

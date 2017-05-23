@@ -21,10 +21,10 @@ pub struct Transport {
     pub stanza: Stanza,
 }
 
-impl<'a> TryFrom<&'a Element> for Transport {
+impl TryFrom<Element> for Transport {
     type Error = Error;
 
-    fn try_from(elem: &'a Element) -> Result<Transport, Error> {
+    fn try_from(elem: Element) -> Result<Transport, Error> {
         if elem.is("transport", ns::JINGLE_IBB) {
             for _ in elem.children() {
                 return Err(Error::ParseError("Unknown child in JingleIBB element."));
@@ -43,7 +43,7 @@ impl<'a> TryFrom<&'a Element> for Transport {
     }
 }
 
-impl<'a> Into<Element> for &'a Transport {
+impl Into<Element> for Transport {
     fn into(self) -> Element {
         Element::builder("transport")
                 .ns(ns::JINGLE_IBB)
@@ -62,7 +62,7 @@ mod tests {
     #[test]
     fn test_simple() {
         let elem: Element = "<transport xmlns='urn:xmpp:jingle:transports:ibb:1' block-size='3' sid='coucou'/>".parse().unwrap();
-        let transport = Transport::try_from(&elem).unwrap();
+        let transport = Transport::try_from(elem).unwrap();
         assert_eq!(transport.block_size, 3);
         assert_eq!(transport.sid, "coucou");
         assert_eq!(transport.stanza, Stanza::Iq);
@@ -71,7 +71,7 @@ mod tests {
     #[test]
     fn test_invalid() {
         let elem: Element = "<transport xmlns='urn:xmpp:jingle:transports:ibb:1'/>".parse().unwrap();
-        let error = Transport::try_from(&elem).unwrap_err();
+        let error = Transport::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -79,7 +79,7 @@ mod tests {
         assert_eq!(message, "Required attribute 'block-size' missing.");
 
         let elem: Element = "<transport xmlns='urn:xmpp:jingle:transports:ibb:1' block-size='65536'/>".parse().unwrap();
-        let error = Transport::try_from(&elem).unwrap_err();
+        let error = Transport::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseIntError(error) => error,
             _ => panic!(),
@@ -87,7 +87,7 @@ mod tests {
         assert_eq!(message.description(), "number too large to fit in target type");
 
         let elem: Element = "<transport xmlns='urn:xmpp:jingle:transports:ibb:1' block-size='-5'/>".parse().unwrap();
-        let error = Transport::try_from(&elem).unwrap_err();
+        let error = Transport::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseIntError(error) => error,
             _ => panic!(),
@@ -95,7 +95,7 @@ mod tests {
         assert_eq!(message.description(), "invalid digit found in string");
 
         let elem: Element = "<transport xmlns='urn:xmpp:jingle:transports:ibb:1' block-size='128'/>".parse().unwrap();
-        let error = Transport::try_from(&elem).unwrap_err();
+        let error = Transport::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -106,7 +106,7 @@ mod tests {
     #[test]
     fn test_invalid_stanza() {
         let elem: Element = "<transport xmlns='urn:xmpp:jingle:transports:ibb:1' block-size='128' sid='coucou' stanza='fdsq'/>".parse().unwrap();
-        let error = Transport::try_from(&elem).unwrap_err();
+        let error = Transport::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),

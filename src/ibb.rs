@@ -65,10 +65,10 @@ pub enum IBB {
     },
 }
 
-impl<'a> TryFrom<&'a Element> for IBB {
+impl TryFrom<Element> for IBB {
     type Error = Error;
 
-    fn try_from(elem: &'a Element) -> Result<IBB, Error> {
+    fn try_from(elem: Element) -> Result<IBB, Error> {
         if elem.is("open", ns::IBB) {
             for _ in elem.children() {
                 return Err(Error::ParseError("Unknown child in open element."));
@@ -107,29 +107,29 @@ impl<'a> TryFrom<&'a Element> for IBB {
     }
 }
 
-impl<'a> Into<Element> for &'a IBB {
+impl Into<Element> for IBB {
     fn into(self) -> Element {
-        match *self {
-            IBB::Open { ref block_size, ref sid, ref stanza } => {
+        match self {
+            IBB::Open { block_size, sid, stanza } => {
                 Element::builder("open")
                         .ns(ns::IBB)
                         .attr("block-size", format!("{}", block_size))
-                        .attr("sid", sid.to_owned())
-                        .attr("stanza", stanza.to_owned())
+                        .attr("sid", sid)
+                        .attr("stanza", stanza)
                         .build()
             },
-            IBB::Data { ref seq, ref sid, ref data } => {
+            IBB::Data { seq, sid, data } => {
                 Element::builder("data")
                         .ns(ns::IBB)
                         .attr("seq", format!("{}", seq))
-                        .attr("sid", sid.to_owned())
+                        .attr("sid", sid)
                         .append(base64::encode(&data))
                         .build()
             },
-            IBB::Close { ref sid } => {
+            IBB::Close { sid } => {
                 Element::builder("close")
                         .ns(ns::IBB)
-                        .attr("sid", sid.to_owned())
+                        .attr("sid", sid)
                         .build()
             },
         }
@@ -144,7 +144,7 @@ mod tests {
     #[test]
     fn test_simple() {
         let elem: Element = "<open xmlns='http://jabber.org/protocol/ibb' block-size='3' sid='coucou'/>".parse().unwrap();
-        let open = IBB::try_from(&elem).unwrap();
+        let open = IBB::try_from(elem).unwrap();
         match open {
             IBB::Open { block_size, sid, stanza } => {
                 assert_eq!(block_size, 3);
@@ -155,7 +155,7 @@ mod tests {
         }
 
         let elem: Element = "<data xmlns='http://jabber.org/protocol/ibb' seq='0' sid='coucou'>AAAA</data>".parse().unwrap();
-        let data = IBB::try_from(&elem).unwrap();
+        let data = IBB::try_from(elem).unwrap();
         match data {
             IBB::Data { seq, sid, data } => {
                 assert_eq!(seq, 0);
@@ -166,7 +166,7 @@ mod tests {
         }
 
         let elem: Element = "<close xmlns='http://jabber.org/protocol/ibb' sid='coucou'/>".parse().unwrap();
-        let close = IBB::try_from(&elem).unwrap();
+        let close = IBB::try_from(elem).unwrap();
         match close {
             IBB::Close { sid } => {
                 assert_eq!(sid, "coucou");
@@ -178,7 +178,7 @@ mod tests {
     #[test]
     fn test_invalid() {
         let elem: Element = "<open xmlns='http://jabber.org/protocol/ibb'/>".parse().unwrap();
-        let error = IBB::try_from(&elem).unwrap_err();
+        let error = IBB::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -186,7 +186,7 @@ mod tests {
         assert_eq!(message, "Required attribute 'block-size' missing.");
 
         let elem: Element = "<open xmlns='http://jabber.org/protocol/ibb' block-size='-5'/>".parse().unwrap();
-        let error = IBB::try_from(&elem).unwrap_err();
+        let error = IBB::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseIntError(error) => error,
             _ => panic!(),
@@ -194,7 +194,7 @@ mod tests {
         assert_eq!(message.description(), "invalid digit found in string");
 
         let elem: Element = "<open xmlns='http://jabber.org/protocol/ibb' block-size='128'/>".parse().unwrap();
-        let error = IBB::try_from(&elem).unwrap_err();
+        let error = IBB::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(error) => error,
             _ => panic!(),
@@ -205,7 +205,7 @@ mod tests {
     #[test]
     fn test_invalid_stanza() {
         let elem: Element = "<open xmlns='http://jabber.org/protocol/ibb' block-size='128' sid='coucou' stanza='fdsq'/>".parse().unwrap();
-        let error = IBB::try_from(&elem).unwrap_err();
+        let error = IBB::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
