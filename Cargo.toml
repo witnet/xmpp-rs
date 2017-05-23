@@ -10,7 +10,7 @@ categories = ["parsing", "network-programming"]
 license = "MPL-2.0"
 
 [dependencies]
-minidom = "0.3.1"
+minidom = "0.4.1"
 jid = "0.2.0"
 base64 = "0.5.0"
 digest = "0.5.0"
