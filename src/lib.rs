@@ -1,6 +1,8 @@
 #![feature(raw)]
+#![feature(try_from)]
 
 extern crate xml;
+extern crate xmpp_parsers;
 extern crate openssl;
 extern crate minidom;
 extern crate base64;
