@@ -1,3 +1,32 @@
+Version 0.3.0:
+2017-05-23  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
+    * Big changes:
+        - All parsers and serialisers now consume their argument, this
+          makes the API way more efficient, but you will have to clone
+          before passing your structs in it if you want to keep them.
+        - Payloads of stanzas are not parsed automatically anymore, to
+          let applications which want to forward them as-is do so more
+          easily.  Parsing now always succeeds on unknown payloads, it
+          just puts them into an Unknown value containing the existing
+          minidom Element.
+    * New parsers/serialisers:
+        - Last User Interaction in Presence, XEP-0319.
+    * Improved parsers/serialisers:
+        - Message now supports subject, bodies and threads as per
+          RFC 6121 §5.2.
+        - Replace most attribute reads with a nice macro.
+        - Use enums for more enum-like things, for example Algo in
+          Hash, or FieldType in DataForm.
+        - Wire up stanza-id and origin-id to MessagePayload.
+        - Wire up MAM elements to message and iq payloads.
+        - Changes in the RSM API.
+        - Add support for more data forms elements, but still not the
+          complete set.
+        - Thanks to minidom 0.3.1, check for explicitly disallowed
+          extra attributes in some elements.
+    * Crate updates:
+        - minidom 0.4.1
+
 Version 0.2.0:
 2017-05-06  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
     * New parsers/serialisers:
