@@ -8,7 +8,7 @@ use std::convert::TryFrom;
 use std::str::FromStr;
 use std::collections::BTreeMap;
 
-use minidom::Element;
+use minidom::{Element, IntoAttributeValue};
 
 use error::Error;
 use jid::Jid;
@@ -39,15 +39,15 @@ impl FromStr for ErrorType {
     }
 }
 
-impl From<ErrorType> for String {
-    fn from(type_: ErrorType) -> String {
-        String::from(match type_ {
+impl IntoAttributeValue for ErrorType {
+    fn into_attribute_value(self) -> Option<String> {
+        Some(String::from(match self {
             ErrorType::Auth => "auth",
             ErrorType::Cancel => "cancel",
             ErrorType::Continue => "continue",
             ErrorType::Modify => "modify",
             ErrorType::Wait => "wait",
-        })
+        }))
     }
 }
 
@@ -189,11 +189,7 @@ impl TryFrom<Element> for StanzaError {
                 other = Some(child.clone());
             }
         }
-
-        if defined_condition.is_none() {
-            return Err(Error::ParseError("Error must have a defined-condition."));
-        }
-        let defined_condition = defined_condition.unwrap();
+        let defined_condition = defined_condition.ok_or(Error::ParseError("Error must have a defined-condition."))?;
 
         Ok(StanzaError {
             type_: type_,
@@ -209,16 +205,13 @@ impl Into<Element> for StanzaError {
     fn into(self) -> Element {
         let mut root = Element::builder("error")
                                .ns(ns::JABBER_CLIENT)
-                               .attr("type", String::from(self.type_.clone()))
-                               .attr("by", match self.by {
-                                    Some(ref by) => Some(String::from(by.clone())),
-                                    None => None,
-                                })
-                               .append(Element::builder(self.defined_condition.clone())
+                               .attr("type", self.type_)
+                               .attr("by", self.by.and_then(|by| Some(String::from(by))))
+                               .append(Element::builder(self.defined_condition)
                                                .ns(ns::XMPP_STANZAS)
                                                .build())
                                .build();
-        for (lang, text) in self.texts.clone() {
+        for (lang, text) in self.texts {
             let elem = Element::builder("text")
                                .ns(ns::XMPP_STANZAS)
                                .attr("xml:lang", lang)
@@ -226,8 +219,8 @@ impl Into<Element> for StanzaError {
                                .build();
             root.append_child(elem);
         }
-        if let Some(ref other) = self.other {
-            root.append_child(other.clone());
+        if let Some(other) = self.other {
+            root.append_child(other);
         }
         root
     }
