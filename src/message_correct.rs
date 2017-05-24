@@ -27,6 +27,11 @@ impl TryFrom<Element> for Replace {
         for _ in elem.children() {
             return Err(Error::ParseError("Unknown child in replace element."));
         }
+        for (attr, _) in elem.attrs() {
+            if attr != "id" {
+                return Err(Error::ParseError("Unknown attribute in replace element."));
+            }
+        }
         let id = get_attr!(elem, "id", required);
         Ok(Replace { id })
     }
@@ -36,7 +41,7 @@ impl Into<Element> for Replace {
     fn into(self) -> Element {
         Element::builder("replace")
                 .ns(ns::MESSAGE_CORRECT)
-                .attr("id", self.id.clone())
+                .attr("id", self.id)
                 .build()
     }
 }
@@ -49,6 +54,17 @@ mod tests {
     fn test_simple() {
         let elem: Element = "<replace xmlns='urn:xmpp:message-correct:0' id='coucou'/>".parse().unwrap();
         Replace::try_from(elem).unwrap();
+    }
+
+    #[test]
+    fn test_invalid_attribute() {
+        let elem: Element = "<replace xmlns='urn:xmpp:message-correct:0' coucou=''/>".parse().unwrap();
+        let error = Replace::try_from(elem).unwrap_err();
+        let message = match error {
+            Error::ParseError(string) => string,
+            _ => panic!(),
+        };
+        assert_eq!(message, "Unknown attribute in replace element.");
     }
 
     #[test]
