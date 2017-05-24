@@ -6,7 +6,7 @@
 
 use std::convert::TryFrom;
 
-use minidom::Element;
+use minidom::{Element, IntoElements, ElementEmitter};
 
 use error::Error;
 use ns;
@@ -18,12 +18,45 @@ pub struct Feature {
     pub var: String,
 }
 
+impl Into<Element> for Feature {
+    fn into(self) -> Element {
+        Element::builder("feature")
+                .ns(ns::DISCO_INFO)
+                .attr("var", self.var)
+                .build()
+    }
+}
+
+impl IntoElements for Feature {
+    fn into_elements(self, emitter: &mut ElementEmitter) {
+        emitter.append_child(self.into());
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct Identity {
     pub category: String, // TODO: use an enum here.
     pub type_: String, // TODO: use an enum here.
     pub xml_lang: String,
     pub name: Option<String>,
+}
+
+impl Into<Element> for Identity {
+    fn into(self) -> Element {
+        Element::builder("identity")
+                .ns(ns::DISCO_INFO)
+                .attr("category", self.category)
+                .attr("type", self.type_)
+                .attr("xml:lang", self.xml_lang)
+                .attr("name", self.name)
+                .build()
+    }
+}
+
+impl IntoElements for Identity {
+    fn into_elements(self, emitter: &mut ElementEmitter) {
+        emitter.append_child(self.into());
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -111,31 +144,15 @@ impl TryFrom<Element> for Disco {
 
 impl Into<Element> for Disco {
     fn into(self) -> Element {
-        let mut root = Element::builder("query")
-                               .ns(ns::DISCO_INFO)
-                               .attr("node", self.node.clone())
-                               .build();
-        for identity in self.identities {
-            let identity_element = Element::builder("identity")
-                                           .ns(ns::DISCO_INFO)
-                                           .attr("category", identity.category.clone())
-                                           .attr("type", identity.type_.clone())
-                                           .attr("xml:lang", identity.xml_lang.clone())
-                                           .attr("name", identity.name.clone())
-                                           .build();
-            root.append_child(identity_element);
-        }
-        for feature in self.features {
-            let feature_element = Element::builder("feature")
-                                          .ns(ns::DISCO_INFO)
-                                          .attr("var", feature.var.clone())
-                                          .build();
-            root.append_child(feature_element);
-        }
         for _ in self.extensions {
             panic!("Not yet implemented!");
         }
-        root
+        Element::builder("query")
+                .ns(ns::DISCO_INFO)
+                .attr("node", self.node)
+                .append(self.identities)
+                .append(self.features)
+                .build()
     }
 }
 
