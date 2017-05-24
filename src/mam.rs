@@ -188,18 +188,13 @@ impl TryFrom<Element> for Prefs {
 
 impl Into<Element> for Query {
     fn into(self) -> Element {
-        let mut elem = Element::builder("query")
-                               .ns(ns::MAM)
-                               .attr("queryid", self.queryid.clone())
-                               .attr("node", self.node.clone())
-                               .build();
-        //if let Some(form) = self.form {
-        //    elem.append_child(form.into());
-        //}
-        if let Some(set) = self.set {
-            elem.append_child(set.into());
-        }
-        elem
+        Element::builder("query")
+                .ns(ns::MAM)
+                .attr("queryid", self.queryid)
+                .attr("node", self.node)
+                //.append(self.form.map(|form| -> Element { form.into() }))
+                .append(self.set.map(|set| -> Element { set.into() }))
+                .build()
     }
 }
 
@@ -236,7 +231,7 @@ impl Into<Element> for Prefs {
             let mut always = Element::builder("always")
                                      .ns(ns::RSM)
                                      .build();
-            for jid in self.always.clone() {
+            for jid in self.always {
                 always.append_child(Element::builder("jid")
                                             .ns(ns::RSM)
                                             .append(String::from(jid))
@@ -248,7 +243,7 @@ impl Into<Element> for Prefs {
             let mut never = Element::builder("never")
                                      .ns(ns::RSM)
                                      .build();
-            for jid in self.never.clone() {
+            for jid in self.never {
                 never.append_child(Element::builder("jid")
                                             .ns(ns::RSM)
                                             .append(String::from(jid))
