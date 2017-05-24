@@ -97,7 +97,7 @@ impl Into<Element> for MessagePayload {
             MessagePayload::StanzaId(stanza_id) => stanza_id.into(),
             MessagePayload::MamResult(result) => result.into(),
 
-            MessagePayload::Unknown(elem) => elem.clone(),
+            MessagePayload::Unknown(elem) => elem,
         }
     }
 }
@@ -221,39 +221,36 @@ impl TryFrom<Element> for Message {
 
 impl Into<Element> for Message {
     fn into(self) -> Element {
-        let mut stanza = Element::builder("message")
-                                 .ns(ns::JABBER_CLIENT)
-                                 .attr("from", self.from.clone().and_then(|value| Some(String::from(value))))
-                                 .attr("to", self.to.clone().and_then(|value| Some(String::from(value))))
-                                 .attr("id", self.id.clone())
-                                 .attr("type", self.type_.clone())
-                                 .append(self.subjects.iter()
-                                                    .map(|(lang, subject)| {
-                                                         Element::builder("subject")
-                                                                 .ns(ns::JABBER_CLIENT)
-                                                                 .attr("xml:lang", match lang.as_ref() {
-                                                                      "" => None,
-                                                                      lang => Some(lang),
-                                                                  })
-                                                                 .append(subject.clone())
-                                                                 .build() })
-                                                    .collect::<Vec<_>>())
-                                 .append(self.bodies.iter()
-                                                    .map(|(lang, body)| {
-                                                         Element::builder("body")
-                                                                 .ns(ns::JABBER_CLIENT)
-                                                                 .attr("xml:lang", match lang.as_ref() {
-                                                                      "" => None,
-                                                                      lang => Some(lang),
-                                                                  })
-                                                                 .append(body.clone())
-                                                                 .build() })
-                                                    .collect::<Vec<_>>())
-                                 .build();
-        for child in self.payloads.clone() {
-            stanza.append_child(child);
-        }
-        stanza
+        Element::builder("message")
+                .ns(ns::JABBER_CLIENT)
+                .attr("from", self.from.and_then(|value| Some(String::from(value))))
+                .attr("to", self.to.and_then(|value| Some(String::from(value))))
+                .attr("id", self.id)
+                .attr("type", self.type_)
+                .append(self.subjects.iter()
+                                   .map(|(lang, subject)| {
+                                        Element::builder("subject")
+                                                .ns(ns::JABBER_CLIENT)
+                                                .attr("xml:lang", match lang.as_ref() {
+                                                     "" => None,
+                                                     lang => Some(lang),
+                                                 })
+                                                .append(subject)
+                                                .build() })
+                                   .collect::<Vec<_>>())
+                .append(self.bodies.iter()
+                                   .map(|(lang, body)| {
+                                        Element::builder("body")
+                                                .ns(ns::JABBER_CLIENT)
+                                                .attr("xml:lang", match lang.as_ref() {
+                                                     "" => None,
+                                                     lang => Some(lang),
+                                                 })
+                                                .append(body)
+                                                .build() })
+                                   .collect::<Vec<_>>())
+                .append(self.payloads)
+                .build()
     }
 }
 
