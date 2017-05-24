@@ -92,10 +92,10 @@ impl Into<Element> for Set {
                                .ns(ns::RSM)
                                .build();
         if self.after.is_some() {
-            elem.append_child(Element::builder("after").ns(ns::RSM).append(self.after.clone()).build());
+            elem.append_child(Element::builder("after").ns(ns::RSM).append(self.after).build());
         }
         if self.before.is_some() {
-            elem.append_child(Element::builder("before").ns(ns::RSM).append(self.before.clone()).build());
+            elem.append_child(Element::builder("before").ns(ns::RSM).append(self.before).build());
         }
         if self.count.is_some() {
             elem.append_child(Element::builder("count").ns(ns::RSM).append(format!("{}", self.count.unwrap())).build());
@@ -104,13 +104,13 @@ impl Into<Element> for Set {
             elem.append_child(Element::builder("first")
                                       .ns(ns::RSM)
                                       .attr("index", self.first_index.map(|index| format!("{}", index)))
-                                      .append(self.first.clone()).build());
+                                      .append(self.first).build());
         }
         if self.index.is_some() {
             elem.append_child(Element::builder("index").ns(ns::RSM).append(format!("{}", self.index.unwrap())).build());
         }
         if self.last.is_some() {
-            elem.append_child(Element::builder("last").ns(ns::RSM).append(self.last.clone()).build());
+            elem.append_child(Element::builder("last").ns(ns::RSM).append(self.last).build());
         }
         if self.max.is_some() {
             elem.append_child(Element::builder("max").ns(ns::RSM).append(format!("{}", self.max.unwrap())).build());
