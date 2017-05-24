@@ -13,6 +13,8 @@ use error::Error;
 
 use ns;
 
+use base64;
+
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone, PartialEq)]
 pub enum Algo {
@@ -63,7 +65,7 @@ impl IntoAttributeValue for Algo {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Hash {
     pub algo: Algo,
-    pub hash: String,
+    pub hash: Vec<u8>,
 }
 
 impl TryFrom<Element> for Hash {
@@ -79,7 +81,7 @@ impl TryFrom<Element> for Hash {
         let algo = get_attr!(elem, "algo", required);
         let hash = match elem.text().as_ref() {
             "" => return Err(Error::ParseError("Hash element shouldn’t be empty.")),
-            text => text.to_owned(),
+            text => base64::decode(text)?,
         };
         Ok(Hash {
             algo: algo,
@@ -93,7 +95,7 @@ impl Into<Element> for Hash {
         Element::builder("hash")
                 .ns(ns::HASHES)
                 .attr("algo", self.algo)
-                .append(self.hash.clone())
+                .append(base64::encode(&self.hash))
                 .build()
     }
 }
@@ -107,7 +109,7 @@ mod tests {
         let elem: Element = "<hash xmlns='urn:xmpp:hashes:2' algo='sha-256'>2XarmwTlNxDAMkvymloX3S5+VbylNrJt/l5QyPa+YoU=</hash>".parse().unwrap();
         let hash = Hash::try_from(elem).unwrap();
         assert_eq!(hash.algo, Algo::Sha_256);
-        assert_eq!(hash.hash, "2XarmwTlNxDAMkvymloX3S5+VbylNrJt/l5QyPa+YoU=");
+        assert_eq!(hash.hash, base64::decode("2XarmwTlNxDAMkvymloX3S5+VbylNrJt/l5QyPa+YoU=").unwrap());
     }
 
     #[test]

@@ -236,6 +236,7 @@ impl Into<Element> for Description {
 mod tests {
     use super::*;
     use hashes::Algo;
+    use base64;
 
     #[test]
     fn test_description() {
@@ -260,7 +261,7 @@ mod tests {
         assert_eq!(desc.file.size, Some(6144u64));
         assert_eq!(desc.file.range, None);
         assert_eq!(desc.file.hashes[0].algo, Algo::Sha_1);
-        assert_eq!(desc.file.hashes[0].hash, "w0mcJylzCn+AfvuGdqkty2+KP48=");
+        assert_eq!(desc.file.hashes[0].hash, base64::decode("w0mcJylzCn+AfvuGdqkty2+KP48=").unwrap());
     }
 
     #[test]
@@ -282,6 +283,6 @@ mod tests {
         assert_eq!(desc.file.size, None);
         assert_eq!(desc.file.range, None);
         assert_eq!(desc.file.hashes[0].algo, Algo::Sha_1);
-        assert_eq!(desc.file.hashes[0].hash, "w0mcJylzCn+AfvuGdqkty2+KP48=");
+        assert_eq!(desc.file.hashes[0].hash, base64::decode("w0mcJylzCn+AfvuGdqkty2+KP48=").unwrap());
     }
 }
