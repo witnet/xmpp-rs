@@ -7,7 +7,8 @@
 use std::convert::TryFrom;
 use std::str::FromStr;
 
-use minidom::Element;
+use minidom::{Element, IntoElements, IntoAttributeValue, ElementEmitter};
+use jid::Jid;
 
 use error::Error;
 use ns;
@@ -57,9 +58,9 @@ impl FromStr for Action {
     }
 }
 
-impl From<Action> for String {
-    fn from(action: Action) -> String {
-        String::from(match action {
+impl IntoAttributeValue for Action {
+    fn into_attribute_value(self) -> Option<String> {
+        Some(String::from(match self {
             Action::ContentAccept => "content-accept",
             Action::ContentAdd => "content-add",
             Action::ContentModify => "content-modify",
@@ -75,12 +76,9 @@ impl From<Action> for String {
             Action::TransportInfo => "transport-info",
             Action::TransportReject => "transport-reject",
             Action::TransportReplace => "transport-replace",
-        })
+        }))
     }
 }
-
-// TODO: use a real JID type.
-type Jid = String;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Creator {
@@ -118,6 +116,12 @@ pub enum Senders {
     Responder,
 }
 
+impl Default for Senders {
+    fn default() -> Senders {
+        Senders::Both
+    }
+}
+
 impl FromStr for Senders {
     type Err = Error;
 
@@ -153,6 +157,66 @@ pub struct Content {
     pub description: Option<Element>,
     pub transport: Option<Element>,
     pub security: Option<Element>,
+}
+
+impl TryFrom<Element> for Content {
+    type Error = Error;
+
+    fn try_from(elem: Element) -> Result<Content, Error> {
+        if !elem.is("content", ns::JINGLE) {
+            return Err(Error::ParseError("This is not a content element."));
+        }
+
+        let mut content = Content {
+            creator: get_attr!(elem, "creator", required),
+            disposition: get_attr!(elem, "disposition", optional).unwrap_or(String::from("session")),
+            name: get_attr!(elem, "name", required),
+            senders: get_attr!(elem, "senders", default),
+            description: None,
+            transport: None,
+            security: None,
+        };
+        for child in elem.children() {
+            if child.name() == "description" {
+                if content.description.is_some() {
+                    return Err(Error::ParseError("Content must not have more than one description."));
+                }
+                content.description = Some(child.clone());
+            } else if child.name() == "transport" {
+                if content.transport.is_some() {
+                    return Err(Error::ParseError("Content must not have more than one transport."));
+                }
+                content.transport = Some(child.clone());
+            } else if child.name() == "security" {
+                if content.security.is_some() {
+                    return Err(Error::ParseError("Content must not have more than one security."));
+                }
+                content.security = Some(child.clone());
+            }
+        }
+        Ok(content)
+    }
+}
+
+impl Into<Element> for Content {
+    fn into(self) -> Element {
+        Element::builder("content")
+                .ns(ns::JINGLE)
+                .attr("creator", String::from(self.creator))
+                .attr("disposition", self.disposition)
+                .attr("name", self.name)
+                .attr("senders", String::from(self.senders))
+                .append(self.description)
+                .append(self.transport)
+                .append(self.security)
+                .build()
+    }
+}
+
+impl IntoElements for Content {
+    fn into_elements(self, emitter: &mut ElementEmitter) {
+        emitter.append_child(self.into());
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -234,6 +298,58 @@ pub struct ReasonElement {
     pub text: Option<String>,
 }
 
+impl TryFrom<Element> for ReasonElement {
+    type Error = Error;
+
+    fn try_from(elem: Element) -> Result<ReasonElement, Error> {
+        if !elem.is("reason", ns::JINGLE) {
+            return Err(Error::ParseError("This is not a reason element."));
+        }
+        let mut reason = None;
+        let mut text = None;
+        for child in elem.children() {
+            if child.ns() != Some(ns::JINGLE) {
+                return Err(Error::ParseError("Reason contains a foreign element."));
+            }
+            match child.name() {
+                "text" => {
+                    if text.is_some() {
+                        return Err(Error::ParseError("Reason must not have more than one text."));
+                    }
+                    text = Some(child.text());
+                },
+                name => {
+                    if reason.is_some() {
+                        return Err(Error::ParseError("Reason must not have more than one reason."));
+                    }
+                    reason = Some(name.parse()?);
+                },
+            }
+        }
+        let reason = reason.ok_or(Error::ParseError("Reason doesn’t contain a valid reason."))?;
+        Ok(ReasonElement {
+            reason: reason,
+            text: text,
+        })
+    }
+}
+
+impl Into<Element> for ReasonElement {
+    fn into(self) -> Element {
+        let reason: Element = self.reason.into();
+        Element::builder("reason")
+                .append(reason)
+                .append(self.text)
+                .build()
+    }
+}
+
+impl IntoElements for ReasonElement {
+    fn into_elements(self, emitter: &mut ElementEmitter) {
+        emitter.append_child(self.into());
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct Jingle {
     pub action: Action,
@@ -253,150 +369,46 @@ impl TryFrom<Element> for Jingle {
             return Err(Error::ParseError("This is not a Jingle element."));
         }
 
-        let mut contents: Vec<Content> = vec!();
+        let mut jingle = Jingle {
+            action: get_attr!(root, "action", required),
+            initiator: get_attr!(root, "initiator", optional),
+            responder: get_attr!(root, "responder", optional),
+            sid: get_attr!(root, "sid", required),
+            contents: vec!(),
+            reason: None,
+            other: vec!(),
+        };
 
-        let action = root.attr("action")
-                         .ok_or(Error::ParseError("Jingle must have an 'action' attribute."))?
-                         .parse()?;
-        let initiator = root.attr("initiator")
-                            .and_then(|initiator| initiator.parse().ok());
-        let responder = root.attr("responder")
-                            .and_then(|responder| responder.parse().ok());
-        let sid = root.attr("sid")
-                      .ok_or(Error::ParseError("Jingle must have a 'sid' attribute."))?;
-        let mut reason_element = None;
-        let mut other = vec!();
-
-        for child in root.children() {
+        for child in root.children().cloned() {
             if child.is("content", ns::JINGLE) {
-                let creator = child.attr("creator")
-                                   .ok_or(Error::ParseError("Content must have a 'creator' attribute."))?
-                                   .parse()?;
-                let disposition = child.attr("disposition")
-                                       .unwrap_or("session");
-                let name = child.attr("name")
-                                .ok_or(Error::ParseError("Content must have a 'name' attribute."))?;
-                let senders = child.attr("senders")
-                                   .unwrap_or("both")
-                                   .parse()?;
-                let mut description = None;
-                let mut transport = None;
-                let mut security = None;
-                for stuff in child.children() {
-                    if stuff.name() == "description" {
-                        if description.is_some() {
-                            return Err(Error::ParseError("Content must not have more than one description."));
-                        }
-                        description = Some(stuff.clone());
-                    } else if stuff.name() == "transport" {
-                        if transport.is_some() {
-                            return Err(Error::ParseError("Content must not have more than one transport."));
-                        }
-                        transport = Some(stuff.clone());
-                    } else if stuff.name() == "security" {
-                        if security.is_some() {
-                            return Err(Error::ParseError("Content must not have more than one security."));
-                        }
-                        security = Some(stuff.clone());
-                    }
-                }
-                contents.push(Content {
-                    creator: creator,
-                    disposition: disposition.to_owned(),
-                    name: name.to_owned(),
-                    senders: senders,
-                    description: description,
-                    transport: transport,
-                    security: security,
-                });
+                let content = Content::try_from(child.clone())?;
+                jingle.contents.push(content);
             } else if child.is("reason", ns::JINGLE) {
-                if reason_element.is_some() {
+                if jingle.reason.is_some() {
                     return Err(Error::ParseError("Jingle must not have more than one reason."));
                 }
-                let mut reason = None;
-                let mut text = None;
-                for stuff in child.children() {
-                    if stuff.ns() != Some(ns::JINGLE) {
-                        return Err(Error::ParseError("Reason contains a foreign element."));
-                    }
-                    let name = stuff.name();
-                    if name == "text" {
-                        if text.is_some() {
-                            return Err(Error::ParseError("Reason must not have more than one text."));
-                        }
-                        text = Some(stuff.text());
-                    } else {
-                        reason = Some(name.parse()?);
-                    }
-                }
-                if reason.is_none() {
-                    return Err(Error::ParseError("Reason doesn’t contain a valid reason."));
-                }
-                reason_element = Some(ReasonElement {
-                    reason: reason.unwrap(),
-                    text: text,
-                });
+                let reason = ReasonElement::try_from(child.clone())?;
+                jingle.reason = Some(reason);
             } else {
-                other.push(child.clone());
+                jingle.other.push(child.clone());
             }
         }
 
-        Ok(Jingle {
-            action: action,
-            initiator: initiator,
-            responder: responder,
-            sid: sid.to_owned(),
-            contents: contents,
-            reason: reason_element,
-            other: other,
-        })
-    }
-}
-
-impl Into<Element> for Content {
-    fn into(self) -> Element {
-        let mut root = Element::builder("content")
-                               .ns(ns::JINGLE)
-                               .attr("creator", String::from(self.creator.clone()))
-                               .attr("disposition", self.disposition.clone())
-                               .attr("name", self.name.clone())
-                               .attr("senders", String::from(self.senders.clone()))
-                               .build();
-        if let Some(description) = self.description.clone() {
-            root.append_child(description);
-        }
-        if let Some(transport) = self.transport.clone() {
-            root.append_child(transport);
-        }
-        if let Some(security) = self.security.clone() {
-            root.append_child(security);
-        }
-        root
+        Ok(jingle)
     }
 }
 
 impl Into<Element> for Jingle {
     fn into(self) -> Element {
-        let mut root = Element::builder("jingle")
-                               .ns(ns::JINGLE)
-                               .attr("action", String::from(self.action.clone()))
-                               .attr("initiator", self.initiator.clone())
-                               .attr("responder", self.responder.clone())
-                               .attr("sid", self.sid.clone())
-                               .build();
-        for content in self.contents {
-            let content_elem = content.into();
-            root.append_child(content_elem);
-        }
-        if let Some(reason) = self.reason {
-            let reason2: Element = reason.reason.into();
-            let reason_elem = Element::builder("reason")
-                                      .append(reason2)
-                                      .append(reason.text)
-                                      .build();
-            root.append_child(reason_elem);
-        }
-        root
+        Element::builder("jingle")
+                .ns(ns::JINGLE)
+                .attr("action", self.action)
+                .attr("initiator", match self.initiator { Some(initiator) => Some(String::from(initiator)), None => None })
+                .attr("responder", match self.responder { Some(responder) => Some(String::from(responder)), None => None })
+                .attr("sid", self.sid)
+                .append(self.contents)
+                .append(self.reason)
+                .build()
     }
 }
 
@@ -420,7 +432,7 @@ mod tests {
             Error::ParseError(string) => string,
             _ => panic!(),
         };
-        assert_eq!(message, "Jingle must have an 'action' attribute.");
+        assert_eq!(message, "Required attribute 'action' missing.");
 
         let elem: Element = "<jingle xmlns='urn:xmpp:jingle:1' action='session-info'/>".parse().unwrap();
         let error = Jingle::try_from(elem).unwrap_err();
@@ -428,7 +440,7 @@ mod tests {
             Error::ParseError(string) => string,
             _ => panic!(),
         };
-        assert_eq!(message, "Jingle must have a 'sid' attribute.");
+        assert_eq!(message, "Required attribute 'sid' missing.");
 
         let elem: Element = "<jingle xmlns='urn:xmpp:jingle:1' action='coucou' sid='coucou'/>".parse().unwrap();
         let error = Jingle::try_from(elem).unwrap_err();
@@ -465,7 +477,7 @@ mod tests {
             Error::ParseError(string) => string,
             _ => panic!(),
         };
-        assert_eq!(message, "Content must have a 'creator' attribute.");
+        assert_eq!(message, "Required attribute 'creator' missing.");
 
         let elem: Element = "<jingle xmlns='urn:xmpp:jingle:1' action='session-initiate' sid='coucou'><content creator='initiator'/></jingle>".parse().unwrap();
         let error = Jingle::try_from(elem).unwrap_err();
@@ -473,7 +485,7 @@ mod tests {
             Error::ParseError(string) => string,
             _ => panic!(),
         };
-        assert_eq!(message, "Content must have a 'name' attribute.");
+        assert_eq!(message, "Required attribute 'name' missing.");
 
         let elem: Element = "<jingle xmlns='urn:xmpp:jingle:1' action='session-initiate' sid='coucou'><content creator='coucou' name='coucou'/></jingle>".parse().unwrap();
         let error = Jingle::try_from(elem).unwrap_err();
