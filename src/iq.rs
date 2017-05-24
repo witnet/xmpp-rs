@@ -61,7 +61,7 @@ impl TryFrom<Element> for IqPayload {
             ("fin", ns::MAM) => IqPayload::MamFin(MamFin::try_from(elem)?),
             ("prefs", ns::MAM) => IqPayload::MamPrefs(MamPrefs::try_from(elem)?),
 
-            _ => IqPayload::Unknown(elem.clone()),
+            _ => IqPayload::Unknown(elem),
         })
     }
 }

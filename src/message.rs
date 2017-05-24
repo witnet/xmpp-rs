@@ -79,7 +79,7 @@ impl TryFrom<Element> for MessagePayload {
             // XEP-0380
             ("encryption", ns::EME) => MessagePayload::ExplicitMessageEncryption(ExplicitMessageEncryption::try_from(elem)?),
 
-            _ => MessagePayload::Unknown(elem.clone()),
+            _ => MessagePayload::Unknown(elem),
         })
     }
 }
