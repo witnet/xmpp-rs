@@ -28,11 +28,9 @@ impl TryFrom<Element> for ExplicitMessageEncryption {
         for _ in elem.children() {
             return Err(Error::ParseError("Unknown child in encryption element."));
         }
-        let namespace = get_attr!(elem, "namespace", required);
-        let name = get_attr!(elem, "name", optional);
         Ok(ExplicitMessageEncryption {
-            namespace: namespace,
-            name: name,
+            namespace: get_attr!(elem, "namespace", required),
+            name: get_attr!(elem, "name", optional),
         })
     }
 }
@@ -41,8 +39,8 @@ impl Into<Element> for ExplicitMessageEncryption {
     fn into(self) -> Element {
         Element::builder("encryption")
                 .ns(ns::EME)
-                .attr("namespace", self.namespace.clone())
-                .attr("name", self.name.clone())
+                .attr("namespace", self.namespace)
+                .attr("name", self.name)
                 .build()
     }
 }
