@@ -67,12 +67,12 @@ impl Into<Element> for Candidate {
     fn into(self) -> Element {
         Element::builder("candidate")
                 .ns(ns::JINGLE_S5B)
-                .attr("cid", self.cid.clone())
-                .attr("host", self.host.clone())
-                .attr("jid", self.jid.clone())
+                .attr("cid", self.cid)
+                .attr("host", self.host)
+                .attr("jid", self.jid)
                 .attr("port", match self.port { Some(port) => Some(format!("{}", port)), None => None })
                 .attr("priority", format!("{}", self.priority))
-                .attr("type", self.type_.clone())
+                .attr("type", self.type_)
                 .build()
     }
 }
@@ -143,22 +143,16 @@ impl TryFrom<Element> for Transport {
                 payload = Some(if child.is("candidate", ns::JINGLE_S5B) {
                     let mut candidates = match payload {
                         Some(TransportPayload::Candidates(candidates)) => candidates,
-                        Some(_) => return Err(Error::ParseError("Non-activated child already present in JingleS5B transport element.")),
+                        Some(_) => return Err(Error::ParseError("Non-candidate child already present in JingleS5B transport element.")),
                         None => vec!(),
                     };
-                    let cid = get_attr!(child, "cid", required);
-                    let host = get_attr!(child, "host", required);
-                    let jid = get_attr!(child, "jid", required);
-                    let port = get_attr!(child, "port", optional);
-                    let priority = get_attr!(child, "priority", required);
-                    let type_ = get_attr!(child, "type", default);
                     candidates.push(Candidate {
-                        cid: cid,
-                        host: host,
-                        jid: jid,
-                        port: port,
-                        priority: priority,
-                        type_: type_,
+                        cid: get_attr!(child, "cid", required),
+                        host: get_attr!(child, "host", required),
+                        jid: get_attr!(child, "jid", required),
+                        port: get_attr!(child, "port", optional),
+                        priority: get_attr!(child, "priority", required),
+                        type_: get_attr!(child, "type", default),
                     });
                     TransportPayload::Candidates(candidates)
                 } else if child.is("activated", ns::JINGLE_S5B) {
@@ -204,13 +198,13 @@ impl Into<Element> for Transport {
     fn into(self) -> Element {
         Element::builder("transport")
                 .ns(ns::JINGLE_S5B)
-                .attr("sid", self.sid.clone())
-                .attr("dstaddr", self.dstaddr.clone())
-                .attr("mode", self.mode.clone())
+                .attr("sid", self.sid)
+                .attr("dstaddr", self.dstaddr)
+                .attr("mode", self.mode)
                 .append(match self.payload {
-                     TransportPayload::Candidates(candidates) => {
-                         candidates.iter()
-                                   .map(|candidate| -> Element { candidate.clone().into() })
+                     TransportPayload::Candidates(mut candidates) => {
+                         candidates.drain(..)
+                                   .map(|candidate| candidate.into())
                                    .collect::<Vec<Element>>()
                      },
                      TransportPayload::Activated(cid) => {
