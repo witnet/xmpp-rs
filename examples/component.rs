@@ -2,7 +2,6 @@ extern crate xmpp;
 
 use xmpp::jid::Jid;
 use xmpp::component::ComponentBuilder;
-use xmpp::plugins::messaging::{MessagingPlugin, MessageEvent};
 
 use std::env;
 
@@ -17,11 +16,5 @@ fn main() {
                                          .port(port)
                                          .connect()
                                          .unwrap();
-    component.register_plugin(MessagingPlugin::new());
-    loop {
-        let event = component.next_event().unwrap();
-        if let Some(evt) = event.downcast::<MessageEvent>() {
-            println!("{:?}", evt);
-        }
-    }
+    component.main().unwrap();
 }
