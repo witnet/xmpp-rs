@@ -48,11 +48,11 @@ impl TryFrom<Element> for ECaps2 {
 }
 
 impl Into<Element> for ECaps2 {
-    fn into(self) -> Element {
+    fn into(mut self) -> Element {
         Element::builder("c")
                 .ns(ns::ECAPS2)
-                .append(self.hashes.iter()
-                                   .map(|hash| hash.clone().into())
+                .append(self.hashes.drain(..)
+                                   .map(|hash| hash.into())
                                    .collect::<Vec<Element>>())
                 .build()
     }
