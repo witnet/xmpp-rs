@@ -25,21 +25,17 @@ impl TryFrom<Element> for Transport {
     type Error = Error;
 
     fn try_from(elem: Element) -> Result<Transport, Error> {
-        if elem.is("transport", ns::JINGLE_IBB) {
-            for _ in elem.children() {
-                return Err(Error::ParseError("Unknown child in JingleIBB element."));
-            }
-            let block_size = get_attr!(elem, "block-size", required);
-            let sid = get_attr!(elem, "sid", required);
-            let stanza = get_attr!(elem, "stanza", default);
-            Ok(Transport {
-                block_size: block_size,
-                sid: sid,
-                stanza: stanza
-            })
-        } else {
-            Err(Error::ParseError("This is not an JingleIBB element."))
+        if !elem.is("transport", ns::JINGLE_IBB) {
+            return Err(Error::ParseError("This is not an JingleIBB element."))
         }
+        for _ in elem.children() {
+            return Err(Error::ParseError("Unknown child in JingleIBB element."));
+        }
+        Ok(Transport {
+            block_size: get_attr!(elem, "block-size", required),
+            sid: get_attr!(elem, "sid", required),
+            stanza: get_attr!(elem, "stanza", default),
+        })
     }
 }
 
@@ -48,8 +44,8 @@ impl Into<Element> for Transport {
         Element::builder("transport")
                 .ns(ns::JINGLE_IBB)
                 .attr("block-size", format!("{}", self.block_size))
-                .attr("sid", self.sid.clone())
-                .attr("stanza", self.stanza.clone())
+                .attr("sid", self.sid)
+                .attr("stanza", self.stanza)
                 .build()
     }
 }
