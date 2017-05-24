@@ -15,7 +15,7 @@ use ns;
 #[derive(Debug, Clone)]
 pub enum Receipt {
     Request,
-    Received(String),
+    Received(Option<String>),
 }
 
 impl TryFrom<Element> for Receipt {
@@ -26,9 +26,17 @@ impl TryFrom<Element> for Receipt {
             return Err(Error::ParseError("Unknown child in receipt element."));
         }
         if elem.is("request", ns::RECEIPTS) {
+            for _ in elem.attrs() {
+                return Err(Error::ParseError("Unknown attribute in request element."));
+            }
             Ok(Receipt::Request)
         } else if elem.is("received", ns::RECEIPTS) {
-            let id = elem.attr("id").unwrap_or("").to_owned();
+            for (attr, _) in elem.attrs() {
+                if attr != "id" {
+                    return Err(Error::ParseError("Unknown attribute in received element."));
+                }
+            }
+            let id = get_attr!(elem, "id", optional);
             Ok(Receipt::Received(id))
         } else {
             Err(Error::ParseError("This is not a receipt element."))
@@ -40,13 +48,11 @@ impl Into<Element> for Receipt {
     fn into(self) -> Element {
         match self {
             Receipt::Request => Element::builder("request")
-                                        .ns(ns::RECEIPTS)
-                                        .build(),
+                                        .ns(ns::RECEIPTS),
             Receipt::Received(id) => Element::builder("received")
                                              .ns(ns::RECEIPTS)
-                                             .attr("id", id)
-                                             .build(),
-        }
+                                             .attr("id", id),
+        }.build()
     }
 }
 
@@ -72,7 +78,7 @@ mod tests {
         let elem: Element = receipt.into();
         assert!(elem.is("request", ns::RECEIPTS));
 
-        let receipt = Receipt::Received("coucou".to_owned());
+        let receipt = Receipt::Received(Some(String::from("coucou")));
         let elem: Element = receipt.into();
         assert!(elem.is("received", ns::RECEIPTS));
         assert_eq!(elem.attr("id"), Some("coucou"));
