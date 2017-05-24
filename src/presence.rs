@@ -8,7 +8,7 @@ use std::convert::TryFrom;
 use std::str::FromStr;
 use std::collections::BTreeMap;
 
-use minidom::{Element, IntoElements, IntoAttributeValue, ElementEmitter};
+use minidom::{Element, IntoAttributeValue};
 
 use jid::Jid;
 
@@ -29,15 +29,31 @@ pub enum Show {
     Xa,
 }
 
-impl IntoElements for Show {
-    fn into_elements(self, emitter: &mut ElementEmitter) {
-        let elem = Element::builder(match self {
-            Show::Away => "away",
-            Show::Chat => "chat",
-            Show::Dnd => "dnd",
-            Show::Xa => "xa",
-        }).build();
-        emitter.append_child(elem);
+impl FromStr for Show {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Show, Error> {
+        Ok(match s {
+            "away" => Show::Away,
+            "chat" => Show::Chat,
+            "dnd" => Show::Dnd,
+            "xa" => Show::Xa,
+
+            _ => return Err(Error::ParseError("Invalid value for show.")),
+        })
+    }
+}
+
+impl Into<Element> for Show {
+    fn into(self) -> Element {
+        Element::builder("show")
+                .append(match self {
+                     Show::Away => "away",
+                     Show::Chat => "chat",
+                     Show::Dnd => "dnd",
+                     Show::Xa => "xa",
+                 })
+                .build()
     }
 }
 
@@ -86,7 +102,7 @@ impl Into<Element> for PresencePayload {
             PresencePayload::Idle(idle) => idle.into(),
             PresencePayload::ECaps2(ecaps2) => ecaps2.into(),
 
-            PresencePayload::Unknown(elem) => elem.clone(),
+            PresencePayload::Unknown(elem) => elem,
         }
     }
 }
@@ -164,17 +180,20 @@ impl TryFrom<Element> for Presence {
         if !root.is("presence", ns::JABBER_CLIENT) {
             return Err(Error::ParseError("This is not a presence element."));
         }
-        let from = get_attr!(root, "from", optional);
-        let to = get_attr!(root, "to", optional);
-        let id = get_attr!(root, "id", optional);
-        let type_ = get_attr!(root, "type", default);
-        let mut show = None;
-        let mut statuses = BTreeMap::new();
         let mut priority = None;
-        let mut payloads = vec!();
+        let mut presence = Presence {
+            from: get_attr!(root, "from", optional),
+            to: get_attr!(root, "to", optional),
+            id: get_attr!(root, "id", optional),
+            type_: get_attr!(root, "type", default),
+            show: None,
+            statuses: BTreeMap::new(),
+            priority: 0i8,
+            payloads: vec!(),
+        };
         for elem in root.children() {
             if elem.is("show", ns::JABBER_CLIENT) {
-                if show.is_some() {
+                if presence.show.is_some() {
                     return Err(Error::ParseError("More than one show element in a presence."));
                 }
                 for _ in elem.children() {
@@ -183,14 +202,7 @@ impl TryFrom<Element> for Presence {
                 for _ in elem.attrs() {
                     return Err(Error::ParseError("Unknown attribute in show element."));
                 }
-                show = Some(match elem.text().as_ref() {
-                    "away" => Show::Away,
-                    "chat" => Show::Chat,
-                    "dnd" => Show::Dnd,
-                    "xa" => Show::Xa,
-
-                    _ => return Err(Error::ParseError("Invalid value for show.")),
-                });
+                presence.show = Some(Show::from_str(elem.text().as_ref())?);
             } else if elem.is("status", ns::JABBER_CLIENT) {
                 for _ in elem.children() {
                     return Err(Error::ParseError("Unknown child in status element."));
@@ -201,7 +213,7 @@ impl TryFrom<Element> for Presence {
                     }
                 }
                 let lang = get_attr!(elem, "xml:lang", default);
-                if statuses.insert(lang, elem.text()).is_some() {
+                if presence.statuses.insert(lang, elem.text()).is_some() {
                     return Err(Error::ParseError("Status element present twice for the same xml:lang."));
                 }
             } else if elem.is("priority", ns::JABBER_CLIENT) {
@@ -216,46 +228,40 @@ impl TryFrom<Element> for Presence {
                 }
                 priority = Some(Priority::from_str(elem.text().as_ref())?);
             } else {
-                payloads.push(elem.clone());
+                presence.payloads.push(elem.clone());
             }
         }
-        Ok(Presence {
-            from: from,
-            to: to,
-            id: id,
-            type_: type_,
-            show: show,
-            statuses: statuses,
-            priority: priority.unwrap_or(0i8),
-            payloads: payloads,
-        })
+        if let Some(priority) = priority {
+            presence.priority = priority;
+        }
+        Ok(presence)
     }
 }
 
 impl Into<Element> for Presence {
     fn into(self) -> Element {
-        let mut stanza = Element::builder("presence")
-                                 .ns(ns::JABBER_CLIENT)
-                                 .attr("from", self.from.clone().and_then(|value| Some(String::from(value))))
-                                 .attr("to", self.to.clone().and_then(|value| Some(String::from(value))))
-                                 .attr("id", self.id.clone())
-                                 .attr("type", self.type_.clone())
-                                 .append(self.show.clone())
-                                 .append(self.statuses.iter().map(|(lang, status)| {
-                                      Element::builder("status")
-                                              .attr("xml:lang", match lang.as_ref() {
-                                                   "" => None,
-                                                   lang => Some(lang),
-                                               })
-                                              .append(status.clone())
-                                              .build()
-                                  }).collect::<Vec<_>>())
-                                 .append(if self.priority == 0 { None } else { Some(format!("{}", self.priority)) })
-                                 .build();
-        for child in self.payloads.clone() {
-            stanza.append_child(child);
-        }
-        stanza
+        Element::builder("presence")
+                .ns(ns::JABBER_CLIENT)
+                .attr("from", self.from.and_then(|value| Some(String::from(value))))
+                .attr("to", self.to.and_then(|value| Some(String::from(value))))
+                .attr("id", self.id)
+                .attr("type", self.type_)
+                .append(match self.show {
+                     Some(show) => Some({ let elem: Element = show.into(); elem }),
+                     None => None
+                 })
+                .append(self.statuses.iter().map(|(lang, status)| {
+                     Element::builder("status")
+                             .attr("xml:lang", match lang.as_ref() {
+                                  "" => None,
+                                  lang => Some(lang),
+                              })
+                             .append(status)
+                             .build()
+                 }).collect::<Vec<_>>())
+                .append(if self.priority == 0 { None } else { Some(format!("{}", self.priority)) })
+                .append(self.payloads)
+                .build()
     }
 }
 
