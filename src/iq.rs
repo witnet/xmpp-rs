@@ -43,7 +43,7 @@ impl TryFrom<Element> for IqPayload {
     fn try_from(elem: Element) -> Result<IqPayload, Error> {
         Ok(match (elem.name().as_ref(), elem.ns().unwrap().as_ref()) {
             // XEP-0030
-            ("query", ns::DISCO_INFO) => IqPayload::Disco(Disco::try_from(elem.clone())?),
+            ("query", ns::DISCO_INFO) => IqPayload::Disco(Disco::try_from(elem)?),
 
             // XEP-0047
             ("open", ns::IBB)
@@ -74,9 +74,9 @@ pub enum IqType {
     Error(StanzaError),
 }
 
-impl IntoAttributeValue for IqType {
+impl<'a> IntoAttributeValue for &'a IqType {
     fn into_attribute_value(self) -> Option<String> {
-        Some(match self {
+        Some(match *self {
             IqType::Get(_) => "get",
             IqType::Set(_) => "set",
             IqType::Result(_) => "result",
@@ -144,7 +144,7 @@ impl TryFrom<Element> for Iq {
                 IqType::Result(None)
             }
         } else if type_ == "error" {
-            if let Some(payload) = error_payload.clone() {
+            if let Some(payload) = error_payload {
                 IqType::Error(payload)
             } else {
                 return Err(Error::ParseError("Wrong number of children in iq element."));
@@ -173,7 +173,7 @@ impl Into<Element> for IqPayload {
             IqPayload::MamFin(fin) => fin.into(),
             IqPayload::MamPrefs(prefs) => prefs.into(),
 
-            IqPayload::Unknown(elem) => elem.clone(),
+            IqPayload::Unknown(elem) => elem,
         }
     }
 }
@@ -182,12 +182,12 @@ impl Into<Element> for Iq {
     fn into(self) -> Element {
         let mut stanza = Element::builder("iq")
                                  .ns(ns::JABBER_CLIENT)
-                                 .attr("from", self.from.clone().and_then(|value| Some(String::from(value))))
-                                 .attr("to", self.to.clone().and_then(|value| Some(String::from(value))))
-                                 .attr("id", self.id.clone())
-                                 .attr("type", self.payload.clone())
+                                 .attr("from", self.from.and_then(|value| Some(String::from(value))))
+                                 .attr("to", self.to.and_then(|value| Some(String::from(value))))
+                                 .attr("id", self.id)
+                                 .attr("type", &self.payload)
                                  .build();
-        let elem = match self.payload.clone() {
+        let elem = match self.payload {
             IqType::Get(elem)
           | IqType::Set(elem)
           | IqType::Result(Some(elem)) => elem,
