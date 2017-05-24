@@ -381,16 +381,16 @@ impl TryFrom<Element> for Jingle {
 
         for child in root.children().cloned() {
             if child.is("content", ns::JINGLE) {
-                let content = Content::try_from(child.clone())?;
+                let content = Content::try_from(child)?;
                 jingle.contents.push(content);
             } else if child.is("reason", ns::JINGLE) {
                 if jingle.reason.is_some() {
                     return Err(Error::ParseError("Jingle must not have more than one reason."));
                 }
-                let reason = ReasonElement::try_from(child.clone())?;
+                let reason = ReasonElement::try_from(child)?;
                 jingle.reason = Some(reason);
             } else {
-                jingle.other.push(child.clone());
+                jingle.other.push(child);
             }
         }
 
