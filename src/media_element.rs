@@ -33,22 +33,24 @@ impl TryFrom<Element> for MediaElement {
             return Err(Error::ParseError("This is not a media element."));
         }
 
-        let width = elem.attr("width").and_then(|width| width.parse().ok());
-        let height = elem.attr("height").and_then(|height| height.parse().ok());
-        let mut uris = vec!();
+        let mut media = MediaElement {
+            width: get_attr!(elem, "width", optional),
+            height: get_attr!(elem, "height", optional),
+            uris: vec!(),
+        };
         for uri in elem.children() {
             if uri.is("uri", ns::MEDIA_ELEMENT) {
-                let type_ = uri.attr("type").ok_or(Error::ParseError("Attribute type on uri is mandatory."))?;
+                let type_ = get_attr!(uri, "type", required);
                 let text = uri.text().trim().to_owned();
                 if text == "" {
                     return Err(Error::ParseError("URI missing in uri."));
                 }
-                uris.push(URI { type_: type_.to_owned(), uri: text });
+                media.uris.push(URI { type_: type_, uri: text });
             } else {
                 return Err(Error::ParseError("Unknown child in media element."));
             }
         }
-        Ok(MediaElement { width: width, height: height, uris: uris })
+        Ok(media)
     }
 }
 
@@ -56,6 +58,7 @@ impl TryFrom<Element> for MediaElement {
 mod tests {
     use super::*;
     use data_forms::DataForm;
+    use std::error::Error as StdError;
 
     #[test]
     fn test_simple() {
@@ -86,20 +89,36 @@ mod tests {
     #[test]
     fn test_invalid_width_height() {
         let elem: Element = "<media xmlns='urn:xmpp:media-element' width=''/>".parse().unwrap();
-        let media = MediaElement::try_from(elem).unwrap();
-        assert!(media.width.is_none());
+        let error = MediaElement::try_from(elem).unwrap_err();
+        let error = match error {
+            Error::ParseIntError(error) => error,
+            _ => panic!(),
+        };
+        assert_eq!(error.description(), "cannot parse integer from empty string");
 
         let elem: Element = "<media xmlns='urn:xmpp:media-element' width='coucou'/>".parse().unwrap();
-        let media = MediaElement::try_from(elem).unwrap();
-        assert!(media.width.is_none());
+        let error = MediaElement::try_from(elem).unwrap_err();
+        let error = match error {
+            Error::ParseIntError(error) => error,
+            _ => panic!(),
+        };
+        assert_eq!(error.description(), "invalid digit found in string");
 
         let elem: Element = "<media xmlns='urn:xmpp:media-element' height=''/>".parse().unwrap();
-        let media = MediaElement::try_from(elem).unwrap();
-        assert!(media.height.is_none());
+        let error = MediaElement::try_from(elem).unwrap_err();
+        let error = match error {
+            Error::ParseIntError(error) => error,
+            _ => panic!(),
+        };
+        assert_eq!(error.description(), "cannot parse integer from empty string");
 
         let elem: Element = "<media xmlns='urn:xmpp:media-element' height='-10'/>".parse().unwrap();
-        let media = MediaElement::try_from(elem).unwrap();
-        assert!(media.height.is_none());
+        let error = MediaElement::try_from(elem).unwrap_err();
+        let error = match error {
+            Error::ParseIntError(error) => error,
+            _ => panic!(),
+        };
+        assert_eq!(error.description(), "invalid digit found in string");
     }
 
     #[test]
@@ -121,7 +140,7 @@ mod tests {
             Error::ParseError(string) => string,
             _ => panic!(),
         };
-        assert_eq!(message, "Attribute type on uri is mandatory.");
+        assert_eq!(message, "Required attribute 'type' missing.");
 
         let elem: Element = "<media xmlns='urn:xmpp:media-element'><uri type='text/html'/></media>".parse().unwrap();
         let error = MediaElement::try_from(elem).unwrap_err();
