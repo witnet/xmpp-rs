@@ -6,7 +6,7 @@
 
 use std::convert::TryFrom;
 
-use minidom::Element;
+use minidom::{Element, IntoElements, ElementEmitter};
 
 use error::Error;
 
@@ -16,6 +16,22 @@ use ns;
 pub struct URI {
     pub type_: String,
     pub uri: String,
+}
+
+impl From<URI> for Element {
+    fn from(uri: URI) -> Element {
+        Element::builder("uri")
+                .ns(ns::MEDIA_ELEMENT)
+                .attr("type", uri.type_)
+                .append(uri.uri)
+                .build()
+    }
+}
+
+impl IntoElements for URI {
+    fn into_elements(self, emitter: &mut ElementEmitter) {
+        emitter.append_child(self.into());
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -51,6 +67,23 @@ impl TryFrom<Element> for MediaElement {
             }
         }
         Ok(media)
+    }
+}
+
+impl From<MediaElement> for Element {
+    fn from(media: MediaElement) -> Element {
+        Element::builder("media")
+                .ns(ns::MEDIA_ELEMENT)
+                .attr("width", media.width)
+                .attr("height", media.height)
+                .append(media.uris)
+                .build()
+    }
+}
+
+impl IntoElements for MediaElement {
+    fn into_elements(self, emitter: &mut ElementEmitter) {
+        emitter.append_child(self.into());
     }
 }
 

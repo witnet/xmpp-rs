@@ -7,7 +7,7 @@
 use std::convert::TryFrom;
 use std::str::FromStr;
 
-use minidom::Element;
+use minidom::{Element, IntoElements, IntoAttributeValue, ElementEmitter};
 
 use error::Error;
 use ns;
@@ -55,10 +55,46 @@ impl FromStr for FieldType {
     }
 }
 
+impl IntoAttributeValue for FieldType {
+    fn into_attribute_value(self) -> Option<String> {
+        Some(String::from(match self {
+            FieldType::Boolean => "boolean",
+            FieldType::Fixed => "fixed",
+            FieldType::Hidden => "hidden",
+            FieldType::JidMulti => "jid-multi",
+            FieldType::JidSingle => "jid-single",
+            FieldType::ListMulti => "list-multi",
+            FieldType::ListSingle => "list-single",
+            FieldType::TextMulti => "text-multi",
+            FieldType::TextPrivate => "text-private",
+            FieldType::TextSingle => "text-single",
+        }))
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct Option_ {
     pub label: Option<String>,
     pub value: String,
+}
+
+impl From<Option_> for Element {
+    fn from(option: Option_) -> Element {
+        Element::builder("option")
+                .ns(ns::DATA_FORMS)
+                .attr("label", option.label)
+                .append(Element::builder("value")
+                                .ns(ns::DATA_FORMS)
+                                .append(option.value)
+                                .build())
+                .build()
+    }
+}
+
+impl IntoElements for Option_ {
+    fn into_elements(self, emitter: &mut ElementEmitter) {
+        emitter.append_child(self.into());
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -70,6 +106,29 @@ pub struct Field {
     pub options: Vec<Option_>,
     pub values: Vec<String>,
     pub media: Vec<MediaElement>,
+}
+
+impl From<Field> for Element {
+    fn from(field: Field) -> Element {
+        Element::builder("field")
+                .ns(ns::DATA_FORMS)
+                .attr("var", field.var)
+                .attr("type", field.type_)
+                .attr("label", field.label)
+                .append(if field.required { Some(Element::builder("required").ns(ns::DATA_FORMS).build()) } else { None })
+                .append(field.options)
+                .append(field.values.iter().map(|value| {
+                     Element::builder("value").ns(ns::DATA_FORMS).append(value).build()
+                 }).collect::<Vec<_>>())
+                .append(field.media)
+                .build()
+    }
+}
+
+impl IntoElements for Field {
+    fn into_elements(self, emitter: &mut ElementEmitter) {
+        emitter.append_child(self.into());
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -92,6 +151,17 @@ impl FromStr for DataFormType {
 
             _ => return Err(Error::ParseError("Unknown data form type.")),
         })
+    }
+}
+
+impl IntoAttributeValue for DataFormType {
+    fn into_attribute_value(self) -> Option<String> {
+        Some(String::from(match self {
+            DataFormType::Cancel => "cancel",
+            DataFormType::Form => "form",
+            DataFormType::Result_ => "result",
+            DataFormType::Submit => "submit",
+        }))
     }
 }
 
@@ -223,6 +293,19 @@ impl TryFrom<Element> for DataForm {
             }
         }
         Ok(form)
+    }
+}
+
+impl From<DataForm> for Element {
+    fn from(form: DataForm) -> Element {
+        Element::builder("x")
+                .ns(ns::DATA_FORMS)
+                .attr("type", form.type_)
+                .append(form.form_type)
+                .append(form.title)
+                .append(form.instructions)
+                .append(form.fields)
+                .build()
     }
 }
 
