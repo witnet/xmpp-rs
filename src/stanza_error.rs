@@ -8,7 +8,7 @@ use std::convert::TryFrom;
 use std::str::FromStr;
 use std::collections::BTreeMap;
 
-use minidom::{Element, IntoAttributeValue};
+use minidom::{Element, IntoElements, IntoAttributeValue, ElementEmitter};
 
 use error::Error;
 use jid::Jid;
@@ -110,9 +110,9 @@ impl FromStr for DefinedCondition {
     }
 }
 
-impl From<DefinedCondition> for String {
-    fn from(defined_condition: DefinedCondition) -> String {
-        String::from(match defined_condition {
+impl IntoElements for DefinedCondition {
+    fn into_elements(self, emitter: &mut ElementEmitter) {
+        emitter.append_child(Element::builder(match self {
             DefinedCondition::BadRequest => "bad-request",
             DefinedCondition::Conflict => "conflict",
             DefinedCondition::FeatureNotImplemented => "feature-not-implemented",
@@ -135,7 +135,7 @@ impl From<DefinedCondition> for String {
             DefinedCondition::SubscriptionRequired => "subscription-required",
             DefinedCondition::UndefinedCondition => "undefined-condition",
             DefinedCondition::UnexpectedRequest => "unexpected-request",
-        })
+        }).ns(ns::XMPP_STANZAS).build());
     }
 }
 
@@ -207,9 +207,7 @@ impl Into<Element> for StanzaError {
                                .ns(ns::JABBER_CLIENT)
                                .attr("type", self.type_)
                                .attr("by", self.by.and_then(|by| Some(String::from(by))))
-                               .append(Element::builder(self.defined_condition)
-                                               .ns(ns::XMPP_STANZAS)
-                                               .build())
+                               .append(self.defined_condition)
                                .build();
         for (lang, text) in self.texts {
             let elem = Element::builder("text")

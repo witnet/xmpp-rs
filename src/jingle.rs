@@ -99,12 +99,12 @@ impl FromStr for Creator {
     }
 }
 
-impl From<Creator> for String {
-    fn from(creator: Creator) -> String {
-        String::from(match creator {
+impl IntoAttributeValue for Creator {
+    fn into_attribute_value(self) -> Option<String> {
+        Some(String::from(match self {
             Creator::Initiator => "initiator",
             Creator::Responder => "responder",
-        })
+        }))
     }
 }
 
@@ -137,14 +137,14 @@ impl FromStr for Senders {
     }
 }
 
-impl From<Senders> for String {
-    fn from(senders: Senders) -> String {
-        String::from(match senders {
+impl IntoAttributeValue for Senders {
+    fn into_attribute_value(self) -> Option<String> {
+        Some(String::from(match self {
             Senders::Both => "both",
             Senders::Initiator => "initiator",
             Senders::None_ => "none",
             Senders::Responder => "responder",
-        })
+        }))
     }
 }
 
@@ -202,10 +202,10 @@ impl Into<Element> for Content {
     fn into(self) -> Element {
         Element::builder("content")
                 .ns(ns::JINGLE)
-                .attr("creator", String::from(self.creator))
+                .attr("creator", self.creator)
                 .attr("disposition", self.disposition)
                 .attr("name", self.name)
-                .attr("senders", String::from(self.senders))
+                .attr("senders", self.senders)
                 .append(self.description)
                 .append(self.transport)
                 .append(self.security)
