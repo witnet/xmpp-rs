@@ -24,6 +24,9 @@ pub const RSM: &'static str = "http://jabber.org/protocol/rsm";
 /// XEP-0085: Chat State Notifications
 pub const CHATSTATES: &'static str = "http://jabber.org/protocol/chatstates";
 
+/// XEP-0115: Entity Capabilities
+pub const CAPS: &'static str = "http://jabber.org/protocol/caps";
+
 /// XEP-0166: Jingle
 pub const JINGLE: &'static str = "urn:xmpp:jingle:1";
 

@@ -18,6 +18,7 @@ extern crate minidom;
 extern crate jid;
 extern crate base64;
 extern crate digest;
+extern crate sha_1;
 extern crate sha2;
 extern crate sha3;
 extern crate blake2;
@@ -74,6 +75,9 @@ pub mod rsm;
 
 /// XEP-0085: Chat State Notifications
 pub mod chatstates;
+
+/// XEP-0115: Entity Capabilities
+pub mod caps;
 
 /// XEP-0166: Jingle
 pub mod jingle;
