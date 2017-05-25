@@ -48,9 +48,9 @@ impl Into<Element> for Delay {
     fn into(self) -> Element {
         Element::builder("delay")
                 .ns(ns::DELAY)
-                .attr("from", self.from.clone().and_then(|value| Some(String::from(value))))
-                .attr("stamp", self.stamp.clone())
-                .append(self.data.clone())
+                .attr("from", self.from.and_then(|value| Some(String::from(value))))
+                .attr("stamp", self.stamp)
+                .append(self.data)
                 .build()
     }
 }
