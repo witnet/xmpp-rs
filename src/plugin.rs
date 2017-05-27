@@ -1,6 +1,6 @@
 //! Provides the plugin infrastructure.
 
-use event::{Event, EventHandler, Dispatcher, SendElement, Priority};
+use event::{Event, Dispatcher, SendElement, Priority, Propagation};
 
 use std::any::Any;
 
@@ -62,10 +62,13 @@ impl PluginProxy {
     }
 
     /// Registers an event handler.
-    pub fn register_handler<E, H>(&self, priority: Priority, handler: H) where E: Event, H: EventHandler<E> {
+    pub fn register_handler<E, F>(&self, priority: Priority, func: F)
+        where
+            E: Event,
+            F: Fn(&E) -> Propagation + 'static {
         self.with_binding(move |binding| {
             // TODO: proper error handling
-            binding.dispatcher.lock().unwrap().register(priority, handler);
+            binding.dispatcher.lock().unwrap().register(priority, func);
         });
     }
 

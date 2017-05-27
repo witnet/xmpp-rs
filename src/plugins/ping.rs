@@ -1,5 +1,5 @@
 use plugin::PluginProxy;
-use event::{Event, EventHandler, Priority, Propagation, ReceiveElement};
+use event::{Event, Priority, Propagation, ReceiveElement};
 use minidom::Element;
 use error::Error;
 use jid::Jid;
@@ -43,14 +43,8 @@ impl PingPlugin {
                             .build();
         self.proxy.send(reply);
     }
-}
 
-impl_plugin!(PingPlugin, proxy, [
-    ReceiveElement => Priority::Default,
-]);
-
-impl EventHandler<ReceiveElement> for PingPlugin {
-    fn handle(&self, evt: &ReceiveElement) -> Propagation {
+    fn handle_receive_element(&self, evt: &ReceiveElement) -> Propagation {
         let elem = &evt.0;
         if elem.is("iq", ns::CLIENT) && elem.attr("type") == Some("get") {
             if elem.has_child("ping", ns::PING) {
@@ -64,3 +58,7 @@ impl EventHandler<ReceiveElement> for PingPlugin {
         Propagation::Continue
     }
 }
+
+impl_plugin!(PingPlugin, proxy, [
+    (ReceiveElement, Priority::Default) => handle_receive_element,
+]);

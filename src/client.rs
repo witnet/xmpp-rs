@@ -88,11 +88,11 @@ impl ClientBuilder {
             binding: PluginProxyBinding::new(dispatcher.clone()),
             dispatcher: dispatcher,
         };
-        client.dispatcher.lock().unwrap().register(Priority::Default, Box::new(move |evt: &SendElement| {
+        client.dispatcher.lock().unwrap().register(Priority::Default, move |evt: &SendElement| {
             let mut t = transport.lock().unwrap();
             t.write_element(&evt.0).unwrap();
             Propagation::Continue
-        }));
+        });
         client.connect(credentials)?;
         client.bind()?;
         Ok(client)

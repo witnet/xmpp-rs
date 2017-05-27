@@ -1,7 +1,7 @@
 use std::convert::TryFrom;
 
 use plugin::PluginProxy;
-use event::{Event, EventHandler, ReceiveElement, Propagation, Priority};
+use event::{Event, ReceiveElement, Propagation, Priority};
 use ns;
 
 pub use xmpp_parsers::message::Message;
@@ -22,14 +22,8 @@ impl StanzaPlugin {
             proxy: PluginProxy::new(),
         }
     }
-}
 
-impl_plugin!(StanzaPlugin, proxy, [
-    ReceiveElement => Priority::Default,
-]);
-
-impl EventHandler<ReceiveElement> for StanzaPlugin {
-    fn handle(&self, evt: &ReceiveElement) -> Propagation {
+    fn handle_receive_element(&self, evt: &ReceiveElement) -> Propagation {
         let elem = &evt.0;
 
         // TODO: make the handle take an Element instead of a reference.
@@ -49,3 +43,7 @@ impl EventHandler<ReceiveElement> for StanzaPlugin {
         Propagation::Continue
     }
 }
+
+impl_plugin!(StanzaPlugin, proxy, [
+    (ReceiveElement, Priority::Default) => handle_receive_element,
+]);

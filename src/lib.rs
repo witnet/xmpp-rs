@@ -1,4 +1,3 @@
-#![feature(raw)]
 #![feature(try_from)]
 
 extern crate xml;

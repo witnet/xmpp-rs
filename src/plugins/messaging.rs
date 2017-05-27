@@ -1,5 +1,5 @@
-use plugin::{PluginProxy};
-use event::{Event, EventHandler, ReceiveElement, Priority, Propagation};
+use plugin::PluginProxy;
+use event::{Event, ReceiveElement, Priority, Propagation};
 use minidom::Element;
 use error::Error;
 use jid::Jid;
@@ -34,14 +34,8 @@ impl MessagingPlugin {
         self.proxy.send(elem);
         Ok(())
     }
-}
 
-impl_plugin!(MessagingPlugin, proxy, [
-    ReceiveElement => Priority::Default,
-]);
-
-impl EventHandler<ReceiveElement> for MessagingPlugin {
-    fn handle(&self, evt: &ReceiveElement) -> Propagation {
+    fn handle_receive_element(&self, evt: &ReceiveElement) -> Propagation {
         let elem = &evt.0;
         if elem.is("message", ns::CLIENT) && elem.attr("type") == Some("chat") {
             if let Some(body) = elem.get_child("body", ns::CLIENT) {
@@ -55,3 +49,7 @@ impl EventHandler<ReceiveElement> for MessagingPlugin {
         Propagation::Continue
     }
 }
+
+impl_plugin!(MessagingPlugin, proxy, [
+    (ReceiveElement, Priority::Default) => handle_receive_element,
+]);
