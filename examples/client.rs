@@ -4,7 +4,7 @@ use xmpp::jid::Jid;
 use xmpp::client::ClientBuilder;
 use xmpp::plugins::stanza::StanzaPlugin;
 use xmpp::plugins::messaging::{MessagingPlugin, MessageEvent};
-use xmpp::plugins::presence::{PresencePlugin, Show};
+use xmpp::plugins::presence::{PresencePlugin, Type};
 use xmpp::plugins::ping::{PingPlugin, PingEvent};
 
 use std::env;
@@ -20,7 +20,7 @@ fn main() {
     client.register_plugin(MessagingPlugin::new());
     client.register_plugin(PresencePlugin::new());
     client.register_plugin(PingPlugin::new());
-    client.plugin::<PresencePlugin>().set_presence(Show::Available, None).unwrap();
+    client.plugin::<PresencePlugin>().set_presence(Type::Available, None, None).unwrap();
     client.main().unwrap();
     /*loop {
         let event = client.next_event().unwrap();
