@@ -2,23 +2,81 @@
 
 use event::{Event, Dispatcher, SendElement, Priority, Propagation};
 
-use std::any::Any;
+use std::any::{Any, TypeId};
 
-use std::sync::Arc;
+use std::collections::HashMap;
+
+use std::sync::{RwLock, Arc};
+
+use std::marker::PhantomData;
+
+use std::ops::Deref;
+
+use std::convert::AsRef;
 
 use std::mem;
 
 use minidom::Element;
 
+pub struct PluginContainer {
+    plugins: RwLock<HashMap<TypeId, Arc<Plugin>>>,
+}
+
+impl PluginContainer {
+    pub fn new() -> PluginContainer {
+        PluginContainer {
+            plugins: RwLock::new(HashMap::new()),
+        }
+    }
+
+    pub fn register<P: Plugin + 'static>(&self, plugin: Arc<P>) {
+        let mut guard = self.plugins.write().unwrap();
+        if guard.insert(TypeId::of::<P>(), plugin as Arc<Plugin>).is_some() {
+            panic!("registering a plugin that's already registered");
+        }
+    }
+
+    pub fn get<P: Plugin>(&self) -> Option<PluginRef<P>> {
+        let guard = self.plugins.read().unwrap();
+        let arc = guard.get(&TypeId::of::<P>());
+        arc.map(|arc| PluginRef {
+            inner: arc.clone(),
+            _marker: PhantomData
+        })
+    }
+}
+
+#[derive(Clone)]
+pub struct PluginRef<P: Plugin> {
+    inner: Arc<Plugin>,
+    _marker: PhantomData<P>,
+}
+
+impl<P: Plugin> Deref for PluginRef<P> {
+    type Target = P;
+
+    fn deref(&self) -> &P {
+        self.inner.as_any().downcast_ref::<P>().expect("plugin downcast failure")
+    }
+}
+
+impl<P: Plugin> AsRef<P> for PluginRef<P> {
+    fn as_ref(&self) -> &P {
+        self.inner.as_any().downcast_ref::<P>().expect("plugin downcast failure")
+    }
+}
+
 #[derive(Clone)]
 pub struct PluginProxyBinding {
     dispatcher: Arc<Dispatcher>,
+    plugin_container: Arc<PluginContainer>,
 }
 
 impl PluginProxyBinding {
-    pub fn new(dispatcher: Arc<Dispatcher>) -> PluginProxyBinding {
+    pub fn new(dispatcher: Arc<Dispatcher>, plugin_container: Arc<PluginContainer>) -> PluginProxyBinding {
         PluginProxyBinding {
             dispatcher: dispatcher,
+            plugin_container: plugin_container,
         }
     }
 }
@@ -70,6 +128,13 @@ impl PluginProxy {
             // TODO: proper error handling
             binding.dispatcher.register(priority, func);
         });
+    }
+
+    /// Tries to get another plugin.
+    pub fn plugin<P: Plugin>(&self) -> Option<PluginRef<P>> {
+        self.with_binding(|binding| {
+            binding.plugin_container.get::<P>()
+        })
     }
 
     /// Sends a stanza.

@@ -3,7 +3,7 @@ use jid::Jid;
 use transport::{Transport, PlainTransport};
 use error::Error;
 use ns;
-use plugin::{Plugin, PluginInit, PluginProxyBinding};
+use plugin::{Plugin, PluginInit, PluginProxyBinding, PluginContainer, PluginRef};
 use event::{Dispatcher, ReceiveElement, SendElement, Propagation, Priority, Event};
 use connection::{Connection, Component2S};
 use sha_1::{Sha1, Digest};
@@ -14,10 +14,6 @@ use xml::reader::XmlEvent as ReaderEvent;
 
 use std::fmt::Write;
 use std::sync::{Mutex, Arc};
-
-use std::collections::HashMap;
-
-use std::any::TypeId;
 
 /// A builder for `Component`s.
 pub struct ComponentBuilder {
@@ -63,11 +59,12 @@ impl ComponentBuilder {
         Component2S::init(&mut transport, &self.jid.domain, "stream_opening")?;
         let dispatcher = Arc::new(Dispatcher::new());
         let transport = Arc::new(Mutex::new(transport));
+        let plugin_container = Arc::new(PluginContainer::new());
         let mut component = Component {
             jid: self.jid,
             transport: transport.clone(),
-            plugins: HashMap::new(),
-            binding: PluginProxyBinding::new(dispatcher.clone()),
+            binding: PluginProxyBinding::new(dispatcher.clone(), plugin_container.clone()),
+            plugin_container: plugin_container,
             dispatcher: dispatcher,
         };
         component.dispatcher.register(Priority::Default, move |evt: &SendElement| {
@@ -84,7 +81,7 @@ impl ComponentBuilder {
 pub struct Component {
     jid: Jid,
     transport: Arc<Mutex<PlainTransport>>,
-    plugins: HashMap<TypeId, Arc<Plugin>>,
+    plugin_container: Arc<PluginContainer>,
     binding: PluginProxyBinding,
     dispatcher: Arc<Dispatcher>,
 }
@@ -99,20 +96,9 @@ impl Component {
     pub fn register_plugin<P: Plugin + PluginInit + 'static>(&mut self, mut plugin: P) {
         let binding = self.binding.clone();
         plugin.bind(binding);
-        let p = Arc::new(plugin) as Arc<Plugin>;
+        let p = Arc::new(plugin);
         P::init(&self.dispatcher, p.clone());
-        if self.plugins.insert(TypeId::of::<P>(), p).is_some() {
-            panic!("registering a plugin that's already registered");
-        }
-    }
-
-    /// Returns the plugin given by the type parameter, if it exists, else panics.
-    pub fn plugin<P: Plugin>(&self) -> &P {
-        self.plugins.get(&TypeId::of::<P>())
-                    .expect("the requested plugin was not registered")
-                    .as_any()
-                    .downcast_ref::<P>()
-                    .expect("plugin downcast failure (should not happen!!)")
+        self.plugin_container.register(p);
     }
 
     pub fn register_handler<E, F>(&mut self, pri: Priority, func: F)
@@ -120,6 +106,11 @@ impl Component {
             E: Event,
             F: Fn(&E) -> Propagation + 'static {
         self.dispatcher.register(pri, func);
+    }
+
+    /// Returns the plugin given by the type parameter, if it exists, else panics.
+    pub fn plugin<P: Plugin>(&self) -> PluginRef<P> {
+        self.plugin_container.get::<P>().unwrap()
     }
 
     /// Returns the next event and flush the send queue.

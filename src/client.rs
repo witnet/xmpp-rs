@@ -3,7 +3,7 @@ use jid::Jid;
 use transport::{Transport, SslTransport};
 use error::Error;
 use ns;
-use plugin::{Plugin, PluginInit, PluginProxyBinding};
+use plugin::{Plugin, PluginInit, PluginProxyBinding, PluginContainer, PluginRef};
 use connection::{Connection, C2S};
 use sasl::client::Mechanism as SaslMechanism;
 use sasl::client::mechanisms::{Plain, Scram};
@@ -21,9 +21,7 @@ use xml::reader::XmlEvent as ReaderEvent;
 
 use std::sync::{Mutex, Arc};
 
-use std::collections::{HashSet, HashMap};
-
-use std::any::TypeId;
+use std::collections::HashSet;
 
 /// Struct that should be moved somewhere else and cleaned up.
 #[derive(Debug)]
@@ -81,11 +79,12 @@ impl ClientBuilder {
         let mut credentials = self.credentials;
         credentials.channel_binding = transport.channel_bind();
         let transport = Arc::new(Mutex::new(transport));
+        let plugin_container = Arc::new(PluginContainer::new());
         let mut client = Client {
             jid: self.jid,
             transport: transport.clone(),
-            plugins: HashMap::new(),
-            binding: PluginProxyBinding::new(dispatcher.clone()),
+            binding: PluginProxyBinding::new(dispatcher.clone(), plugin_container.clone()),
+            plugin_container: plugin_container,
             dispatcher: dispatcher,
         };
         client.dispatcher.register(Priority::Default, move |evt: &SendElement| {
@@ -103,7 +102,7 @@ impl ClientBuilder {
 pub struct Client {
     jid: Jid,
     transport: Arc<Mutex<SslTransport>>,
-    plugins: HashMap<TypeId, Arc<Plugin>>,
+    plugin_container: Arc<PluginContainer>,
     binding: PluginProxyBinding,
     dispatcher: Arc<Dispatcher>,
 }
@@ -118,11 +117,9 @@ impl Client {
     pub fn register_plugin<P: Plugin + PluginInit + 'static>(&mut self, mut plugin: P) {
         let binding = self.binding.clone();
         plugin.bind(binding);
-        let p = Arc::new(plugin) as Arc<Plugin>;
+        let p = Arc::new(plugin);
         P::init(&self.dispatcher, p.clone());
-        if self.plugins.insert(TypeId::of::<P>(), p).is_some() {
-            panic!("registering a plugin that's already registered");
-        }
+        self.plugin_container.register(p);
     }
 
     pub fn register_handler<E, F>(&mut self, pri: Priority, func: F)
@@ -133,12 +130,8 @@ impl Client {
     }
 
     /// Returns the plugin given by the type parameter, if it exists, else panics.
-    pub fn plugin<P: Plugin>(&self) -> &P {
-        self.plugins.get(&TypeId::of::<P>())
-                    .expect("the requested plugin was not registered")
-                    .as_any()
-                    .downcast_ref::<P>()
-                    .expect("plugin downcast failure (should not happen!!)")
+    pub fn plugin<P: Plugin>(&self) -> PluginRef<P> {
+        self.plugin_container.get::<P>().unwrap()
     }
 
     /// Returns the next event and flush the send queue.
