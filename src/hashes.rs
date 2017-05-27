@@ -47,9 +47,9 @@ impl FromStr for Algo {
     }
 }
 
-impl IntoAttributeValue for Algo {
-    fn into_attribute_value(self) -> Option<String> {
-        Some(String::from(match self {
+impl From<Algo> for String {
+    fn from(algo: Algo) -> String {
+        String::from(match algo {
             Algo::Sha_1 => "sha-1",
             Algo::Sha_256 => "sha-256",
             Algo::Sha_512 => "sha-512",
@@ -57,8 +57,14 @@ impl IntoAttributeValue for Algo {
             Algo::Sha3_512 => "sha3-512",
             Algo::Blake2b_256 => "blake2b-256",
             Algo::Blake2b_512 => "blake2b-512",
-            Algo::Unknown(text) => return Some(text),
-        }))
+            Algo::Unknown(text) => return text,
+        })
+    }
+}
+
+impl IntoAttributeValue for Algo {
+    fn into_attribute_value(self) -> Option<String> {
+        Some(String::from(self))
     }
 }
 
