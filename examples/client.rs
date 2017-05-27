@@ -3,6 +3,7 @@ extern crate xmpp;
 use xmpp::jid::Jid;
 use xmpp::client::ClientBuilder;
 use xmpp::plugins::stanza::StanzaPlugin;
+use xmpp::plugins::unhandled_iq::UnhandledIqPlugin;
 use xmpp::plugins::messaging::{MessagingPlugin, MessageEvent};
 use xmpp::plugins::presence::{PresencePlugin, Type};
 use xmpp::plugins::ping::{PingPlugin, PingEvent};
@@ -18,6 +19,7 @@ fn main() {
                                    .connect()
                                    .unwrap();
     client.register_plugin(StanzaPlugin::new());
+    client.register_plugin(UnhandledIqPlugin::new());
     client.register_plugin(MessagingPlugin::new());
     client.register_plugin(PresencePlugin::new());
     client.register_plugin(PingPlugin::new());
