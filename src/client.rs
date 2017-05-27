@@ -103,7 +103,7 @@ impl ClientBuilder {
 pub struct Client {
     jid: Jid,
     transport: Arc<Mutex<SslTransport>>,
-    plugins: HashMap<TypeId, Arc<Box<Plugin>>>,
+    plugins: HashMap<TypeId, Arc<Plugin>>,
     binding: PluginProxyBinding,
     dispatcher: Arc<Dispatcher>,
 }
@@ -118,7 +118,7 @@ impl Client {
     pub fn register_plugin<P: Plugin + PluginInit + 'static>(&mut self, mut plugin: P) {
         let binding = self.binding.clone();
         plugin.bind(binding);
-        let p = Arc::new(Box::new(plugin) as Box<Plugin>);
+        let p = Arc::new(plugin) as Arc<Plugin>;
         P::init(&self.dispatcher, p.clone());
         if self.plugins.insert(TypeId::of::<P>(), p).is_some() {
             panic!("registering a plugin that's already registered");

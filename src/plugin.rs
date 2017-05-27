@@ -90,7 +90,7 @@ pub trait Plugin: Any + PluginAny {
 }
 
 pub trait PluginInit {
-    fn init(dispatcher: &Dispatcher, me: Arc<Box<Plugin>>);
+    fn init(dispatcher: &Dispatcher, me: Arc<Plugin>);
 }
 
 pub trait PluginAny {
