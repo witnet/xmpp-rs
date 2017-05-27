@@ -37,7 +37,7 @@ impl IntoElements for Feature {
 pub struct Identity {
     pub category: String, // TODO: use an enum here.
     pub type_: String, // TODO: use an enum here.
-    pub xml_lang: String,
+    pub lang: Option<String>,
     pub name: Option<String>,
 }
 
@@ -47,7 +47,7 @@ impl Into<Element> for Identity {
                 .ns(ns::DISCO_INFO)
                 .attr("category", self.category)
                 .attr("type", self.type_)
-                .attr("xml:lang", self.xml_lang)
+                .attr("xml:lang", self.lang)
                 .attr("name", self.name)
                 .build()
     }
@@ -98,12 +98,12 @@ impl TryFrom<Element> for Disco {
                     return Err(Error::ParseError("Identity must have a non-empty 'type' attribute."))
                 }
 
-                let lang = get_attr!(child, "xml:lang", default);
+                let lang = get_attr!(child, "xml:lang", optional);
                 let name = get_attr!(child, "name", optional);
                 identities.push(Identity {
                     category: category,
                     type_: type_,
-                    xml_lang: lang,
+                    lang: lang,
                     name: name,
                 });
             } else if child.is("x", ns::DATA_FORMS) {

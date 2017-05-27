@@ -88,7 +88,7 @@ fn compute_identities(identities: &[Identity]) -> Vec<u8> {
     compute_items(identities, 0x1c, |identity| {
         let mut bytes = compute_item(&identity.category);
         bytes.append(&mut compute_item(&identity.type_));
-        bytes.append(&mut compute_item(&identity.xml_lang));
+        bytes.append(&mut compute_item(&identity.lang.clone().unwrap_or_default()));
         bytes.append(&mut compute_item(&identity.name.clone().unwrap_or_default()));
         bytes.push(0x1e);
         bytes

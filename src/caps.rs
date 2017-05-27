@@ -91,8 +91,9 @@ fn compute_features(features: &[Feature]) -> Vec<u8> {
 
 fn compute_identities(identities: &[Identity]) -> Vec<u8> {
     compute_items(identities, |identity| {
-        let empty = String::new();
-        let string = format!("{}/{}/{}/{}", identity.category, identity.type_, identity.xml_lang, match identity.name { Some(ref name) => name, None => &empty });
+        let lang = identity.lang.clone().unwrap_or_default();
+        let name = identity.name.clone().unwrap_or_default();
+        let string = format!("{}/{}/{}/{}", identity.category, identity.type_, lang, name);
         let bytes = string.as_bytes();
         let mut vec = Vec::with_capacity(bytes.len());
         vec.extend_from_slice(bytes);
