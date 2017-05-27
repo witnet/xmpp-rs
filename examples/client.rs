@@ -5,6 +5,7 @@ use xmpp::client::ClientBuilder;
 use xmpp::plugins::messaging::{MessagingPlugin, MessageEvent};
 use xmpp::plugins::presence::{PresencePlugin, Show};
 use xmpp::plugins::ping::{PingPlugin, PingEvent};
+use xmpp::event::{Priority, Propagation};
 
 use std::env;
 
@@ -18,16 +19,10 @@ fn main() {
     client.register_plugin(MessagingPlugin::new());
     client.register_plugin(PresencePlugin::new());
     client.register_plugin(PingPlugin::new());
+    client.register_handler(Priority::Max, |e: &MessageEvent| {
+        println!("{:?}", e);
+        Propagation::Continue
+    });
     client.plugin::<PresencePlugin>().set_presence(Show::Available, None).unwrap();
     client.main().unwrap();
-    /*loop {
-        let event = client.next_event().unwrap();
-        if let Some(evt) = event.downcast::<MessageEvent>() {
-            println!("{:?}", evt);
-        }
-        else if let Some(evt) = event.downcast::<PingEvent>() {
-            println!("{:?}", evt);
-            client.plugin::<PingPlugin>().reply_ping(evt);
-        }
-    }*/
 }

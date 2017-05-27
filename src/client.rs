@@ -11,7 +11,7 @@ use sasl::common::{Credentials as SaslCredentials, Identity, Secret, ChannelBind
 use sasl::common::scram::{Sha1, Sha256};
 use components::sasl_error::SaslError;
 use util::FromElement;
-use event::{Dispatcher, Propagation, SendElement, ReceiveElement, Priority};
+use event::{Event, Dispatcher, Propagation, SendElement, ReceiveElement, Priority};
 
 use base64;
 
@@ -126,6 +126,13 @@ impl Client {
         if self.plugins.insert(TypeId::of::<P>(), p).is_some() {
             panic!("registering a plugin that's already registered");
         }
+    }
+
+    pub fn register_handler<E, F>(&mut self, pri: Priority, func: F)
+        where
+            E: Event,
+            F: Fn(&E) -> Propagation + 'static {
+        self.dispatcher.lock().unwrap().register(pri, func);
     }
 
     /// Returns the plugin given by the type parameter, if it exists, else panics.
