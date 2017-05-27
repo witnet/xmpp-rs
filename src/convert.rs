@@ -93,6 +93,24 @@ impl IntoAttributeValue for usize {
     }
 }
 
+impl IntoAttributeValue for u32 {
+    fn into_attribute_value(self) -> Option<String> {
+        Some(format!("{}", self))
+    }
+}
+
+impl IntoAttributeValue for u16 {
+    fn into_attribute_value(self) -> Option<String> {
+        Some(format!("{}", self))
+    }
+}
+
+impl IntoAttributeValue for u8 {
+    fn into_attribute_value(self) -> Option<String> {
+        Some(format!("{}", self))
+    }
+}
+
 impl IntoAttributeValue for String {
     fn into_attribute_value(self) -> Option<String> {
         Some(self)
