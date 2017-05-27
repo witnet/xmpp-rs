@@ -43,7 +43,7 @@ impl Into<Element> for Transport {
     fn into(self) -> Element {
         Element::builder("transport")
                 .ns(ns::JINGLE_IBB)
-                .attr("block-size", format!("{}", self.block_size))
+                .attr("block-size", self.block_size)
                 .attr("sid", self.sid)
                 .attr("stanza", self.stanza)
                 .build()

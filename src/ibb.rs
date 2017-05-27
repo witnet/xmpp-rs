@@ -113,7 +113,7 @@ impl Into<Element> for IBB {
             IBB::Open { block_size, sid, stanza } => {
                 Element::builder("open")
                         .ns(ns::IBB)
-                        .attr("block-size", format!("{}", block_size))
+                        .attr("block-size", block_size)
                         .attr("sid", sid)
                         .attr("stanza", stanza)
                         .build()
@@ -121,7 +121,7 @@ impl Into<Element> for IBB {
             IBB::Data { seq, sid, data } => {
                 Element::builder("data")
                         .ns(ns::IBB)
-                        .attr("seq", format!("{}", seq))
+                        .attr("seq", seq)
                         .attr("sid", sid)
                         .append(base64::encode(&data))
                         .build()

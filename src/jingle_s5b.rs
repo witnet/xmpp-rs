@@ -70,8 +70,8 @@ impl Into<Element> for Candidate {
                 .attr("cid", self.cid)
                 .attr("host", self.host)
                 .attr("jid", self.jid)
-                .attr("port", match self.port { Some(port) => Some(format!("{}", port)), None => None })
-                .attr("priority", format!("{}", self.priority))
+                .attr("port", self.port)
+                .attr("priority", self.priority)
                 .attr("type", self.type_)
                 .build()
     }

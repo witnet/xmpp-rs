@@ -103,7 +103,7 @@ impl Into<Element> for Set {
         if self.first.is_some() {
             elem.append_child(Element::builder("first")
                                       .ns(ns::RSM)
-                                      .attr("index", self.first_index.map(|index| format!("{}", index)))
+                                      .attr("index", self.first_index)
                                       .append(self.first).build());
         }
         if self.index.is_some() {
