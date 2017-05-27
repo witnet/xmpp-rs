@@ -1,14 +1,17 @@
+use std::convert::TryFrom;
+
 use plugin::PluginProxy;
-use event::{Event, Priority, Propagation, ReceiveElement};
-use minidom::Element;
+use event::{Event, Priority, Propagation};
 use error::Error;
 use jid::Jid;
-use ns;
+
+use plugins::stanza::Iq;
+use xmpp_parsers::iq::{IqType, IqPayload};
+use xmpp_parsers::ping::Ping;
 
 #[derive(Debug)]
 pub struct PingEvent {
     pub from: Jid,
-    pub to: Jid,
     pub id: String,
 }
 
@@ -26,39 +29,43 @@ impl PingPlugin {
     }
 
     pub fn send_ping(&self, to: &Jid) -> Result<(), Error> {
-        let mut elem = Element::builder("iq")
-                               .attr("type", "get")
-                               .attr("to", to.to_string())
-                               .build();
-        elem.append_child(Element::builder("ping").ns(ns::PING).build());
-        self.proxy.send(elem);
+        let to = to.clone();
+        self.proxy.send(Iq {
+            from: None,
+            to: Some(to),
+            // TODO: use a generic way to generate ids.
+            id: Some(String::from("id")),
+            payload: IqType::Get(IqPayload::Ping(Ping).into()),
+        }.into());
         Ok(())
     }
 
-    pub fn reply_ping(&self, event: &PingEvent) {
-        let reply = Element::builder("iq")
-                            .attr("type", "result")
-                            .attr("to", event.from.to_string())
-                            .attr("id", event.id.to_string())
-                            .build();
-        self.proxy.send(reply);
-    }
-
-    fn handle_receive_element(&self, evt: &ReceiveElement) -> Propagation {
-        let elem = &evt.0;
-        if elem.is("iq", ns::CLIENT) && elem.attr("type") == Some("get") {
-            if elem.has_child("ping", ns::PING) {
+    fn handle_iq(&self, iq: &Iq) -> Propagation {
+        let iq = iq.clone();
+        if let IqType::Get(payload) = iq.payload {
+            // TODO: use an intermediate plugin to parse this payload.
+            if let Ok(IqPayload::Ping(_)) = IqPayload::try_from(payload) {
                 self.proxy.dispatch(PingEvent { // TODO: safety!!!
-                    from: elem.attr("from").unwrap().parse().unwrap(),
-                    to: elem.attr("to").unwrap().parse().unwrap(),
-                    id: elem.attr("id").unwrap().parse().unwrap(),
+                    from: iq.from.unwrap(),
+                    id: iq.id.unwrap(),
                 });
             }
         }
         Propagation::Continue
     }
+
+    fn reply_ping(&self, ping: &PingEvent) -> Propagation {
+        self.proxy.send(Iq {
+            from: None,
+            to: Some(ping.from.to_owned()),
+            id: Some(ping.id.to_owned()),
+            payload: IqType::Result(None),
+        }.into());
+        Propagation::Continue
+    }
 }
 
 impl_plugin!(PingPlugin, proxy, [
-    (ReceiveElement, Priority::Default) => handle_receive_element,
+    (Iq, Priority::Default) => handle_iq,
+    (PingEvent, Priority::Default) => reply_ping,
 ]);
