@@ -87,29 +87,23 @@ pub trait IntoAttributeValue {
     fn into_attribute_value(self) -> Option<String>;
 }
 
-impl IntoAttributeValue for usize {
-    fn into_attribute_value(self) -> Option<String> {
-        Some(format!("{}", self))
+macro_rules! impl_into_attribute_value {
+    ($t:ty) => {
+        impl IntoAttributeValue for $t {
+            fn into_attribute_value(self) -> Option<String> {
+                Some(format!("{}", self))
+            }
+        }
     }
 }
 
-impl IntoAttributeValue for u32 {
-    fn into_attribute_value(self) -> Option<String> {
-        Some(format!("{}", self))
+macro_rules! impl_into_attribute_values {
+    ($($t:ty),*) => {
+        $(impl_into_attribute_value!($t);)*
     }
 }
 
-impl IntoAttributeValue for u16 {
-    fn into_attribute_value(self) -> Option<String> {
-        Some(format!("{}", self))
-    }
-}
-
-impl IntoAttributeValue for u8 {
-    fn into_attribute_value(self) -> Option<String> {
-        Some(format!("{}", self))
-    }
-}
+impl_into_attribute_values!(usize, u64, u32, u16, u8, isize, i64, i32, i16, i8);
 
 impl IntoAttributeValue for String {
     fn into_attribute_value(self) -> Option<String> {
@@ -132,5 +126,22 @@ impl<'a> IntoAttributeValue for &'a str {
 impl<T: IntoAttributeValue> IntoAttributeValue for Option<T> {
     fn into_attribute_value(self) -> Option<String> {
         self.and_then(|t| t.into_attribute_value())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::IntoAttributeValue;
+
+    #[test]
+    fn test_into_attribute_value_on_ints() {
+        assert_eq!(16u8.into_attribute_value().unwrap()    , "16");
+        assert_eq!(17u16.into_attribute_value().unwrap()   , "17");
+        assert_eq!(18u32.into_attribute_value().unwrap()   , "18");
+        assert_eq!(19u64.into_attribute_value().unwrap()   , "19");
+        assert_eq!(   16i8.into_attribute_value().unwrap() , "16");
+        assert_eq!((-17i16).into_attribute_value().unwrap(), "-17");
+        assert_eq!(   18i32.into_attribute_value().unwrap(), "18");
+        assert_eq!((-19i64).into_attribute_value().unwrap(), "-19");
     }
 }
