@@ -22,6 +22,7 @@ extern crate sha_1;
 extern crate sha2;
 extern crate sha3;
 extern crate blake2;
+extern crate chrono;
 
 macro_rules! get_attr {
     ($elem:ident, $attr:tt, $type:tt) => (

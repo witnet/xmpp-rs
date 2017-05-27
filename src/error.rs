@@ -12,6 +12,7 @@ use std::string;
 use base64;
 use minidom;
 use jid;
+use chrono;
 
 #[derive(Debug)]
 pub enum Error {
@@ -22,6 +23,7 @@ pub enum Error {
     ParseIntError(num::ParseIntError),
     ParseStringError(string::ParseError),
     JidParseError(jid::JidParseError),
+    ChronoParseError(chrono::ParseError),
 }
 
 impl From<io::Error> for Error {
@@ -57,5 +59,11 @@ impl From<string::ParseError> for Error {
 impl From<jid::JidParseError> for Error {
     fn from(err: jid::JidParseError) -> Error {
         Error::JidParseError(err)
+    }
+}
+
+impl From<chrono::ParseError> for Error {
+    fn from(err: chrono::ParseError) -> Error {
+        Error::ChronoParseError(err)
     }
 }

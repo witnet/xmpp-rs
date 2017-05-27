@@ -7,16 +7,15 @@
 use std::convert::TryFrom;
 
 use minidom::Element;
+use chrono::prelude::*;
 
 use error::Error;
 
 use ns;
 
-type Date = String;
-
 #[derive(Debug, Clone)]
 pub struct Idle {
-    pub since: Date,
+    pub since: DateTime<FixedOffset>,
 }
 
 impl TryFrom<Element> for Idle {
@@ -29,7 +28,7 @@ impl TryFrom<Element> for Idle {
         for _ in elem.children() {
             return Err(Error::ParseError("Unknown child in idle element."));
         }
-        let since = get_attr!(elem, "since", required);
+        let since = get_attr!(elem, "since", required, since, DateTime::parse_from_rfc3339(since)?);
         Ok(Idle { since: since })
     }
 }
@@ -38,7 +37,7 @@ impl Into<Element> for Idle {
     fn into(self) -> Element {
         Element::builder("idle")
                 .ns(ns::IDLE)
-                .attr("since", self.since.clone())
+                .attr("since", self.since.to_rfc3339())
                 .build()
     }
 }
@@ -46,6 +45,7 @@ impl Into<Element> for Idle {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::error::Error as StdError;
 
     #[test]
     fn test_simple() {
@@ -76,9 +76,66 @@ mod tests {
     }
 
     #[test]
+    fn test_invalid_date() {
+        // There is no thirteenth month.
+        let elem: Element = "<idle xmlns='urn:xmpp:idle:1' since='2017-13-01T12:23:34Z'/>".parse().unwrap();
+        let error = Idle::try_from(elem).unwrap_err();
+        let message = match error {
+            Error::ChronoParseError(string) => string,
+            _ => panic!(),
+        };
+        assert_eq!(message.description(), "input is out of range");
+
+        // Timezone ≥24:00 aren’t allowed.
+        let elem: Element = "<idle xmlns='urn:xmpp:idle:1' since='2017-05-27T12:11:02+25:00'/>".parse().unwrap();
+        let error = Idle::try_from(elem).unwrap_err();
+        let message = match error {
+            Error::ChronoParseError(string) => string,
+            _ => panic!(),
+        };
+        assert_eq!(message.description(), "input is out of range");
+
+        // Timezone without the : separator aren’t allowed.
+        let elem: Element = "<idle xmlns='urn:xmpp:idle:1' since='2017-05-27T12:11:02+0100'/>".parse().unwrap();
+        let error = Idle::try_from(elem).unwrap_err();
+        let message = match error {
+            Error::ChronoParseError(string) => string,
+            _ => panic!(),
+        };
+        assert_eq!(message.description(), "input contains invalid characters");
+
+        // No seconds, error message could be improved.
+        let elem: Element = "<idle xmlns='urn:xmpp:idle:1' since='2017-05-27T12:11+01:00'/>".parse().unwrap();
+        let error = Idle::try_from(elem).unwrap_err();
+        let message = match error {
+            Error::ChronoParseError(string) => string,
+            _ => panic!(),
+        };
+        assert_eq!(message.description(), "input contains invalid characters");
+
+        // TODO: maybe we’ll want to support this one, as per XEP-0082 §4.
+        let elem: Element = "<idle xmlns='urn:xmpp:idle:1' since='20170527T12:11:02+01:00'/>".parse().unwrap();
+        let error = Idle::try_from(elem).unwrap_err();
+        let message = match error {
+            Error::ChronoParseError(string) => string,
+            _ => panic!(),
+        };
+        assert_eq!(message.description(), "input contains invalid characters");
+
+        // No timezone.
+        let elem: Element = "<idle xmlns='urn:xmpp:idle:1' since='2017-05-27T12:11:02'/>".parse().unwrap();
+        let error = Idle::try_from(elem).unwrap_err();
+        let message = match error {
+            Error::ChronoParseError(string) => string,
+            _ => panic!(),
+        };
+        assert_eq!(message.description(), "premature end of input");
+    }
+
+    #[test]
     fn test_serialise() {
         let elem: Element = "<idle xmlns='urn:xmpp:idle:1' since='2017-05-21T20:19:55+01:00'/>".parse().unwrap();
-        let idle = Idle { since: Date::from("2017-05-21T20:19:55+01:00") };
+        let idle = Idle { since: DateTime::parse_from_rfc3339("2017-05-21T20:19:55+01:00").unwrap() };
         let elem2 = idle.into();
         assert_eq!(elem, elem2);
     }
