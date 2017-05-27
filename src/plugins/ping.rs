@@ -6,8 +6,10 @@ use error::Error;
 use jid::Jid;
 
 use plugins::stanza::Iq;
+use plugins::disco::DiscoPlugin;
 use xmpp_parsers::iq::{IqType, IqPayload};
 use xmpp_parsers::ping::Ping;
+use xmpp_parsers::ns;
 
 #[derive(Debug)]
 pub struct PingEvent {
@@ -25,6 +27,24 @@ impl PingPlugin {
     pub fn new() -> PingPlugin {
         PingPlugin {
             proxy: PluginProxy::new(),
+        }
+    }
+
+    // TODO: make that called automatically after plugins are created.
+    pub fn init(&self) {
+        if let Some(disco) = self.proxy.plugin::<DiscoPlugin>() {
+            disco.add_feature(ns::PING);
+        } else {
+            panic!("Please handle dependencies in the correct order.");
+        }
+    }
+
+    // TODO: make that called automatically before removal.
+    pub fn deinit(&self) {
+        if let Some(disco) = self.proxy.plugin::<DiscoPlugin>() {
+            disco.remove_feature(ns::PING);
+        } else {
+            panic!("Please handle dependencies in the correct order.");
         }
     }
 

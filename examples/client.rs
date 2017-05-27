@@ -27,6 +27,7 @@ fn main() {
     client.register_plugin(DiscoPlugin::new("client", "bot", "en", "xmpp-rs"));
     client.register_plugin(IbbPlugin::new());
     client.register_plugin(PingPlugin::new());
+    client.plugin::<PingPlugin>().init();
     client.register_handler(Priority::Max, |e: &MessageEvent| {
         println!("{:?}", e);
         Propagation::Continue
