@@ -13,6 +13,7 @@ use hashes::{Hash, Algo};
 use minidom::Element;
 use error::Error;
 use ns;
+use base64;
 
 use sha2::{Sha256, Sha512};
 use sha3::{Sha3_256, Sha3_512};
@@ -171,11 +172,19 @@ pub fn hash_ecaps2(data: &[u8], algo: Algo) -> Result<Hash, String> {
     })
 }
 
+pub fn query_ecaps2(hash: Hash) -> Disco {
+    Disco {
+        node: Some(format!("{}#{}.{}", ns::ECAPS2, String::from(hash.algo), base64::encode(&hash.hash))),
+        identities: vec!(),
+        features: vec!(),
+        extensions: vec!(),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use ecaps2;
-    use base64;
 
     #[test]
     fn test_parse() {

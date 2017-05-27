@@ -91,7 +91,8 @@ fn compute_features(features: &[Feature]) -> Vec<u8> {
 
 fn compute_identities(identities: &[Identity]) -> Vec<u8> {
     compute_items(identities, |identity| {
-        let string = format!("{}/{}/{}/{}", identity.category, identity.type_, identity.xml_lang, match identity.name { Some(ref name) => name.clone(), None => String::new() });
+        let empty = String::new();
+        let string = format!("{}/{}/{}/{}", identity.category, identity.type_, identity.xml_lang, match identity.name { Some(ref name) => name, None => &empty });
         let bytes = string.as_bytes();
         let mut vec = Vec::with_capacity(bytes.len());
         vec.extend_from_slice(bytes);
@@ -189,6 +190,15 @@ pub fn hash_caps(data: &[u8], algo: Algo) -> Result<Hash, String> {
         },
         algo: algo,
     })
+}
+
+pub fn query_caps(caps: Caps) -> Disco {
+    Disco {
+        node: Some(format!("{}#{}", caps.node, base64::encode(&caps.hash.hash))),
+        identities: vec!(),
+        features: vec!(),
+        extensions: vec!(),
+    }
 }
 
 #[cfg(test)]
