@@ -17,6 +17,7 @@ use error::Error;
 use ns;
 
 use stanza_error::StanzaError;
+use caps::Caps;
 use delay::Delay;
 use idle::Idle;
 use ecaps2::ECaps2;
@@ -66,6 +67,7 @@ pub type Priority = i8;
 #[derive(Debug, Clone)]
 pub enum PresencePayload {
     StanzaError(StanzaError),
+    Caps(Caps),
     Delay(Delay),
     Idle(Idle),
     ECaps2(ECaps2),
@@ -79,6 +81,9 @@ impl TryFrom<Element> for PresencePayload {
     fn try_from(elem: Element) -> Result<PresencePayload, Error> {
         Ok(match (elem.name().as_ref(), elem.ns().unwrap().as_ref()) {
             ("error", ns::JABBER_CLIENT) => PresencePayload::StanzaError(StanzaError::try_from(elem)?),
+
+            // XEP-0115
+            ("c", ns::CAPS) => PresencePayload::Caps(Caps::try_from(elem)?),
 
             // XEP-0203
             ("delay", ns::DELAY) => PresencePayload::Delay(Delay::try_from(elem)?),
@@ -98,6 +103,7 @@ impl Into<Element> for PresencePayload {
     fn into(self) -> Element {
         match self {
             PresencePayload::StanzaError(stanza_error) => stanza_error.into(),
+            PresencePayload::Caps(caps) => caps.into(),
             PresencePayload::Delay(delay) => delay.into(),
             PresencePayload::Idle(idle) => idle.into(),
             PresencePayload::ECaps2(ecaps2) => ecaps2.into(),
