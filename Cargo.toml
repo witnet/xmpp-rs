@@ -1,7 +1,7 @@
 [package]
 name = "jid"
-version = "0.2.0"
-authors = ["lumi <lumi@pew.im>"]
+version = "0.2.1"
+authors = ["lumi <lumi@pew.im>", "Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>"]
 description = "A crate which provides a Jid struct for Jabber IDs."
 homepage = "https://gitlab.com/lumi/jid-rs"
 repository = "https://gitlab.com/lumi/jid-rs"
