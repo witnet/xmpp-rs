@@ -24,7 +24,7 @@ pub enum JidParseError {
 ///  - A node/name, `node`, which is the optional part before the @.
 ///  - A domain, `domain`, which is the mandatory part after the @ but before the /.
 ///  - A resource, `resource`, which is the optional part after the /.
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq, Hash)]
 pub struct Jid {
     /// The node part of the Jabber ID, if it exists, else None.
     pub node: Option<String>,
