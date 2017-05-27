@@ -9,7 +9,7 @@ macro_rules! impl_plugin {
 
         #[allow(unused_variables)]
         impl $crate::plugin::PluginInit for $plugin {
-            fn init( dispatcher: &mut $crate::event::Dispatcher
+            fn init( dispatcher: &$crate::event::Dispatcher
                    , me: ::std::sync::Arc<Box<$crate::plugin::Plugin>>) {
                 $(
                     let new_arc = me.clone();

@@ -4,6 +4,7 @@ use std::fmt::Debug;
 use std::collections::BTreeMap;
 use std::cmp::Ordering;
 use std::mem;
+use std::sync::Mutex;
 
 use minidom::Element;
 
@@ -72,21 +73,21 @@ pub enum Propagation {
 
 /// An event dispatcher, this takes care of dispatching events to their respective handlers.
 pub struct Dispatcher {
-    handlers: BTreeMap<TypeId, Vec<Record<Priority, Box<EventHandler>>>>,
-    queue: Vec<(TypeId, AbstractEvent)>,
+    handlers: Mutex<BTreeMap<TypeId, Vec<Record<Priority, Box<EventHandler>>>>>,
+    queue: Mutex<Vec<(TypeId, AbstractEvent)>>,
 }
 
 impl Dispatcher {
     /// Create a new `Dispatcher`.
     pub fn new() -> Dispatcher {
         Dispatcher {
-            handlers: BTreeMap::new(),
-            queue: Vec::new(),
+            handlers: Mutex::new(BTreeMap::new()),
+            queue: Mutex::new(Vec::new()),
         }
     }
 
     /// Register an event handler.
-    pub fn register<E, F>(&mut self, priority: Priority, func: F)
+    pub fn register<E, F>(&self, priority: Priority, func: F)
         where
             E: Event,
             F: Fn(&E) -> Propagation + 'static {
@@ -110,24 +111,28 @@ impl Dispatcher {
             func: func,
             _marker: PhantomData,
         }) as Box<EventHandler>;
-        let ent = self.handlers.entry(TypeId::of::<E>())
-                               .or_insert_with(|| Vec::new());
+        let mut guard = self.handlers.lock().unwrap();
+        let ent = guard.entry(TypeId::of::<E>())
+                       .or_insert_with(|| Vec::new());
         ent.push(Record(priority, handler));
         ent.sort();
     }
 
     /// Append an event to the queue.
-    pub fn dispatch<E>(&mut self, event: E) where E: Event {
-        self.queue.push((TypeId::of::<E>(), AbstractEvent::new(event)));
+    pub fn dispatch<E>(&self, event: E) where E: Event {
+        self.queue.lock().unwrap().push((TypeId::of::<E>(), AbstractEvent::new(event)));
     }
 
     /// Flush all events in the queue so they can be handled by their respective handlers.
     /// Returns whether there are still pending events.
-    pub fn flush(&mut self) -> bool {
+    pub fn flush(&self) -> bool {
         let mut q = Vec::new();
-        mem::swap(&mut self.queue, &mut q);
+        {
+            let mut my_q = self.queue.lock().unwrap();
+            mem::swap(my_q.as_mut(), &mut q);
+        }
         'evts: for (t, evt) in q {
-            if let Some(handlers) = self.handlers.get_mut(&t) {
+            if let Some(handlers) = self.handlers.lock().unwrap().get_mut(&t) {
                 for &mut Record(_, ref mut handler) in handlers {
                     match handler.handle(&evt) {
                         Propagation::Stop => { continue 'evts; },
@@ -136,12 +141,12 @@ impl Dispatcher {
                 }
             }
         }
-        !self.queue.is_empty()
+        !self.queue.lock().unwrap().is_empty()
     }
 
     /// Flushes all events, like `flush`, but keeps doing this until there is nothing left in the
     /// queue.
-    pub fn flush_all(&mut self) {
+    pub fn flush_all(&self) {
         while self.flush() {}
     }
 }
@@ -176,7 +181,7 @@ mod tests {
     #[test]
     #[should_panic(expected = "success")]
     fn test() {
-        let mut disp = Dispatcher::new();
+        let disp = Dispatcher::new();
 
         #[derive(Debug)]
         struct MyEvent {

@@ -4,7 +4,7 @@ use event::{Event, Dispatcher, SendElement, Priority, Propagation};
 
 use std::any::Any;
 
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 use std::mem;
 
@@ -12,11 +12,11 @@ use minidom::Element;
 
 #[derive(Clone)]
 pub struct PluginProxyBinding {
-    dispatcher: Arc<Mutex<Dispatcher>>,
+    dispatcher: Arc<Dispatcher>,
 }
 
 impl PluginProxyBinding {
-    pub fn new(dispatcher: Arc<Mutex<Dispatcher>>) -> PluginProxyBinding {
+    pub fn new(dispatcher: Arc<Dispatcher>) -> PluginProxyBinding {
         PluginProxyBinding {
             dispatcher: dispatcher,
         }
@@ -57,7 +57,7 @@ impl PluginProxy {
     pub fn dispatch<E: Event>(&self, event: E) {
         self.with_binding(move |binding| {
             // TODO: proper error handling
-            binding.dispatcher.lock().unwrap().dispatch(event);
+            binding.dispatcher.dispatch(event);
         });
     }
 
@@ -68,7 +68,7 @@ impl PluginProxy {
             F: Fn(&E) -> Propagation + 'static {
         self.with_binding(move |binding| {
             // TODO: proper error handling
-            binding.dispatcher.lock().unwrap().register(priority, func);
+            binding.dispatcher.register(priority, func);
         });
     }
 
@@ -90,7 +90,7 @@ pub trait Plugin: Any + PluginAny {
 }
 
 pub trait PluginInit {
-    fn init(dispatcher: &mut Dispatcher, me: Arc<Box<Plugin>>);
+    fn init(dispatcher: &Dispatcher, me: Arc<Box<Plugin>>);
 }
 
 pub trait PluginAny {

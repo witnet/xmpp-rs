@@ -77,7 +77,7 @@ impl ClientBuilder {
         let host = &self.host.unwrap_or(self.jid.domain.clone());
         let mut transport = SslTransport::connect(host, self.port)?;
         C2S::init(&mut transport, &self.jid.domain, "before_sasl")?;
-        let dispatcher = Arc::new(Mutex::new(Dispatcher::new()));
+        let dispatcher = Arc::new(Dispatcher::new());
         let mut credentials = self.credentials;
         credentials.channel_binding = transport.channel_bind();
         let transport = Arc::new(Mutex::new(transport));
@@ -88,7 +88,7 @@ impl ClientBuilder {
             binding: PluginProxyBinding::new(dispatcher.clone()),
             dispatcher: dispatcher,
         };
-        client.dispatcher.lock().unwrap().register(Priority::Default, move |evt: &SendElement| {
+        client.dispatcher.register(Priority::Default, move |evt: &SendElement| {
             let mut t = transport.lock().unwrap();
             t.write_element(&evt.0).unwrap();
             Propagation::Continue
@@ -105,7 +105,7 @@ pub struct Client {
     transport: Arc<Mutex<SslTransport>>,
     plugins: HashMap<TypeId, Arc<Box<Plugin>>>,
     binding: PluginProxyBinding,
-    dispatcher: Arc<Mutex<Dispatcher>>,
+    dispatcher: Arc<Dispatcher>,
 }
 
 impl Client {
@@ -119,10 +119,7 @@ impl Client {
         let binding = self.binding.clone();
         plugin.bind(binding);
         let p = Arc::new(Box::new(plugin) as Box<Plugin>);
-        {
-            let mut disp = self.dispatcher.lock().unwrap();
-            P::init(&mut disp, p.clone());
-        }
+        P::init(&self.dispatcher, p.clone());
         if self.plugins.insert(TypeId::of::<P>(), p).is_some() {
             panic!("registering a plugin that's already registered");
         }
@@ -132,7 +129,7 @@ impl Client {
         where
             E: Event,
             F: Fn(&E) -> Propagation + 'static {
-        self.dispatcher.lock().unwrap().register(pri, func);
+        self.dispatcher.register(pri, func);
     }
 
     /// Returns the plugin given by the type parameter, if it exists, else panics.
@@ -146,14 +143,11 @@ impl Client {
 
     /// Returns the next event and flush the send queue.
     pub fn main(&mut self) -> Result<(), Error> {
-        self.dispatcher.lock().unwrap().flush_all();
+        self.dispatcher.flush_all();
         loop {
             let elem = self.read_element()?;
-            {
-                let mut disp = self.dispatcher.lock().unwrap();
-                disp.dispatch(ReceiveElement(elem));
-                disp.flush_all();
-            }
+            self.dispatcher.dispatch(ReceiveElement(elem));
+            self.dispatcher.flush_all();
         }
     }
 

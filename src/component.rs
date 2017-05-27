@@ -4,7 +4,7 @@ use transport::{Transport, PlainTransport};
 use error::Error;
 use ns;
 use plugin::{Plugin, PluginInit, PluginProxyBinding};
-use event::{Dispatcher, ReceiveElement};
+use event::{Dispatcher, ReceiveElement, SendElement, Propagation, Priority, Event};
 use connection::{Connection, Component2S};
 use sha_1::{Sha1, Digest};
 
@@ -61,15 +61,20 @@ impl ComponentBuilder {
         let host = &self.host.unwrap_or(self.jid.domain.clone());
         let mut transport = PlainTransport::connect(host, self.port)?;
         Component2S::init(&mut transport, &self.jid.domain, "stream_opening")?;
-        let dispatcher = Arc::new(Mutex::new(Dispatcher::new()));
+        let dispatcher = Arc::new(Dispatcher::new());
         let transport = Arc::new(Mutex::new(transport));
         let mut component = Component {
             jid: self.jid,
-            transport: transport,
+            transport: transport.clone(),
             plugins: HashMap::new(),
             binding: PluginProxyBinding::new(dispatcher.clone()),
             dispatcher: dispatcher,
         };
+        component.dispatcher.register(Priority::Default, move |evt: &SendElement| {
+            let mut t = transport.lock().unwrap();
+            t.write_element(&evt.0).unwrap();
+            Propagation::Continue
+        });
         component.connect(self.secret)?;
         Ok(component)
     }
@@ -81,7 +86,7 @@ pub struct Component {
     transport: Arc<Mutex<PlainTransport>>,
     plugins: HashMap<TypeId, Arc<Box<Plugin>>>,
     binding: PluginProxyBinding,
-    dispatcher: Arc<Mutex<Dispatcher>>,
+    dispatcher: Arc<Dispatcher>,
 }
 
 impl Component {
@@ -95,10 +100,7 @@ impl Component {
         let binding = self.binding.clone();
         plugin.bind(binding);
         let p = Arc::new(Box::new(plugin) as Box<Plugin>);
-        {
-            let mut disp = self.dispatcher.lock().unwrap();
-            P::init(&mut disp, p.clone());
-        }
+        P::init(&self.dispatcher, p.clone());
         if self.plugins.insert(TypeId::of::<P>(), p).is_some() {
             panic!("registering a plugin that's already registered");
         }
@@ -113,16 +115,20 @@ impl Component {
                     .expect("plugin downcast failure (should not happen!!)")
     }
 
+    pub fn register_handler<E, F>(&mut self, pri: Priority, func: F)
+        where
+            E: Event,
+            F: Fn(&E) -> Propagation + 'static {
+        self.dispatcher.register(pri, func);
+    }
+
     /// Returns the next event and flush the send queue.
     pub fn main(&mut self) -> Result<(), Error> {
-        self.dispatcher.lock().unwrap().flush_all();
+        self.dispatcher.flush_all();
         loop {
             let elem = self.read_element()?;
-            {
-                let mut disp = self.dispatcher.lock().unwrap();
-                disp.dispatch(ReceiveElement(elem));
-                disp.flush_all();
-            }
+            self.dispatcher.dispatch(ReceiveElement(elem));
+            self.dispatcher.flush_all();
         }
     }
 
