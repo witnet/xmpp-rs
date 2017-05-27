@@ -87,6 +87,12 @@ pub trait IntoAttributeValue {
     fn into_attribute_value(self) -> Option<String>;
 }
 
+impl IntoAttributeValue for usize {
+    fn into_attribute_value(self) -> Option<String> {
+        Some(format!("{}", self))
+    }
+}
+
 impl IntoAttributeValue for String {
     fn into_attribute_value(self) -> Option<String> {
         Some(self)
