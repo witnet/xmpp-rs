@@ -51,7 +51,7 @@ impl PingPlugin {
                 });
             }
         }
-        Propagation::Continue
+        Propagation::Stop
     }
 
     fn reply_ping(&self, ping: &PingEvent) -> Propagation {

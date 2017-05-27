@@ -40,7 +40,7 @@ impl StanzaPlugin {
             self.proxy.dispatch(iq);
         }
 
-        Propagation::Continue
+        Propagation::Stop
     }
 }
 
