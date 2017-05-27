@@ -28,6 +28,7 @@ fn main() {
     client.register_plugin(IbbPlugin::new());
     client.register_plugin(PingPlugin::new());
     client.plugin::<PingPlugin>().init();
+    client.plugin::<IbbPlugin>().init();
     client.register_handler(Priority::Max, |e: &MessageEvent| {
         println!("{:?}", e);
         Propagation::Continue

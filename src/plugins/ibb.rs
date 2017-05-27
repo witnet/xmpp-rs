@@ -8,9 +8,11 @@ use event::{Event, Priority, Propagation};
 use jid::Jid;
 
 use plugins::stanza::Iq;
+use plugins::disco::DiscoPlugin;
 use xmpp_parsers::iq::{IqType, IqPayload};
 use xmpp_parsers::ibb::{IBB, Stanza};
 use xmpp_parsers::stanza_error::{StanzaError, ErrorType, DefinedCondition};
+use xmpp_parsers::ns;
 
 #[derive(Debug, Clone)]
 pub struct Session {
@@ -63,6 +65,24 @@ impl IbbPlugin {
         IbbPlugin {
             proxy: PluginProxy::new(),
             sessions: Arc::new(Mutex::new(HashMap::new())),
+        }
+    }
+
+    // TODO: make that called automatically after plugins are created.
+    pub fn init(&self) {
+        if let Some(disco) = self.proxy.plugin::<DiscoPlugin>() {
+            disco.add_feature(ns::IBB);
+        } else {
+            panic!("Please handle dependencies in the correct order.");
+        }
+    }
+
+    // TODO: make that called automatically before removal.
+    pub fn deinit(&self) {
+        if let Some(disco) = self.proxy.plugin::<DiscoPlugin>() {
+            disco.remove_feature(ns::IBB);
+        } else {
+            panic!("Please handle dependencies in the correct order.");
         }
     }
 
