@@ -6,6 +6,7 @@ use xmpp::plugins::stanza::StanzaPlugin;
 use xmpp::plugins::unhandled_iq::UnhandledIqPlugin;
 use xmpp::plugins::messaging::{MessagingPlugin, MessageEvent};
 use xmpp::plugins::presence::{PresencePlugin, Type};
+use xmpp::plugins::ibb::IbbPlugin;
 use xmpp::plugins::ping::{PingPlugin, PingEvent};
 use xmpp::event::{Priority, Propagation};
 
@@ -22,6 +23,7 @@ fn main() {
     client.register_plugin(UnhandledIqPlugin::new());
     client.register_plugin(MessagingPlugin::new());
     client.register_plugin(PresencePlugin::new());
+    client.register_plugin(IbbPlugin::new());
     client.register_plugin(PingPlugin::new());
     client.register_handler(Priority::Max, |e: &MessageEvent| {
         println!("{:?}", e);
