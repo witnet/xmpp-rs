@@ -81,13 +81,13 @@ impl PresencePlugin {
                                    .build();
                 stanza.append_child(elem);
             }
-            let mut elem = Element::builder("show")
-                                   .ns(ns::CLIENT)
-                                   .build();
             if show != Show::Available {
+                let mut elem = Element::builder("show")
+                                       .ns(ns::CLIENT)
+                                       .build();
                 elem.append_text_node(show.to_string());
+                stanza.append_child(elem);
             }
-            stanza.append_child(elem);
             self.proxy.send(stanza);
         }
         Ok(())
