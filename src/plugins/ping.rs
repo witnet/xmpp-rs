@@ -49,9 +49,10 @@ impl PingPlugin {
                     from: iq.from.unwrap(),
                     id: iq.id.unwrap(),
                 });
+                return Propagation::Stop;
             }
         }
-        Propagation::Stop
+        Propagation::Continue
     }
 
     fn reply_ping(&self, ping: &PingEvent) -> Propagation {

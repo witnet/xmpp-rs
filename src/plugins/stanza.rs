@@ -38,6 +38,9 @@ impl StanzaPlugin {
         } else if elem.is("iq", ns::CLIENT) {
             let iq = Iq::try_from(elem).unwrap();
             self.proxy.dispatch(iq);
+        } else {
+            // TODO: handle nonzas too.
+            return Propagation::Continue;
         }
 
         Propagation::Stop
