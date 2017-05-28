@@ -221,7 +221,7 @@ impl Into<Element> for Transport {
                      TransportPayload::CandidateUsed(ref cid) => {
                          vec!(Element::builder("candidate-used")
                                       .ns(ns::JINGLE_S5B)
-                                      .attr("cid", cid.to_owned())
+                                      .attr("cid", cid)
                                       .build())
                      },
                      TransportPayload::ProxyError => {
