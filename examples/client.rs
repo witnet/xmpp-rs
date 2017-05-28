@@ -7,7 +7,7 @@ use xmpp::plugins::unhandled_iq::UnhandledIqPlugin;
 use xmpp::plugins::messaging::{MessagingPlugin, MessageEvent};
 use xmpp::plugins::presence::{PresencePlugin, Type};
 use xmpp::plugins::ibb::IbbPlugin;
-use xmpp::plugins::ping::{PingPlugin, PingEvent};
+use xmpp::plugins::ping::PingPlugin;
 use xmpp::event::{Priority, Propagation};
 
 use std::env;
