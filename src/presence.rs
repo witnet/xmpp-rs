@@ -8,7 +8,7 @@ use std::convert::TryFrom;
 use std::str::FromStr;
 use std::collections::BTreeMap;
 
-use minidom::{Element, IntoAttributeValue};
+use minidom::{Element, IntoElements, IntoAttributeValue, ElementEmitter};
 
 use jid::Jid;
 
@@ -24,10 +24,17 @@ use ecaps2::ECaps2;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Show {
+    None,
     Away,
     Chat,
     Dnd,
     Xa,
+}
+
+impl Default for Show {
+    fn default() -> Show {
+        Show::None
+    }
 }
 
 impl FromStr for Show {
@@ -45,16 +52,21 @@ impl FromStr for Show {
     }
 }
 
-impl Into<Element> for Show {
-    fn into(self) -> Element {
-        Element::builder("show")
-                .append(match self {
-                     Show::Away => "away",
-                     Show::Chat => "chat",
-                     Show::Dnd => "dnd",
-                     Show::Xa => "xa",
-                 })
-                .build()
+impl IntoElements for Show {
+    fn into_elements(self, emitter: &mut ElementEmitter) {
+        if self == Show::None {
+            return;
+        }
+        emitter.append_child(
+            Element::builder("show")
+                    .append(match self {
+                         Show::None => unreachable!(),
+                         Show::Away => Some("away"),
+                         Show::Chat => Some("chat"),
+                         Show::Dnd => Some("dnd"),
+                         Show::Xa => Some("xa"),
+                     })
+                    .build())
     }
 }
 
@@ -114,7 +126,7 @@ impl Into<Element> for PresencePayload {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum PresenceType {
+pub enum Type {
     /// This value is not an acceptable 'type' attribute, it is only used
     /// internally to signal the absence of 'type'.
     None,
@@ -127,42 +139,42 @@ pub enum PresenceType {
     Unsubscribed,
 }
 
-impl Default for PresenceType {
-    fn default() -> PresenceType {
-        PresenceType::None
+impl Default for Type {
+    fn default() -> Type {
+        Type::None
     }
 }
 
-impl FromStr for PresenceType {
+impl FromStr for Type {
     type Err = Error;
 
-    fn from_str(s: &str) -> Result<PresenceType, Error> {
+    fn from_str(s: &str) -> Result<Type, Error> {
         Ok(match s {
-            "error" => PresenceType::Error,
-            "probe" => PresenceType::Probe,
-            "subscribe" => PresenceType::Subscribe,
-            "subscribed" => PresenceType::Subscribed,
-            "unavailable" => PresenceType::Unavailable,
-            "unsubscribe" => PresenceType::Unsubscribe,
-            "unsubscribed" => PresenceType::Unsubscribed,
+            "error" => Type::Error,
+            "probe" => Type::Probe,
+            "subscribe" => Type::Subscribe,
+            "subscribed" => Type::Subscribed,
+            "unavailable" => Type::Unavailable,
+            "unsubscribe" => Type::Unsubscribe,
+            "unsubscribed" => Type::Unsubscribed,
 
             _ => return Err(Error::ParseError("Invalid 'type' attribute on presence element.")),
         })
     }
 }
 
-impl IntoAttributeValue for PresenceType {
+impl IntoAttributeValue for Type {
     fn into_attribute_value(self) -> Option<String> {
         Some(match self {
-            PresenceType::None => return None,
+            Type::None => return None,
 
-            PresenceType::Error => "error",
-            PresenceType::Probe => "probe",
-            PresenceType::Subscribe => "subscribe",
-            PresenceType::Subscribed => "subscribed",
-            PresenceType::Unavailable => "unavailable",
-            PresenceType::Unsubscribe => "unsubscribe",
-            PresenceType::Unsubscribed => "unsubscribed",
+            Type::Error => "error",
+            Type::Probe => "probe",
+            Type::Subscribe => "subscribe",
+            Type::Subscribed => "subscribed",
+            Type::Unavailable => "unavailable",
+            Type::Unsubscribe => "unsubscribe",
+            Type::Unsubscribed => "unsubscribed",
         }.to_owned())
     }
 }
@@ -172,8 +184,8 @@ pub struct Presence {
     pub from: Option<Jid>,
     pub to: Option<Jid>,
     pub id: Option<String>,
-    pub type_: PresenceType,
-    pub show: Option<Show>,
+    pub type_: Type,
+    pub show: Show,
     pub statuses: BTreeMap<Lang, Status>,
     pub priority: Priority,
     pub payloads: Vec<Element>,
@@ -186,20 +198,21 @@ impl TryFrom<Element> for Presence {
         if !root.is("presence", ns::JABBER_CLIENT) {
             return Err(Error::ParseError("This is not a presence element."));
         }
+        let mut show = None;
         let mut priority = None;
         let mut presence = Presence {
             from: get_attr!(root, "from", optional),
             to: get_attr!(root, "to", optional),
             id: get_attr!(root, "id", optional),
             type_: get_attr!(root, "type", default),
-            show: None,
+            show: Show::None,
             statuses: BTreeMap::new(),
             priority: 0i8,
             payloads: vec!(),
         };
         for elem in root.children() {
             if elem.is("show", ns::JABBER_CLIENT) {
-                if presence.show.is_some() {
+                if show.is_some() {
                     return Err(Error::ParseError("More than one show element in a presence."));
                 }
                 for _ in elem.children() {
@@ -208,7 +221,7 @@ impl TryFrom<Element> for Presence {
                 for _ in elem.attrs() {
                     return Err(Error::ParseError("Unknown attribute in show element."));
                 }
-                presence.show = Some(Show::from_str(elem.text().as_ref())?);
+                show = Some(Show::from_str(elem.text().as_ref())?);
             } else if elem.is("status", ns::JABBER_CLIENT) {
                 for _ in elem.children() {
                     return Err(Error::ParseError("Unknown child in status element."));
@@ -237,6 +250,9 @@ impl TryFrom<Element> for Presence {
                 presence.payloads.push(elem.clone());
             }
         }
+        if let Some(show) = show {
+            presence.show = show;
+        }
         if let Some(priority) = priority {
             presence.priority = priority;
         }
@@ -252,10 +268,7 @@ impl Into<Element> for Presence {
                 .attr("to", self.to.and_then(|value| Some(String::from(value))))
                 .attr("id", self.id)
                 .attr("type", self.type_)
-                .append(match self.show {
-                     Some(show) => Some({ let elem: Element = show.into(); elem }),
-                     None => None
-                 })
+                .append(self.show)
                 .append(self.statuses.iter().map(|(lang, status)| {
                      Element::builder("status")
                              .attr("xml:lang", match lang.as_ref() {
@@ -283,7 +296,7 @@ mod tests {
         assert_eq!(presence.from, None);
         assert_eq!(presence.to, None);
         assert_eq!(presence.id, None);
-        assert_eq!(presence.type_, PresenceType::None);
+        assert_eq!(presence.type_, Type::None);
         assert!(presence.payloads.is_empty());
     }
 
@@ -294,8 +307,8 @@ mod tests {
             from: None,
             to: None,
             id: None,
-            type_: PresenceType::Unavailable,
-            show: None,
+            type_: Type::Unavailable,
+            show: Show::None,
             statuses: BTreeMap::new(),
             priority: 0i8,
             payloads: vec!(),
@@ -309,7 +322,7 @@ mod tests {
         let elem: Element = "<presence xmlns='jabber:client'><show>chat</show></presence>".parse().unwrap();
         let presence = Presence::try_from(elem).unwrap();
         assert_eq!(presence.payloads.len(), 0);
-        assert_eq!(presence.show, Some(Show::Chat));
+        assert_eq!(presence.show, Show::Chat);
     }
 
     #[test]
@@ -432,8 +445,8 @@ mod tests {
             from: None,
             to: None,
             id: None,
-            type_: PresenceType::Unavailable,
-            show: None,
+            type_: Type::Unavailable,
+            show: Show::None,
             statuses: statuses,
             priority: 0i8,
             payloads: vec!(),
