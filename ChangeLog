@@ -1,3 +1,24 @@
+Version 0.4.0:
+2017-05-28  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
+    * Incompatible changes:
+        - Receipts now make the id optional, as per the specification.
+        - Hashes now expose their raw binary value, instead of staying
+          base64-encoded.
+        - Parse dates (XEP-0082) in delayed delivery (XEP-0203) and
+          last user interaction (XEP-0319), using the chrono crate.
+    * Improvements:
+        - Removal of most of the remaining clones, the only ones left
+          are due to minidom not exposing a draining iterator over the
+          children.
+        - Finish to parse all of the attributes using get_attr!().
+        - More attribute checks.
+        - Split more parsers into one parser per element.
+        - Rely on minidom 0.4.3 to serialise more standard types
+          automatically.
+        - Implement forgotten serialisation for data forms (XEP-0004).
+        - Implement legacy capabilities (XEP-0115) for compatibility
+          with older software.
+
 Version 0.3.0:
 2017-05-23  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
     * Big changes:
