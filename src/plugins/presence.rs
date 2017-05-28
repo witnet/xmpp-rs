@@ -3,7 +3,7 @@ use std::collections::BTreeMap;
 use error::Error;
 use plugin::PluginProxy;
 
-pub use xmpp_parsers::presence::{Presence, PresenceType as Type, Show};
+pub use xmpp_parsers::presence::{Presence, Type, Show};
 
 pub struct PresencePlugin {
     proxy: PluginProxy,
@@ -16,7 +16,7 @@ impl PresencePlugin {
         }
     }
 
-    pub fn set_presence(&self, type_: Type, show: Option<Show>, status: Option<String>) -> Result<(), Error> {
+    pub fn set_presence(&self, type_: Type, show: Show, status: Option<String>) -> Result<(), Error> {
         let presence = Presence {
             from: None,
             to: None,
