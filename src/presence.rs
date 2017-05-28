@@ -117,7 +117,7 @@ impl Into<Element> for PresencePayload {
 pub enum PresenceType {
     /// This value is not an acceptable 'type' attribute, it is only used
     /// internally to signal the absence of 'type'.
-    Available,
+    None,
     Error,
     Probe,
     Subscribe,
@@ -129,7 +129,7 @@ pub enum PresenceType {
 
 impl Default for PresenceType {
     fn default() -> PresenceType {
-        PresenceType::Available
+        PresenceType::None
     }
 }
 
@@ -154,7 +154,7 @@ impl FromStr for PresenceType {
 impl IntoAttributeValue for PresenceType {
     fn into_attribute_value(self) -> Option<String> {
         Some(match self {
-            PresenceType::Available => return None,
+            PresenceType::None => return None,
 
             PresenceType::Error => "error",
             PresenceType::Probe => "probe",
@@ -283,7 +283,7 @@ mod tests {
         assert_eq!(presence.from, None);
         assert_eq!(presence.to, None);
         assert_eq!(presence.id, None);
-        assert_eq!(presence.type_, PresenceType::Available);
+        assert_eq!(presence.type_, PresenceType::None);
         assert!(presence.payloads.is_empty());
     }
 
