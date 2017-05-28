@@ -62,6 +62,9 @@ pub mod iq;
 /// RFC 6120: Extensible Messaging and Presence Protocol (XMPP): Core
 pub mod stanza_error;
 
+/// RFC 6121: Extensible Messaging and Presence Protocol (XMPP): Instant Messaging and Presence
+pub mod roster;
+
 /// XEP-0004: Data Forms
 pub mod data_forms;
 

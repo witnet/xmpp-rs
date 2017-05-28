@@ -1,3 +1,9 @@
+Version 0.?.?:
+2017-??-??  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
+    * New parsers/serialisers:
+        - Implementation of the roster management protocol defined in
+          RFC 6121 §2.
+
 Version 0.4.0:
 2017-05-28  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
     * Incompatible changes:
