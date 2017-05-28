@@ -1,5 +1,6 @@
 pub mod messaging;
 pub mod presence;
+pub mod disco;
 pub mod ping;
 pub mod ibb;
 pub mod stanza;
