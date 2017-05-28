@@ -17,6 +17,7 @@ use error::Error;
 use ns;
 
 use stanza_error::StanzaError;
+use roster::Roster;
 use disco::Disco;
 use ibb::IBB;
 use jingle::Jingle;
@@ -26,6 +27,7 @@ use mam::{Query as MamQuery, Fin as MamFin, Prefs as MamPrefs};
 /// Lists every known payload of a `<iq/>`.
 #[derive(Debug, Clone)]
 pub enum IqPayload {
+    Roster(Roster),
     Disco(Disco),
     IBB(IBB),
     Jingle(Jingle),
@@ -42,6 +44,9 @@ impl TryFrom<Element> for IqPayload {
 
     fn try_from(elem: Element) -> Result<IqPayload, Error> {
         Ok(match (elem.name().as_ref(), elem.ns().unwrap().as_ref()) {
+            // RFC-6121
+            ("query", ns::ROSTER) => IqPayload::Roster(Roster::try_from(elem)?),
+
             // XEP-0030
             ("query", ns::DISCO_INFO) => IqPayload::Disco(Disco::try_from(elem)?),
 
@@ -165,6 +170,7 @@ impl TryFrom<Element> for Iq {
 impl Into<Element> for IqPayload {
     fn into(self) -> Element {
         match self {
+            IqPayload::Roster(roster) => roster.into(),
             IqPayload::Disco(disco) => disco.into(),
             IqPayload::IBB(ibb) => ibb.into(),
             IqPayload::Jingle(jingle) => jingle.into(),
