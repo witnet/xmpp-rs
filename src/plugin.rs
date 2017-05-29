@@ -8,6 +8,8 @@ use std::collections::HashMap;
 
 use std::sync::{RwLock, Arc};
 
+use std::sync::atomic::{AtomicUsize, Ordering, ATOMIC_USIZE_INIT};
+
 use std::marker::PhantomData;
 
 use std::ops::Deref;
@@ -73,6 +75,7 @@ pub struct PluginProxyBinding {
     dispatcher: Arc<Dispatcher>,
     plugin_container: Arc<PluginContainer>,
     jid: Jid,
+    next_id: Arc<AtomicUsize>,
 }
 
 impl PluginProxyBinding {
@@ -81,6 +84,7 @@ impl PluginProxyBinding {
             dispatcher: dispatcher,
             plugin_container: plugin_container,
             jid: jid,
+            next_id: Arc::new(ATOMIC_USIZE_INIT),
         }
     }
 }
@@ -150,6 +154,13 @@ impl PluginProxy {
     pub fn get_own_jid(&self) -> Jid {
         self.with_binding(|binding| {
             binding.jid.clone()
+        })
+    }
+
+    /// Get a new id.
+    pub fn gen_id(&self) -> String {
+        self.with_binding(|binding| {
+            format!("{}", binding.next_id.fetch_add(1, Ordering::SeqCst))
         })
     }
 }
