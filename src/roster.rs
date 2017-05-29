@@ -70,7 +70,7 @@ impl TryFrom<Element> for Item {
 
         let mut item = Item {
             jid: get_attr!(elem, "jid", required),
-            name: get_attr!(elem, "name", optional),
+            name: get_attr!(elem, "name", optional).and_then(|name| if name == "" { None } else { Some(name) }),
             subscription: get_attr!(elem, "subscription", optional),
             groups: vec!(),
         };
