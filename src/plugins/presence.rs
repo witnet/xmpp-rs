@@ -20,7 +20,7 @@ impl PresencePlugin {
         let presence = Presence {
             from: None,
             to: None,
-            id: None,
+            id: Some(self.proxy.gen_id()),
             type_: type_,
             show: show,
             priority: 0i8,

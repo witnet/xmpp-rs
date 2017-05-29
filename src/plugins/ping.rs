@@ -53,8 +53,7 @@ impl PingPlugin {
         self.proxy.send(Iq {
             from: None,
             to: Some(to),
-            // TODO: use a generic way to generate ids.
-            id: Some(String::from("id")),
+            id: Some(self.proxy.gen_id()),
             payload: IqType::Get(IqPayload::Ping(Ping).into()),
         }.into());
         Ok(())
