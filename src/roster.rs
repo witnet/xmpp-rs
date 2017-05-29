@@ -168,6 +168,10 @@ mod tests {
         assert_eq!(roster.ver, Some(String::from("ver7")));
         assert_eq!(roster.items.len(), 2);
 
+        let elem2: Element = "<query xmlns='jabber:iq:roster' ver='ver7'><item jid='nurse@example.com'/><item jid='romeo@example.net' name=''/></query>".parse().unwrap();
+        let roster2 = Roster::try_from(elem2).unwrap();
+        assert_eq!(roster.items, roster2.items);
+
         let elem: Element = "<query xmlns='jabber:iq:roster' ver='ver9'/>".parse().unwrap();
         let roster = Roster::try_from(elem).unwrap();
         assert_eq!(roster.ver, Some(String::from("ver9")));
