@@ -67,8 +67,7 @@ impl MessagingPlugin {
             from: None,
             to: Some(to.clone()),
             type_: MessageType::Chat,
-            // TODO: always use an id.
-            id: None,
+            id: Some(self.proxy.gen_id()),
             bodies: {
                 let mut bodies = BTreeMap::new();
                 bodies.insert(String::new(), String::from(body));
