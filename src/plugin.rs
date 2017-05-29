@@ -18,6 +18,8 @@ use std::mem;
 
 use minidom::Element;
 
+use jid::Jid;
+
 pub struct PluginContainer {
     plugins: RwLock<HashMap<TypeId, Arc<Plugin>>>,
 }
@@ -70,13 +72,15 @@ impl<P: Plugin> AsRef<P> for PluginRef<P> {
 pub struct PluginProxyBinding {
     dispatcher: Arc<Dispatcher>,
     plugin_container: Arc<PluginContainer>,
+    jid: Jid,
 }
 
 impl PluginProxyBinding {
-    pub fn new(dispatcher: Arc<Dispatcher>, plugin_container: Arc<PluginContainer>) -> PluginProxyBinding {
+    pub fn new(dispatcher: Arc<Dispatcher>, plugin_container: Arc<PluginContainer>, jid: Jid) -> PluginProxyBinding {
         PluginProxyBinding {
             dispatcher: dispatcher,
             plugin_container: plugin_container,
+            jid: jid,
         }
     }
 }
@@ -140,6 +144,13 @@ impl PluginProxy {
     /// Sends a stanza.
     pub fn send(&self, elem: Element) {
         self.dispatch(SendElement(elem));
+    }
+
+    /// Get our own JID.
+    pub fn get_own_jid(&self) -> Jid {
+        self.with_binding(|binding| {
+            binding.jid.clone()
+        })
     }
 }
 

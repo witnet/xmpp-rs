@@ -61,9 +61,9 @@ impl ComponentBuilder {
         let transport = Arc::new(Mutex::new(transport));
         let plugin_container = Arc::new(PluginContainer::new());
         let mut component = Component {
-            jid: self.jid,
+            jid: self.jid.clone(),
             transport: transport.clone(),
-            binding: PluginProxyBinding::new(dispatcher.clone(), plugin_container.clone()),
+            binding: PluginProxyBinding::new(dispatcher.clone(), plugin_container.clone(), self.jid),
             plugin_container: plugin_container,
             dispatcher: dispatcher,
         };
