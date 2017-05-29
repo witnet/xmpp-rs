@@ -16,7 +16,7 @@ use ns;
 use base64;
 
 #[allow(non_camel_case_types)]
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Algo {
     Sha_1,
     Sha_256,
@@ -68,7 +68,7 @@ impl IntoAttributeValue for Algo {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Hash {
     pub algo: Algo,
     pub hash: Vec<u8>,
