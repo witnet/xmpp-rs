@@ -2,6 +2,7 @@ extern crate xmpp;
 
 use xmpp::jid::Jid;
 use xmpp::client::ClientBuilder;
+use xmpp::plugins::stanza_debug::StanzaDebugPlugin;
 use xmpp::plugins::stanza::StanzaPlugin;
 use xmpp::plugins::unhandled_iq::UnhandledIqPlugin;
 use xmpp::plugins::messaging::{MessagingPlugin, MessageEvent};
@@ -20,6 +21,9 @@ fn main() {
                                    .password(pass)
                                    .connect()
                                    .unwrap();
+    if env::var("STANZA_DEBUG").is_ok() {
+        client.register_plugin(StanzaDebugPlugin::new());
+    }
     client.register_plugin(StanzaPlugin::new());
     client.register_plugin(UnhandledIqPlugin::new());
     client.register_plugin(MessagingPlugin::new());
