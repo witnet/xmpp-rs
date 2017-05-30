@@ -1,4 +1,5 @@
 // Copyright (c) 2017 Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
+// Copyright (c) 2017 Maxime “pep” Buquet <pep+code@bouah.net>
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -17,6 +18,7 @@ use error::Error;
 use ns;
 
 use stanza_error::StanzaError;
+use muc::Muc;
 use caps::Caps;
 use delay::Delay;
 use idle::Idle;
@@ -79,6 +81,7 @@ pub type Priority = i8;
 #[derive(Debug, Clone)]
 pub enum PresencePayload {
     StanzaError(StanzaError),
+    Muc(Muc),
     Caps(Caps),
     Delay(Delay),
     Idle(Idle),
@@ -93,6 +96,9 @@ impl TryFrom<Element> for PresencePayload {
     fn try_from(elem: Element) -> Result<PresencePayload, Error> {
         Ok(match (elem.name().as_ref(), elem.ns().unwrap().as_ref()) {
             ("error", ns::JABBER_CLIENT) => PresencePayload::StanzaError(StanzaError::try_from(elem)?),
+
+            // XEP-0045
+            ("x", ns::MUC) => PresencePayload::Muc(Muc::try_from(elem)?),
 
             // XEP-0115
             ("c", ns::CAPS) => PresencePayload::Caps(Caps::try_from(elem)?),
@@ -115,6 +121,7 @@ impl Into<Element> for PresencePayload {
     fn into(self) -> Element {
         match self {
             PresencePayload::StanzaError(stanza_error) => stanza_error.into(),
+            PresencePayload::Muc(muc) => muc.into(),
             PresencePayload::Caps(caps) => caps.into(),
             PresencePayload::Delay(delay) => delay.into(),
             PresencePayload::Idle(idle) => idle.into(),

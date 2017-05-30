@@ -1,4 +1,5 @@
 // Copyright (c) 2017 Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
+// Copyright (c) 2017 Maxime “pep” Buquet <pep+code@bouah.net>
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -17,6 +18,9 @@ pub const DATA_FORMS: &'static str = "jabber:x:data";
 
 /// XEP-0030: Service Discovery
 pub const DISCO_INFO: &'static str = "http://jabber.org/protocol/disco#info";
+
+/// XEP-0045: Multi-User Chat
+pub const MUC: &'static str = "http://jabber.org/protocol/muc";
 
 /// XEP-0047: In-Band Bytestreams
 pub const IBB: &'static str = "http://jabber.org/protocol/ibb";

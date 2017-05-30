@@ -7,6 +7,7 @@
 //! back before being sent over the wire.
 
 // Copyright (c) 2017 Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
+// Copyright (c) 2017 Maxime “pep” Buquet <pep+code@bouah.net>
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -70,6 +71,9 @@ pub mod data_forms;
 
 /// XEP-0030: Service Discovery
 pub mod disco;
+
+/// XEP-0045: Multi-User Chat
+pub mod muc;
 
 /// XEP-0047: In-Band Bytestreams
 pub mod ibb;
