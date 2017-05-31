@@ -8,3 +8,4 @@ pub mod ibb;
 pub mod stanza;
 pub mod stanza_debug;
 pub mod unhandled_iq;
+pub mod muc;
