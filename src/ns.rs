@@ -21,6 +21,8 @@ pub const DISCO_INFO: &'static str = "http://jabber.org/protocol/disco#info";
 
 /// XEP-0045: Multi-User Chat
 pub const MUC: &'static str = "http://jabber.org/protocol/muc";
+/// XEP-0045: Multi-User Chat
+pub const MUC_USER: &'static str = "http://jabber.org/protocol/muc#user";
 
 /// XEP-0047: In-Band Bytestreams
 pub const IBB: &'static str = "http://jabber.org/protocol/ibb";
