@@ -64,7 +64,7 @@
 //! minidom = "*"
 //! ```
 
-extern crate xml;
+extern crate quick_xml;
 #[macro_use] extern crate error_chain;
 
 pub mod error;

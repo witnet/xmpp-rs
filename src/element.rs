@@ -1,18 +1,16 @@
 //! Provides an `Element` type, which represents DOM nodes, and a builder to create them with.
 
-use std::io::prelude::*;
-use std::io::Cursor;
-use std::collections::BTreeMap;
-use std::collections::btree_map;
+use std::io:: Write;
+use std::collections::{btree_map, BTreeMap};
 
-use std::fmt;
+use std::str;
 
 use error::{Error, ErrorKind, Result};
 
-use xml::reader::{XmlEvent as ReaderEvent, EventReader};
-use xml::writer::{XmlEvent as WriterEvent, EventWriter, EmitterConfig};
-use xml::name::Name;
-use xml::namespace::NS_NO_PREFIX;
+use quick_xml::reader::Reader as EventReader;
+use quick_xml::events::{Event, BytesStart};
+
+use std::io::BufRead;
 
 use std::str::FromStr;
 
@@ -69,9 +67,18 @@ impl Node {
             Node::Text(ref s) => Some(s),
         }
     }
+
+    fn write_to_inner<W: Write>(&self, writer: &mut W, last_namespace: &mut Option<String>) -> Result<()>{
+        match *self {
+            Node::Element(ref elmt) => elmt.write_to_inner(writer, last_namespace)?,
+            Node::Text(ref s) => write!(writer, "{}", s)?,
+        }
+
+        Ok(())
+    }
 }
 
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq, Debug)]
 /// A struct representing a DOM Element.
 pub struct Element {
     name: String,
@@ -82,26 +89,18 @@ pub struct Element {
 
 impl<'a> From<&'a Element> for String {
     fn from(elem: &'a Element) -> String {
-        let mut out = Vec::new();
-        let config = EmitterConfig::new()
-                    .write_document_declaration(false);
-        elem.write_to(&mut EventWriter::new_with_config(&mut out, config)).unwrap();
-        String::from_utf8(out).unwrap()
+        let mut writer = Vec::new();
+        elem.write_to(&mut writer).unwrap();
+        String::from_utf8(writer).unwrap()
     }
 }
 
-impl fmt::Debug for Element {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        write!(fmt, "{}", String::from(self))?;
-        Ok(())
-    }
-}
 
 impl FromStr for Element {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Element> {
-        let mut reader = EventReader::new(Cursor::new(s));
+        let mut reader = EventReader::from_str(s);
         Element::from_reader(&mut reader)
     }
 }
@@ -246,106 +245,105 @@ impl Element {
     }
 
     /// Parse a document from an `EventReader`.
-    pub fn from_reader<R: Read>(reader: &mut EventReader<R>) -> Result<Element> {
-        loop {
-            let e = reader.next()?;
-            match e {
-                ReaderEvent::StartElement { name, attributes, namespace } => {
-                    let attributes = attributes.into_iter()
-                                               .map(|o| {
-                                                    (match o.name.prefix {
-                                                        Some(prefix) => format!("{}:{}", prefix, o.name.local_name),
-                                                        None => o.name.local_name
-                                                    },
-                                                    o.value)
-                                                })
-                                               .collect();
-                    let ns = if let Some(ref prefix) = name.prefix {
-                        namespace.get(prefix)
-                    }
-                    else {
-                        namespace.get(NS_NO_PREFIX)
-                    }.map(|s| s.to_owned());
+    pub fn from_reader<R: BufRead>(reader: &mut EventReader<R>) -> Result<Element> {
+        let mut buf = Vec::new();
+        let root: Element;
 
-                    let mut root = Element::new(name.local_name, ns, attributes, Vec::new());
-                    root.from_reader_inner(reader)?;
-                    return Ok(root);
+        loop {
+            let e = reader.read_event(&mut buf)?;
+            match e {
+                Event::Empty(ref e) | Event::Start(ref e) => {
+                    root = build_element(e)?; // FIXME: could be break build_element(e)? when break value is stable
+                    break;
                 },
-                ReaderEvent::EndDocument => {
+                Event::Eof => {
                     bail!(ErrorKind::EndOfDocument);
                 },
                 _ => () // TODO: may need more errors
             }
-        }
-    }
+        };
 
-    #[cfg_attr(feature = "cargo-clippy", allow(wrong_self_convention))]
-    fn from_reader_inner<R: Read>(&mut self, reader: &mut EventReader<R>) -> Result<()> {
+        let mut stack = vec![root];
+
         loop {
-            let e = reader.next()?;
-            match e {
-                ReaderEvent::StartElement { name, attributes, namespace } => {
-                    let attributes = attributes.into_iter()
-                                               .map(|o| {
-                                                    (match o.name.prefix {
-                                                        Some(prefix) => format!("{}:{}", prefix, o.name.local_name),
-                                                        None => o.name.local_name
-                                                    },
-                                                    o.value)
-                                                })
-                                               .collect();
-                    let ns = if let Some(ref prefix) = name.prefix {
-                        namespace.get(prefix)
+            match reader.read_event(&mut buf)? {
+                Event::Empty(ref e) => {
+                    let elem = build_element(e)?;
+                    // Since there is no Event::End after, directly append it to the current node
+                    stack.last_mut().unwrap().append_child(elem);
+                },
+                Event::Start(ref e) => {
+                    let elem = build_element(e)?;
+                    stack.push(elem);
+                },
+                Event::End(ref e) => {
+                    if stack.len() <= 1 {
+                        break;
                     }
-                    else {
-                        namespace.get(NS_NO_PREFIX)
-                    }.map(|s| s.to_owned());
-                    let elem = Element::new(name.local_name, ns, attributes, Vec::with_capacity(1));
-                    let elem_ref = self.append_child(elem);
-                    elem_ref.from_reader_inner(reader)?;
+                    let elem = stack.pop().unwrap();
+                    if let Some(to) = stack.last_mut() {
+                        if elem.name().as_bytes() != e.name() {
+                            bail!(ErrorKind::InvalidElementClosed);
+                        }
+                        to.append_child(elem);
+                    }
                 },
-                ReaderEvent::EndElement { .. } => {
-                    // TODO: may want to check whether we're closing the correct element
-                    return Ok(());
+                Event::Text(s) | Event::CData(s) => {
+                    let text = s.unescape_and_decode(reader)?;
+                    if text != "" {
+                        let mut current_elem = stack.last_mut().unwrap();
+                        current_elem.append_text_node(text);
+                    }
                 },
-                ReaderEvent::Characters(s) | ReaderEvent::CData(s) => {
-                    self.append_text_node(s);
-                },
-                ReaderEvent::EndDocument => {
-                    bail!(ErrorKind::EndOfDocument);
+                Event::Eof => {
+                    break;
                 },
                 _ => (), // TODO: may need to implement more
             }
         }
+        Ok(stack.pop().unwrap())
     }
 
-    /// Output a document to an `EventWriter`.
-    pub fn write_to<W: Write>(&self, writer: &mut EventWriter<W>) -> Result<()> {
-        let name = if let Some(ref ns) = self.namespace {
-            Name::qualified(&self.name, ns, None)
-        }
-        else {
-            Name::local(&self.name)
-        };
-        let mut start = WriterEvent::start_element(name);
+    /// Output a document to a `Writer`.
+    pub fn write_to<W: Write>(&self, writer: &mut W) -> Result<()> {
+        let mut last_namespace = None;
+        write!(writer, "<?xml version=\"1.0\" encoding=\"utf-8\"?>")?;
+        self.write_to_inner(writer, &mut last_namespace)
+    }
+
+    /// Output a document to a `Writer` assuming you're already in the provided namespace
+    pub fn write_to_in_namespace<W: Write>(&self, writer: &mut W, namespace: &str) -> Result<()> {
+        write!(writer, "<?xml version=\"1.0\" encoding=\"utf-8\"?>")?;
+        self.write_to_inner(writer, &mut Some(namespace.to_owned()))
+    }
+
+    fn write_to_inner<W: Write>(&self, writer: &mut W, last_namespace: &mut Option<String>) -> Result<()> {
+        write!(writer, "<")?;
+        write!(writer, "{}", self.name)?;
+
         if let Some(ref ns) = self.namespace {
-            start = start.default_ns(ns.clone());
-        }
-        for attr in &self.attributes { // TODO: I think this could be done a lot more efficiently
-            start = start.attr(Name::local(attr.0), attr.1);
-        }
-        writer.write(start)?;
-        for child in &self.children {
-            match *child {
-                Node::Element(ref e) => {
-                    e.write_to(writer)?;
-                },
-                Node::Text(ref s) => {
-                    writer.write(WriterEvent::characters(s))?;
-                },
+            if *last_namespace != self.namespace {
+                write!(writer, " xmlns=\"{}\"", ns)?;
+                *last_namespace = Some(ns.clone());
             }
         }
-        writer.write(WriterEvent::end_element())?;
+
+        for (key, value) in &self.attributes {
+            write!(writer, " {}=\"{}\"", key, value)?;
+        }
+
+        if self.children.is_empty() {
+            write!(writer, " />")?;
+            return Ok(())
+        }
+
+        write!(writer, ">")?;
+
+        for child in &self.children {
+            child.write_to_inner(writer, last_namespace)?;
+        }
+
+        write!(writer, "</{}>", self.name)?;
         Ok(())
     }
 
@@ -354,7 +352,7 @@ impl Element {
     /// # Examples
     ///
     /// ```rust
-    /// use minidom::{Element, Node};
+    /// use minidom::Element;
     ///
     /// let elem: Element = "<root>a<c1 />b<c2 />c</root>".parse().unwrap();
     ///
@@ -590,6 +588,31 @@ impl Element {
     pub fn has_child<N: AsRef<str>, NS: AsRef<str>>(&self, name: N, namespace: NS) -> bool {
         self.get_child(name, namespace).is_some()
     }
+}
+
+fn build_element(event: &BytesStart) -> Result<Element> {
+    let mut attributes = event.attributes()
+                               .map(|o| {
+                                    let o = o?;
+                                    let key = str::from_utf8(o.key)?.to_owned();
+                                    let value = str::from_utf8(o.value)?.to_owned();
+                                    Ok((key, value))
+                                   }
+                                )
+                               .collect::<Result<BTreeMap<String, String>>>()?;
+        let mut ns_key = None;
+        for (key, _) in &attributes {
+            if key == "xmlns" || key.starts_with("xmlns:") {
+                ns_key = Some(key.clone());
+            }
+        }
+
+        let ns = match ns_key {
+            None => None,
+            Some(key) => attributes.remove(&key),
+        };
+        let name = str::from_utf8(event.name())?.to_owned();
+        Ok(Element::new(name, ns, attributes, Vec::new()))
 }
 
 /// An iterator over references to child elements of an `Element`.

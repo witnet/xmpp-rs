@@ -1,9 +1,6 @@
-use std::io::Cursor;
-
 use std::iter::Iterator;
 
-use xml::reader::EventReader;
-use xml::writer::EventWriter;
+use quick_xml::reader::Reader;
 
 use element::Element;
 
@@ -32,19 +29,18 @@ fn build_test_tree() -> Element {
 
 #[test]
 fn reader_works() {
-    let mut reader = EventReader::new(Cursor::new(TEST_STRING));
+    let mut reader = Reader::from_str(TEST_STRING);
     assert_eq!(Element::from_reader(&mut reader).unwrap(), build_test_tree());
 }
 
 #[test]
 fn writer_works() {
     let root = build_test_tree();
-    let mut out = Vec::new();
+    let mut writer = Vec::new();
     {
-        let mut writer = EventWriter::new(&mut out);
         root.write_to(&mut writer).unwrap();
     }
-    assert_eq!(String::from_utf8(out).unwrap(), TEST_STRING);
+    assert_eq!(String::from_utf8(writer).unwrap(), TEST_STRING);
 }
 
 #[test]
@@ -110,8 +106,18 @@ fn two_elements_with_same_arguments_different_order_are_equal() {
 
 #[test]
 fn namespace_attributes_works() {
-    let mut reader = EventReader::new(Cursor::new(TEST_STRING));
+    let mut reader = Reader::from_str(TEST_STRING);
     let root = Element::from_reader(&mut reader).unwrap();
     assert_eq!("en", root.attr("xml:lang").unwrap());
     assert_eq!("fr", root.get_child("child", "child_ns").unwrap().attr("xml:lang").unwrap());
+}
+
+#[test]
+fn wrongly_closed_elements_error() {
+    let elem1 = "<a></b>".parse::<Element>();
+    assert!(elem1.is_err());
+    let elem1 = "<a></c></a>".parse::<Element>();
+    assert!(elem1.is_err());
+    let elem1 = "<a><c><d/></c></a>".parse::<Element>();
+    assert!(elem1.is_ok());
 }
