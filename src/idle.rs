@@ -7,7 +7,7 @@
 use std::convert::TryFrom;
 
 use minidom::Element;
-use chrono::prelude::*;
+use chrono::{DateTime, FixedOffset};
 
 use error::Error;
 

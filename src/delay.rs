@@ -7,7 +7,7 @@
 use std::convert::TryFrom;
 
 use minidom::Element;
-use chrono::prelude::*;
+use chrono::{DateTime, FixedOffset};
 
 use error::Error;
 use jid::Jid;
@@ -58,8 +58,9 @@ impl Into<Element> for Delay {
 
 #[cfg(test)]
 mod tests {
-    use std::str::FromStr;
     use super::*;
+    use std::str::FromStr;
+    use chrono::{Datelike, Timelike};
 
     #[test]
     fn test_simple() {
