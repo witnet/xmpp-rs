@@ -6,6 +6,7 @@ extern crate openssl;
 extern crate minidom;
 extern crate base64;
 extern crate sha_1;
+extern crate chrono;
 pub extern crate jid;
 pub extern crate sasl;
 

@@ -23,6 +23,7 @@ minidom = "0.4.1"
 jid = "0.2.1"
 sasl = "0.4.0"
 sha-1 = "0.3.3"
+chrono = "0.3.1"
 
 [features]
 insecure = []
