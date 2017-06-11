@@ -82,7 +82,7 @@ impl MessagingPlugin {
     }
 
     fn handle_message(&self, message: &Message) -> Propagation {
-        let from = message.from.clone().unwrap();
+        let from = message.from.clone().unwrap_or(self.proxy.get_own_jid());
         for payload in message.payloads.clone() {
             let payload = match MessagePayload::try_from(payload) {
                 Ok(payload) => payload,
