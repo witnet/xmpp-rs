@@ -309,6 +309,12 @@ impl From<DataForm> for Element {
     }
 }
 
+impl IntoElements for DataForm {
+    fn into_elements(self, emitter: &mut ElementEmitter) {
+        emitter.append_child(self.into());
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
