@@ -18,7 +18,7 @@ gitlab = { repository = "lumi/xmpp-rs" }
 xml-rs = "0.4.1"
 xmpp-parsers = "0.5.0"
 openssl = "0.9.12"
-base64 = "0.5.2"
+base64 = "0.6.0"
 minidom = "0.4.1"
 jid = "0.2.1"
 sasl = "0.4.0"
