@@ -81,6 +81,9 @@ pub mod ibb;
 /// XEP-0059: Result Set Management
 pub mod rsm;
 
+/// XEP-0060: Publish-Subscribe
+pub mod pubsub;
+
 /// XEP-0085: Chat State Notifications
 pub mod chatstates;
 

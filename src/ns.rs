@@ -30,6 +30,15 @@ pub const IBB: &'static str = "http://jabber.org/protocol/ibb";
 /// XEP-0059: Result Set Management
 pub const RSM: &'static str = "http://jabber.org/protocol/rsm";
 
+/// XEP-0060: Publish-Subscribe
+pub const PUBSUB: &'static str = "http://jabber.org/protocol/pubsub";
+/// XEP-0060: Publish-Subscribe
+pub const PUBSUB_ERRORS: &'static str = "http://jabber.org/protocol/pubsub#errors";
+/// XEP-0060: Publish-Subscribe
+pub const PUBSUB_EVENT: &'static str = "http://jabber.org/protocol/pubsub#event";
+/// XEP-0060: Publish-Subscribe
+pub const PUBSUB_OWNER: &'static str = "http://jabber.org/protocol/pubsub#owner";
+
 /// XEP-0085: Chat State Notifications
 pub const CHATSTATES: &'static str = "http://jabber.org/protocol/chatstates";
 
