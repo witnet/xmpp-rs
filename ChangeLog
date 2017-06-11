@@ -1,8 +1,16 @@
-Version 0.?.?:
-2017-??-??  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
+Version 0.5.0:
+2017-06-11  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
     * New parsers/serialisers:
         - Implementation of the roster management protocol defined in
           RFC 6121 §2.
+        - Implementation of PubSub events (except collections).
+        - Early implementation of MUC.
+    * Breaking changes:
+        - Rename presence enums to make them easier to use.
+    * Improvements:
+        - Make hashes comparable and hashable.
+        - Make data forms embeddable easily into minidom
+          Element::builder.
 
 Version 0.4.0:
 2017-05-28  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
