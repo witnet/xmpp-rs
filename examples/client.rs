@@ -5,7 +5,7 @@ use xmpp::client::ClientBuilder;
 use xmpp::plugins::stanza::StanzaPlugin;
 use xmpp::plugins::unhandled_iq::UnhandledIqPlugin;
 use xmpp::plugins::messaging::{MessagingPlugin, MessageEvent};
-use xmpp::plugins::presence::{PresencePlugin, Type};
+use xmpp::plugins::presence::{PresencePlugin, Type, Show};
 use xmpp::plugins::disco::DiscoPlugin;
 use xmpp::plugins::ibb::IbbPlugin;
 use xmpp::plugins::ping::PingPlugin;
@@ -33,6 +33,6 @@ fn main() {
         println!("{:?}", e);
         Propagation::Continue
     });
-    client.plugin::<PresencePlugin>().set_presence(Type::Available, None, None).unwrap();
+    client.plugin::<PresencePlugin>().set_presence(Type::None, Show::None, None).unwrap();
     client.main().unwrap();
 }
