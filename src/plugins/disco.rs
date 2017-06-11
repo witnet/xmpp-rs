@@ -6,7 +6,7 @@ use event::{Event, Priority, Propagation};
 use jid::Jid;
 
 use plugins::stanza::Iq;
-use xmpp_parsers::iq::{IqType, IqPayload};
+use xmpp_parsers::iq::IqType;
 use xmpp_parsers::disco::{Disco, Identity, Feature};
 use xmpp_parsers::data_forms::DataForm;
 use xmpp_parsers::ns;
@@ -18,7 +18,15 @@ pub struct DiscoInfoRequest {
     pub node: Option<String>,
 }
 
+#[derive(Debug)]
+pub struct DiscoInfoResult {
+    pub from: Jid,
+    pub id: String,
+    pub disco: Disco,
+}
+
 impl Event for DiscoInfoRequest {}
+impl Event for DiscoInfoResult {}
 
 pub struct DiscoPlugin {
     proxy: PluginProxy,
@@ -88,12 +96,20 @@ impl DiscoPlugin {
     fn handle_iq(&self, iq: &Iq) -> Propagation {
         let iq = iq.clone();
         if let IqType::Get(payload) = iq.payload {
-            // TODO: use an intermediate plugin to parse this payload.
-            if let Ok(IqPayload::Disco(disco)) = IqPayload::try_from(payload) {
-                self.proxy.dispatch(DiscoInfoRequest { // TODO: safety!!!
+            if let Ok(disco) = Disco::try_from(payload) {
+                self.proxy.dispatch(DiscoInfoRequest {
                     from: iq.from.unwrap(),
                     id: iq.id.unwrap(),
                     node: disco.node,
+                });
+                return Propagation::Stop;
+            }
+        } else if let IqType::Result(Some(payload)) = iq.payload {
+            if let Ok(disco) = Disco::try_from(payload) {
+                self.proxy.dispatch(DiscoInfoResult {
+                    from: iq.from.unwrap(),
+                    id: iq.id.unwrap(),
+                    disco: disco,
                 });
                 return Propagation::Stop;
             }
