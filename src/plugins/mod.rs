@@ -2,6 +2,7 @@ pub mod messaging;
 pub mod presence;
 pub mod roster;
 pub mod disco;
+pub mod caps;
 pub mod ping;
 pub mod ibb;
 pub mod stanza;

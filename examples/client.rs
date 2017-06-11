@@ -8,6 +8,7 @@ use xmpp::plugins::unhandled_iq::UnhandledIqPlugin;
 use xmpp::plugins::messaging::{MessagingPlugin, MessageEvent};
 use xmpp::plugins::presence::{PresencePlugin, Type, Show};
 use xmpp::plugins::disco::DiscoPlugin;
+use xmpp::plugins::caps::CapsPlugin;
 use xmpp::plugins::ibb::IbbPlugin;
 use xmpp::plugins::ping::PingPlugin;
 use xmpp::event::{Priority, Propagation};
@@ -29,6 +30,7 @@ fn main() {
     client.register_plugin(MessagingPlugin::new());
     client.register_plugin(PresencePlugin::new());
     client.register_plugin(DiscoPlugin::new("client", "bot", "en", "xmpp-rs"));
+    client.register_plugin(CapsPlugin::new());
     client.register_plugin(IbbPlugin::new());
     client.register_plugin(PingPlugin::new());
     client.plugin::<PingPlugin>().init();
