@@ -64,13 +64,11 @@ impl Transport for PlainTransport {
     }
 
     fn write_element(&mut self, element: &minidom::Element) -> Result<(), Error> {
-        println!("SENT: {:?}", element);
         Ok(element.write_to(&mut self.writer)?)
     }
 
     fn read_element(&mut self) -> Result<minidom::Element, Error> {
         let element = minidom::Element::from_reader(&mut self.reader)?;
-        println!("RECV: {:?}", element);
         Ok(element)
     }
 
