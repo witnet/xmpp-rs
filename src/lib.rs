@@ -204,6 +204,7 @@ impl Jid {
     /// assert_eq!(jid.node, Some("node".to_owned()));
     /// assert_eq!(jid.domain, "domain".to_owned());
     /// assert_eq!(jid.resource, None);
+    /// ```
     pub fn into_bare_jid(self) -> Jid {
         Jid {
             node: self.node,
@@ -250,6 +251,7 @@ impl Jid {
     /// assert_eq!(jid.node, None);
     /// assert_eq!(jid.domain, "domain".to_owned());
     /// assert_eq!(jid.resource, None);
+    /// ```
     pub fn into_domain_jid(self) -> Jid {
         Jid {
             node: None,
