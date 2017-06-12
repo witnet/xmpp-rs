@@ -190,6 +190,28 @@ impl Jid {
         }
     }
 
+    /// Returns a new Jabber ID from the current one with only node and domain.
+    ///
+    /// This is of the form `node`@`domain`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use jid::Jid;
+    ///
+    /// let jid = Jid::full("node", "domain", "resource").get_bare();
+    ///
+    /// assert_eq!(jid.node, Some("node".to_owned()));
+    /// assert_eq!(jid.domain, "domain".to_owned());
+    /// assert_eq!(jid.resource, None);
+    pub fn get_bare(self) -> Jid {
+        Jid {
+            node: self.node.clone(),
+            domain: self.domain.clone(),
+            resource: None,
+        }
+    }
+
     /// Constructs a Jabber ID containing only a `domain`.
     ///
     /// This is of the form `domain`.
@@ -210,6 +232,28 @@ impl Jid {
         Jid {
             node: None,
             domain: domain.into(),
+            resource: None,
+        }
+    }
+
+    /// Returns a new Jabber ID from the current one with only domain.
+    ///
+    /// This is of the form `domain`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use jid::Jid;
+    ///
+    /// let jid = Jid::full("node", "domain", "resource").get_domain();
+    ///
+    /// assert_eq!(jid.node, None);
+    /// assert_eq!(jid.domain, "domain".to_owned());
+    /// assert_eq!(jid.resource, None);
+    pub fn get_domain(self) -> Jid {
+        Jid {
+            node: None,
+            domain: self.domain.clone(),
             resource: None,
         }
     }
