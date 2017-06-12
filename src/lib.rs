@@ -206,8 +206,8 @@ impl Jid {
     /// assert_eq!(jid.resource, None);
     pub fn get_bare(self) -> Jid {
         Jid {
-            node: self.node.clone(),
-            domain: self.domain.clone(),
+            node: self.node,
+            domain: self.domain,
             resource: None,
         }
     }
@@ -253,7 +253,7 @@ impl Jid {
     pub fn get_domain(self) -> Jid {
         Jid {
             node: None,
-            domain: self.domain.clone(),
+            domain: self.domain,
             resource: None,
         }
     }
