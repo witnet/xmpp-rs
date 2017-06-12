@@ -199,12 +199,12 @@ impl Jid {
     /// ```
     /// use jid::Jid;
     ///
-    /// let jid = Jid::full("node", "domain", "resource").get_bare();
+    /// let jid = Jid::full("node", "domain", "resource").into_bare_jid();
     ///
     /// assert_eq!(jid.node, Some("node".to_owned()));
     /// assert_eq!(jid.domain, "domain".to_owned());
     /// assert_eq!(jid.resource, None);
-    pub fn get_bare(self) -> Jid {
+    pub fn into_bare_jid(self) -> Jid {
         Jid {
             node: self.node,
             domain: self.domain,
@@ -245,12 +245,12 @@ impl Jid {
     /// ```
     /// use jid::Jid;
     ///
-    /// let jid = Jid::full("node", "domain", "resource").get_domain();
+    /// let jid = Jid::full("node", "domain", "resource").into_domain_jid();
     ///
     /// assert_eq!(jid.node, None);
     /// assert_eq!(jid.domain, "domain".to_owned());
     /// assert_eq!(jid.resource, None);
-    pub fn get_domain(self) -> Jid {
+    pub fn into_domain_jid(self) -> Jid {
         Jid {
             node: None,
             domain: self.domain,
