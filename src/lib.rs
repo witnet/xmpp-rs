@@ -76,7 +76,7 @@ impl FromStr for Jid {
     fn from_str(s: &str) -> Result<Jid, JidParseError> {
         // TODO: very naive, may need to do it differently
         let iter = s.chars();
-        let mut buf = String::new();
+        let mut buf = String::with_capacity(s.len());
         let mut state = ParserState::Node;
         let mut node = None;
         let mut domain = None;
