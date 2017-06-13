@@ -46,7 +46,7 @@ generate_attribute!(Senders, "senders", {
 #[derive(Debug, Clone)]
 pub struct Content {
     pub creator: Creator,
-    pub disposition: String,
+    pub disposition: String, // TODO: the list of values is defined, use an enum!
     pub name: String,
     pub senders: Senders,
     pub description: Option<Element>,
