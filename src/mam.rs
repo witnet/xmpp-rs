@@ -39,36 +39,11 @@ pub struct Fin {
     pub set: Set,
 }
 
-#[derive(Debug, Clone)]
-pub enum DefaultPrefs {
-    Always,
-    Never,
-    Roster,
-}
-
-impl FromStr for DefaultPrefs {
-    type Err = Error;
-
-    fn from_str(s: &str) -> Result<DefaultPrefs, Error> {
-        Ok(match s {
-            "always" => DefaultPrefs::Always,
-            "never" => DefaultPrefs::Never,
-            "roster" => DefaultPrefs::Roster,
-
-            _ => return Err(Error::ParseError("Invalid 'default' attribute.")),
-        })
-    }
-}
-
-impl IntoAttributeValue for DefaultPrefs {
-    fn into_attribute_value(self) -> Option<String> {
-        Some(String::from(match self {
-            DefaultPrefs::Always => "always",
-            DefaultPrefs::Never => "never",
-            DefaultPrefs::Roster => "roster",
-        }))
-    }
-}
+generate_attribute!(DefaultPrefs, "default", {
+    Always => "always",
+    Never => "never",
+    Roster => "roster",
+});
 
 #[derive(Debug, Clone)]
 pub struct Prefs {

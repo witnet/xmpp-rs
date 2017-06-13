@@ -13,138 +13,39 @@ use jid::Jid;
 use error::Error;
 use ns;
 
-#[derive(Debug, Clone, PartialEq)]
-pub enum Action {
-    ContentAccept,
-    ContentAdd,
-    ContentModify,
-    ContentReject,
-    ContentRemove,
-    DescriptionInfo,
-    SecurityInfo,
-    SessionAccept,
-    SessionInfo,
-    SessionInitiate,
-    SessionTerminate,
-    TransportAccept,
-    TransportInfo,
-    TransportReject,
-    TransportReplace,
-}
+generate_attribute!(Action, "action", {
+    ContentAccept => "content-accept",
+    ContentAdd => "content-add",
+    ContentModify => "content-modify",
+    ContentReject => "content-reject",
+    ContentRemove => "content-remove",
+    DescriptionInfo => "description-info",
+    SecurityInfo => "security-info",
+    SessionAccept => "session-accept",
+    SessionInfo => "session-info",
+    SessionInitiate => "session-initiate",
+    SessionTerminate => "session-terminate",
+    TransportAccept => "transport-accept",
+    TransportInfo => "transport-info",
+    TransportReject => "transport-reject",
+    TransportReplace => "transport-replace",
+});
 
-impl FromStr for Action {
-    type Err = Error;
+generate_attribute!(Creator, "creator", {
+    Initiator => "initiator",
+    Responder => "responder",
+});
 
-    fn from_str(s: &str) -> Result<Action, Error> {
-        Ok(match s {
-            "content-accept" => Action::ContentAccept,
-            "content-add" => Action::ContentAdd,
-            "content-modify" => Action::ContentModify,
-            "content-reject" => Action::ContentReject,
-            "content-remove" => Action::ContentRemove,
-            "description-info" => Action::DescriptionInfo,
-            "security-info" => Action::SecurityInfo,
-            "session-accept" => Action::SessionAccept,
-            "session-info" => Action::SessionInfo,
-            "session-initiate" => Action::SessionInitiate,
-            "session-terminate" => Action::SessionTerminate,
-            "transport-accept" => Action::TransportAccept,
-            "transport-info" => Action::TransportInfo,
-            "transport-reject" => Action::TransportReject,
-            "transport-replace" => Action::TransportReplace,
-
-            _ => return Err(Error::ParseError("Unknown action.")),
-        })
-    }
-}
-
-impl IntoAttributeValue for Action {
-    fn into_attribute_value(self) -> Option<String> {
-        Some(String::from(match self {
-            Action::ContentAccept => "content-accept",
-            Action::ContentAdd => "content-add",
-            Action::ContentModify => "content-modify",
-            Action::ContentReject => "content-reject",
-            Action::ContentRemove => "content-remove",
-            Action::DescriptionInfo => "description-info",
-            Action::SecurityInfo => "security-info",
-            Action::SessionAccept => "session-accept",
-            Action::SessionInfo => "session-info",
-            Action::SessionInitiate => "session-initiate",
-            Action::SessionTerminate => "session-terminate",
-            Action::TransportAccept => "transport-accept",
-            Action::TransportInfo => "transport-info",
-            Action::TransportReject => "transport-reject",
-            Action::TransportReplace => "transport-replace",
-        }))
-    }
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum Creator {
-    Initiator,
-    Responder,
-}
-
-impl FromStr for Creator {
-    type Err = Error;
-
-    fn from_str(s: &str) -> Result<Creator, Error> {
-        Ok(match s {
-            "initiator" => Creator::Initiator,
-            "responder" => Creator::Responder,
-
-            _ => return Err(Error::ParseError("Unknown creator.")),
-        })
-    }
-}
-
-impl IntoAttributeValue for Creator {
-    fn into_attribute_value(self) -> Option<String> {
-        Some(String::from(match self {
-            Creator::Initiator => "initiator",
-            Creator::Responder => "responder",
-        }))
-    }
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum Senders {
-    Both,
-    Initiator,
-    None_,
-    Responder,
-}
+generate_attribute!(Senders, "senders", {
+    Both => "both",
+    Initiator => "initiator",
+    None => "none",
+    Responder => "responder",
+});
 
 impl Default for Senders {
     fn default() -> Senders {
         Senders::Both
-    }
-}
-
-impl FromStr for Senders {
-    type Err = Error;
-
-    fn from_str(s: &str) -> Result<Senders, Error> {
-        Ok(match s {
-            "both" => Senders::Both,
-            "initiator" => Senders::Initiator,
-            "none" => Senders::None_,
-            "responder" => Senders::Responder,
-
-            _ => return Err(Error::ParseError("Unknown senders.")),
-        })
-    }
-}
-
-impl IntoAttributeValue for Senders {
-    fn into_attribute_value(self) -> Option<String> {
-        Some(String::from(match self {
-            Senders::Both => "both",
-            Senders::Initiator => "initiator",
-            Senders::None_ => "none",
-            Senders::Responder => "responder",
-        }))
     }
 }
 
@@ -448,7 +349,7 @@ mod tests {
             Error::ParseError(string) => string,
             _ => panic!(),
         };
-        assert_eq!(message, "Unknown action.");
+        assert_eq!(message, "Unknown value for 'action' attribute.");
     }
 
     #[test]
@@ -493,7 +394,7 @@ mod tests {
             Error::ParseError(string) => string,
             _ => panic!(),
         };
-        assert_eq!(message, "Unknown creator.");
+        assert_eq!(message, "Unknown value for 'creator' attribute.");
 
         let elem: Element = "<jingle xmlns='urn:xmpp:jingle:1' action='session-initiate' sid='coucou'><content creator='initiator' name='coucou' senders='coucou'/></jingle>".parse().unwrap();
         let error = Jingle::try_from(elem).unwrap_err();
@@ -501,7 +402,7 @@ mod tests {
             Error::ParseError(string) => string,
             _ => panic!(),
         };
-        assert_eq!(message, "Unknown senders.");
+        assert_eq!(message, "Unknown value for 'senders' attribute.");
 
         let elem: Element = "<jingle xmlns='urn:xmpp:jingle:1' action='session-initiate' sid='coucou'><content creator='initiator' name='coucou' senders=''/></jingle>".parse().unwrap();
         let error = Jingle::try_from(elem).unwrap_err();
@@ -509,7 +410,7 @@ mod tests {
             Error::ParseError(string) => string,
             _ => panic!(),
         };
-        assert_eq!(message, "Unknown senders.");
+        assert_eq!(message, "Unknown value for 'senders' attribute.");
     }
 
     #[test]

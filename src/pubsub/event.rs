@@ -43,45 +43,12 @@ impl IntoElements for Item {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
-pub enum Subscription {
-    None,
-    Pending,
-    Subscribed,
-    Unconfigured,
-}
-
-impl Default for Subscription {
-    fn default() -> Subscription {
-        Subscription::None
-    }
-}
-
-impl FromStr for Subscription {
-    type Err = Error;
-
-    fn from_str(s: &str) -> Result<Subscription, Error> {
-        Ok(match s {
-            "none" => Subscription::None,
-            "pending" => Subscription::Pending,
-            "subscribed" => Subscription::Subscribed,
-            "unconfigured" => Subscription::Unconfigured,
-
-            _ => return Err(Error::ParseError("Invalid 'subscription' attribute.")),
-        })
-    }
-}
-
-impl IntoAttributeValue for Subscription {
-    fn into_attribute_value(self) -> Option<String> {
-        Some(String::from(match self {
-            Subscription::None => return None,
-            Subscription::Pending => "pending",
-            Subscription::Subscribed => "subscribed",
-            Subscription::Unconfigured => "unconfigured",
-        }))
-    }
-}
+generate_attribute!(Subscription, "subscription", {
+    None => "none",
+    Pending => "pending",
+    Subscribed => "subscribed",
+    Unconfigured => "unconfigured",
+}, Default = None);
 
 #[derive(Debug, Clone)]
 pub enum PubSubEvent {

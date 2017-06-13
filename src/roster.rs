@@ -15,42 +15,13 @@ use ns;
 
 type Group = String;
 
-#[derive(Debug, Clone, PartialEq)]
-pub enum Subscription {
-    None,
-    From,
-    To,
-    Both,
-    Remove,
-}
-
-impl FromStr for Subscription {
-    type Err = Error;
-
-    fn from_str(s: &str) -> Result<Subscription, Error> {
-        Ok(match s {
-            "none" => Subscription::None,
-            "from" => Subscription::From,
-            "to" => Subscription::To,
-            "both" => Subscription::Both,
-            "remove" => Subscription::Remove,
-
-            _ => return Err(Error::ParseError("Unknown value for attribute 'subscription'.")),
-        })
-    }
-}
-
-impl IntoAttributeValue for Subscription {
-    fn into_attribute_value(self) -> Option<String> {
-        Some(String::from(match self {
-            Subscription::None => "none",
-            Subscription::From => "from",
-            Subscription::To => "to",
-            Subscription::Both => "both",
-            Subscription::Remove => "remove",
-        }))
-    }
-}
+generate_attribute!(Subscription, "subscription", {
+    None => "none",
+    From => "from",
+    To => "to",
+    Both => "both",
+    Remove => "remove",
+});
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Item {

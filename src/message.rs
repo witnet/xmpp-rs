@@ -102,46 +102,17 @@ impl Into<Element> for MessagePayload {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
-pub enum MessageType {
-    Chat,
-    Error,
-    Groupchat,
-    Headline,
-    Normal,
-}
+generate_attribute!(MessageType, "type", {
+    Chat => "chat",
+    Error => "error",
+    Groupchat => "groupchat",
+    Headline => "headline",
+    Normal => "normal",
+});
 
 impl Default for MessageType {
     fn default() -> MessageType {
         MessageType::Normal
-    }
-}
-
-impl FromStr for MessageType {
-    type Err = Error;
-
-    fn from_str(s: &str) -> Result<MessageType, Error> {
-        Ok(match s {
-            "chat" => MessageType::Chat,
-            "error" => MessageType::Error,
-            "groupchat" => MessageType::Groupchat,
-            "headline" => MessageType::Headline,
-            "normal" => MessageType::Normal,
-
-            _ => return Err(Error::ParseError("Invalid 'type' attribute on message element.")),
-        })
-    }
-}
-
-impl IntoAttributeValue for MessageType {
-    fn into_attribute_value(self) -> Option<String> {
-        Some(match self {
-            MessageType::Chat => "chat",
-            MessageType::Error => "error",
-            MessageType::Groupchat => "groupchat",
-            MessageType::Headline => "headline",
-            MessageType::Normal => "normal",
-        }.to_owned())
     }
 }
 

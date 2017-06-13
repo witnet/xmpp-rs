@@ -13,45 +13,12 @@ use error::Error;
 
 use ns;
 
-#[derive(Debug, Clone, PartialEq)]
-pub enum Type {
-    Assisted,
-    Direct,
-    Proxy,
-    Tunnel,
-}
-
-impl Default for Type {
-    fn default() -> Type {
-        Type::Direct
-    }
-}
-
-impl FromStr for Type {
-    type Err = Error;
-
-    fn from_str(s: &str) -> Result<Type, Error> {
-        Ok(match s {
-            "assisted" => Type::Assisted,
-            "direct" => Type::Direct,
-            "proxy" => Type::Proxy,
-            "tunnel" => Type::Tunnel,
-
-            _ => return Err(Error::ParseError("Invalid 'type' attribute in candidate element.")),
-        })
-    }
-}
-
-impl IntoAttributeValue for Type {
-    fn into_attribute_value(self) -> Option<String> {
-        Some(match self {
-            Type::Assisted => String::from("assisted"),
-            Type::Direct => return None,
-            Type::Proxy => String::from("proxy"),
-            Type::Tunnel => String::from("tunnel"),
-        })
-    }
-}
+generate_attribute!(Type, "type", {
+    Assisted => "assisted",
+    Direct => "direct",
+    Proxy => "proxy",
+    Tunnel => "tunnel",
+}, Default = Direct);
 
 #[derive(Debug, Clone)]
 pub struct Candidate {
@@ -77,39 +44,10 @@ impl Into<Element> for Candidate {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
-pub enum Mode {
-    Tcp,
-    Udp,
-}
-
-impl Default for Mode {
-    fn default() -> Mode {
-        Mode::Tcp
-    }
-}
-
-impl FromStr for Mode {
-    type Err = Error;
-
-    fn from_str(s: &str) -> Result<Mode, Error> {
-        Ok(match s {
-            "tcp" => Mode::Tcp,
-            "udp" => Mode::Udp,
-
-            _ => return Err(Error::ParseError("Invalid 'mode' attribute.")),
-        })
-    }
-}
-
-impl IntoAttributeValue for Mode {
-    fn into_attribute_value(self) -> Option<String> {
-        match self {
-            Mode::Tcp => None,
-            Mode::Udp => Some(String::from("udp")),
-        }
-    }
-}
+generate_attribute!(Mode, "mode", {
+    Tcp => "tcp",
+    Udp => "udp",
+}, Default = Tcp);
 
 #[derive(Debug, Clone)]
 pub enum TransportPayload {

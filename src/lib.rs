@@ -49,6 +49,66 @@ macro_rules! get_attr {
     );
 }
 
+macro_rules! generate_attribute {
+    ($elem:ident, $name:tt, {$($a:ident => $b:tt),+,}) => (
+        generate_attribute!($elem, $name, {$($a => $b),+});
+    );
+    ($elem:ident, $name:tt, {$($a:ident => $b:tt),+,}, Default = $default:ident) => (
+        generate_attribute!($elem, $name, {$($a => $b),+}, Default = $default);
+    );
+    ($elem:ident, $name:tt, {$($a:ident => $b:tt),+}) => (
+        #[derive(Debug, Clone, PartialEq)]
+        pub enum $elem {
+            $($a),+
+        }
+        impl FromStr for $elem {
+            type Err = Error;
+            fn from_str(s: &str) -> Result<$elem, Error> {
+                Ok(match s {
+                    $($b => $elem::$a),+,
+                    _ => return Err(Error::ParseError(concat!("Unknown value for '", $name, "' attribute."))),
+                })
+            }
+        }
+        impl IntoAttributeValue for $elem {
+            fn into_attribute_value(self) -> Option<String> {
+                Some(String::from(match self {
+                    $($elem::$a => $b),+
+                }))
+            }
+        }
+    );
+    ($elem:ident, $name:tt, {$($a:ident => $b:tt),+}, Default = $default:ident) => (
+        #[derive(Debug, Clone, PartialEq)]
+        pub enum $elem {
+            $($a),+
+        }
+        impl FromStr for $elem {
+            type Err = Error;
+            fn from_str(s: &str) -> Result<$elem, Error> {
+                Ok(match s {
+                    $($b => $elem::$a),+,
+                    _ => return Err(Error::ParseError(concat!("Unknown value for '", $name, "' attribute."))),
+                })
+            }
+        }
+        impl IntoAttributeValue for $elem {
+            #[allow(unreachable_patterns)]
+            fn into_attribute_value(self) -> Option<String> {
+                Some(String::from(match self {
+                    $elem::$default => return None,
+                    $($elem::$a => $b),+
+                }))
+            }
+        }
+        impl Default for $elem {
+            fn default() -> $elem {
+                $elem::$default
+            }
+        }
+    );
+}
+
 /// Error type returned by every parser on failure.
 pub mod error;
 /// XML namespace definitions used through XMPP.

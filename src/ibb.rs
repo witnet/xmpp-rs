@@ -14,39 +14,10 @@ use error::Error;
 
 use ns;
 
-#[derive(Debug, Clone, PartialEq)]
-pub enum Stanza {
-    Iq,
-    Message,
-}
-
-impl Default for Stanza {
-    fn default() -> Stanza {
-        Stanza::Iq
-    }
-}
-
-impl FromStr for Stanza {
-    type Err = Error;
-
-    fn from_str(s: &str) -> Result<Stanza, Error> {
-        Ok(match s {
-            "iq" => Stanza::Iq,
-            "message" => Stanza::Message,
-
-            _ => return Err(Error::ParseError("Invalid 'stanza' attribute.")),
-        })
-    }
-}
-
-impl IntoAttributeValue for Stanza {
-    fn into_attribute_value(self) -> Option<String> {
-        match self {
-            Stanza::Iq => None,
-            Stanza::Message => Some(String::from("message")),
-        }
-    }
-}
+generate_attribute!(Stanza, "stanza", {
+    Iq => "iq",
+    Message => "message",
+}, Default = Iq);
 
 #[derive(Debug, Clone)]
 pub enum IBB {

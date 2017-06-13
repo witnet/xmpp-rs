@@ -14,61 +14,22 @@ use ns;
 
 use media_element::MediaElement;
 
-#[derive(Debug, Clone, PartialEq)]
-pub enum FieldType {
-    Boolean,
-    Fixed,
-    Hidden,
-    JidMulti,
-    JidSingle,
-    ListMulti,
-    ListSingle,
-    TextMulti,
-    TextPrivate,
-    TextSingle,
-}
+generate_attribute!(FieldType, "type", {
+    Boolean => "boolean",
+    Fixed => "fixed",
+    Hidden => "hidden",
+    JidMulti => "jid-multi",
+    JidSingle => "jid-single",
+    ListMulti => "list-multi",
+    ListSingle => "list-single",
+    TextMulti => "text-multi",
+    TextPrivate => "text-private",
+    TextSingle => "text-single",
+});
 
 impl Default for FieldType {
     fn default() -> FieldType {
         FieldType::TextSingle
-    }
-}
-
-impl FromStr for FieldType {
-    type Err = Error;
-
-    fn from_str(s: &str) -> Result<FieldType, Error> {
-        Ok(match s {
-            "boolean" => FieldType::Boolean,
-            "fixed" => FieldType::Fixed,
-            "hidden" => FieldType::Hidden,
-            "jid-multi" => FieldType::JidMulti,
-            "jid-single" => FieldType::JidSingle,
-            "list-multi" => FieldType::ListMulti,
-            "list-single" => FieldType::ListSingle,
-            "text-multi" => FieldType::TextMulti,
-            "text-private" => FieldType::TextPrivate,
-            "text-single" => FieldType::TextSingle,
-
-            _ => return Err(Error::ParseError("Invalid 'type' attribute in field element.")),
-        })
-    }
-}
-
-impl IntoAttributeValue for FieldType {
-    fn into_attribute_value(self) -> Option<String> {
-        Some(String::from(match self {
-            FieldType::Boolean => "boolean",
-            FieldType::Fixed => "fixed",
-            FieldType::Hidden => "hidden",
-            FieldType::JidMulti => "jid-multi",
-            FieldType::JidSingle => "jid-single",
-            FieldType::ListMulti => "list-multi",
-            FieldType::ListSingle => "list-single",
-            FieldType::TextMulti => "text-multi",
-            FieldType::TextPrivate => "text-private",
-            FieldType::TextSingle => "text-single",
-        }))
     }
 }
 
@@ -131,39 +92,12 @@ impl IntoElements for Field {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
-pub enum DataFormType {
-    Cancel,
-    Form,
-    Result_,
-    Submit,
-}
-
-impl FromStr for DataFormType {
-    type Err = Error;
-
-    fn from_str(s: &str) -> Result<DataFormType, Error> {
-        Ok(match s {
-            "cancel" => DataFormType::Cancel,
-            "form" => DataFormType::Form,
-            "result" => DataFormType::Result_,
-            "submit" => DataFormType::Submit,
-
-            _ => return Err(Error::ParseError("Unknown data form type.")),
-        })
-    }
-}
-
-impl IntoAttributeValue for DataFormType {
-    fn into_attribute_value(self) -> Option<String> {
-        Some(String::from(match self {
-            DataFormType::Cancel => "cancel",
-            DataFormType::Form => "form",
-            DataFormType::Result_ => "result",
-            DataFormType::Submit => "submit",
-        }))
-    }
-}
+generate_attribute!(Subscription, "subscription", {
+    Cancel => "cancel",
+    Form => "form",
+    Result_ => "result",
+    Submit => "submit",
+});
 
 #[derive(Debug, Clone)]
 pub struct DataForm {

@@ -14,42 +14,13 @@ use error::Error;
 use jid::Jid;
 use ns;
 
-#[derive(Debug, Clone, PartialEq)]
-pub enum ErrorType {
-    Auth,
-    Cancel,
-    Continue,
-    Modify,
-    Wait,
-}
-
-impl FromStr for ErrorType {
-    type Err = Error;
-
-    fn from_str(s: &str) -> Result<ErrorType, Error> {
-        Ok(match s {
-            "auth" => ErrorType::Auth,
-            "cancel" => ErrorType::Cancel,
-            "continue" => ErrorType::Continue,
-            "modify" => ErrorType::Modify,
-            "wait" => ErrorType::Wait,
-
-            _ => return Err(Error::ParseError("Unknown error type.")),
-        })
-    }
-}
-
-impl IntoAttributeValue for ErrorType {
-    fn into_attribute_value(self) -> Option<String> {
-        Some(String::from(match self {
-            ErrorType::Auth => "auth",
-            ErrorType::Cancel => "cancel",
-            ErrorType::Continue => "continue",
-            ErrorType::Modify => "modify",
-            ErrorType::Wait => "wait",
-        }))
-    }
-}
+generate_attribute!(ErrorType, "type", {
+    Auth => "auth",
+    Cancel => "cancel",
+    Continue => "continue",
+    Modify => "modify",
+    Wait => "wait",
+});
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum DefinedCondition {
@@ -252,7 +223,7 @@ mod tests {
             Error::ParseError(string) => string,
             _ => panic!(),
         };
-        assert_eq!(message, "Unknown error type.");
+        assert_eq!(message, "Unknown value for 'type' attribute.");
     }
 
     #[test]
