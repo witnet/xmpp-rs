@@ -41,13 +41,7 @@ generate_attribute!(Senders, "senders", {
     Initiator => "initiator",
     None => "none",
     Responder => "responder",
-});
-
-impl Default for Senders {
-    fn default() -> Senders {
-        Senders::Both
-    }
-}
+}, Default = Both);
 
 #[derive(Debug, Clone)]
 pub struct Content {

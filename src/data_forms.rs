@@ -25,13 +25,7 @@ generate_attribute!(FieldType, "type", {
     TextMulti => "text-multi",
     TextPrivate => "text-private",
     TextSingle => "text-single",
-});
-
-impl Default for FieldType {
-    fn default() -> FieldType {
-        FieldType::TextSingle
-    }
-}
+}, Default = TextSingle);
 
 #[derive(Debug, Clone)]
 pub struct Option_ {

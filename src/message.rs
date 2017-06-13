@@ -108,13 +108,7 @@ generate_attribute!(MessageType, "type", {
     Groupchat => "groupchat",
     Headline => "headline",
     Normal => "normal",
-});
-
-impl Default for MessageType {
-    fn default() -> MessageType {
-        MessageType::Normal
-    }
-}
+}, Default = Normal);
 
 type Lang = String;
 type Body = String;
