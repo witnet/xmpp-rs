@@ -333,7 +333,7 @@ mod tests {
         let elem: Element = "<jingle xmlns='urn:xmpp:jingle:1' action='session-initiate' sid='coucou'/>".parse().unwrap();
         let jingle = Jingle::try_from(elem).unwrap();
         assert_eq!(jingle.action, Action::SessionInitiate);
-        assert_eq!(jingle.sid, "coucou");
+        assert_eq!(jingle.sid, Sid(String::from("coucou")));
     }
 
     #[test]
