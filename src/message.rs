@@ -236,7 +236,7 @@ mod tests {
 
     #[test]
     fn test_serialise() {
-        let elem: Element = "<message xmlns='jabber:client' type='normal'/>".parse().unwrap();
+        let elem: Element = "<message xmlns='jabber:client'/>".parse().unwrap();
         let message = Message {
             from: None,
             to: None,

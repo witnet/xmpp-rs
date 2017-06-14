@@ -181,6 +181,6 @@ mod tests {
             Error::ParseError(string) => string,
             _ => panic!(),
         };
-        assert_eq!(message, "Invalid 'stanza' attribute.");
+        assert_eq!(message, "Unknown value for 'stanza' attribute.");
     }
 }

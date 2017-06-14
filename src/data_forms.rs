@@ -86,7 +86,7 @@ impl IntoElements for Field {
     }
 }
 
-generate_attribute!(Subscription, "subscription", {
+generate_attribute!(DataFormType, "type", {
     Cancel => "cancel",
     Form => "form",
     Result_ => "result",
@@ -272,7 +272,7 @@ mod tests {
             Error::ParseError(string) => string,
             _ => panic!(),
         };
-        assert_eq!(message, "Unknown data form type.");
+        assert_eq!(message, "Unknown value for 'type' attribute.");
     }
 
     #[test]
