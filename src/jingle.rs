@@ -245,12 +245,29 @@ impl IntoElements for ReasonElement {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct Sid(String);
+
+impl FromStr for Sid {
+    type Err = Error;
+    fn from_str(s: &str) -> Result<Sid, Error> {
+        // TODO: implement the NMTOKEN restrictions: https://www.w3.org/TR/2000/WD-xml-2e-20000814#NT-Nmtoken
+        Ok(Sid(String::from(s)))
+    }
+}
+
+impl IntoAttributeValue for Sid {
+    fn into_attribute_value(self) -> Option<String> {
+        return Some(self.0);
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct Jingle {
     pub action: Action,
     pub initiator: Option<Jid>,
     pub responder: Option<Jid>,
-    pub sid: String,
+    pub sid: Sid,
     pub contents: Vec<Content>,
     pub reason: Option<ReasonElement>,
     pub other: Vec<Element>,
