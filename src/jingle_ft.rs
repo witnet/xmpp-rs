@@ -9,6 +9,7 @@ use std::convert::TryFrom;
 use hashes::Hash;
 
 use minidom::{Element, IntoElements, ElementEmitter};
+use chrono::{DateTime, FixedOffset};
 
 use error::Error;
 use ns;
@@ -36,7 +37,7 @@ impl IntoElements for Range {
 
 #[derive(Debug, Clone)]
 pub struct File {
-    pub date: Option<String>,
+    pub date: Option<DateTime<FixedOffset>>,
     pub media_type: Option<String>,
     pub name: Option<String>,
     pub desc: Option<String>,
@@ -110,7 +111,7 @@ impl TryFrom<Element> for Description {
                     if date.is_some() {
                         return Err(Error::ParseError("File must not have more than one date."));
                     }
-                    date = Some(file_payload.text());
+                    date = Some(file_payload.text().parse()?);
                 } else if file_payload.is("media-type", ns::JINGLE_FT) {
                     if media_type.is_some() {
                         return Err(Error::ParseError("File must not have more than one media-type."));
@@ -179,7 +180,7 @@ impl Into<Element> for File {
         if let Some(date) = self.date {
             root.append_child(Element::builder("date")
                                       .ns(ns::JINGLE_FT)
-                                      .append(date)
+                                      .append(date.to_rfc3339())
                                       .build());
         }
         if let Some(media_type) = self.media_type {
@@ -242,7 +243,7 @@ mod tests {
   <file>
     <media-type>text/plain</media-type>
     <name>test.txt</name>
-    <date>2015-07-26T21:46:00</date>
+    <date>2015-07-26T21:46:00+01:00</date>
     <size>6144</size>
     <hash xmlns='urn:xmpp:hashes:2'
           algo='sha-1'>w0mcJylzCn+AfvuGdqkty2+KP48=</hash>
@@ -254,7 +255,7 @@ mod tests {
         assert_eq!(desc.file.media_type, Some(String::from("text/plain")));
         assert_eq!(desc.file.name, Some(String::from("test.txt")));
         assert_eq!(desc.file.desc, None);
-        assert_eq!(desc.file.date, Some(String::from("2015-07-26T21:46:00")));
+        assert_eq!(desc.file.date, Some(DateTime::parse_from_rfc3339("2015-07-26T21:46:00+01:00").unwrap()));
         assert_eq!(desc.file.size, Some(6144u64));
         assert_eq!(desc.file.range, None);
         assert_eq!(desc.file.hashes[0].algo, Algo::Sha_1);
