@@ -8,6 +8,8 @@ use std::convert::From;
 use std::io;
 use std::num;
 use std::string;
+use std::fmt;
+use std::error;
 
 use base64;
 use minidom;
@@ -24,6 +26,36 @@ pub enum Error {
     ParseStringError(string::ParseError),
     JidParseError(jid::JidParseError),
     ChronoParseError(chrono::ParseError),
+}
+
+impl fmt::Display for Error {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            Error::ParseError(s) => write!(fmt, "{}", s),
+            Error::IoError(ref e) => write!(fmt, "{}", e),
+            Error::XMLError(ref e) => write!(fmt, "{}", e),
+            Error::Base64Error(ref e) => write!(fmt, "{}", e),
+            Error::ParseIntError(ref e) => write!(fmt, "{}", e),
+            Error::ParseStringError(ref e) => write!(fmt, "{}", e),
+            Error::JidParseError(_) => write!(fmt, "JID parse error"),
+            Error::ChronoParseError(ref e) => write!(fmt, "{}", e),
+        }
+    }
+}
+
+impl error::Error for Error {
+    fn description(&self) -> &str {
+        match *self {
+            Error::ParseError(s) => s,
+            Error::IoError(ref e) => e.description(),
+            Error::XMLError(ref e) => e.description(),
+            Error::Base64Error(ref e) => e.description(),
+            Error::ParseIntError(ref e) => e.description(),
+            Error::ParseStringError(ref e) => e.description(),
+            Error::JidParseError(_) => "JID parse error",
+            Error::ChronoParseError(ref e) => e.description(),
+        }
+    }
 }
 
 impl From<io::Error> for Error {
