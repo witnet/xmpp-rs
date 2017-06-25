@@ -245,29 +245,14 @@ impl IntoElements for ReasonElement {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct Sid(String);
-
-impl FromStr for Sid {
-    type Err = Error;
-    fn from_str(s: &str) -> Result<Sid, Error> {
-        // TODO: implement the NMTOKEN restrictions: https://www.w3.org/TR/2000/WD-xml-2e-20000814#NT-Nmtoken
-        Ok(Sid(String::from(s)))
-    }
-}
-
-impl IntoAttributeValue for Sid {
-    fn into_attribute_value(self) -> Option<String> {
-        return Some(self.0);
-    }
-}
+generate_id!(SessionId);
 
 #[derive(Debug, Clone)]
 pub struct Jingle {
     pub action: Action,
     pub initiator: Option<Jid>,
     pub responder: Option<Jid>,
-    pub sid: Sid,
+    pub sid: SessionId,
     pub contents: Vec<Content>,
     pub reason: Option<ReasonElement>,
     pub other: Vec<Element>,
@@ -333,7 +318,7 @@ mod tests {
         let elem: Element = "<jingle xmlns='urn:xmpp:jingle:1' action='session-initiate' sid='coucou'/>".parse().unwrap();
         let jingle = Jingle::try_from(elem).unwrap();
         assert_eq!(jingle.action, Action::SessionInitiate);
-        assert_eq!(jingle.sid, Sid(String::from("coucou")));
+        assert_eq!(jingle.sid, SessionId(String::from("coucou")));
     }
 
     #[test]

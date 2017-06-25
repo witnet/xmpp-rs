@@ -25,37 +25,9 @@ generate_attribute!(Mode, "mode", {
     Udp => "udp",
 }, Default = Tcp);
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct CandidateId(String);
+generate_id!(CandidateId);
 
-impl FromStr for CandidateId {
-    type Err = Error;
-    fn from_str(s: &str) -> Result<CandidateId, Error> {
-        Ok(CandidateId(String::from(s)))
-    }
-}
-
-impl IntoAttributeValue for CandidateId {
-    fn into_attribute_value(self) -> Option<String> {
-        return Some(self.0);
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct StreamId(String);
-
-impl FromStr for StreamId {
-    type Err = Error;
-    fn from_str(s: &str) -> Result<StreamId, Error> {
-        Ok(StreamId(String::from(s)))
-    }
-}
-
-impl IntoAttributeValue for StreamId {
-    fn into_attribute_value(self) -> Option<String> {
-        return Some(self.0);
-    }
-}
+generate_id!(StreamId);
 
 #[derive(Debug, Clone)]
 pub struct Candidate {
