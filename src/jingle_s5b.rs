@@ -8,6 +8,7 @@ use std::convert::TryFrom;
 use std::str::FromStr;
 
 use minidom::{Element, IntoAttributeValue};
+use jid::Jid;
 
 use error::Error;
 
@@ -33,7 +34,7 @@ generate_id!(StreamId);
 pub struct Candidate {
     pub cid: CandidateId,
     pub host: String,
-    pub jid: String,
+    pub jid: Jid,
     pub port: Option<u16>,
     pub priority: u32,
     pub type_: Type,
@@ -45,7 +46,7 @@ impl Into<Element> for Candidate {
                 .ns(ns::JINGLE_S5B)
                 .attr("cid", self.cid)
                 .attr("host", self.host)
-                .attr("jid", self.jid)
+                .attr("jid", String::from(self.jid))
                 .attr("port", self.port)
                 .attr("priority", self.priority)
                 .attr("type", self.type_)
@@ -217,7 +218,7 @@ mod tests {
             payload: TransportPayload::Candidates(vec!(Candidate {
                 cid: CandidateId(String::from("coucou")),
                 host: String::from("coucou"),
-                jid: String::from("coucou@coucou"),
+                jid: Jid::from_str("coucou@coucou").unwrap(),
                 port: None,
                 priority: 0u32,
                 type_: Type::Direct,
