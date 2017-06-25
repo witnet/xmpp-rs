@@ -109,6 +109,25 @@ macro_rules! generate_attribute {
     );
 }
 
+macro_rules! generate_id {
+    ($elem:ident) => (
+        #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+        pub struct $elem(String);
+        impl FromStr for $elem {
+            type Err = Error;
+            fn from_str(s: &str) -> Result<$elem, Error> {
+                // TODO: add a way to parse that differently when needed.
+                Ok($elem(String::from(s)))
+            }
+        }
+        impl IntoAttributeValue for $elem {
+            fn into_attribute_value(self) -> Option<String> {
+                Some(self.0)
+            }
+        }
+    );
+}
+
 /// Error type returned by every parser on failure.
 pub mod error;
 /// XML namespace definitions used through XMPP.
