@@ -229,9 +229,8 @@ impl From<DataForm> for Element {
         Element::builder("x")
                 .ns(ns::DATA_FORMS)
                 .attr("type", form.type_)
-                .append(form.form_type)
-                .append(form.title)
-                .append(form.instructions)
+                .append(if form.title.is_some() { Some(Element::builder("title").ns(ns::DATA_FORMS).append(form.title)) } else { None })
+                .append(if form.instructions.is_some() { Some(Element::builder("instructions").ns(ns::DATA_FORMS).append(form.instructions)) } else { None })
                 .append(form.fields)
                 .build()
     }
