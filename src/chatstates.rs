@@ -25,25 +25,23 @@ impl TryFrom<Element> for ChatState {
     type Error = Error;
 
     fn try_from(elem: Element) -> Result<ChatState, Error> {
+        if elem.ns() != Some(ns::CHATSTATES) {
+            return Err(Error::ParseError("This is not a chatstate element."));
+        }
         for _ in elem.children() {
             return Err(Error::ParseError("Unknown child in chatstate element."));
         }
         for _ in elem.attrs() {
             return Err(Error::ParseError("Unknown attribute in chatstate element."));
         }
-        if elem.is("active", ns::CHATSTATES) {
-            Ok(ChatState::Active)
-        } else if elem.is("composing", ns::CHATSTATES) {
-            Ok(ChatState::Composing)
-        } else if elem.is("gone", ns::CHATSTATES) {
-            Ok(ChatState::Gone)
-        } else if elem.is("inactive", ns::CHATSTATES) {
-            Ok(ChatState::Inactive)
-        } else if elem.is("paused", ns::CHATSTATES) {
-            Ok(ChatState::Paused)
-        } else {
-            Err(Error::ParseError("This is not a chatstate element."))
-        }
+        Ok(match elem.name() {
+            "active" => ChatState::Active,
+            "composing" => ChatState::Composing,
+            "gone" => ChatState::Gone,
+            "inactive" => ChatState::Inactive,
+            "paused" => ChatState::Paused,
+            _ => return Err(Error::ParseError("This is not a chatstate element.")),
+        })
     }
 }
 
