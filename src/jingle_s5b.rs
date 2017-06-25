@@ -20,9 +20,46 @@ generate_attribute!(Type, "type", {
     Tunnel => "tunnel",
 }, Default = Direct);
 
+generate_attribute!(Mode, "mode", {
+    Tcp => "tcp",
+    Udp => "udp",
+}, Default = Tcp);
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct CandidateId(String);
+
+impl FromStr for CandidateId {
+    type Err = Error;
+    fn from_str(s: &str) -> Result<CandidateId, Error> {
+        Ok(CandidateId(String::from(s)))
+    }
+}
+
+impl IntoAttributeValue for CandidateId {
+    fn into_attribute_value(self) -> Option<String> {
+        return Some(self.0);
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct StreamId(String);
+
+impl FromStr for StreamId {
+    type Err = Error;
+    fn from_str(s: &str) -> Result<StreamId, Error> {
+        Ok(StreamId(String::from(s)))
+    }
+}
+
+impl IntoAttributeValue for StreamId {
+    fn into_attribute_value(self) -> Option<String> {
+        return Some(self.0);
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct Candidate {
-    pub cid: String,
+    pub cid: CandidateId,
     pub host: String,
     pub jid: String,
     pub port: Option<u16>,
@@ -44,11 +81,6 @@ impl Into<Element> for Candidate {
     }
 }
 
-generate_attribute!(Mode, "mode", {
-    Tcp => "tcp",
-    Udp => "udp",
-}, Default = Tcp);
-
 #[derive(Debug, Clone)]
 pub enum TransportPayload {
     Activated(String),
@@ -61,7 +93,7 @@ pub enum TransportPayload {
 
 #[derive(Debug, Clone)]
 pub struct Transport {
-    pub sid: String,
+    pub sid: StreamId,
     pub dstaddr: Option<String>,
     pub mode: Mode,
     pub payload: TransportPayload,
@@ -181,7 +213,7 @@ mod tests {
     fn test_simple() {
         let elem: Element = "<transport xmlns='urn:xmpp:jingle:transports:s5b:1' sid='coucou'/>".parse().unwrap();
         let transport = Transport::try_from(elem).unwrap();
-        assert_eq!(transport.sid, "coucou");
+        assert_eq!(transport.sid, StreamId(String::from("coucou")));
         assert_eq!(transport.dstaddr, None);
         assert_eq!(transport.mode, Mode::Tcp);
         match transport.payload {
@@ -194,7 +226,7 @@ mod tests {
     fn test_serialise_activated() {
         let elem: Element = "<transport xmlns='urn:xmpp:jingle:transports:s5b:1' sid='coucou'><activated cid='coucou'/></transport>".parse().unwrap();
         let transport = Transport {
-            sid: String::from("coucou"),
+            sid: StreamId(String::from("coucou")),
             dstaddr: None,
             mode: Mode::Tcp,
             payload: TransportPayload::Activated(String::from("coucou")),
@@ -207,11 +239,11 @@ mod tests {
     fn test_serialise_candidate() {
         let elem: Element = "<transport xmlns='urn:xmpp:jingle:transports:s5b:1' sid='coucou'><candidate cid='coucou' host='coucou' jid='coucou@coucou' priority='0'/></transport>".parse().unwrap();
         let transport = Transport {
-            sid: String::from("coucou"),
+            sid: StreamId(String::from("coucou")),
             dstaddr: None,
             mode: Mode::Tcp,
             payload: TransportPayload::Candidates(vec!(Candidate {
-                cid: String::from("coucou"),
+                cid: CandidateId(String::from("coucou")),
                 host: String::from("coucou"),
                 jid: String::from("coucou@coucou"),
                 port: None,
