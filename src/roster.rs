@@ -65,7 +65,7 @@ impl Into<Element> for Item {
                 .attr("jid", String::from(self.jid))
                 .attr("name", self.name)
                 .attr("subscription", self.subscription)
-                .append(self.groups)
+                .append(self.groups.iter().map(|group| Element::builder("group").ns(ns::ROSTER).append(group)).collect::<Vec<_>>())
                 .build()
     }
 }
@@ -173,6 +173,29 @@ mod tests {
     }
 
     #[test]
+    fn test_multiple_groups() {
+        let elem: Element = r#"
+<query xmlns='jabber:iq:roster'>
+  <item jid='test@example.org'>
+    <group>A</group>
+    <group>B</group>
+  </item>
+</query>
+"#.parse().unwrap();
+        let elem1 = elem.clone();
+        let roster = Roster::try_from(elem).unwrap();
+        assert!(roster.ver.is_none());
+        assert_eq!(roster.items.len(), 1);
+        assert_eq!(roster.items[0].jid, Jid::from_str("test@example.org").unwrap());
+        assert_eq!(roster.items[0].name, None);
+        assert_eq!(roster.items[0].groups.len(), 2);
+        assert_eq!(roster.items[0].groups[0], String::from("A"));
+        assert_eq!(roster.items[0].groups[1], String::from("B"));
+        let elem2 = roster.into();
+        assert_eq!(elem1, elem2);
+    }
+
+    #[test]
     fn test_set() {
         let elem: Element = "<query xmlns='jabber:iq:roster'><item jid='nurse@example.com'/></query>".parse().unwrap();
         let roster = Roster::try_from(elem).unwrap();
@@ -185,7 +208,6 @@ mod tests {
         name='Nurse'>
     <group>Servants</group>
   </item>
-</query>
 </query>
 "#.parse().unwrap();
         let roster = Roster::try_from(elem).unwrap();
