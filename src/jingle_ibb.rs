@@ -5,8 +5,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use std::convert::TryFrom;
+use std::str::FromStr;
 
-use minidom::Element;
+use minidom::{Element, IntoAttributeValue};
 
 use error::Error;
 
@@ -14,10 +15,12 @@ use ns;
 
 use ibb::Stanza;
 
+generate_id!(StreamId);
+
 #[derive(Debug, Clone)]
 pub struct Transport {
     pub block_size: u16,
-    pub sid: String,
+    pub sid: StreamId,
     pub stanza: Stanza,
 }
 
@@ -60,7 +63,7 @@ mod tests {
         let elem: Element = "<transport xmlns='urn:xmpp:jingle:transports:ibb:1' block-size='3' sid='coucou'/>".parse().unwrap();
         let transport = Transport::try_from(elem).unwrap();
         assert_eq!(transport.block_size, 3);
-        assert_eq!(transport.sid, "coucou");
+        assert_eq!(transport.sid, StreamId(String::from("coucou")));
         assert_eq!(transport.stanza, Stanza::Iq);
     }
 
