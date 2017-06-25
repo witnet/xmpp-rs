@@ -144,6 +144,9 @@ pub mod rsm;
 /// XEP-0060: Publish-Subscribe
 pub mod pubsub;
 
+/// XEP-0077: In-Band Registration
+pub mod ibr;
+
 /// XEP-0085: Chat State Notifications
 pub mod chatstates;
 

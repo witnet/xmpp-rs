@@ -39,6 +39,9 @@ pub const PUBSUB_EVENT: &str = "http://jabber.org/protocol/pubsub#event";
 /// XEP-0060: Publish-Subscribe
 pub const PUBSUB_OWNER: &str = "http://jabber.org/protocol/pubsub#owner";
 
+/// XEP-0077: In-Band Registration
+pub const REGISTER: &str = "jabber:iq:register";
+
 /// XEP-0085: Chat State Notifications
 pub const CHATSTATES: &str = "http://jabber.org/protocol/chatstates";
 
