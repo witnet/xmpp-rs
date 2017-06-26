@@ -198,6 +198,21 @@ pub struct Presence {
     pub payloads: Vec<Element>,
 }
 
+impl Presence {
+    pub fn new(type_: Type) -> Presence {
+        Presence {
+            from: None,
+            to: None,
+            id: None,
+            type_: type_,
+            show: Show::None,
+            statuses: BTreeMap::new(),
+            priority: 0i8,
+            payloads: vec!(),
+        }
+    }
+}
+
 impl TryFrom<Element> for Presence {
     type Error = Error;
 
@@ -310,16 +325,7 @@ mod tests {
     #[test]
     fn test_serialise() {
         let elem: Element = "<presence xmlns='jabber:client' type='unavailable'/>".parse().unwrap();
-        let presence = Presence {
-            from: None,
-            to: None,
-            id: None,
-            type_: Type::Unavailable,
-            show: Show::None,
-            statuses: BTreeMap::new(),
-            priority: 0i8,
-            payloads: vec!(),
-        };
+        let presence = Presence::new(Type::Unavailable);
         let elem2 = presence.into();
         assert_eq!(elem, elem2);
     }
@@ -446,18 +452,8 @@ mod tests {
     #[test]
     fn test_serialise_status() {
         let status = Status::from("Hello world!");
-        let mut statuses = BTreeMap::new();
-        statuses.insert(String::from(""), status);
-        let presence = Presence {
-            from: None,
-            to: None,
-            id: None,
-            type_: Type::Unavailable,
-            show: Show::None,
-            statuses: statuses,
-            priority: 0i8,
-            payloads: vec!(),
-        };
+        let mut presence = Presence::new(Type::Unavailable);
+        presence.statuses.insert(String::from(""), status);
         let elem: Element = presence.into();
         assert!(elem.is("presence", ns::JABBER_CLIENT));
         assert!(elem.children().collect::<Vec<_>>()[0].is("status", ns::JABBER_CLIENT));
