@@ -127,6 +127,21 @@ pub struct Message {
     pub payloads: Vec<Element>,
 }
 
+impl Message {
+    pub fn new(to: Option<Jid>) -> Message {
+        Message {
+            from: None,
+            to: to,
+            id: None,
+            type_: MessageType::Chat,
+            bodies: BTreeMap::new(),
+            subjects: BTreeMap::new(),
+            thread: None,
+            payloads: vec!(),
+        }
+    }
+}
+
 impl TryFrom<Element> for Message {
     type Error = Error;
 
@@ -237,16 +252,8 @@ mod tests {
     #[test]
     fn test_serialise() {
         let elem: Element = "<message xmlns='jabber:client'/>".parse().unwrap();
-        let message = Message {
-            from: None,
-            to: None,
-            id: None,
-            type_: MessageType::Normal,
-            bodies: BTreeMap::new(),
-            subjects: BTreeMap::new(),
-            thread: None,
-            payloads: vec!(),
-        };
+        let mut message = Message::new(None);
+        message.type_ = MessageType::Normal;
         let elem2 = message.into();
         assert_eq!(elem, elem2);
     }
@@ -265,18 +272,8 @@ mod tests {
     #[test]
     fn test_serialise_body() {
         let elem: Element = "<message xmlns='jabber:client' to='coucou@example.org' type='chat'><body>Hello world!</body></message>".parse().unwrap();
-        let mut bodies = BTreeMap::new();
-        bodies.insert(String::from(""), String::from("Hello world!"));
-        let message = Message {
-            from: None,
-            to: Some(Jid::from_str("coucou@example.org").unwrap()),
-            id: None,
-            type_: MessageType::Chat,
-            bodies: bodies,
-            subjects: BTreeMap::new(),
-            thread: None,
-            payloads: vec!(),
-        };
+        let mut message = Message::new(Some(Jid::from_str("coucou@example.org").unwrap()));
+        message.bodies.insert(String::from(""), String::from("Hello world!"));
         let elem2 = message.into();
         assert_eq!(elem, elem2);
     }
