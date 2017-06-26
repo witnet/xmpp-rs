@@ -278,76 +278,20 @@ impl IntoElements for Reason {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
-pub enum Affiliation {
-    Owner,
-    Admin,
-    Member,
-    Outcast,
-    None,
-}
+generate_attribute!(Affiliation, "affiliation", {
+    Owner => "owner",
+    Admin => "admin",
+    Member => "member",
+    Outcast => "outcast",
+    None => "none",
+}, Default = None);
 
-impl FromStr for Affiliation {
-    type Err = Error;
-
-    fn from_str(s: &str) -> Result<Affiliation, Error> {
-        Ok(match s {
-            "owner" => Affiliation::Owner,
-            "admin" => Affiliation::Admin,
-            "member" => Affiliation::Member,
-            "outcast" => Affiliation::Outcast,
-            "none" => Affiliation::None,
-
-            _ => return Err(Error::ParseError("Unknown affiliation.")),
-        })
-    }
-}
-
-impl IntoAttributeValue for Affiliation {
-    fn into_attribute_value(self) -> Option<String> {
-        Some(String::from(match self {
-            Affiliation::Owner => "owner",
-            Affiliation::Admin => "admin",
-            Affiliation::Member => "member",
-            Affiliation::Outcast => "outcast",
-            Affiliation::None => "none",
-        }))
-    }
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum Role {
-    Moderator,
-    Participant,
-    Visitor,
-    None,
-}
-
-impl FromStr for Role {
-    type Err = Error;
-
-    fn from_str(s: &str) -> Result<Role, Error> {
-        Ok(match s {
-            "moderator" => Role::Moderator,
-            "participant" => Role::Participant,
-            "visitor" => Role::Visitor,
-            "none" => Role::None,
-
-            _ => return Err(Error::ParseError("Unknown role.")),
-        })
-    }
-}
-
-impl IntoAttributeValue for Role {
-    fn into_attribute_value(self) -> Option<String> {
-        Some(String::from(match self {
-            Role::Moderator => "moderator",
-            Role::Participant => "participant",
-            Role::Visitor => "visitor",
-            Role::None => "none",
-        }))
-    }
-}
+generate_attribute!(Role, "role", {
+    Moderator => "moderator",
+    Participant => "participant",
+    Visitor => "visitor",
+    None => "none",
+}, Default = None);
 
 #[derive(Debug, Clone)]
 pub struct Item {
