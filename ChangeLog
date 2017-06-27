@@ -1,3 +1,23 @@
+Version 0.6.0:
+2017-06-27  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
+    * New parsers/serialisers:
+        - In-Band Registration (XEP-0077) was added.
+        - Multi-User Chat (XEP-0045) got expanded a lot, thanks pep.!
+    * Breaking changes:
+        - Added wrappers for Strings used as identifiers, to add type
+          safety.
+        - Use chrono’s DateTime for JingleFT’s date element.
+        - Use Jid for JingleS5B’s jid attribute.
+    * Improvements:
+        - Use more macros for common tasks.
+        - Add a constructor for Message and Presence.
+        - Implement std::fmt::Display and std::error::Error on our
+          error type.
+        - Fix DataForms serialisation.
+        - Fix roster group serialisation.
+        - Update libraries, notably chrono whose version 0.3.1 got
+          yanked.
+
 Version 0.5.0:
 2017-06-11  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
     * New parsers/serialisers:
