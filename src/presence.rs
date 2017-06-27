@@ -308,7 +308,6 @@ impl Into<Element> for Presence {
 
 #[cfg(test)]
 mod tests {
-    use std::collections::BTreeMap;
     use super::*;
 
     #[test]
