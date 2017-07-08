@@ -253,7 +253,7 @@ impl Element {
             let e = reader.read_event(&mut buf)?;
             match e {
                 Event::Empty(ref e) | Event::Start(ref e) => {
-                    root = build_element(e)?; // FIXME: could be break build_element(e)? when break value is stable
+                    root = build_element(&reader, e)?; // FIXME: could be break build_element(e)? when break value is stable
                     break;
                 },
                 Event::Eof => {
@@ -268,12 +268,12 @@ impl Element {
         loop {
             match reader.read_event(&mut buf)? {
                 Event::Empty(ref e) => {
-                    let elem = build_element(e)?;
+                    let elem = build_element(&reader, e)?;
                     // Since there is no Event::End after, directly append it to the current node
                     stack.last_mut().unwrap().append_child(elem);
                 },
                 Event::Start(ref e) => {
-                    let elem = build_element(e)?;
+                    let elem = build_element(&reader, e)?;
                     stack.push(elem);
                 },
                 Event::End(ref e) => {
@@ -590,29 +590,29 @@ impl Element {
     }
 }
 
-fn build_element(event: &BytesStart) -> Result<Element> {
+fn build_element<R: BufRead>(reader: &EventReader<R>, event: &BytesStart) -> Result<Element> {
     let mut attributes = event.attributes()
                                .map(|o| {
                                     let o = o?;
                                     let key = str::from_utf8(o.key)?.to_owned();
-                                    let value = str::from_utf8(o.value)?.to_owned();
+                                    let value = o.unescape_and_decode_value(reader)?;
                                     Ok((key, value))
                                    }
                                 )
                                .collect::<Result<BTreeMap<String, String>>>()?;
-        let mut ns_key = None;
-        for (key, _) in &attributes {
-            if key == "xmlns" || key.starts_with("xmlns:") {
-                ns_key = Some(key.clone());
-            }
+    let mut ns_key = None;
+    for (key, _) in &attributes {
+        if key == "xmlns" || key.starts_with("xmlns:") {
+            ns_key = Some(key.clone());
         }
+    }
 
-        let ns = match ns_key {
-            None => None,
-            Some(key) => attributes.remove(&key),
-        };
-        let name = str::from_utf8(event.name())?.to_owned();
-        Ok(Element::new(name, ns, attributes, Vec::new()))
+    let ns = match ns_key {
+        None => None,
+        Some(key) => attributes.remove(&key),
+    };
+    let name = str::from_utf8(event.name())?.to_owned();
+    Ok(Element::new(name, ns, attributes, Vec::new()))
 }
 
 /// An iterator over references to child elements of an `Element`.
