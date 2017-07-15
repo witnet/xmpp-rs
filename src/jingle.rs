@@ -43,11 +43,13 @@ generate_attribute!(Senders, "senders", {
     Responder => "responder",
 }, Default = Both);
 
+generate_id!(ContentId);
+
 #[derive(Debug, Clone)]
 pub struct Content {
     pub creator: Creator,
     pub disposition: String, // TODO: the list of values is defined, use an enum!
-    pub name: String,
+    pub name: ContentId,
     pub senders: Senders,
     pub description: Option<Element>,
     pub transport: Option<Element>,
@@ -353,7 +355,7 @@ mod tests {
         let elem: Element = "<jingle xmlns='urn:xmpp:jingle:1' action='session-initiate' sid='coucou'><content creator='initiator' name='coucou'><description/><transport/></content></jingle>".parse().unwrap();
         let jingle = Jingle::try_from(elem).unwrap();
         assert_eq!(jingle.contents[0].creator, Creator::Initiator);
-        assert_eq!(jingle.contents[0].name, "coucou");
+        assert_eq!(jingle.contents[0].name, ContentId(String::from("coucou")));
         assert_eq!(jingle.contents[0].senders, Senders::Both);
         assert_eq!(jingle.contents[0].disposition, "session");
 
