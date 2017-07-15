@@ -112,7 +112,7 @@ macro_rules! generate_attribute {
 macro_rules! generate_id {
     ($elem:ident) => (
         #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-        pub struct $elem(String);
+        pub struct $elem(pub String);
         impl FromStr for $elem {
             type Err = Error;
             fn from_str(s: &str) -> Result<$elem, Error> {
@@ -213,6 +213,9 @@ pub mod mam;
 
 /// XEP-0319: Last User Interaction in Presence
 pub mod idle;
+
+/// XEP-0353: Jingle Message Initiation
+pub mod jingle_message;
 
 /// XEP-0359: Unique and Stable Stanza IDs
 pub mod stanza_id;
