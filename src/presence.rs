@@ -211,6 +211,36 @@ impl Presence {
             payloads: vec!(),
         }
     }
+
+    pub fn with_from(mut self, from: Option<Jid>) -> Presence {
+        self.from = from;
+        self
+    }
+
+    pub fn with_to(mut self, to: Option<Jid>) -> Presence {
+        self.to = to;
+        self
+    }
+
+    pub fn with_id(mut self, id: Option<String>) -> Presence {
+        self.id = id;
+        self
+    }
+
+    pub fn with_show(mut self, show: Show) -> Presence {
+        self.show = show;
+        self
+    }
+
+    pub fn with_priority(mut self, priority: i8) -> Presence {
+        self.priority = priority;
+        self
+    }
+
+    pub fn with_payloads(mut self, payloads: Vec<Element>) -> Presence {
+        self.payloads = payloads;
+        self
+    }
 }
 
 impl TryFrom<Element> for Presence {
