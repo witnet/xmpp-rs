@@ -149,3 +149,50 @@ fn wrongly_closed_elements_error() {
     let elem1 = "<a><c><d/></c></a>".parse::<Element>();
     assert!(elem1.is_ok());
 }
+
+#[test]
+fn namespace_simple() {
+    let elem: Element = "<message xmlns='jabber:client'/>".parse().unwrap();
+    assert_eq!(elem.name(), "message");
+    assert_eq!(elem.ns(), Some("jabber:client"));
+}
+
+#[test]
+fn namespace_prefixed() {
+    let elem: Element = "<stream:features xmlns:stream='http://etherx.jabber.org/streams'/>"
+        .parse().unwrap();
+    assert_eq!(elem.name(), "features");
+    assert_eq!(elem.ns(), Some("http://etherx.jabber.org/streams"));
+}
+
+#[test]
+fn namespace_inherited_simple() {
+    let elem: Element = "<stream xmlns='jabber:client'><message/></stream>".parse().unwrap();
+    assert_eq!(elem.name(), "stream");
+    assert_eq!(elem.ns(), Some("jabber:client"));
+    let child = elem.children().next().unwrap();
+    assert_eq!(child.name(), "message");
+    assert_eq!(child.ns(), Some("jabber:client"));
+}
+
+#[test]
+fn namespace_inherited_prefixed1() {
+    let elem: Element = "<stream:features xmlns:stream='http://etherx.jabber.org/streams' xmlns='jabber:client'><message/></stream>"
+        .parse().unwrap();
+    assert_eq!(elem.name(), "features");
+    assert_eq!(elem.ns(), Some("http://etherx.jabber.org/streams"));
+    let child = elem.children().next().unwrap();
+    assert_eq!(child.name(), "message");
+    assert_eq!(child.ns(), Some("jabber:client"));
+}
+
+#[test]
+fn namespace_inherited_prefixed2() {
+    let elem: Element = "<stream xmlns='http://etherx.jabber.org/streams' xmlns:jabber='jabber:client'><jabber:message/></stream>"
+        .parse().unwrap();
+    assert_eq!(elem.name(), "stream");
+    assert_eq!(elem.ns(), Some("http://etherx.jabber.org/streams"));
+    let child = elem.children().next().unwrap();
+    assert_eq!(child.name(), "message");
+    assert_eq!(child.ns(), Some("jabber:client"));
+}
