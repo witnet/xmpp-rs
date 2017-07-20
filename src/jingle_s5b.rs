@@ -4,7 +4,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use std::convert::TryFrom;
+use try_from::TryFrom;
 use std::str::FromStr;
 
 use minidom::{Element, IntoAttributeValue};
@@ -73,7 +73,7 @@ pub struct Transport {
 }
 
 impl TryFrom<Element> for Transport {
-    type Error = Error;
+    type Err = Error;
 
     fn try_from(elem: Element) -> Result<Transport, Error> {
         if elem.is("transport", ns::JINGLE_S5B) {

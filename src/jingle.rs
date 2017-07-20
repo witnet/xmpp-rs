@@ -4,7 +4,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use std::convert::TryFrom;
+use try_from::TryFrom;
 use std::str::FromStr;
 
 use minidom::{Element, IntoElements, IntoAttributeValue, ElementEmitter};
@@ -57,7 +57,7 @@ pub struct Content {
 }
 
 impl TryFrom<Element> for Content {
-    type Error = Error;
+    type Err = Error;
 
     fn try_from(elem: Element) -> Result<Content, Error> {
         if !elem.is("content", ns::JINGLE) {
@@ -196,7 +196,7 @@ pub struct ReasonElement {
 }
 
 impl TryFrom<Element> for ReasonElement {
-    type Error = Error;
+    type Err = Error;
 
     fn try_from(elem: Element) -> Result<ReasonElement, Error> {
         if !elem.is("reason", ns::JINGLE) {
@@ -261,7 +261,7 @@ pub struct Jingle {
 }
 
 impl TryFrom<Element> for Jingle {
-    type Error = Error;
+    type Err = Error;
 
     fn try_from(root: Element) -> Result<Jingle, Error> {
         if !root.is("jingle", ns::JINGLE) {

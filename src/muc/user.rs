@@ -4,8 +4,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use std::convert::TryFrom;
-use std::convert::TryInto;
+use try_from::{TryFrom, TryInto};
 use std::str::FromStr;
 
 use minidom::{Element, IntoElements, IntoAttributeValue, ElementEmitter};
@@ -74,7 +73,7 @@ pub enum Status {
 }
 
 impl TryFrom<Element> for Status {
-    type Error = Error;
+    type Err = Error;
 
     fn try_from(elem: Element) -> Result<Status, Error> {
         if !elem.is("status", ns::MUC_USER) {
@@ -160,7 +159,7 @@ pub enum Actor {
 }
 
 impl TryFrom<Element> for Actor {
-    type Error = Error;
+    type Err = Error;
 
     fn try_from(elem: Element) -> Result<Actor, Error> {
         if !elem.is("actor", ns::MUC_USER) {
@@ -210,7 +209,7 @@ pub struct Continue {
 }
 
 impl TryFrom<Element> for Continue {
-    type Error = Error;
+    type Err = Error;
 
     fn try_from(elem: Element) -> Result<Continue, Error> {
         if !elem.is("continue", ns::MUC_USER) {
@@ -247,7 +246,7 @@ impl IntoElements for Continue {
 pub struct Reason(String);
 
 impl TryFrom<Element> for Reason {
-    type Error = Error;
+    type Err = Error;
 
     fn try_from(elem: Element) -> Result<Reason, Error> {
         if !elem.is("reason", ns::MUC_USER) {
@@ -305,7 +304,7 @@ pub struct Item {
 }
 
 impl TryFrom<Element> for Item {
-    type Error = Error;
+    type Err = Error;
 
     fn try_from(elem: Element) -> Result<Item, Error> {
         if !elem.is("item", ns::MUC_USER) {
@@ -374,7 +373,7 @@ pub struct MucUser {
 }
 
 impl TryFrom<Element> for MucUser {
-    type Error = Error;
+    type Err = Error;
 
     fn try_from(elem: Element) -> Result<MucUser, Error> {
         if !elem.is("x", ns::MUC_USER) {

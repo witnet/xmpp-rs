@@ -4,7 +4,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use std::convert::TryFrom;
+use try_from::TryFrom;
 use std::str::FromStr;
 use std::collections::BTreeMap;
 
@@ -43,7 +43,7 @@ pub enum MessagePayload {
 }
 
 impl TryFrom<Element> for MessagePayload {
-    type Error = Error;
+    type Err = Error;
 
     fn try_from(elem: Element) -> Result<MessagePayload, Error> {
         Ok(match (elem.name().as_ref(), elem.ns().unwrap().as_ref()) {
@@ -143,7 +143,7 @@ impl Message {
 }
 
 impl TryFrom<Element> for Message {
-    type Error = Error;
+    type Err = Error;
 
     fn try_from(root: Element) -> Result<Message, Error> {
         if !root.is("message", ns::JABBER_CLIENT) {

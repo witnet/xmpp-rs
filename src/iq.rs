@@ -5,7 +5,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use std::convert::TryFrom;
+use try_from::TryFrom;
 
 use minidom::Element;
 use minidom::IntoAttributeValue;
@@ -61,7 +61,7 @@ pub enum IqResultPayload {
 }
 
 impl TryFrom<Element> for IqGetPayload {
-    type Error = Error;
+    type Err = Error;
 
     fn try_from(elem: Element) -> Result<IqGetPayload, Error> {
         Ok(match (elem.name().as_ref(), elem.ns().unwrap().as_ref()) {
@@ -98,7 +98,7 @@ impl Into<Element> for IqGetPayload {
 }
 
 impl TryFrom<Element> for IqSetPayload {
-    type Error = Error;
+    type Err = Error;
 
     fn try_from(elem: Element) -> Result<IqSetPayload, Error> {
         Ok(match (elem.name().as_ref(), elem.ns().unwrap().as_ref()) {
@@ -137,7 +137,7 @@ impl Into<Element> for IqSetPayload {
 }
 
 impl TryFrom<Element> for IqResultPayload {
-    type Error = Error;
+    type Err = Error;
 
     fn try_from(elem: Element) -> Result<IqResultPayload, Error> {
         Ok(match (elem.name().as_ref(), elem.ns().unwrap().as_ref()) {
@@ -199,7 +199,7 @@ pub struct Iq {
 }
 
 impl TryFrom<Element> for Iq {
-    type Error = Error;
+    type Err = Error;
 
     fn try_from(root: Element) -> Result<Iq, Error> {
         if !root.is("iq", ns::JABBER_CLIENT) {

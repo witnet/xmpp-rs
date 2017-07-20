@@ -4,7 +4,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use std::convert::TryFrom;
+use try_from::TryFrom;
 
 use minidom::Element;
 
@@ -44,7 +44,7 @@ fn check_empty_and_get_sid(elem: Element) -> Result<SessionId, Error> {
 }
 
 impl TryFrom<Element> for JingleMI {
-    type Error = Error;
+    type Err = Error;
 
     fn try_from(elem: Element) -> Result<JingleMI, Error> {
         if elem.ns() != Some(ns::JINGLE_MESSAGE) {

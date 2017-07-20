@@ -4,7 +4,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use std::convert::TryFrom;
+use try_from::TryFrom;
 
 use minidom::Element;
 
@@ -16,7 +16,7 @@ use ns;
 pub struct Attention;
 
 impl TryFrom<Element> for Attention {
-    type Error = Error;
+    type Err = Error;
 
     fn try_from(elem: Element) -> Result<Attention, Error> {
         if !elem.is("attention", ns::ATTENTION) {
@@ -39,7 +39,7 @@ impl Into<Element> for Attention {
 
 #[cfg(test)]
 mod tests {
-    use std::convert::TryFrom;
+    use try_from::TryFrom;
     use minidom::Element;
     use error::Error;
     use super::Attention;

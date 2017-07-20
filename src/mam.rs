@@ -4,7 +4,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use std::convert::TryFrom;
+use try_from::TryFrom;
 use std::str::FromStr;
 
 use minidom::{Element, IntoAttributeValue};
@@ -53,7 +53,7 @@ pub struct Prefs {
 }
 
 impl TryFrom<Element> for Query {
-    type Error = Error;
+    type Err = Error;
 
     fn try_from(elem: Element) -> Result<Query, Error> {
         if !elem.is("query", ns::MAM) {
@@ -77,7 +77,7 @@ impl TryFrom<Element> for Query {
 }
 
 impl TryFrom<Element> for Result_ {
-    type Error = Error;
+    type Err = Error;
 
     fn try_from(elem: Element) -> Result<Result_, Error> {
         if !elem.is("result", ns::MAM) {
@@ -103,7 +103,7 @@ impl TryFrom<Element> for Result_ {
 }
 
 impl TryFrom<Element> for Fin {
-    type Error = Error;
+    type Err = Error;
 
     fn try_from(elem: Element) -> Result<Fin, Error> {
         if !elem.is("fin", ns::MAM) {
@@ -129,7 +129,7 @@ impl TryFrom<Element> for Fin {
 }
 
 impl TryFrom<Element> for Prefs {
-    type Error = Error;
+    type Err = Error;
 
     fn try_from(elem: Element) -> Result<Prefs, Error> {
         if !elem.is("prefs", ns::MAM) {

@@ -5,7 +5,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use std::collections::HashMap;
-use std::convert::TryFrom;
+use try_from::TryFrom;
 
 use minidom::{Element, IntoElements, ElementEmitter};
 
@@ -26,7 +26,7 @@ pub struct Query {
 }
 
 impl TryFrom<Element> for Query {
-    type Error = Error;
+    type Err = Error;
 
     fn try_from(elem: Element) -> Result<Query, Error> {
         if !elem.is("query", ns::REGISTER) {

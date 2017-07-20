@@ -4,7 +4,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use std::convert::TryFrom;
+use try_from::TryFrom;
 
 use hashes::Hash;
 
@@ -85,7 +85,7 @@ impl IntoElements for Received {
 }
 
 impl TryFrom<Element> for Description {
-    type Error = Error;
+    type Err = Error;
 
     fn try_from(elem: Element) -> Result<Description, Error> {
         if !elem.is("description", ns::JINGLE_FT) {
