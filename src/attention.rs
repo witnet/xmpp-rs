@@ -25,6 +25,9 @@ impl TryFrom<Element> for Attention {
         for _ in elem.children() {
             return Err(Error::ParseError("Unknown child in attention element."));
         }
+        for _ in elem.attrs() {
+            return Err(Error::ParseError("Unknown attribute in attention element."));
+        }
         Ok(Attention)
     }
 }
@@ -59,6 +62,17 @@ mod tests {
             _ => panic!(),
         };
         assert_eq!(message, "Unknown child in attention element.");
+    }
+
+    #[test]
+    fn test_invalid_attribute() {
+        let elem: Element = "<attention xmlns='urn:xmpp:attention:0' coucou=''/>".parse().unwrap();
+        let error = Attention::try_from(elem).unwrap_err();
+        let message = match error {
+            Error::ParseError(string) => string,
+            _ => panic!(),
+        };
+        assert_eq!(message, "Unknown attribute in attention element.");
     }
 
     #[test]
