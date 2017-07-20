@@ -222,7 +222,7 @@ impl TryFrom<Element> for Iq {
                         return Err(Error::ParseError("Wrong number of children in iq element."));
                     }
                     error_payload = Some(StanzaError::try_from(elem.clone())?);
-                } else if root.children().collect::<Vec<_>>().len() != 2 {
+                } else if root.children().count() != 2 {
                     return Err(Error::ParseError("Wrong number of children in iq element."));
                 }
             } else {

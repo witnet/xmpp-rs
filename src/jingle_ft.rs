@@ -91,7 +91,7 @@ impl TryFrom<Element> for Description {
         if !elem.is("description", ns::JINGLE_FT) {
             return Err(Error::ParseError("This is not a JingleFT description element."));
         }
-        if elem.children().collect::<Vec<_>>().len() != 1 {
+        if elem.children().count() != 1 {
             return Err(Error::ParseError("JingleFT description element must have exactly one child."));
         }
 

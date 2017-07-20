@@ -485,6 +485,6 @@ mod tests {
         presence.statuses.insert(String::from(""), status);
         let elem: Element = presence.into();
         assert!(elem.is("presence", ns::JABBER_CLIENT));
-        assert!(elem.children().collect::<Vec<_>>()[0].is("status", ns::JABBER_CLIENT));
+        assert!(elem.children().next().unwrap().is("status", ns::JABBER_CLIENT));
     }
 }
