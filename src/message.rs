@@ -115,6 +115,7 @@ type Body = String;
 type Subject = String;
 type Thread = String;
 
+/// The main structure representing the `<message/>` stanza.
 #[derive(Debug, Clone)]
 pub struct Message {
     pub from: Option<Jid>,

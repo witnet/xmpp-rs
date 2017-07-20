@@ -58,7 +58,11 @@ macro_rules! generate_attribute {
     ($elem:ident, $name:tt, {$($a:ident => $b:tt),+}) => (
         #[derive(Debug, Clone, PartialEq)]
         pub enum $elem {
-            $($a),+
+            $(
+                #[doc=$b]
+                #[doc="value for this attribute."]
+                $a
+            ),+
         }
         impl FromStr for $elem {
             type Err = Error;
@@ -80,7 +84,11 @@ macro_rules! generate_attribute {
     ($elem:ident, $name:tt, {$($a:ident => $b:tt),+}, Default = $default:ident) => (
         #[derive(Debug, Clone, PartialEq)]
         pub enum $elem {
-            $($a),+
+            $(
+                #[doc=$b]
+                #[doc="value for this attribute."]
+                $a
+            ),+
         }
         impl FromStr for $elem {
             type Err = Error;

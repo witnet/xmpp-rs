@@ -190,6 +190,7 @@ impl<'a> IntoAttributeValue for &'a IqType {
     }
 }
 
+/// The main structure representing the `<iq/>` stanza.
 #[derive(Debug, Clone)]
 pub struct Iq {
     pub from: Option<Jid>,

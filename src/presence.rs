@@ -186,6 +186,7 @@ impl IntoAttributeValue for Type {
     }
 }
 
+/// The main structure representing the `<presence/>` stanza.
 #[derive(Debug, Clone)]
 pub struct Presence {
     pub from: Option<Jid>,
