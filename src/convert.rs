@@ -51,9 +51,9 @@ impl<T: IntoElements> IntoElements for Option<T> {
     }
 }
 
-impl IntoElements for Element {
+impl<T> IntoElements for T where T: Into<Element> {
     fn into_elements(self, emitter: &mut ElementEmitter) {
-        emitter.append_child(self);
+        emitter.append_child(self.into());
     }
 }
 
