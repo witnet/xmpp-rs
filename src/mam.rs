@@ -167,8 +167,8 @@ impl From<Query> for Element {
                 .ns(ns::MAM)
                 .attr("queryid", query.queryid)
                 .attr("node", query.node)
-                //.append(query.form.map(|form| -> Element { form.into() }))
-                .append(query.set.map(|set| -> Element { set.into() }))
+                //.append(query.form.map(Element::from))
+                .append(query.set.map(Element::from))
                 .build()
     }
 }

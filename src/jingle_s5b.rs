@@ -147,8 +147,8 @@ impl From<Transport> for Element {
                 .append(match transport.payload {
                      TransportPayload::Candidates(mut candidates) => {
                          candidates.drain(..)
-                                   .map(|candidate| candidate.into())
-                                   .collect::<Vec<Element>>()
+                                   .map(Element::from)
+                                   .collect::<Vec<_>>()
                      },
                      TransportPayload::Activated(cid) => {
                          vec!(Element::builder("activated")

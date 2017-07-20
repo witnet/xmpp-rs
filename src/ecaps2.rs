@@ -52,8 +52,8 @@ impl From<ECaps2> for Element {
         Element::builder("c")
                 .ns(ns::ECAPS2)
                 .append(ecaps2.hashes.drain(..)
-                                     .map(|hash| hash.into())
-                                     .collect::<Vec<Element>>())
+                                     .map(Element::from)
+                                     .collect::<Vec<_>>())
                 .build()
     }
 }

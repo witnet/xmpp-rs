@@ -52,8 +52,8 @@ impl From<Forwarded> for Element {
     fn from(forwarded: Forwarded) -> Element {
         Element::builder("forwarded")
                 .ns(ns::FORWARD)
-                .append(match forwarded.delay { Some(delay) => { let elem: Element = delay.into(); Some(elem) }, None => None })
-                .append(match forwarded.stanza { Some(stanza) => { let elem: Element = stanza.into(); Some(elem) }, None => None })
+                .append(forwarded.delay.map(Element::from))
+                .append(forwarded.stanza.map(Element::from))
                 .build()
     }
 }
