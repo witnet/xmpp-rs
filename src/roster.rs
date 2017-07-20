@@ -65,7 +65,7 @@ impl From<Item> for Element {
                 .attr("jid", String::from(item.jid))
                 .attr("name", item.name)
                 .attr("subscription", item.subscription)
-                .append(item.groups.iter().map(|group| Element::builder("group").ns(ns::ROSTER).append(group)).collect::<Vec<_>>())
+                .append(item.groups.into_iter().map(|group| Element::builder("group").ns(ns::ROSTER).append(group)).collect::<Vec<_>>())
                 .build()
     }
 }

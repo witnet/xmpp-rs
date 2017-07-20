@@ -207,7 +207,7 @@ impl From<Message> for Element {
                 .attr("to", message.to.and_then(|value| Some(String::from(value))))
                 .attr("id", message.id)
                 .attr("type", message.type_)
-                .append(message.subjects.iter()
+                .append(message.subjects.into_iter()
                                         .map(|(lang, subject)| {
                                              Element::builder("subject")
                                                      .ns(ns::JABBER_CLIENT)
@@ -218,7 +218,7 @@ impl From<Message> for Element {
                                                      .append(subject)
                                                      .build() })
                                         .collect::<Vec<_>>())
-                .append(message.bodies.iter()
+                .append(message.bodies.into_iter()
                                       .map(|(lang, body)| {
                                            Element::builder("body")
                                                    .ns(ns::JABBER_CLIENT)

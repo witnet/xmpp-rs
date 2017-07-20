@@ -321,7 +321,7 @@ impl From<Presence> for Element {
                 .attr("id", presence.id)
                 .attr("type", presence.type_)
                 .append(presence.show)
-                .append(presence.statuses.iter().map(|(lang, status)| {
+                .append(presence.statuses.into_iter().map(|(lang, status)| {
                      Element::builder("status")
                              .attr("xml:lang", match lang.as_ref() {
                                   "" => None,

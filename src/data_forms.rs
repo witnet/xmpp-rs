@@ -72,7 +72,7 @@ impl From<Field> for Element {
                 .attr("label", field.label)
                 .append(if field.required { Some(Element::builder("required").ns(ns::DATA_FORMS).build()) } else { None })
                 .append(field.options)
-                .append(field.values.iter().map(|value| {
+                .append(field.values.into_iter().map(|value| {
                      Element::builder("value").ns(ns::DATA_FORMS).append(value).build()
                  }).collect::<Vec<_>>())
                 .append(field.media)

@@ -69,8 +69,8 @@ impl From<Query> for Element {
         Element::builder("query")
                 .ns(ns::REGISTER)
                 .append(if query.registered { Some(Element::builder("registered").ns(ns::REGISTER)) } else { None })
-                .append(query.fields.iter().map(|(name, value)| {
-                     Element::builder(name.clone()).ns(ns::REGISTER).append(value.clone())
+                .append(query.fields.into_iter().map(|(name, value)| {
+                     Element::builder(name).ns(ns::REGISTER).append(value)
                  }).collect::<Vec<_>>())
                 .append(if query.remove { Some(Element::builder("remove").ns(ns::REGISTER)) } else { None })
                 .append(query.form)
