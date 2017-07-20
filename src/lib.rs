@@ -1,10 +1,19 @@
 //! A crate parsing common XMPP elements into Rust structures.
 //!
-//! Each module implements the `TryFrom<&minidom::Element>` trait, which takes
-//! a minidom `Element` reference and returns a `Result`.
+//! Each module implements the [`TryFrom<Element>`] trait, which takes a minidom
+//! [`Element`] reference and returns a `Result` whose value is `Ok` if the
+//! element parsed correctly, `Err(error::Error)` otherwise.
 //!
-//! Parsed structs can then be manipulated manually, and must be serialised
-//! back before being sent over the wire.
+//! The returned structure can be manipuled as any Rust structure, with each
+//! field being public.  You can also create the same structure manually, with
+//! some having `new()` and `with_*()` helper methods to create them.
+//!
+//! Once you are happy with your structure, you can serialise it back to an
+//! [`Element`], using either `From` or `Into<Element>`, which give you what
+//! you want to be sending on the wire.
+//!
+//! [`TryFrom<Element>`]: ../try_from/trait.TryFrom.html
+//! [`Element`]: ../minidom/element/struct.Element.html
 
 // Copyright (c) 2017 Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
 // Copyright (c) 2017 Maxime “pep” Buquet <pep+code@bouah.net>
