@@ -42,10 +42,7 @@ impl From<Attention> for Element {
 
 #[cfg(test)]
 mod tests {
-    use try_from::TryFrom;
-    use minidom::Element;
-    use error::Error;
-    use super::Attention;
+    use super::*;
 
     #[test]
     fn test_simple() {
