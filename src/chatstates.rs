@@ -12,12 +12,23 @@ use error::Error;
 
 use ns;
 
+/// Enum representing chatstate elements part of the
+/// `http://jabber.org/protocol/chatstates` namespace.
 #[derive(Debug, Clone)]
 pub enum ChatState {
+    /// `<active xmlns='http://jabber.org/protocol/chatstates'/>`
     Active,
+
+    /// `<composing xmlns='http://jabber.org/protocol/chatstates'/>`
     Composing,
+
+    /// `<gone xmlns='http://jabber.org/protocol/chatstates'/>`
     Gone,
+
+    /// `<inactive xmlns='http://jabber.org/protocol/chatstates'/>`
     Inactive,
+
+    /// `<paused xmlns='http://jabber.org/protocol/chatstates'/>`
     Paused,
 }
 

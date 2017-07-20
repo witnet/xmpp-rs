@@ -13,6 +13,7 @@ use error::Error;
 
 use ns;
 
+/// Structure representing a `<ping xmlns='urn:xmpp:ping'/>` element.
 #[derive(Debug, Clone)]
 pub struct Ping;
 

@@ -12,9 +12,14 @@ use error::Error;
 
 use ns;
 
+/// Structure representing an `<encryption xmlns='urn:xmpp:eme:0'/>` element.
 #[derive(Debug, Clone)]
 pub struct ExplicitMessageEncryption {
+    /// Namespace of the encryption scheme used.
     pub namespace: String,
+
+    /// User-friendly name for the encryption scheme, should be `None` for OTR,
+    /// legacy OpenPGP and OX.
     pub name: Option<String>,
 }
 

@@ -12,6 +12,7 @@ use error::Error;
 
 use ns;
 
+/// Structure representing an `<attention xmlns='urn:xmpp:attention:0'/>` element.
 #[derive(Debug, Clone)]
 pub struct Attention;
 
