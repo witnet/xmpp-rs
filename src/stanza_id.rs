@@ -45,9 +45,9 @@ impl TryFrom<Element> for StanzaId {
     }
 }
 
-impl Into<Element> for StanzaId {
-    fn into(self) -> Element {
-        match self {
+impl From<StanzaId> for Element {
+    fn from(stanza_id: StanzaId) -> Element {
+        match stanza_id {
             StanzaId::StanzaId { id, by } => {
                 Element::builder("stanza-id")
                         .ns(ns::SID)

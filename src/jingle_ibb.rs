@@ -42,13 +42,13 @@ impl TryFrom<Element> for Transport {
     }
 }
 
-impl Into<Element> for Transport {
-    fn into(self) -> Element {
+impl From<Transport> for Element {
+    fn from(transport: Transport) -> Element {
         Element::builder("transport")
                 .ns(ns::JINGLE_IBB)
-                .attr("block-size", self.block_size)
-                .attr("sid", self.sid)
-                .attr("stanza", self.stanza)
+                .attr("block-size", transport.block_size)
+                .attr("sid", transport.sid)
+                .attr("stanza", transport.stanza)
                 .build()
     }
 }

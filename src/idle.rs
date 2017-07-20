@@ -33,11 +33,11 @@ impl TryFrom<Element> for Idle {
     }
 }
 
-impl Into<Element> for Idle {
-    fn into(self) -> Element {
+impl From<Idle> for Element {
+    fn from(idle: Idle) -> Element {
         Element::builder("idle")
                 .ns(ns::IDLE)
-                .attr("since", self.since.to_rfc3339())
+                .attr("since", idle.since.to_rfc3339())
                 .build()
     }
 }

@@ -47,13 +47,13 @@ impl TryFrom<Element> for ECaps2 {
     }
 }
 
-impl Into<Element> for ECaps2 {
-    fn into(mut self) -> Element {
+impl From<ECaps2> for Element {
+    fn from(mut ecaps2: ECaps2) -> Element {
         Element::builder("c")
                 .ns(ns::ECAPS2)
-                .append(self.hashes.drain(..)
-                                   .map(|hash| hash.into())
-                                   .collect::<Vec<Element>>())
+                .append(ecaps2.hashes.drain(..)
+                                     .map(|hash| hash.into())
+                                     .collect::<Vec<Element>>())
                 .build()
     }
 }

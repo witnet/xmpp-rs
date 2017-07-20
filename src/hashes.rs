@@ -96,12 +96,12 @@ impl TryFrom<Element> for Hash {
     }
 }
 
-impl Into<Element> for Hash {
-    fn into(self) -> Element {
+impl From<Hash> for Element {
+    fn from(hash: Hash) -> Element {
         Element::builder("hash")
                 .ns(ns::HASHES)
-                .attr("algo", self.algo)
-                .append(base64::encode(&self.hash))
+                .attr("algo", hash.algo)
+                .append(base64::encode(&hash.hash))
                 .build()
     }
 }

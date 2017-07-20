@@ -117,9 +117,9 @@ impl TryFrom<Element> for PresencePayload {
     }
 }
 
-impl Into<Element> for PresencePayload {
-    fn into(self) -> Element {
-        match self {
+impl From<PresencePayload> for Element {
+    fn from(payload: PresencePayload) -> Element {
+        match payload {
             PresencePayload::StanzaError(stanza_error) => stanza_error.into(),
             PresencePayload::Muc(muc) => muc.into(),
             PresencePayload::Caps(caps) => caps.into(),
@@ -282,16 +282,16 @@ impl TryFrom<Element> for Presence {
     }
 }
 
-impl Into<Element> for Presence {
-    fn into(self) -> Element {
+impl From<Presence> for Element {
+    fn from(presence: Presence) -> Element {
         Element::builder("presence")
                 .ns(ns::JABBER_CLIENT)
-                .attr("from", self.from.and_then(|value| Some(String::from(value))))
-                .attr("to", self.to.and_then(|value| Some(String::from(value))))
-                .attr("id", self.id)
-                .attr("type", self.type_)
-                .append(self.show)
-                .append(self.statuses.iter().map(|(lang, status)| {
+                .attr("from", presence.from.and_then(|value| Some(String::from(value))))
+                .attr("to", presence.to.and_then(|value| Some(String::from(value))))
+                .attr("id", presence.id)
+                .attr("type", presence.type_)
+                .append(presence.show)
+                .append(presence.statuses.iter().map(|(lang, status)| {
                      Element::builder("status")
                              .attr("xml:lang", match lang.as_ref() {
                                   "" => None,
@@ -300,8 +300,8 @@ impl Into<Element> for Presence {
                              .append(status)
                              .build()
                  }).collect::<Vec<_>>())
-                .append(if self.priority == 0 { None } else { Some(format!("{}", self.priority)) })
-                .append(self.payloads)
+                .append(if presence.priority == 0 { None } else { Some(format!("{}", presence.priority)) })
+                .append(presence.payloads)
                 .build()
     }
 }

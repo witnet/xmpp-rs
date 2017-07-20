@@ -53,11 +53,11 @@ pub struct Feature {
     pub var: String,
 }
 
-impl Into<Element> for Feature {
-    fn into(self) -> Element {
+impl From<Feature> for Element {
+    fn from(feature: Feature) -> Element {
         Element::builder("feature")
                 .ns(ns::DISCO_INFO)
-                .attr("var", self.var)
+                .attr("var", feature.var)
                 .build()
     }
 }
@@ -76,14 +76,14 @@ pub struct Identity {
     pub name: Option<String>,
 }
 
-impl Into<Element> for Identity {
-    fn into(self) -> Element {
+impl From<Identity> for Element {
+    fn from(identity: Identity) -> Element {
         Element::builder("identity")
                 .ns(ns::DISCO_INFO)
-                .attr("category", self.category)
-                .attr("type", self.type_)
-                .attr("xml:lang", self.lang)
-                .attr("name", self.name)
+                .attr("category", identity.category)
+                .attr("type", identity.type_)
+                .attr("xml:lang", identity.lang)
+                .attr("name", identity.name)
                 .build()
     }
 }
@@ -174,16 +174,16 @@ impl TryFrom<Element> for DiscoInfoResult {
     }
 }
 
-impl Into<Element> for DiscoInfoResult {
-    fn into(self) -> Element {
-        for _ in self.extensions {
+impl From<DiscoInfoResult> for Element {
+    fn from(disco: DiscoInfoResult) -> Element {
+        for _ in disco.extensions {
             panic!("Not yet implemented!");
         }
         Element::builder("query")
                 .ns(ns::DISCO_INFO)
-                .attr("node", self.node)
-                .append(self.identities)
-                .append(self.features)
+                .attr("node", disco.node)
+                .append(disco.identities)
+                .append(disco.features)
                 .build()
     }
 }

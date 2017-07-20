@@ -84,9 +84,9 @@ impl TryFrom<Element> for MessagePayload {
     }
 }
 
-impl Into<Element> for MessagePayload {
-    fn into(self) -> Element {
-        match self {
+impl From<MessagePayload> for Element {
+    fn from(payload: MessagePayload) -> Element {
+        match payload {
             MessagePayload::StanzaError(stanza_error) => stanza_error.into(),
             MessagePayload::Attention(attention) => attention.into(),
             MessagePayload::ChatState(chatstate) => chatstate.into(),
@@ -199,37 +199,37 @@ impl TryFrom<Element> for Message {
     }
 }
 
-impl Into<Element> for Message {
-    fn into(self) -> Element {
+impl From<Message> for Element {
+    fn from(message: Message) -> Element {
         Element::builder("message")
                 .ns(ns::JABBER_CLIENT)
-                .attr("from", self.from.and_then(|value| Some(String::from(value))))
-                .attr("to", self.to.and_then(|value| Some(String::from(value))))
-                .attr("id", self.id)
-                .attr("type", self.type_)
-                .append(self.subjects.iter()
-                                   .map(|(lang, subject)| {
-                                        Element::builder("subject")
-                                                .ns(ns::JABBER_CLIENT)
-                                                .attr("xml:lang", match lang.as_ref() {
-                                                     "" => None,
-                                                     lang => Some(lang),
-                                                 })
-                                                .append(subject)
-                                                .build() })
-                                   .collect::<Vec<_>>())
-                .append(self.bodies.iter()
-                                   .map(|(lang, body)| {
-                                        Element::builder("body")
-                                                .ns(ns::JABBER_CLIENT)
-                                                .attr("xml:lang", match lang.as_ref() {
-                                                     "" => None,
-                                                     lang => Some(lang),
-                                                 })
-                                                .append(body)
-                                                .build() })
-                                   .collect::<Vec<_>>())
-                .append(self.payloads)
+                .attr("from", message.from.and_then(|value| Some(String::from(value))))
+                .attr("to", message.to.and_then(|value| Some(String::from(value))))
+                .attr("id", message.id)
+                .attr("type", message.type_)
+                .append(message.subjects.iter()
+                                        .map(|(lang, subject)| {
+                                             Element::builder("subject")
+                                                     .ns(ns::JABBER_CLIENT)
+                                                     .attr("xml:lang", match lang.as_ref() {
+                                                          "" => None,
+                                                          lang => Some(lang),
+                                                      })
+                                                     .append(subject)
+                                                     .build() })
+                                        .collect::<Vec<_>>())
+                .append(message.bodies.iter()
+                                      .map(|(lang, body)| {
+                                           Element::builder("body")
+                                                   .ns(ns::JABBER_CLIENT)
+                                                   .attr("xml:lang", match lang.as_ref() {
+                                                        "" => None,
+                                                        lang => Some(lang),
+                                                    })
+                                                   .append(body)
+                                                   .build() })
+                                      .collect::<Vec<_>>())
+                .append(message.payloads)
                 .build()
     }
 }

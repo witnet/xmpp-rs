@@ -86,34 +86,34 @@ impl TryFrom<Element> for Set {
     }
 }
 
-impl Into<Element> for Set {
-    fn into(self) -> Element {
+impl From<Set> for Element {
+    fn from(set: Set) -> Element {
         let mut elem = Element::builder("set")
                                .ns(ns::RSM)
                                .build();
-        if self.after.is_some() {
-            elem.append_child(Element::builder("after").ns(ns::RSM).append(self.after).build());
+        if set.after.is_some() {
+            elem.append_child(Element::builder("after").ns(ns::RSM).append(set.after).build());
         }
-        if self.before.is_some() {
-            elem.append_child(Element::builder("before").ns(ns::RSM).append(self.before).build());
+        if set.before.is_some() {
+            elem.append_child(Element::builder("before").ns(ns::RSM).append(set.before).build());
         }
-        if self.count.is_some() {
-            elem.append_child(Element::builder("count").ns(ns::RSM).append(format!("{}", self.count.unwrap())).build());
+        if set.count.is_some() {
+            elem.append_child(Element::builder("count").ns(ns::RSM).append(format!("{}", set.count.unwrap())).build());
         }
-        if self.first.is_some() {
+        if set.first.is_some() {
             elem.append_child(Element::builder("first")
                                       .ns(ns::RSM)
-                                      .attr("index", self.first_index)
-                                      .append(self.first).build());
+                                      .attr("index", set.first_index)
+                                      .append(set.first).build());
         }
-        if self.index.is_some() {
-            elem.append_child(Element::builder("index").ns(ns::RSM).append(format!("{}", self.index.unwrap())).build());
+        if set.index.is_some() {
+            elem.append_child(Element::builder("index").ns(ns::RSM).append(format!("{}", set.index.unwrap())).build());
         }
-        if self.last.is_some() {
-            elem.append_child(Element::builder("last").ns(ns::RSM).append(self.last).build());
+        if set.last.is_some() {
+            elem.append_child(Element::builder("last").ns(ns::RSM).append(set.last).build());
         }
-        if self.max.is_some() {
-            elem.append_child(Element::builder("max").ns(ns::RSM).append(format!("{}", self.max.unwrap())).build());
+        if set.max.is_some() {
+            elem.append_child(Element::builder("max").ns(ns::RSM).append(format!("{}", set.max.unwrap())).build());
         }
         elem
     }

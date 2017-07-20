@@ -45,13 +45,13 @@ impl TryFrom<Element> for Delay {
     }
 }
 
-impl Into<Element> for Delay {
-    fn into(self) -> Element {
+impl From<Delay> for Element {
+    fn from(delay: Delay) -> Element {
         Element::builder("delay")
                 .ns(ns::DELAY)
-                .attr("from", self.from.and_then(|value| Some(String::from(value))))
-                .attr("stamp", self.stamp.to_rfc3339())
-                .append(self.data)
+                .attr("from", delay.from.and_then(|value| Some(String::from(value))))
+                .attr("stamp", delay.stamp.to_rfc3339())
+                .append(delay.data)
                 .build()
     }
 }

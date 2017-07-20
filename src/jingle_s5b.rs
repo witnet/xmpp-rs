@@ -40,16 +40,16 @@ pub struct Candidate {
     pub type_: Type,
 }
 
-impl Into<Element> for Candidate {
-    fn into(self) -> Element {
+impl From<Candidate> for Element {
+    fn from(candidate: Candidate) -> Element {
         Element::builder("candidate")
                 .ns(ns::JINGLE_S5B)
-                .attr("cid", self.cid)
-                .attr("host", self.host)
-                .attr("jid", String::from(self.jid))
-                .attr("port", self.port)
-                .attr("priority", self.priority)
-                .attr("type", self.type_)
+                .attr("cid", candidate.cid)
+                .attr("host", candidate.host)
+                .attr("jid", String::from(candidate.jid))
+                .attr("port", candidate.port)
+                .attr("priority", candidate.priority)
+                .attr("type", candidate.type_)
                 .build()
     }
 }
@@ -137,14 +137,14 @@ impl TryFrom<Element> for Transport {
     }
 }
 
-impl Into<Element> for Transport {
-    fn into(self) -> Element {
+impl From<Transport> for Element {
+    fn from(transport: Transport) -> Element {
         Element::builder("transport")
                 .ns(ns::JINGLE_S5B)
-                .attr("sid", self.sid)
-                .attr("dstaddr", self.dstaddr)
-                .attr("mode", self.mode)
-                .append(match self.payload {
+                .attr("sid", transport.sid)
+                .attr("dstaddr", transport.dstaddr)
+                .attr("mode", transport.mode)
+                .append(match transport.payload {
                      TransportPayload::Candidates(mut candidates) => {
                          candidates.drain(..)
                                    .map(|candidate| candidate.into())

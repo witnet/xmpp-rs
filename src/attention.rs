@@ -32,8 +32,8 @@ impl TryFrom<Element> for Attention {
     }
 }
 
-impl Into<Element> for Attention {
-    fn into(self) -> Element {
+impl From<Attention> for Element {
+    fn from(_: Attention) -> Element {
         Element::builder("attention")
                 .ns(ns::ATTENTION)
                 .build()

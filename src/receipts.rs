@@ -44,9 +44,9 @@ impl TryFrom<Element> for Receipt {
     }
 }
 
-impl Into<Element> for Receipt {
-    fn into(self) -> Element {
-        match self {
+impl From<Receipt> for Element {
+    fn from(receipt: Receipt) -> Element {
+        match receipt {
             Receipt::Request => Element::builder("request")
                                         .ns(ns::RECEIPTS),
             Receipt::Received(id) => Element::builder("received")

@@ -45,9 +45,9 @@ impl TryFrom<Element> for ChatState {
     }
 }
 
-impl Into<Element> for ChatState {
-    fn into(self) -> Element {
-        Element::builder(match self {
+impl From<ChatState> for Element {
+    fn from(chatstate: ChatState) -> Element {
+        Element::builder(match chatstate {
             ChatState::Active => "active",
             ChatState::Composing => "composing",
             ChatState::Gone => "gone",

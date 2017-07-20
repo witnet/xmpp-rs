@@ -95,17 +95,17 @@ impl TryFrom<Element> for Content {
     }
 }
 
-impl Into<Element> for Content {
-    fn into(self) -> Element {
+impl From<Content> for Element {
+    fn from(content: Content) -> Element {
         Element::builder("content")
                 .ns(ns::JINGLE)
-                .attr("creator", self.creator)
-                .attr("disposition", self.disposition)
-                .attr("name", self.name)
-                .attr("senders", self.senders)
-                .append(self.description)
-                .append(self.transport)
-                .append(self.security)
+                .attr("creator", content.creator)
+                .attr("disposition", content.disposition)
+                .attr("name", content.name)
+                .attr("senders", content.senders)
+                .append(content.description)
+                .append(content.transport)
+                .append(content.security)
                 .build()
     }
 }
@@ -165,9 +165,9 @@ impl FromStr for Reason {
     }
 }
 
-impl Into<Element> for Reason {
-    fn into(self) -> Element {
-        Element::builder(match self {
+impl From<Reason> for Element {
+    fn from(reason: Reason) -> Element {
+        Element::builder(match reason {
             Reason::AlternativeSession => "alternative-session",
             Reason::Busy => "busy",
             Reason::Cancel => "cancel",
@@ -231,12 +231,11 @@ impl TryFrom<Element> for ReasonElement {
     }
 }
 
-impl Into<Element> for ReasonElement {
-    fn into(self) -> Element {
-        let reason: Element = self.reason.into();
+impl From<ReasonElement> for Element {
+    fn from(reason: ReasonElement) -> Element {
         Element::builder("reason")
-                .append(reason)
-                .append(self.text)
+                .append(Element::from(reason.reason))
+                .append(reason.text)
                 .build()
     }
 }
@@ -297,16 +296,16 @@ impl TryFrom<Element> for Jingle {
     }
 }
 
-impl Into<Element> for Jingle {
-    fn into(self) -> Element {
+impl From<Jingle> for Element {
+    fn from(jingle: Jingle) -> Element {
         Element::builder("jingle")
                 .ns(ns::JINGLE)
-                .attr("action", self.action)
-                .attr("initiator", match self.initiator { Some(initiator) => Some(String::from(initiator)), None => None })
-                .attr("responder", match self.responder { Some(responder) => Some(String::from(responder)), None => None })
-                .attr("sid", self.sid)
-                .append(self.contents)
-                .append(self.reason)
+                .attr("action", jingle.action)
+                .attr("initiator", match jingle.initiator { Some(initiator) => Some(String::from(initiator)), None => None })
+                .attr("responder", match jingle.responder { Some(responder) => Some(String::from(responder)), None => None })
+                .attr("sid", jingle.sid)
+                .append(jingle.contents)
+                .append(jingle.reason)
                 .build()
     }
 }

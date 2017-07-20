@@ -83,9 +83,9 @@ impl TryFrom<Element> for IqGetPayload {
     }
 }
 
-impl Into<Element> for IqGetPayload {
-    fn into(self) -> Element {
-        match self {
+impl From<IqGetPayload> for Element {
+    fn from(payload: IqGetPayload) -> Element {
+        match payload {
             IqGetPayload::Roster(roster) => roster.into(),
             IqGetPayload::DiscoInfo(disco) => disco.into(),
             IqGetPayload::Ping(ping) => ping.into(),
@@ -122,9 +122,9 @@ impl TryFrom<Element> for IqSetPayload {
     }
 }
 
-impl Into<Element> for IqSetPayload {
-    fn into(self) -> Element {
-        match self {
+impl From<IqSetPayload> for Element {
+    fn from(payload: IqSetPayload) -> Element {
+        match payload {
             IqSetPayload::Roster(roster) => roster.into(),
             IqSetPayload::IBB(ibb) => ibb.into(),
             IqSetPayload::Jingle(jingle) => jingle.into(),
@@ -157,9 +157,9 @@ impl TryFrom<Element> for IqResultPayload {
     }
 }
 
-impl Into<Element> for IqResultPayload {
-    fn into(self) -> Element {
-        match self {
+impl From<IqResultPayload> for Element {
+    fn from(payload: IqResultPayload) -> Element {
+        match payload {
             IqResultPayload::Roster(roster) => roster.into(),
             IqResultPayload::DiscoInfo(disco) => disco.into(),
             IqResultPayload::MamQuery(query) => query.into(),
@@ -267,16 +267,16 @@ impl TryFrom<Element> for Iq {
     }
 }
 
-impl Into<Element> for Iq {
-    fn into(self) -> Element {
+impl From<Iq> for Element {
+    fn from(iq: Iq) -> Element {
         let mut stanza = Element::builder("iq")
                                  .ns(ns::JABBER_CLIENT)
-                                 .attr("from", self.from.and_then(|value| Some(String::from(value))))
-                                 .attr("to", self.to.and_then(|value| Some(String::from(value))))
-                                 .attr("id", self.id)
-                                 .attr("type", &self.payload)
+                                 .attr("from", iq.from.and_then(|value| Some(String::from(value))))
+                                 .attr("to", iq.to.and_then(|value| Some(String::from(value))))
+                                 .attr("id", iq.id)
+                                 .attr("type", &iq.payload)
                                  .build();
-        let elem = match self.payload {
+        let elem = match iq.payload {
             IqType::Get(elem)
           | IqType::Set(elem)
           | IqType::Result(Some(elem)) => elem,

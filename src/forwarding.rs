@@ -48,12 +48,12 @@ impl TryFrom<Element> for Forwarded {
     }
 }
 
-impl Into<Element> for Forwarded {
-    fn into(self) -> Element {
+impl From<Forwarded> for Element {
+    fn from(forwarded: Forwarded) -> Element {
         Element::builder("forwarded")
                 .ns(ns::FORWARD)
-                .append(match self.delay { Some(delay) => { let elem: Element = delay.into(); Some(elem) }, None => None })
-                .append(match self.stanza { Some(stanza) => { let elem: Element = stanza.into(); Some(elem) }, None => None })
+                .append(match forwarded.delay { Some(delay) => { let elem: Element = delay.into(); Some(elem) }, None => None })
+                .append(match forwarded.stanza { Some(stanza) => { let elem: Element = stanza.into(); Some(elem) }, None => None })
                 .build()
     }
 }

@@ -37,11 +37,11 @@ impl TryFrom<Element> for Replace {
     }
 }
 
-impl Into<Element> for Replace {
-    fn into(self) -> Element {
+impl From<Replace> for Element {
+    fn from(replace: Replace) -> Element {
         Element::builder("replace")
                 .ns(ns::MESSAGE_CORRECT)
-                .attr("id", self.id)
+                .attr("id", replace.id)
                 .build()
     }
 }

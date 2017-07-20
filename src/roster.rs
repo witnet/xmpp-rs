@@ -58,14 +58,14 @@ impl TryFrom<Element> for Item {
     }
 }
 
-impl Into<Element> for Item {
-    fn into(self) -> Element {
+impl From<Item> for Element {
+    fn from(item: Item) -> Element {
         Element::builder("item")
                 .ns(ns::ROSTER)
-                .attr("jid", String::from(self.jid))
-                .attr("name", self.name)
-                .attr("subscription", self.subscription)
-                .append(self.groups.iter().map(|group| Element::builder("group").ns(ns::ROSTER).append(group)).collect::<Vec<_>>())
+                .attr("jid", String::from(item.jid))
+                .attr("name", item.name)
+                .attr("subscription", item.subscription)
+                .append(item.groups.iter().map(|group| Element::builder("group").ns(ns::ROSTER).append(group)).collect::<Vec<_>>())
                 .build()
     }
 }
@@ -110,12 +110,12 @@ impl TryFrom<Element> for Roster {
     }
 }
 
-impl Into<Element> for Roster {
-    fn into(self) -> Element {
+impl From<Roster> for Element {
+    fn from(roster: Roster) -> Element {
         Element::builder("query")
                 .ns(ns::ROSTER)
-                .attr("ver", self.ver)
-                .append(self.items)
+                .attr("ver", roster.ver)
+                .append(roster.items)
                 .build()
     }
 }

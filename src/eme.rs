@@ -35,12 +35,12 @@ impl TryFrom<Element> for ExplicitMessageEncryption {
     }
 }
 
-impl Into<Element> for ExplicitMessageEncryption {
-    fn into(self) -> Element {
+impl From<ExplicitMessageEncryption> for Element {
+    fn from(eme: ExplicitMessageEncryption) -> Element {
         Element::builder("encryption")
                 .ns(ns::EME)
-                .attr("namespace", self.namespace)
-                .attr("name", self.name)
+                .attr("namespace", eme.namespace)
+                .attr("name", eme.name)
                 .build()
     }
 }

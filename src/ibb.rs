@@ -78,9 +78,9 @@ impl TryFrom<Element> for IBB {
     }
 }
 
-impl Into<Element> for IBB {
-    fn into(self) -> Element {
-        match self {
+impl From<IBB> for Element {
+    fn from(ibb: IBB) -> Element {
+        match ibb {
             IBB::Open { block_size, sid, stanza } => {
                 Element::builder("open")
                         .ns(ns::IBB)

@@ -172,15 +172,15 @@ impl TryFrom<Element> for StanzaError {
     }
 }
 
-impl Into<Element> for StanzaError {
-    fn into(self) -> Element {
+impl From<StanzaError> for Element {
+    fn from(err: StanzaError) -> Element {
         let mut root = Element::builder("error")
                                .ns(ns::JABBER_CLIENT)
-                               .attr("type", self.type_)
-                               .attr("by", self.by.and_then(|by| Some(String::from(by))))
-                               .append(self.defined_condition)
+                               .attr("type", err.type_)
+                               .attr("by", err.by.and_then(|by| Some(String::from(by))))
+                               .append(err.defined_condition)
                                .build();
-        for (lang, text) in self.texts {
+        for (lang, text) in err.texts {
             let elem = Element::builder("text")
                                .ns(ns::XMPP_STANZAS)
                                .attr("xml:lang", lang)
@@ -188,7 +188,7 @@ impl Into<Element> for StanzaError {
                                .build();
             root.append_child(elem);
         }
-        if let Some(other) = self.other {
+        if let Some(other) = err.other {
             root.append_child(other);
         }
         root

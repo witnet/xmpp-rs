@@ -33,8 +33,8 @@ impl TryFrom<Element> for Ping {
     }
 }
 
-impl Into<Element> for Ping {
-    fn into(self) -> Element {
+impl From<Ping> for Element {
+    fn from(_: Ping) -> Element {
         Element::builder("ping")
                 .ns(ns::PING)
                 .build()

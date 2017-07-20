@@ -1,4 +1,5 @@
 // Copyright (c) 2017 Maxime “pep” Buquet <pep+code@bouah.net>
+// Copyright (c) 2017 Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -113,11 +114,11 @@ impl TryFrom<Element> for Status {
     }
 }
 
-impl Into<Element> for Status {
-    fn into(self) -> Element {
+impl From<Status> for Element {
+    fn from(status: Status) -> Element {
         Element::builder("status")
                 .ns(ns::MUC_USER)
-                .attr("code", match self {
+                .attr("code", match status {
                      Status::NonAnonymousRoom => 100,
                      Status::AffiliationChange => 101,
                      Status::ConfigShowsUnavailableMembers => 102,
@@ -186,11 +187,11 @@ impl TryFrom<Element> for Actor {
     }
 }
 
-impl Into<Element> for Actor {
-    fn into(self) -> Element {
+impl From<Actor> for Element {
+    fn from(actor: Actor) -> Element {
         let elem = Element::builder("actor").ns(ns::MUC_USER);
 
-        (match self {
+        (match actor {
             Actor::Jid(jid) => elem.attr("jid", String::from(jid)),
             Actor::Nick(nick) => elem.attr("nick", nick),
         }).build()
@@ -227,11 +228,11 @@ impl TryFrom<Element> for Continue {
     }
 }
 
-impl Into<Element> for Continue {
-    fn into(self) -> Element {
+impl From<Continue> for Element {
+    fn from(cont: Continue) -> Element {
         Element::builder("continue")
                 .ns(ns::MUC_USER)
-                .attr("thread", self.thread)
+                .attr("thread", cont.thread)
                 .build()
     }
 }
@@ -262,11 +263,11 @@ impl TryFrom<Element> for Reason {
     }
 }
 
-impl Into<Element> for Reason {
-    fn into(self) -> Element {
+impl From<Reason> for Element {
+    fn from(reason: Reason) -> Element {
         Element::builder("reason")
                 .ns(ns::MUC_USER)
-                .append(self.0)
+                .append(reason.0)
                 .build()
     }
 }
@@ -348,20 +349,20 @@ impl TryFrom<Element> for Item {
     }
 }
 
-impl Into<Element> for Item {
-    fn into(self) -> Element {
+impl From<Item> for Element {
+    fn from(item: Item) -> Element {
         Element::builder("item")
                 .ns(ns::MUC_USER)
-                .attr("affiliation", self.affiliation)
-                .attr("jid", match self.jid {
+                .attr("affiliation", item.affiliation)
+                .attr("jid", match item.jid {
                     Some(jid) => Some(String::from(jid)),
                     None => None,
                 })
-                .attr("nick", self.nick)
-                .attr("role", self.role)
-                .append(self.actor)
-                .append(self.continue_)
-                .append(self.reason)
+                .attr("nick", item.nick)
+                .attr("role", item.role)
+                .append(item.actor)
+                .append(item.continue_)
+                .append(item.reason)
                 .build()
     }
 }
@@ -400,11 +401,11 @@ impl TryFrom<Element> for MucUser {
     }
 }
 
-impl Into<Element> for MucUser {
-    fn into(self) -> Element {
+impl From<MucUser> for Element {
+    fn from(muc_user: MucUser) -> Element {
         Element::builder("x")
                 .ns(ns::MUC_USER)
-                .append(self.status)
+                .append(muc_user.status)
                 .build()
     }
 }

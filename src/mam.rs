@@ -161,52 +161,52 @@ impl TryFrom<Element> for Prefs {
     }
 }
 
-impl Into<Element> for Query {
-    fn into(self) -> Element {
+impl From<Query> for Element {
+    fn from(query: Query) -> Element {
         Element::builder("query")
                 .ns(ns::MAM)
-                .attr("queryid", self.queryid)
-                .attr("node", self.node)
-                //.append(self.form.map(|form| -> Element { form.into() }))
-                .append(self.set.map(|set| -> Element { set.into() }))
+                .attr("queryid", query.queryid)
+                .attr("node", query.node)
+                //.append(query.form.map(|form| -> Element { form.into() }))
+                .append(query.set.map(|set| -> Element { set.into() }))
                 .build()
     }
 }
 
-impl Into<Element> for Result_ {
-    fn into(self) -> Element {
+impl From<Result_> for Element {
+    fn from(result: Result_) -> Element {
         let mut elem = Element::builder("result")
                                .ns(ns::MAM)
-                               .attr("queryid", self.queryid)
-                               .attr("id", self.id)
+                               .attr("queryid", result.queryid)
+                               .attr("id", result.id)
                                .build();
-        elem.append_child(self.forwarded.into());
+        elem.append_child(result.forwarded.into());
         elem
     }
 }
 
-impl Into<Element> for Fin {
-    fn into(self) -> Element {
+impl From<Fin> for Element {
+    fn from(fin: Fin) -> Element {
         let mut elem = Element::builder("fin")
                                .ns(ns::MAM)
-                               .attr("complete", if self.complete { Some("true") } else { None })
+                               .attr("complete", if fin.complete { Some("true") } else { None })
                                .build();
-        elem.append_child(self.set.into());
+        elem.append_child(fin.set.into());
         elem
     }
 }
 
-impl Into<Element> for Prefs {
-    fn into(self) -> Element {
+impl From<Prefs> for Element {
+    fn from(prefs: Prefs) -> Element {
         let mut elem = Element::builder("prefs")
                                .ns(ns::MAM)
-                               .attr("default", self.default_)
+                               .attr("default", prefs.default_)
                                .build();
-        if !self.always.is_empty() {
+        if !prefs.always.is_empty() {
             let mut always = Element::builder("always")
                                      .ns(ns::RSM)
                                      .build();
-            for jid in self.always {
+            for jid in prefs.always {
                 always.append_child(Element::builder("jid")
                                             .ns(ns::RSM)
                                             .append(String::from(jid))
@@ -214,11 +214,11 @@ impl Into<Element> for Prefs {
             }
             elem.append_child(always);
         }
-        if !self.never.is_empty() {
+        if !prefs.never.is_empty() {
             let mut never = Element::builder("never")
                                      .ns(ns::RSM)
                                      .build();
-            for jid in self.never {
+            for jid in prefs.never {
                 never.append_child(Element::builder("jid")
                                             .ns(ns::RSM)
                                             .append(String::from(jid))

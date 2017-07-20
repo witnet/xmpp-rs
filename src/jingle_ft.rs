@@ -172,57 +172,57 @@ impl TryFrom<Element> for Description {
     }
 }
 
-impl Into<Element> for File {
-    fn into(self) -> Element {
+impl From<File> for Element {
+    fn from(file: File) -> Element {
         let mut root = Element::builder("file")
                                .ns(ns::JINGLE_FT)
                                .build();
-        if let Some(date) = self.date {
+        if let Some(date) = file.date {
             root.append_child(Element::builder("date")
                                       .ns(ns::JINGLE_FT)
                                       .append(date.to_rfc3339())
                                       .build());
         }
-        if let Some(media_type) = self.media_type {
+        if let Some(media_type) = file.media_type {
             root.append_child(Element::builder("media-type")
                                       .ns(ns::JINGLE_FT)
                                       .append(media_type)
                                       .build());
         }
-        if let Some(name) = self.name {
+        if let Some(name) = file.name {
             root.append_child(Element::builder("name")
                                       .ns(ns::JINGLE_FT)
                                       .append(name)
                                       .build());
         }
-        if let Some(desc) = self.desc {
+        if let Some(desc) = file.desc {
             root.append_child(Element::builder("desc")
                                       .ns(ns::JINGLE_FT)
                                       .append(desc)
                                       .build());
         }
-        if let Some(size) = self.size {
+        if let Some(size) = file.size {
             root.append_child(Element::builder("size")
                                       .ns(ns::JINGLE_FT)
                                       .append(format!("{}", size))
                                       .build());
         }
-        if let Some(range) = self.range {
+        if let Some(range) = file.range {
             root.append_child(Element::builder("range")
                                       .ns(ns::JINGLE_FT)
                                       .append(range)
                                       .build());
         }
-        for hash in self.hashes {
+        for hash in file.hashes {
             root.append_child(hash.into());
         }
         root
     }
 }
 
-impl Into<Element> for Description {
-    fn into(self) -> Element {
-        let file: Element = self.file.into();
+impl From<Description> for Element {
+    fn from(description: Description) -> Element {
+        let file: Element = description.file.into();
         Element::builder("description")
                 .ns(ns::JINGLE_FT)
                 .append(file)

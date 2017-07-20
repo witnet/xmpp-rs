@@ -64,16 +64,16 @@ impl TryFrom<Element> for Query {
     }
 }
 
-impl Into<Element> for Query {
-    fn into(self) -> Element {
+impl From<Query> for Element {
+    fn from(query: Query) -> Element {
         Element::builder("query")
                 .ns(ns::REGISTER)
-                .append(if self.registered { Some(Element::builder("registered").ns(ns::REGISTER)) } else { None })
-                .append(self.fields.iter().map(|(name, value)| {
+                .append(if query.registered { Some(Element::builder("registered").ns(ns::REGISTER)) } else { None })
+                .append(query.fields.iter().map(|(name, value)| {
                      Element::builder(name.clone()).ns(ns::REGISTER).append(value.clone())
                  }).collect::<Vec<_>>())
-                .append(if self.remove { Some(Element::builder("remove").ns(ns::REGISTER)) } else { None })
-                .append(self.form)
+                .append(if query.remove { Some(Element::builder("remove").ns(ns::REGISTER)) } else { None })
+                .append(query.form)
                 .build()
     }
 }

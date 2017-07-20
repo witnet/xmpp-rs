@@ -1,4 +1,5 @@
 // Copyright (c) 2017 Maxime “pep” Buquet <pep+code@bouah.net>
+// Copyright (c) 2017 Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -44,11 +45,11 @@ impl TryFrom<Element> for Muc {
     }
 }
 
-impl Into<Element> for Muc {
-    fn into(self) -> Element {
+impl From<Muc> for Element {
+    fn from(muc: Muc) -> Element {
         Element::builder("x")
                 .ns(ns::MUC)
-                .append(self.password)
+                .append(muc.password)
                 .build()
     }
 }
