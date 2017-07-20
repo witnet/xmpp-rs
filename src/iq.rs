@@ -24,15 +24,35 @@ use jingle::Jingle;
 use ping::Ping;
 use mam::{Query as MamQuery, Fin as MamFin, Prefs as MamPrefs};
 
-/// Lists every known payload of a `<iq/>`.
+/// Lists every known payload of an `<iq type='get'/>`.
 #[derive(Debug, Clone)]
-pub enum IqPayload {
+pub enum IqGetPayload {
     Roster(Roster),
-    DiscoInfoResult(DiscoInfoResult),
-    DiscoInfoQuery(DiscoInfoQuery),
+    DiscoInfo(DiscoInfoQuery),
+    Ping(Ping),
+    MamQuery(MamQuery),
+    MamPrefs(MamPrefs),
+
+    Unknown(Element),
+}
+
+/// Lists every known payload of an `<iq type='set'/>`.
+#[derive(Debug, Clone)]
+pub enum IqSetPayload {
+    Roster(Roster),
     IBB(IBB),
     Jingle(Jingle),
-    Ping(Ping),
+    MamQuery(MamQuery),
+    MamPrefs(MamPrefs),
+
+    Unknown(Element),
+}
+
+/// Lists every known payload of an `<iq type='result'/>`.
+#[derive(Debug, Clone)]
+pub enum IqResultPayload {
+    Roster(Roster),
+    DiscoInfo(DiscoInfoResult),
     MamQuery(MamQuery),
     MamFin(MamFin),
     MamPrefs(MamPrefs),
@@ -40,42 +60,114 @@ pub enum IqPayload {
     Unknown(Element),
 }
 
-impl TryFrom<Element> for IqPayload {
+impl TryFrom<Element> for IqGetPayload {
     type Error = Error;
 
-    fn try_from(elem: Element) -> Result<IqPayload, Error> {
+    fn try_from(elem: Element) -> Result<IqGetPayload, Error> {
         Ok(match (elem.name().as_ref(), elem.ns().unwrap().as_ref()) {
             // RFC-6121
-            ("query", ns::ROSTER) => IqPayload::Roster(Roster::try_from(elem)?),
+            ("query", ns::ROSTER) => IqGetPayload::Roster(Roster::try_from(elem)?),
 
             // XEP-0030
-            ("query", ns::DISCO_INFO) => {
-                // TODO: separate all three types of payloads.
-                match DiscoInfoQuery::try_from(elem.clone()) {
-                    Ok(payload) => IqPayload::DiscoInfoQuery(payload),
-                    // TODO: put that error somewhere too?
-                    Err(_) => IqPayload::DiscoInfoResult(DiscoInfoResult::try_from(elem)?),
-                }
-            },
+            ("query", ns::DISCO_INFO) => IqGetPayload::DiscoInfo(DiscoInfoQuery::try_from(elem)?),
+
+            // XEP-0199
+            ("ping", ns::PING) => IqGetPayload::Ping(Ping::try_from(elem)?),
+
+            // XEP-0313
+            ("query", ns::MAM) => IqGetPayload::MamQuery(MamQuery::try_from(elem)?),
+            ("prefs", ns::MAM) => IqGetPayload::MamPrefs(MamPrefs::try_from(elem)?),
+
+            _ => IqGetPayload::Unknown(elem),
+        })
+    }
+}
+
+impl Into<Element> for IqGetPayload {
+    fn into(self) -> Element {
+        match self {
+            IqGetPayload::Roster(roster) => roster.into(),
+            IqGetPayload::DiscoInfo(disco) => disco.into(),
+            IqGetPayload::Ping(ping) => ping.into(),
+            IqGetPayload::MamQuery(query) => query.into(),
+            IqGetPayload::MamPrefs(prefs) => prefs.into(),
+
+            IqGetPayload::Unknown(elem) => elem,
+        }
+    }
+}
+
+impl TryFrom<Element> for IqSetPayload {
+    type Error = Error;
+
+    fn try_from(elem: Element) -> Result<IqSetPayload, Error> {
+        Ok(match (elem.name().as_ref(), elem.ns().unwrap().as_ref()) {
+            // RFC-6121
+            ("query", ns::ROSTER) => IqSetPayload::Roster(Roster::try_from(elem)?),
 
             // XEP-0047
             ("open", ns::IBB)
           | ("data", ns::IBB)
-          | ("close", ns::IBB) => IqPayload::IBB(IBB::try_from(elem)?),
+          | ("close", ns::IBB) => IqSetPayload::IBB(IBB::try_from(elem)?),
 
             // XEP-0166
-            ("jingle", ns::JINGLE) => IqPayload::Jingle(Jingle::try_from(elem)?),
-
-            // XEP-0199
-            ("ping", ns::PING) => IqPayload::Ping(Ping::try_from(elem)?),
+            ("jingle", ns::JINGLE) => IqSetPayload::Jingle(Jingle::try_from(elem)?),
 
             // XEP-0313
-            ("query", ns::MAM) => IqPayload::MamQuery(MamQuery::try_from(elem)?),
-            ("fin", ns::MAM) => IqPayload::MamFin(MamFin::try_from(elem)?),
-            ("prefs", ns::MAM) => IqPayload::MamPrefs(MamPrefs::try_from(elem)?),
+            ("query", ns::MAM) => IqSetPayload::MamQuery(MamQuery::try_from(elem)?),
+            ("prefs", ns::MAM) => IqSetPayload::MamPrefs(MamPrefs::try_from(elem)?),
 
-            _ => IqPayload::Unknown(elem),
+            _ => IqSetPayload::Unknown(elem),
         })
+    }
+}
+
+impl Into<Element> for IqSetPayload {
+    fn into(self) -> Element {
+        match self {
+            IqSetPayload::Roster(roster) => roster.into(),
+            IqSetPayload::IBB(ibb) => ibb.into(),
+            IqSetPayload::Jingle(jingle) => jingle.into(),
+            IqSetPayload::MamQuery(query) => query.into(),
+            IqSetPayload::MamPrefs(prefs) => prefs.into(),
+
+            IqSetPayload::Unknown(elem) => elem,
+        }
+    }
+}
+
+impl TryFrom<Element> for IqResultPayload {
+    type Error = Error;
+
+    fn try_from(elem: Element) -> Result<IqResultPayload, Error> {
+        Ok(match (elem.name().as_ref(), elem.ns().unwrap().as_ref()) {
+            // RFC-6121
+            ("query", ns::ROSTER) => IqResultPayload::Roster(Roster::try_from(elem)?),
+
+            // XEP-0030
+            ("query", ns::DISCO_INFO) => IqResultPayload::DiscoInfo(DiscoInfoResult::try_from(elem)?),
+
+            // XEP-0313
+            ("query", ns::MAM) => IqResultPayload::MamQuery(MamQuery::try_from(elem)?),
+            ("fin", ns::MAM) => IqResultPayload::MamFin(MamFin::try_from(elem)?),
+            ("prefs", ns::MAM) => IqResultPayload::MamPrefs(MamPrefs::try_from(elem)?),
+
+            _ => IqResultPayload::Unknown(elem),
+        })
+    }
+}
+
+impl Into<Element> for IqResultPayload {
+    fn into(self) -> Element {
+        match self {
+            IqResultPayload::Roster(roster) => roster.into(),
+            IqResultPayload::DiscoInfo(disco) => disco.into(),
+            IqResultPayload::MamQuery(query) => query.into(),
+            IqResultPayload::MamFin(fin) => fin.into(),
+            IqResultPayload::MamPrefs(prefs) => prefs.into(),
+
+            IqResultPayload::Unknown(elem) => elem,
+        }
     }
 }
 
@@ -172,24 +264,6 @@ impl TryFrom<Element> for Iq {
             id: id,
             payload: type_,
         })
-    }
-}
-
-impl Into<Element> for IqPayload {
-    fn into(self) -> Element {
-        match self {
-            IqPayload::Roster(roster) => roster.into(),
-            IqPayload::DiscoInfoResult(disco) => disco.into(),
-            IqPayload::DiscoInfoQuery(disco) => disco.into(),
-            IqPayload::IBB(ibb) => ibb.into(),
-            IqPayload::Jingle(jingle) => jingle.into(),
-            IqPayload::Ping(ping) => ping.into(),
-            IqPayload::MamQuery(query) => query.into(),
-            IqPayload::MamFin(fin) => fin.into(),
-            IqPayload::MamPrefs(prefs) => prefs.into(),
-
-            IqPayload::Unknown(elem) => elem,
-        }
     }
 }
 
@@ -344,11 +418,11 @@ mod tests {
         let elem: Element = "<iq xmlns='jabber:client' type='get'><query xmlns='http://jabber.org/protocol/disco#info'/></iq>".parse().unwrap();
         let iq = Iq::try_from(elem).unwrap();
         let payload = match iq.payload {
-            IqType::Get(payload) => IqPayload::try_from(payload).unwrap(),
+            IqType::Get(payload) => IqGetPayload::try_from(payload).unwrap(),
             _ => panic!(),
         };
         assert!(match payload {
-            IqPayload::DiscoInfoQuery(DiscoInfoQuery { .. }) => true,
+            IqGetPayload::DiscoInfo(DiscoInfoQuery { .. }) => true,
             _ => false,
         });
     }
