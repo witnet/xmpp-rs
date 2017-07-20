@@ -18,7 +18,7 @@ use ns;
 
 use stanza_error::StanzaError;
 use roster::Roster;
-use disco::Disco;
+use disco::{DiscoInfoResult, DiscoInfoQuery};
 use ibb::IBB;
 use jingle::Jingle;
 use ping::Ping;
@@ -28,7 +28,8 @@ use mam::{Query as MamQuery, Fin as MamFin, Prefs as MamPrefs};
 #[derive(Debug, Clone)]
 pub enum IqPayload {
     Roster(Roster),
-    Disco(Disco),
+    DiscoInfoResult(DiscoInfoResult),
+    DiscoInfoQuery(DiscoInfoQuery),
     IBB(IBB),
     Jingle(Jingle),
     Ping(Ping),
@@ -48,7 +49,14 @@ impl TryFrom<Element> for IqPayload {
             ("query", ns::ROSTER) => IqPayload::Roster(Roster::try_from(elem)?),
 
             // XEP-0030
-            ("query", ns::DISCO_INFO) => IqPayload::Disco(Disco::try_from(elem)?),
+            ("query", ns::DISCO_INFO) => {
+                // TODO: separate all three types of payloads.
+                match DiscoInfoQuery::try_from(elem.clone()) {
+                    Ok(payload) => IqPayload::DiscoInfoQuery(payload),
+                    // TODO: put that error somewhere too?
+                    Err(_) => IqPayload::DiscoInfoResult(DiscoInfoResult::try_from(elem)?),
+                }
+            },
 
             // XEP-0047
             ("open", ns::IBB)
@@ -171,7 +179,8 @@ impl Into<Element> for IqPayload {
     fn into(self) -> Element {
         match self {
             IqPayload::Roster(roster) => roster.into(),
-            IqPayload::Disco(disco) => disco.into(),
+            IqPayload::DiscoInfoResult(disco) => disco.into(),
+            IqPayload::DiscoInfoQuery(disco) => disco.into(),
             IqPayload::IBB(ibb) => ibb.into(),
             IqPayload::Jingle(jingle) => jingle.into(),
             IqPayload::Ping(ping) => ping.into(),
@@ -339,7 +348,7 @@ mod tests {
             _ => panic!(),
         };
         assert!(match payload {
-            IqPayload::Disco(Disco { .. }) => true,
+            IqPayload::DiscoInfoQuery(DiscoInfoQuery { .. }) => true,
             _ => false,
         });
     }

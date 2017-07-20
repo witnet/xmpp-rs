@@ -6,7 +6,7 @@
 
 use std::convert::TryFrom;
 
-use disco::{Feature, Identity, Disco};
+use disco::{Feature, Identity, DiscoInfoResult, DiscoInfoQuery};
 use data_forms::DataForm;
 use hashes::{Hash, Algo};
 
@@ -122,7 +122,7 @@ fn compute_extensions(extensions: &[DataForm]) -> Vec<u8> {
     })
 }
 
-pub fn compute_disco(disco: &Disco) -> Vec<u8> {
+pub fn compute_disco(disco: &DiscoInfoResult) -> Vec<u8> {
     let identities_string = compute_identities(&disco.identities);
     let features_string = compute_features(&disco.features);
     let extensions_string = compute_extensions(&disco.extensions);
@@ -193,12 +193,9 @@ pub fn hash_caps(data: &[u8], algo: Algo) -> Result<Hash, String> {
     })
 }
 
-pub fn query_caps(caps: Caps) -> Disco {
-    Disco {
+pub fn query_caps(caps: Caps) -> DiscoInfoQuery {
+    DiscoInfoQuery {
         node: Some(format!("{}#{}", caps.node, base64::encode(&caps.hash.hash))),
-        identities: vec!(),
-        features: vec!(),
-        extensions: vec!(),
     }
 }
 
@@ -231,7 +228,7 @@ mod tests {
     #[test]
     fn test_simple() {
         let elem: Element = "<query xmlns='http://jabber.org/protocol/disco#info'><identity category='client' type='pc'/><feature var='http://jabber.org/protocol/disco#info'/></query>".parse().unwrap();
-        let disco = Disco::try_from(elem).unwrap();
+        let disco = DiscoInfoResult::try_from(elem).unwrap();
         let caps = caps::compute_disco(&disco);
         assert_eq!(caps.len(), 50);
     }
@@ -252,7 +249,7 @@ mod tests {
         let data = b"client/pc//Exodus 0.9.1<http://jabber.org/protocol/caps<http://jabber.org/protocol/disco#info<http://jabber.org/protocol/disco#items<http://jabber.org/protocol/muc<";
         let mut expected = Vec::with_capacity(data.len());
         expected.extend_from_slice(data);
-        let disco = Disco::try_from(elem).unwrap();
+        let disco = DiscoInfoResult::try_from(elem).unwrap();
         let caps = caps::compute_disco(&disco);
         assert_eq!(caps, expected);
 
@@ -297,7 +294,7 @@ mod tests {
         let data = b"client/pc/el/\xce\xa8 0.11<client/pc/en/Psi 0.11<http://jabber.org/protocol/caps<http://jabber.org/protocol/disco#info<http://jabber.org/protocol/disco#items<http://jabber.org/protocol/muc<urn:xmpp:dataforms:softwareinfo<ip_version<ipv4<ipv6<os<Mac<os_version<10.5.1<software<Psi<software_version<0.11<";
         let mut expected = Vec::with_capacity(data.len());
         expected.extend_from_slice(data);
-        let disco = Disco::try_from(elem).unwrap();
+        let disco = DiscoInfoResult::try_from(elem).unwrap();
         let caps = caps::compute_disco(&disco);
         assert_eq!(caps, expected);
 
