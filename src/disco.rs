@@ -7,6 +7,7 @@
 use try_from::TryFrom;
 
 use minidom::Element;
+use jid::Jid;
 
 use error::Error;
 use ns;
@@ -176,9 +177,131 @@ impl From<DiscoInfoResult> for Element {
     }
 }
 
+#[derive(Debug, Clone)]
+pub struct DiscoItemsQuery {
+    pub node: Option<String>,
+}
+
+impl TryFrom<Element> for DiscoItemsQuery {
+    type Err = Error;
+
+    fn try_from(elem: Element) -> Result<DiscoItemsQuery, Error> {
+        if !elem.is("query", ns::DISCO_ITEMS) {
+            return Err(Error::ParseError("This is not a disco#items element."));
+        }
+        for _ in elem.children() {
+            return Err(Error::ParseError("Unknown child in disco#items."));
+        }
+        for (attr, _) in elem.attrs() {
+            if attr != "node" {
+                return Err(Error::ParseError("Unknown attribute in disco#items."));
+            }
+        }
+        Ok(DiscoItemsQuery {
+            node: get_attr!(elem, "node", optional),
+        })
+    }
+}
+
+impl From<DiscoItemsQuery> for Element {
+    fn from(disco: DiscoItemsQuery) -> Element {
+        Element::builder("query")
+                .ns(ns::DISCO_ITEMS)
+                .attr("node", disco.node)
+                .build()
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct Item {
+    pub jid: Jid,
+    pub node: Option<String>,
+    pub name: Option<String>,
+}
+
+impl TryFrom<Element> for Item {
+    type Err = Error;
+
+    fn try_from(elem: Element) -> Result<Item, Error> {
+        if !elem.is("item", ns::DISCO_ITEMS) {
+            return Err(Error::ParseError("This is not an item element."));
+        }
+        for _ in elem.children() {
+            return Err(Error::ParseError("Unknown child in item element."));
+        }
+        for (attr, _) in elem.attrs() {
+            if attr != "jid" && attr != "node" && attr != "name" {
+                return Err(Error::ParseError("Unknown attribute in item element."));
+            }
+        }
+        Ok(Item {
+            jid: get_attr!(elem, "jid", required),
+            node: get_attr!(elem, "node", optional),
+            name: get_attr!(elem, "name", optional),
+        })
+    }
+}
+
+impl From<Item> for Element {
+    fn from(item: Item) -> Element {
+        Element::builder("item")
+                .ns(ns::DISCO_ITEMS)
+                .attr("jid", String::from(item.jid))
+                .attr("node", item.node)
+                .attr("name", item.name)
+                .build()
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct DiscoItemsResult {
+    pub node: Option<String>,
+    pub items: Vec<Item>,
+}
+
+impl TryFrom<Element> for DiscoItemsResult {
+    type Err = Error;
+
+    fn try_from(elem: Element) -> Result<DiscoItemsResult, Error> {
+        if !elem.is("query", ns::DISCO_ITEMS) {
+            return Err(Error::ParseError("This is not a disco#items element."));
+        }
+        for (attr, _) in elem.attrs() {
+            if attr != "node" {
+                return Err(Error::ParseError("Unknown attribute in disco#items."));
+            }
+        }
+
+        let mut items: Vec<Item> = vec!();
+        for child in elem.children() {
+            if child.is("item", ns::DISCO_ITEMS) {
+                items.push(Item::try_from(child.clone())?);
+            } else {
+                return Err(Error::ParseError("Unknown element in disco#items."));
+            }
+        }
+
+        Ok(DiscoItemsResult {
+            node: get_attr!(elem, "node", optional),
+            items: items,
+        })
+    }
+}
+
+impl From<DiscoItemsResult> for Element {
+    fn from(disco: DiscoItemsResult) -> Element {
+        Element::builder("query")
+                .ns(ns::DISCO_ITEMS)
+                .attr("node", disco.node)
+                .append(disco.items)
+                .build()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::str::FromStr;
 
     #[test]
     fn test_simple() {
@@ -272,5 +395,42 @@ mod tests {
             _ => panic!(),
         };
         assert_eq!(message, "disco#info feature not present in disco#info.");
+    }
+
+    #[test]
+    fn test_simple_items() {
+        let elem: Element = "<query xmlns='http://jabber.org/protocol/disco#items'/>".parse().unwrap();
+        let query = DiscoItemsQuery::try_from(elem).unwrap();
+        assert!(query.node.is_none());
+
+        let elem: Element = "<query xmlns='http://jabber.org/protocol/disco#items' node='coucou'/>".parse().unwrap();
+        let query = DiscoItemsQuery::try_from(elem).unwrap();
+        assert_eq!(query.node, Some(String::from("coucou")));
+    }
+
+    #[test]
+    fn test_simple_items_result() {
+        let elem: Element = "<query xmlns='http://jabber.org/protocol/disco#items'/>".parse().unwrap();
+        let query = DiscoItemsResult::try_from(elem).unwrap();
+        assert!(query.node.is_none());
+        assert!(query.items.is_empty());
+
+        let elem: Element = "<query xmlns='http://jabber.org/protocol/disco#items' node='coucou'/>".parse().unwrap();
+        let query = DiscoItemsResult::try_from(elem).unwrap();
+        assert_eq!(query.node, Some(String::from("coucou")));
+        assert!(query.items.is_empty());
+    }
+
+    #[test]
+    fn test_answers_items_result() {
+        let elem: Element = "<query xmlns='http://jabber.org/protocol/disco#items'><item jid='component'/><item jid='component2' node='test' name='A component'/></query>".parse().unwrap();
+        let query = DiscoItemsResult::try_from(elem).unwrap();
+        assert_eq!(query.items.len(), 2);
+        assert_eq!(query.items[0].jid, Jid::from_str("component").unwrap());
+        assert_eq!(query.items[0].node, None);
+        assert_eq!(query.items[0].name, None);
+        assert_eq!(query.items[1].jid, Jid::from_str("component2").unwrap());
+        assert_eq!(query.items[1].node, Some(String::from("test")));
+        assert_eq!(query.items[1].name, Some(String::from("A component")));
     }
 }

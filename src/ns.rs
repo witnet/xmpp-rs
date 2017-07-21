@@ -18,6 +18,8 @@ pub const DATA_FORMS: &str = "jabber:x:data";
 
 /// XEP-0030: Service Discovery
 pub const DISCO_INFO: &str = "http://jabber.org/protocol/disco#info";
+/// XEP-0030: Service Discovery
+pub const DISCO_ITEMS: &str = "http://jabber.org/protocol/disco#items";
 
 /// XEP-0045: Multi-User Chat
 pub const MUC: &str = "http://jabber.org/protocol/muc";
