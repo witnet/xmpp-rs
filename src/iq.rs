@@ -272,8 +272,8 @@ impl From<Iq> for Element {
     fn from(iq: Iq) -> Element {
         let mut stanza = Element::builder("iq")
                                  .ns(ns::JABBER_CLIENT)
-                                 .attr("from", iq.from.and_then(|value| Some(String::from(value))))
-                                 .attr("to", iq.to.and_then(|value| Some(String::from(value))))
+                                 .attr("from", iq.from.map(String::from))
+                                 .attr("to", iq.to.map(String::from))
                                  .attr("id", iq.id)
                                  .attr("type", &iq.payload)
                                  .build();

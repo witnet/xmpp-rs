@@ -31,7 +31,7 @@ impl From<Item> for Element {
                 .ns(ns::PUBSUB_EVENT)
                 .attr("id", item.id)
                 .attr("node", item.node)
-                .attr("publisher", item.publisher.and_then(|publisher| Some(String::from(publisher))))
+                .attr("publisher", item.publisher.map(String::from))
                 .append(item.payload)
                 .build()
     }
@@ -222,11 +222,11 @@ impl From<PubSubEvent> for Element {
                 Element::builder("purge")
                         .ns(ns::PUBSUB_EVENT)
                         .attr("node", node)
-                        .append(redirect.and_then(|redirect| {
-                             Some(Element::builder("redirect")
-                                                  .ns(ns::PUBSUB_EVENT)
-                                                  .attr("uri", redirect)
-                                                  .build())
+                        .append(redirect.map(|redirect| {
+                             Element::builder("redirect")
+                                     .ns(ns::PUBSUB_EVENT)
+                                     .attr("uri", redirect)
+                                     .build()
                          }))
                         .build()
             },
@@ -260,8 +260,8 @@ impl From<PubSubEvent> for Element {
                 Element::builder("subscription")
                         .ns(ns::PUBSUB_EVENT)
                         .attr("node", node)
-                        .attr("expiry", expiry.and_then(|expiry| Some(expiry.to_rfc3339())))
-                        .attr("jid", jid.and_then(|jid| Some(String::from(jid))))
+                        .attr("expiry", expiry.map(|expiry| expiry.to_rfc3339()))
+                        .attr("jid", jid.map(String::from))
                         .attr("subid", subid)
                         .attr("subscription", subscription)
                         .build()
