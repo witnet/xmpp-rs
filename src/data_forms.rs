@@ -7,7 +7,7 @@
 use try_from::TryFrom;
 use std::str::FromStr;
 
-use minidom::{Element, IntoElements, IntoAttributeValue, ElementEmitter};
+use minidom::{Element, IntoAttributeValue};
 
 use error::Error;
 use ns;
@@ -46,12 +46,6 @@ impl From<Option_> for Element {
     }
 }
 
-impl IntoElements for Option_ {
-    fn into_elements(self, emitter: &mut ElementEmitter) {
-        emitter.append_child(self.into());
-    }
-}
-
 #[derive(Debug, Clone)]
 pub struct Field {
     pub var: String,
@@ -77,12 +71,6 @@ impl From<Field> for Element {
                  }).collect::<Vec<_>>())
                 .append(field.media)
                 .build()
-    }
-}
-
-impl IntoElements for Field {
-    fn into_elements(self, emitter: &mut ElementEmitter) {
-        emitter.append_child(self.into());
     }
 }
 
@@ -233,12 +221,6 @@ impl From<DataForm> for Element {
                 .append(if form.instructions.is_some() { Some(Element::builder("instructions").ns(ns::DATA_FORMS).append(form.instructions)) } else { None })
                 .append(form.fields)
                 .build()
-    }
-}
-
-impl IntoElements for DataForm {
-    fn into_elements(self, emitter: &mut ElementEmitter) {
-        emitter.append_child(self.into());
     }
 }
 

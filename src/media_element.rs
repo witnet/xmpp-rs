@@ -6,7 +6,7 @@
 
 use try_from::TryFrom;
 
-use minidom::{Element, IntoElements, ElementEmitter};
+use minidom::Element;
 
 use error::Error;
 
@@ -25,12 +25,6 @@ impl From<URI> for Element {
                 .attr("type", uri.type_)
                 .append(uri.uri)
                 .build()
-    }
-}
-
-impl IntoElements for URI {
-    fn into_elements(self, emitter: &mut ElementEmitter) {
-        emitter.append_child(self.into());
     }
 }
 
@@ -78,12 +72,6 @@ impl From<MediaElement> for Element {
                 .attr("height", media.height)
                 .append(media.uris)
                 .build()
-    }
-}
-
-impl IntoElements for MediaElement {
-    fn into_elements(self, emitter: &mut ElementEmitter) {
-        emitter.append_child(self.into());
     }
 }
 

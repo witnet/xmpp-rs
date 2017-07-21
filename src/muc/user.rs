@@ -8,7 +8,7 @@
 use try_from::{TryFrom, TryInto};
 use std::str::FromStr;
 
-use minidom::{Element, IntoElements, IntoAttributeValue, ElementEmitter};
+use minidom::{Element, IntoAttributeValue};
 
 use jid::Jid;
 
@@ -142,12 +142,6 @@ impl From<Status> for Element {
     }
 }
 
-impl IntoElements for Status {
-    fn into_elements(self, emitter: &mut ElementEmitter) {
-        emitter.append_child(self.into());
-    }
-}
-
 /// Optional <actor/> element used in <item/> elements inside presence stanzas of type
 /// "unavailable" that are sent to users who are kick or banned, as well as within IQs for tracking
 /// purposes. -- CHANGELOG  0.17 (2002-10-23)
@@ -198,12 +192,6 @@ impl From<Actor> for Element {
     }
 }
 
-impl IntoElements for Actor {
-    fn into_elements(self, emitter: &mut ElementEmitter) {
-        emitter.append_child(self.into());
-    }
-}
-
 #[derive(Debug, Clone, PartialEq)]
 pub struct Continue {
     thread: Option<String>,
@@ -237,12 +225,6 @@ impl From<Continue> for Element {
     }
 }
 
-impl IntoElements for Continue {
-    fn into_elements(self, emitter: &mut ElementEmitter) {
-        emitter.append_child(self.into());
-    }
-}
-
 #[derive(Debug, Clone, PartialEq)]
 pub struct Reason(String);
 
@@ -269,12 +251,6 @@ impl From<Reason> for Element {
                 .ns(ns::MUC_USER)
                 .append(reason.0)
                 .build()
-    }
-}
-
-impl IntoElements for Reason {
-    fn into_elements(self, emitter: &mut ElementEmitter) {
-        emitter.append_child(self.into());
     }
 }
 

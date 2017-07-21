@@ -7,7 +7,7 @@
 use try_from::TryFrom;
 use std::str::FromStr;
 
-use minidom::{Element, IntoElements, IntoAttributeValue, ElementEmitter};
+use minidom::{Element, IntoAttributeValue};
 use jid::Jid;
 use chrono::{DateTime, FixedOffset};
 
@@ -34,12 +34,6 @@ impl From<Item> for Element {
                 .attr("publisher", item.publisher.map(String::from))
                 .append(item.payload)
                 .build()
-    }
-}
-
-impl IntoElements for Item {
-    fn into_elements(self, emitter: &mut ElementEmitter) {
-        emitter.append_child(self.into());
     }
 }
 

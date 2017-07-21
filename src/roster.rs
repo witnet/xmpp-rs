@@ -7,7 +7,7 @@
 use try_from::TryFrom;
 use std::str::FromStr;
 
-use minidom::{Element, IntoElements, IntoAttributeValue, ElementEmitter};
+use minidom::{Element, IntoAttributeValue};
 use jid::Jid;
 
 use error::Error;
@@ -67,12 +67,6 @@ impl From<Item> for Element {
                 .attr("subscription", item.subscription)
                 .append(item.groups.into_iter().map(|group| Element::builder("group").ns(ns::ROSTER).append(group)).collect::<Vec<_>>())
                 .build()
-    }
-}
-
-impl IntoElements for Item {
-    fn into_elements(self, emitter: &mut ElementEmitter) {
-        emitter.append_child(self.into());
     }
 }
 

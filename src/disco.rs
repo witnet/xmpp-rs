@@ -6,7 +6,7 @@
 
 use try_from::TryFrom;
 
-use minidom::{Element, IntoElements, ElementEmitter};
+use minidom::Element;
 
 use error::Error;
 use ns;
@@ -62,12 +62,6 @@ impl From<Feature> for Element {
     }
 }
 
-impl IntoElements for Feature {
-    fn into_elements(self, emitter: &mut ElementEmitter) {
-        emitter.append_child(self.into());
-    }
-}
-
 #[derive(Debug, Clone)]
 pub struct Identity {
     pub category: String, // TODO: use an enum here.
@@ -85,12 +79,6 @@ impl From<Identity> for Element {
                 .attr("xml:lang", identity.lang)
                 .attr("name", identity.name)
                 .build()
-    }
-}
-
-impl IntoElements for Identity {
-    fn into_elements(self, emitter: &mut ElementEmitter) {
-        emitter.append_child(self.into());
     }
 }
 

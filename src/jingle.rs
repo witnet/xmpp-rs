@@ -7,7 +7,7 @@
 use try_from::TryFrom;
 use std::str::FromStr;
 
-use minidom::{Element, IntoElements, IntoAttributeValue, ElementEmitter};
+use minidom::{Element, IntoAttributeValue};
 use jid::Jid;
 
 use error::Error;
@@ -107,12 +107,6 @@ impl From<Content> for Element {
                 .append(content.transport)
                 .append(content.security)
                 .build()
-    }
-}
-
-impl IntoElements for Content {
-    fn into_elements(self, emitter: &mut ElementEmitter) {
-        emitter.append_child(self.into());
     }
 }
 
@@ -237,12 +231,6 @@ impl From<ReasonElement> for Element {
                 .append(Element::from(reason.reason))
                 .append(reason.text)
                 .build()
-    }
-}
-
-impl IntoElements for ReasonElement {
-    fn into_elements(self, emitter: &mut ElementEmitter) {
-        emitter.append_child(self.into());
     }
 }
 

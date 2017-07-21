@@ -7,7 +7,7 @@
 use std::collections::HashMap;
 use try_from::TryFrom;
 
-use minidom::{Element, IntoElements, ElementEmitter};
+use minidom::Element;
 
 use error::Error;
 
@@ -75,12 +75,6 @@ impl From<Query> for Element {
                 .append(if query.remove { Some(Element::builder("remove").ns(ns::REGISTER)) } else { None })
                 .append(query.form)
                 .build()
-    }
-}
-
-impl IntoElements for Query {
-    fn into_elements(self, emitter: &mut ElementEmitter) {
-        emitter.append_child(self.into());
     }
 }
 
