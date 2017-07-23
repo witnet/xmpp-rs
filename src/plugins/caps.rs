@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::convert::TryFrom;
+use try_from::TryFrom;
 use std::sync::{Mutex, Arc};
 
 use plugin::PluginProxy;
@@ -11,7 +11,7 @@ use plugins::stanza::{Presence, Iq};
 use plugins::disco::DiscoInfoResult;
 use xmpp_parsers::presence::Type as PresenceType;
 use xmpp_parsers::iq::IqType;
-use xmpp_parsers::disco::Disco;
+use xmpp_parsers::disco::{DiscoInfoQuery, DiscoInfoResult as DiscoInfoResult_};
 use xmpp_parsers::caps::Caps;
 
 #[derive(Debug)]
@@ -26,7 +26,7 @@ impl Event for DiscoInfoRequest {}
 pub struct CapsPlugin {
     proxy: PluginProxy,
     pending: Arc<Mutex<HashMap<Jid, (String, String)>>>,
-    cache: Arc<Mutex<HashMap<(Jid, String), Disco>>>,
+    cache: Arc<Mutex<HashMap<(Jid, String), DiscoInfoResult_>>>,
 }
 
 impl CapsPlugin {
@@ -59,11 +59,8 @@ impl CapsPlugin {
                     let mut pending = self.pending.lock().unwrap();
                     pending.insert(recipient.clone(), (id.clone(), node.clone()));
                 }
-                let disco = Disco {
+                let disco = DiscoInfoQuery {
                     node: Some(node),
-                    identities: vec!(),
-                    features: vec!(),
-                    extensions: vec!(),
                 };
                 self.proxy.send(Iq {
                     to: Some(recipient),

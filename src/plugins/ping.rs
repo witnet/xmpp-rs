@@ -1,4 +1,4 @@
-use std::convert::TryFrom;
+use try_from::TryFrom;
 
 use plugin::PluginProxy;
 use event::{Event, Priority, Propagation};
@@ -7,7 +7,7 @@ use jid::Jid;
 
 use plugins::stanza::Iq;
 use plugins::disco::DiscoPlugin;
-use xmpp_parsers::iq::{IqType, IqPayload};
+use xmpp_parsers::iq::{IqType, IqGetPayload};
 use xmpp_parsers::ping::Ping;
 use xmpp_parsers::ns;
 
@@ -54,7 +54,7 @@ impl PingPlugin {
             from: None,
             to: Some(to),
             id: Some(self.proxy.gen_id()),
-            payload: IqType::Get(IqPayload::Ping(Ping).into()),
+            payload: IqType::Get(IqGetPayload::Ping(Ping).into()),
         }.into());
         Ok(())
     }
@@ -63,7 +63,7 @@ impl PingPlugin {
         let iq = iq.clone();
         if let IqType::Get(payload) = iq.payload {
             // TODO: use an intermediate plugin to parse this payload.
-            if let Ok(IqPayload::Ping(_)) = IqPayload::try_from(payload) {
+            if let Ok(IqGetPayload::Ping(_)) = IqGetPayload::try_from(payload) {
                 self.proxy.dispatch(PingEvent { // TODO: safety!!!
                     from: iq.from.unwrap(),
                     id: iq.id.unwrap(),

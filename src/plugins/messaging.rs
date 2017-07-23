@@ -1,4 +1,4 @@
-use std::convert::TryFrom;
+use try_from::TryFrom;
 use std::collections::BTreeMap;
 
 use plugin::PluginProxy;

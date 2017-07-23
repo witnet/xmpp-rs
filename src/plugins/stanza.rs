@@ -1,4 +1,4 @@
-use std::convert::TryFrom;
+use try_from::TryFrom;
 
 use plugin::PluginProxy;
 use event::{Event, ReceiveElement, Propagation, Priority};

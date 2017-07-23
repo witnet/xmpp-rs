@@ -1,4 +1,4 @@
-use std::convert::TryFrom;
+use try_from::TryFrom;
 use std::sync::{Mutex, Arc};
 
 use plugin::PluginProxy;
@@ -7,7 +7,7 @@ use jid::Jid;
 
 use plugins::stanza::Iq;
 use xmpp_parsers::iq::IqType;
-use xmpp_parsers::disco::{Disco, Identity, Feature};
+use xmpp_parsers::disco::{DiscoInfoQuery, DiscoInfoResult as DiscoInfoResult_, Identity, Feature};
 use xmpp_parsers::data_forms::DataForm;
 use xmpp_parsers::ns;
 
@@ -22,7 +22,7 @@ pub struct DiscoInfoRequest {
 pub struct DiscoInfoResult {
     pub from: Jid,
     pub id: String,
-    pub disco: Disco,
+    pub disco: DiscoInfoResult_,
 }
 
 impl Event for DiscoInfoRequest {}
@@ -30,14 +30,14 @@ impl Event for DiscoInfoResult {}
 
 pub struct DiscoPlugin {
     proxy: PluginProxy,
-    cached_disco: Arc<Mutex<Disco>>,
+    cached_disco: Arc<Mutex<DiscoInfoResult_>>,
 }
 
 impl DiscoPlugin {
     pub fn new(category: &str, type_: &str, lang: &str, name: &str) -> DiscoPlugin {
         DiscoPlugin {
             proxy: PluginProxy::new(),
-            cached_disco: Arc::new(Mutex::new(Disco {
+            cached_disco: Arc::new(Mutex::new(DiscoInfoResult_ {
                 node: None,
                 identities: vec!(Identity {
                     category: category.to_owned(),
@@ -96,7 +96,7 @@ impl DiscoPlugin {
     fn handle_iq(&self, iq: &Iq) -> Propagation {
         let iq = iq.clone();
         if let IqType::Get(payload) = iq.payload {
-            if let Ok(disco) = Disco::try_from(payload) {
+            if let Ok(disco) = DiscoInfoQuery::try_from(payload) {
                 self.proxy.dispatch(DiscoInfoRequest {
                     from: iq.from.unwrap(),
                     id: iq.id.unwrap(),
@@ -105,7 +105,7 @@ impl DiscoPlugin {
                 return Propagation::Stop;
             }
         } else if let IqType::Result(Some(payload)) = iq.payload {
-            if let Ok(disco) = Disco::try_from(payload) {
+            if let Ok(disco) = DiscoInfoResult_::try_from(payload) {
                 self.proxy.dispatch(DiscoInfoResult {
                     from: iq.from.unwrap(),
                     id: iq.id.unwrap(),
