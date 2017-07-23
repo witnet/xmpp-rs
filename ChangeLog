@@ -1,3 +1,22 @@
+Version 0.7.0:
+2017-07-23  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
+    * New parsers/serialisers:
+        - Jingle Message Initialisation (XEP-0353) was added.
+        - The disco#items query (XEP-0030) is now supported, in
+          addition to the existing disco#info one.
+    * Breaking changes:
+        - Replaced many type aliases with proper wrapping structs.
+        - Split Disco into a query and a result part, since they have
+          very different constraints.
+        - Split IqPayload in three to avoid parsing queries as results
+          for example.
+    * Improvements:
+        - Use TryFrom from the try_from crate, thus removing the
+          dependency on nightly!
+        - Always implement From instead of Into, the latter is
+          generated anyway.
+        - Add helpers to construct your Presence stanza.
+
 Version 0.6.0:
 2017-06-27  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
     * New parsers/serialisers:
