@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::convert::TryFrom;
+use try_from::TryFrom;
 use std::sync::Mutex;
 
 use plugin::PluginProxy;
@@ -8,7 +8,7 @@ use jid::Jid;
 
 use plugins::stanza::Iq;
 use plugins::disco::DiscoPlugin;
-use xmpp_parsers::iq::{IqType, IqPayload};
+use xmpp_parsers::iq::{IqType, IqSetPayload, IqResultPayload};
 use xmpp_parsers::roster::{Roster, Item, Subscription};
 use xmpp_parsers::ns;
 
@@ -140,8 +140,8 @@ impl RosterPlugin {
         let id = iq.id.unwrap();
         match iq.payload {
             IqType::Result(Some(payload)) => {
-                match IqPayload::try_from(payload) {
-                    Ok(IqPayload::Roster(roster)) => {
+                match IqResultPayload::try_from(payload) {
+                    Ok(IqResultPayload::Roster(roster)) => {
                         self.handle_roster_reply(roster);
                         Propagation::Stop
                     },
@@ -150,8 +150,8 @@ impl RosterPlugin {
                 }
             },
             IqType::Set(payload) => {
-                match IqPayload::try_from(payload) {
-                    Ok(IqPayload::Roster(roster)) => {
+                match IqSetPayload::try_from(payload) {
+                    Ok(IqSetPayload::Roster(roster)) => {
                         let payload = match self.handle_roster_push(roster) {
                             Ok(_) => IqType::Result(None),
                             Err(string) => {

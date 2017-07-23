@@ -1,5 +1,3 @@
-#![feature(try_from)]
-
 extern crate xml;
 extern crate xmpp_parsers;
 extern crate openssl;
@@ -7,6 +5,7 @@ extern crate minidom;
 extern crate base64;
 extern crate sha_1;
 extern crate chrono;
+extern crate try_from;
 pub extern crate jid;
 pub extern crate sasl;
 

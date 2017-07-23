@@ -1,6 +1,6 @@
 use std::collections::{HashMap, BTreeMap};
 use std::collections::hash_map::Entry;
-use std::convert::TryFrom;
+use try_from::TryFrom;
 use std::sync::{Mutex, Arc};
 
 use plugin::PluginProxy;
@@ -9,7 +9,7 @@ use jid::Jid;
 
 use plugins::stanza::Iq;
 use plugins::disco::DiscoPlugin;
-use xmpp_parsers::iq::{IqType, IqPayload};
+use xmpp_parsers::iq::{IqType, IqSetPayload};
 use xmpp_parsers::ibb::{IBB, Stanza};
 use xmpp_parsers::stanza_error::{StanzaError, ErrorType, DefinedCondition};
 use xmpp_parsers::ns;
@@ -163,8 +163,8 @@ impl IbbPlugin {
             let from = iq.from.unwrap();
             let id = iq.id.unwrap();
             // TODO: use an intermediate plugin to parse this payload.
-            let payload = match IqPayload::try_from(payload) {
-                Ok(IqPayload::IBB(ibb)) => {
+            let payload = match IqSetPayload::try_from(payload) {
+                Ok(IqSetPayload::IBB(ibb)) => {
                     match self.handle_ibb(from.clone(), ibb) {
                         Ok(_) => IqType::Result(None),
                         Err(error) => IqType::Error(error),

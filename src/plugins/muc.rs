@@ -1,5 +1,5 @@
 use std::collections::BTreeMap;
-use std::convert::TryFrom;
+use try_from::TryFrom;
 
 use jid::Jid;
 use error::Error;
