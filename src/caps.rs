@@ -15,11 +15,12 @@ use error::Error;
 use ns;
 use base64;
 
+use digest::Digest;
 use sha_1::Sha1;
 use sha2::{Sha256, Sha512};
 use sha3::{Sha3_256, Sha3_512};
-use blake2::Blake2b;
-use digest::{Digest, VariableOutput};
+//use blake2::Blake2b;
+//use digest::{Digest, VariableOutput};
 
 #[derive(Debug, Clone)]
 pub struct Caps {
@@ -173,6 +174,9 @@ pub fn hash_caps(data: &[u8], algo: Algo) -> Result<Hash, String> {
                 let hash = hasher.result();
                 get_hash_vec(hash.as_slice())
             },
+            Algo::Blake2b_256
+          | Algo::Blake2b_512 => panic!("See https://github.com/RustCrypto/hashes/issues/34"),
+            /*
             Algo::Blake2b_256 => {
                 let mut hasher = Blake2b::default();
                 hasher.input(data);
@@ -187,6 +191,7 @@ pub fn hash_caps(data: &[u8], algo: Algo) -> Result<Hash, String> {
                 let hash = hasher.variable_result(&mut buf).unwrap();
                 get_hash_vec(hash)
             },
+            */
             Algo::Unknown(algo) => return Err(format!("Unknown algorithm: {}.", algo)),
         },
         algo: algo,

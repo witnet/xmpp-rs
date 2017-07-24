@@ -15,10 +15,11 @@ use error::Error;
 use ns;
 use base64;
 
+use digest::Digest;
 use sha2::{Sha256, Sha512};
 use sha3::{Sha3_256, Sha3_512};
-use blake2::Blake2b;
-use digest::{Digest, VariableOutput};
+//use blake2::Blake2b;
+//use digest::{Digest, VariableOutput};
 
 #[derive(Debug, Clone)]
 pub struct ECaps2 {
@@ -151,6 +152,9 @@ pub fn hash_ecaps2(data: &[u8], algo: Algo) -> Result<Hash, String> {
                 let hash = hasher.result();
                 get_hash_vec(hash.as_slice())
             },
+            Algo::Blake2b_256
+          | Algo::Blake2b_512 => panic!("See https://github.com/RustCrypto/hashes/issues/34"),
+            /*
             Algo::Blake2b_256 => {
                 let mut hasher = Blake2b::default();
                 hasher.input(data);
@@ -165,6 +169,7 @@ pub fn hash_ecaps2(data: &[u8], algo: Algo) -> Result<Hash, String> {
                 let hash = hasher.variable_result(&mut buf).unwrap();
                 get_hash_vec(hash)
             },
+            */
             Algo::Sha_1 => return Err(String::from("Disabled algorithm sha-1: unsafe.")),
             Algo::Unknown(algo) => return Err(format!("Unknown algorithm: {}.", algo)),
         },
@@ -455,6 +460,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn test_blake2b_512() {
         let hash = ecaps2::hash_ecaps2("abc".as_bytes(), Algo::Blake2b_512).unwrap();
         let known_hash: Vec<u8> = vec!(
