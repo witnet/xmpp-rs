@@ -1,4 +1,10 @@
 Version 0.7.0:
+2017-07-24  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
+    * Hotfixes:
+        - Stub out blake2 support, since the blake2 crate broke its API
+          between their 0.6.0 and 0.6.1 releases…
+
+Version 0.7.0:
 2017-07-23  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
     * New parsers/serialisers:
         - Jingle Message Initialisation (XEP-0353) was added.
