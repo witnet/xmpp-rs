@@ -145,8 +145,8 @@ impl From<Transport> for Element {
                 .attr("dstaddr", transport.dstaddr)
                 .attr("mode", transport.mode)
                 .append(match transport.payload {
-                     TransportPayload::Candidates(mut candidates) => {
-                         candidates.drain(..)
+                     TransportPayload::Candidates(candidates) => {
+                         candidates.into_iter()
                                    .map(Element::from)
                                    .collect::<Vec<_>>()
                      },
@@ -161,7 +161,7 @@ impl From<Transport> for Element {
                                       .ns(ns::JINGLE_S5B)
                                       .build())
                      },
-                     TransportPayload::CandidateUsed(ref cid) => {
+                     TransportPayload::CandidateUsed(cid) => {
                          vec!(Element::builder("candidate-used")
                                       .ns(ns::JINGLE_S5B)
                                       .attr("cid", cid)

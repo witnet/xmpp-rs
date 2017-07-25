@@ -49,10 +49,10 @@ impl TryFrom<Element> for ECaps2 {
 }
 
 impl From<ECaps2> for Element {
-    fn from(mut ecaps2: ECaps2) -> Element {
+    fn from(ecaps2: ECaps2) -> Element {
         Element::builder("c")
                 .ns(ns::ECAPS2)
-                .append(ecaps2.hashes.drain(..)
+                .append(ecaps2.hashes.into_iter()
                                      .map(Element::from)
                                      .collect::<Vec<_>>())
                 .build()
