@@ -80,7 +80,7 @@ fn builder_works() {
                        .append("e")
                        .build();
     assert_eq!(elem.name(), "a");
-    assert_eq!(elem.ns(), Some("b"));
+    assert_eq!(elem.ns(), Some("b".to_owned()));
     assert_eq!(elem.attr("c"), Some("d"));
     assert_eq!(elem.attr("x"), None);
     assert_eq!(elem.text(), "e");
@@ -115,6 +115,7 @@ fn namespace_propagation_works() {
     let grandchild = Element::bare("grandchild");
     child.append_child(grandchild);
     root.append_child(child);
+
     assert_eq!(root.get_child("child", "root_ns").unwrap().ns(), root.ns());
     assert_eq!(root.get_child("child", "root_ns").unwrap()
                    .get_child("grandchild", "root_ns").unwrap()
@@ -154,7 +155,7 @@ fn wrongly_closed_elements_error() {
 fn namespace_simple() {
     let elem: Element = "<message xmlns='jabber:client'/>".parse().unwrap();
     assert_eq!(elem.name(), "message");
-    assert_eq!(elem.ns(), Some("jabber:client"));
+    assert_eq!(elem.ns(), Some("jabber:client".to_owned()));
 }
 
 #[test]
@@ -162,28 +163,28 @@ fn namespace_prefixed() {
     let elem: Element = "<stream:features xmlns:stream='http://etherx.jabber.org/streams'/>"
         .parse().unwrap();
     assert_eq!(elem.name(), "features");
-    assert_eq!(elem.ns(), Some("http://etherx.jabber.org/streams"));
+    assert_eq!(elem.ns(), Some("http://etherx.jabber.org/streams".to_owned()));
 }
 
 #[test]
 fn namespace_inherited_simple() {
     let elem: Element = "<stream xmlns='jabber:client'><message/></stream>".parse().unwrap();
     assert_eq!(elem.name(), "stream");
-    assert_eq!(elem.ns(), Some("jabber:client"));
+    assert_eq!(elem.ns(), Some("jabber:client".to_owned()));
     let child = elem.children().next().unwrap();
     assert_eq!(child.name(), "message");
-    assert_eq!(child.ns(), Some("jabber:client"));
+    assert_eq!(child.ns(), Some("jabber:client".to_owned()));
 }
 
 #[test]
 fn namespace_inherited_prefixed1() {
-    let elem: Element = "<stream:features xmlns:stream='http://etherx.jabber.org/streams' xmlns='jabber:client'><message/></stream>"
+    let elem: Element = "<stream:features xmlns:stream='http://etherx.jabber.org/streams' xmlns='jabber:client'><message/></stream:features>"
         .parse().unwrap();
     assert_eq!(elem.name(), "features");
-    assert_eq!(elem.ns(), Some("http://etherx.jabber.org/streams"));
+    assert_eq!(elem.ns(), Some("http://etherx.jabber.org/streams".to_owned()));
     let child = elem.children().next().unwrap();
     assert_eq!(child.name(), "message");
-    assert_eq!(child.ns(), Some("jabber:client"));
+    assert_eq!(child.ns(), Some("jabber:client".to_owned()));
 }
 
 #[test]
@@ -191,8 +192,8 @@ fn namespace_inherited_prefixed2() {
     let elem: Element = "<stream xmlns='http://etherx.jabber.org/streams' xmlns:jabber='jabber:client'><jabber:message/></stream>"
         .parse().unwrap();
     assert_eq!(elem.name(), "stream");
-    assert_eq!(elem.ns(), Some("http://etherx.jabber.org/streams"));
+    assert_eq!(elem.ns(), Some("http://etherx.jabber.org/streams".to_owned()));
     let child = elem.children().next().unwrap();
     assert_eq!(child.name(), "message");
-    assert_eq!(child.ns(), Some("jabber:client"));
+    assert_eq!(child.ns(), Some("jabber:client".to_owned()));
 }

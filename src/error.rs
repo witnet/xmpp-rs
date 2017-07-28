@@ -26,5 +26,10 @@ error_chain! {
             description("The XML is invalid, an element was wrongly closed")
             display("the XML is invalid, an element was wrongly closed")
         }
+        /// An error which is returned when an elemet's name contains more than one colon
+        InvalidElement {
+            description("The XML element is invalid")
+            display("the XML element is invalid")
+        }
     }
 }

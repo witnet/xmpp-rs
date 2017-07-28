@@ -4,6 +4,8 @@ use std::io:: Write;
 use std::collections::{btree_map, BTreeMap};
 
 use std::str;
+use std::cell::RefCell;
+use std::rc::Rc;
 
 use error::{Error, ErrorKind, Result};
 
@@ -84,9 +86,9 @@ impl Node {
         }
     }
 
-    fn write_to_inner<W: Write>(&self, writer: &mut W, last_namespace: &mut Option<String>) -> Result<()>{
+    fn write_to_inner<W: Write>(&self, writer: &mut W) -> Result<()>{
         match *self {
-            Node::Element(ref elmt) => elmt.write_to_inner(writer, last_namespace)?,
+            Node::Element(ref elmt) => elmt.write_to_inner(writer)?,
             Node::Text(ref s) => write_escaped(writer, s)?,
         }
 
@@ -94,11 +96,109 @@ impl Node {
     }
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+struct NamespaceSet {
+    parent: RefCell<Option<Rc<NamespaceSet>>>,
+    namespaces: BTreeMap<Option<String>, String>,
+}
+
+impl Default for NamespaceSet {
+    fn default() -> Self {
+        NamespaceSet {
+            parent: RefCell::new(None),
+            namespaces: BTreeMap::new(),
+        }
+    }
+}
+
+impl NamespaceSet {
+    fn get(&self, prefix: &Option<String>) -> Option<String> {
+        match self.namespaces.get(prefix) {
+            Some(ns) => Some(ns.clone()),
+            None => match *self.parent.borrow() {
+                None => None,
+                Some(ref parent) => parent.get(prefix)
+            },
+        }
+    }
+
+    fn has<NS: AsRef<str>>(&self, prefix: &Option<String>, wanted_ns: NS) -> bool {
+        match self.namespaces.get(prefix) {
+            Some(ns) =>
+                ns == wanted_ns.as_ref(),
+            None => match *self.parent.borrow() {
+                None =>
+                    false,
+                Some(ref parent) =>
+                    parent.has(prefix, wanted_ns),
+            },
+        }
+    }
+
+    fn set_parent(&self, parent: &Element) {
+        let mut parent_ns = self.parent.borrow_mut();
+        let new_set = ((&parent.namespaces) as &Rc<NamespaceSet>).clone();
+        *parent_ns = Some(new_set);
+    }
+
+}
+
+impl From<BTreeMap<Option<String>, String>> for NamespaceSet {
+    fn from(namespaces: BTreeMap<Option<String>, String>) -> Self {
+        NamespaceSet {
+            parent: RefCell::new(None),
+            namespaces: namespaces,
+        }
+    }
+}
+
+impl From<Option<String>> for NamespaceSet {
+    fn from(namespace: Option<String>) -> Self {
+        match namespace {
+            None => Self::default(),
+            Some(namespace) => Self::from(namespace),
+        }
+    }
+}
+
+impl From<String> for NamespaceSet {
+    fn from(namespace: String) -> Self {
+        let mut namespaces = BTreeMap::new();
+        namespaces.insert(None, namespace);
+
+        NamespaceSet {
+            parent: RefCell::new(None),
+            namespaces: namespaces,
+        }
+    }
+}
+
+impl From<(Option<String>, String)> for NamespaceSet {
+    fn from(prefix_namespace: (Option<String>, String)) -> Self {
+        let (prefix, namespace) = prefix_namespace;
+        let mut namespaces = BTreeMap::new();
+        namespaces.insert(prefix, namespace);
+
+        NamespaceSet {
+            parent: RefCell::new(None),
+            namespaces: namespaces,
+        }
+    }
+}
+
+impl From<(String, String)> for NamespaceSet {
+    fn from(prefix_namespace: (String, String)) -> Self {
+        let (prefix, namespace) = prefix_namespace;
+        Self::from((Some(prefix), namespace))
+    }
+}
+
 #[derive(Clone, PartialEq, Eq, Debug)]
 /// A struct representing a DOM Element.
 pub struct Element {
+    prefix: Option<String>,
     name: String,
-    namespace: Option<String>,
+    namespaces: Rc<NamespaceSet>,
     attributes: BTreeMap<String, String>,
     children: Vec<Node>,
 }
@@ -122,10 +222,10 @@ impl FromStr for Element {
 }
 
 impl Element {
-    fn new(name: String, namespace: Option<String>, attributes: BTreeMap<String, String>, children: Vec<Node>) -> Element {
+    fn new<NS: Into<NamespaceSet>>(name: String, prefix: Option<String>, namespaces: NS, attributes: BTreeMap<String, String>, children: Vec<Node>) -> Element {
         Element {
-            name: name,
-            namespace: namespace,
+            prefix, name,
+            namespaces: Rc::new(namespaces.into()),
             attributes: attributes,
             children: children,
         }
@@ -145,14 +245,16 @@ impl Element {
     ///                    .build();
     ///
     /// assert_eq!(elem.name(), "name");
-    /// assert_eq!(elem.ns(), Some("namespace"));
+    /// assert_eq!(elem.ns(), Some("namespace".to_owned()));
     /// assert_eq!(elem.attr("name"), Some("value"));
     /// assert_eq!(elem.attr("inexistent"), None);
     /// assert_eq!(elem.text(), "inner");
     /// ```
-    pub fn builder<S: Into<String>>(name: S) -> ElementBuilder {
+    pub fn builder<S: AsRef<str>>(name: S) -> ElementBuilder {
+        let (prefix, name) = split_element_name(name).unwrap();
         ElementBuilder {
-            root: Element::new(name.into(), None, BTreeMap::new(), Vec::new()),
+            root: Element::new(name, prefix, None, BTreeMap::new(), Vec::new()),
+            namespaces: Default::default(),
         }
     }
 
@@ -172,8 +274,9 @@ impl Element {
     /// ```
     pub fn bare<S: Into<String>>(name: S) -> Element {
         Element {
+            prefix: None,
             name: name.into(),
-            namespace: None,
+            namespaces: Rc::new(NamespaceSet::default()),
             attributes: BTreeMap::new(),
             children: Vec::new(),
         }
@@ -185,9 +288,8 @@ impl Element {
     }
 
     /// Returns a reference to the namespace of this element, if it has one, else `None`.
-    pub fn ns(&self) -> Option<&str> {
-        self.namespace.as_ref()
-                      .map(String::as_ref)
+    pub fn ns(&self) -> Option<String> {
+        self.namespaces.get(&self.prefix)
     }
 
     /// Returns a reference to the value of the given attribute, if it exists, else `None`.
@@ -256,8 +358,8 @@ impl Element {
     /// assert_eq!(elem.is("wrong", "wrong"), false);
     /// ```
     pub fn is<N: AsRef<str>, NS: AsRef<str>>(&self, name: N, namespace: NS) -> bool {
-        let ns = self.namespace.as_ref().map(String::as_ref);
-        self.name == name.as_ref() && ns == Some(namespace.as_ref())
+        self.name == name.as_ref() &&
+            self.namespaces.has(&self.prefix, namespace)
     }
 
     /// Parse a document from an `EventReader`.
@@ -322,27 +424,30 @@ impl Element {
 
     /// Output a document to a `Writer`.
     pub fn write_to<W: Write>(&self, writer: &mut W) -> Result<()> {
-        let mut last_namespace = None;
         write!(writer, "<?xml version=\"1.0\" encoding=\"utf-8\"?>")?;
-        self.write_to_inner(writer, &mut last_namespace)
+        self.write_to_inner(writer)
     }
 
-    /// Output a document to a `Writer` assuming you're already in the provided namespace
-    pub fn write_to_in_namespace<W: Write>(&self, writer: &mut W, namespace: &str) -> Result<()> {
-        write!(writer, "<?xml version=\"1.0\" encoding=\"utf-8\"?>")?;
-        self.write_to_inner(writer, &mut Some(namespace.to_owned()))
-    }
+    /// Like `write_to()` but without the `<?xml?>` prelude
+    pub fn write_to_inner<W: Write>(&self, writer: &mut W) -> Result<()> {
+        let name = match &self.prefix {
+            &None => self.name.to_owned(),
+            &Some(ref prefix) => format!("{}:{}", prefix, self.name),
+        };
+        write!(writer, "<{}", name)?;
 
-    fn write_to_inner<W: Write>(&self, writer: &mut W, last_namespace: &mut Option<String>) -> Result<()> {
-        write!(writer, "<")?;
-        write!(writer, "{}", self.name)?;
-
-        if let Some(ref ns) = self.namespace {
-            if *last_namespace != self.namespace {
-                write!(writer, " xmlns=\"")?;
-                write_escaped(writer, ns)?;
-                write!(writer, "\"")?;
-                *last_namespace = Some(ns.clone());
+        for (prefix, ns) in &self.namespaces.namespaces {
+            match prefix {
+                &None => {
+                    write!(writer, " xmlns=\"")?;
+                    write_escaped(writer, ns)?;
+                    write!(writer, "\"")?;
+                },
+                &Some(ref prefix) => {
+                    write!(writer, " xmlns:{}=\"", prefix)?;
+                    write_escaped(writer, ns)?;
+                    write!(writer, "\"")?;
+                },
             }
         }
 
@@ -360,10 +465,10 @@ impl Element {
         write!(writer, ">")?;
 
         for child in &self.children {
-            child.write_to_inner(writer, last_namespace)?;
+            child.write_to_inner(writer)?;
         }
 
-        write!(writer, "</{}>", self.name)?;
+        write!(writer, "</{}>", name)?;
         Ok(())
     }
 
@@ -472,27 +577,14 @@ impl Element {
     ///
     /// assert_eq!(child.name(), "new");
     /// ```
-    pub fn append_child(&mut self, mut child: Element) -> &mut Element {
-        if child.namespace.is_none() && self.namespace.is_some() {
-            child.namespace = self.namespace.clone();
-            child.propagate_namespaces();
-        }
+    pub fn append_child(&mut self, child: Element) -> &mut Element {
+        child.namespaces.set_parent(&self);
+
         self.children.push(Node::Element(child));
         if let Node::Element(ref mut cld) = *self.children.last_mut().unwrap() {
             cld
-        }
-        else {
+        } else {
             unreachable!()
-        }
-    }
-
-    fn propagate_namespaces(&mut self) {
-        let ns = self.namespace.clone();
-        for child in self.children_mut() {
-            if child.namespace.is_none() {
-                child.namespace = ns.clone();
-                child.propagate_namespaces();
-            }
         }
     }
 
@@ -610,29 +702,42 @@ impl Element {
     }
 }
 
-fn build_element(event: &BytesStart) -> Result<Element> {
-    let mut attributes = event.attributes()
-                               .map(|o| {
-                                    let o = o?;
-                                    let key = str::from_utf8(o.key)?.to_owned();
-                                    let value = str::from_utf8(o.value)?.to_owned();
-                                    Ok((key, value))
-                                   }
-                                )
-                               .collect::<Result<BTreeMap<String, String>>>()?;
-        let mut ns_key = None;
-        for (key, _) in &attributes {
-            if key == "xmlns" || key.starts_with("xmlns:") {
-                ns_key = Some(key.clone());
-            }
-        }
+fn split_element_name<S: AsRef<str>>(s: S) -> Result<(Option<String>, String)> {
+    let name_parts = s.as_ref().split(':').collect::<Vec<&str>>();
+    match name_parts.len() {
+        2 => Ok((Some(name_parts[0].to_owned()), name_parts[1].to_owned())),
+        1 => Ok((None, name_parts[0].to_owned())),
+        _ => bail!(ErrorKind::InvalidElement),
+    }
+}
 
-        let ns = match ns_key {
-            None => None,
-            Some(key) => attributes.remove(&key),
-        };
-        let name = str::from_utf8(event.name())?.to_owned();
-        Ok(Element::new(name, ns, attributes, Vec::new()))
+fn build_element(event: &BytesStart) -> Result<Element> {
+    let mut namespaces = BTreeMap::new();
+    let attributes = event.attributes()
+        .map(|o| {
+            let o = o?;
+            let key = str::from_utf8(o.key)?.to_owned();
+            let value = str::from_utf8(o.value)?.to_owned();
+            Ok((key, value))
+        })
+        .filter(|o| {
+            match o {
+                &Ok((ref key, ref value)) if key == "xmlns" => {
+                    namespaces.insert(None, value.to_owned());
+                    false
+                },
+                &Ok((ref key, ref value)) if key.starts_with("xmlns:") => {
+                    namespaces.insert(Some(key[6..].to_owned()), value.to_owned());
+                    false
+                },
+                _ => true,
+            }
+        })
+        .collect::<Result<BTreeMap<String, String>>>()?;
+
+    let (prefix, name) = split_element_name(str::from_utf8(event.name())?)?;
+    let element = Element::new(name, prefix, namespaces, attributes, Vec::new());
+    Ok(element)
 }
 
 /// An iterator over references to child elements of an `Element`.
@@ -742,12 +847,14 @@ impl<'a> Iterator for AttrsMut<'a> {
 /// A builder for `Element`s.
 pub struct ElementBuilder {
     root: Element,
+    namespaces: BTreeMap<Option<String>, String>,
 }
 
 impl ElementBuilder {
     /// Sets the namespace.
     pub fn ns<S: Into<String>>(mut self, namespace: S) -> ElementBuilder {
-        self.root.namespace = Some(namespace.into());
+        self.namespaces
+            .insert(self.root.prefix.clone(), namespace.into());
         self
     }
 
@@ -768,21 +875,33 @@ impl ElementBuilder {
 
     /// Builds the `Element`.
     pub fn build(self) -> Element {
-        self.root
+        let mut element = self.root;
+        // Set namespaces
+        element.namespaces = Rc::new(NamespaceSet::from(self.namespaces));
+        // Propagate namespaces
+        for node in &element.children {
+            if let Node::Element(ref e) = *node {
+                e.namespaces.set_parent(&element);
+            }
+        }
+
+        element
     }
 }
 
+#[cfg(test)]
 #[test]
 fn test_element_new() {
     use std::iter::FromIterator;
 
     let elem = Element::new( "name".to_owned()
+                           , None
                            , Some("namespace".to_owned())
                            , BTreeMap::from_iter(vec![ ("name".to_string(), "value".to_string()) ].into_iter() )
                            , Vec::new() );
 
     assert_eq!(elem.name(), "name");
-    assert_eq!(elem.ns(), Some("namespace"));
+    assert_eq!(elem.ns(), Some("namespace".to_owned()));
     assert_eq!(elem.attr("name"), Some("value"));
     assert_eq!(elem.attr("inexistent"), None);
 }
