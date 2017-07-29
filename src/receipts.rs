@@ -13,46 +13,65 @@ use error::Error;
 use ns;
 
 #[derive(Debug, Clone)]
-pub enum Receipt {
-    Request,
-    Received(Option<String>),
-}
+pub struct Request;
 
-impl TryFrom<Element> for Receipt {
+impl TryFrom<Element> for Request {
     type Err = Error;
 
-    fn try_from(elem: Element) -> Result<Receipt, Error> {
+    fn try_from(elem: Element) -> Result<Request, Error> {
+        if !elem.is("request", ns::RECEIPTS) {
+            return Err(Error::ParseError("This is not a request element."));
+        }
         for _ in elem.children() {
-            return Err(Error::ParseError("Unknown child in receipt element."));
+            return Err(Error::ParseError("Unknown child in request element."));
         }
-        if elem.is("request", ns::RECEIPTS) {
-            for _ in elem.attrs() {
-                return Err(Error::ParseError("Unknown attribute in request element."));
-            }
-            Ok(Receipt::Request)
-        } else if elem.is("received", ns::RECEIPTS) {
-            for (attr, _) in elem.attrs() {
-                if attr != "id" {
-                    return Err(Error::ParseError("Unknown attribute in received element."));
-                }
-            }
-            let id = get_attr!(elem, "id", optional);
-            Ok(Receipt::Received(id))
-        } else {
-            Err(Error::ParseError("This is not a receipt element."))
+        for _ in elem.attrs() {
+            return Err(Error::ParseError("Unknown attribute in request element."));
         }
+        Ok(Request)
     }
 }
 
-impl From<Receipt> for Element {
-    fn from(receipt: Receipt) -> Element {
-        match receipt {
-            Receipt::Request => Element::builder("request")
-                                        .ns(ns::RECEIPTS),
-            Receipt::Received(id) => Element::builder("received")
-                                             .ns(ns::RECEIPTS)
-                                             .attr("id", id),
-        }.build()
+impl From<Request> for Element {
+    fn from(_: Request) -> Element {
+        Element::builder("request")
+                .ns(ns::RECEIPTS)
+                .build()
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct Received {
+    pub id: Option<String>,
+}
+
+impl TryFrom<Element> for Received {
+    type Err = Error;
+
+    fn try_from(elem: Element) -> Result<Received, Error> {
+        if !elem.is("received", ns::RECEIPTS) {
+            return Err(Error::ParseError("This is not a received element."));
+        }
+        for _ in elem.children() {
+            return Err(Error::ParseError("Unknown child in received element."));
+        }
+        for (attr, _) in elem.attrs() {
+            if attr != "id" {
+                return Err(Error::ParseError("Unknown attribute in received element."));
+            }
+        }
+        Ok(Received {
+            id: get_attr!(elem, "id", optional),
+        })
+    }
+}
+
+impl From<Received> for Element {
+    fn from(received: Received) -> Element {
+        Element::builder("received")
+               .ns(ns::RECEIPTS)
+               .attr("id", received.id)
+               .build()
     }
 }
 
@@ -63,22 +82,25 @@ mod tests {
     #[test]
     fn test_simple() {
         let elem: Element = "<request xmlns='urn:xmpp:receipts'/>".parse().unwrap();
-        Receipt::try_from(elem).unwrap();
+        Request::try_from(elem).unwrap();
 
         let elem: Element = "<received xmlns='urn:xmpp:receipts'/>".parse().unwrap();
-        Receipt::try_from(elem).unwrap();
+        Received::try_from(elem).unwrap();
 
         let elem: Element = "<received xmlns='urn:xmpp:receipts' id='coucou'/>".parse().unwrap();
-        Receipt::try_from(elem).unwrap();
+        Received::try_from(elem).unwrap();
     }
 
     #[test]
     fn test_serialise() {
-        let receipt = Receipt::Request;
+        let receipt = Request;
         let elem: Element = receipt.into();
         assert!(elem.is("request", ns::RECEIPTS));
+        assert_eq!(elem.attrs().count(), 0);
 
-        let receipt = Receipt::Received(Some(String::from("coucou")));
+        let receipt = Received {
+            id: Some(String::from("coucou")),
+        };
         let elem: Element = receipt.into();
         assert!(elem.is("received", ns::RECEIPTS));
         assert_eq!(elem.attr("id"), Some("coucou"));

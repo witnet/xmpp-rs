@@ -18,7 +18,7 @@ use ns;
 
 use stanza_error::StanzaError;
 use chatstates::ChatState;
-use receipts::Receipt;
+use receipts::{Request as ReceiptRequest, Received as ReceiptReceived};
 use delay::Delay;
 use attention::Attention;
 use message_correct::Replace;
@@ -31,7 +31,8 @@ use mam::Result_ as MamResult;
 pub enum MessagePayload {
     StanzaError(StanzaError),
     ChatState(ChatState),
-    Receipt(Receipt),
+    ReceiptRequest(ReceiptRequest),
+    ReceiptReceived(ReceiptReceived),
     Delay(Delay),
     Attention(Attention),
     MessageCorrect(Replace),
@@ -58,8 +59,8 @@ impl TryFrom<Element> for MessagePayload {
           | ("gone", ns::CHATSTATES) => MessagePayload::ChatState(ChatState::try_from(elem)?),
 
             // XEP-0184
-            ("request", ns::RECEIPTS)
-          | ("received", ns::RECEIPTS) => MessagePayload::Receipt(Receipt::try_from(elem)?),
+            ("request", ns::RECEIPTS) => MessagePayload::ReceiptRequest(ReceiptRequest::try_from(elem)?),
+            ("received", ns::RECEIPTS) => MessagePayload::ReceiptReceived(ReceiptReceived::try_from(elem)?),
 
             // XEP-0203
             ("delay", ns::DELAY) => MessagePayload::Delay(Delay::try_from(elem)?),
@@ -91,7 +92,8 @@ impl From<MessagePayload> for Element {
             MessagePayload::StanzaError(stanza_error) => stanza_error.into(),
             MessagePayload::Attention(attention) => attention.into(),
             MessagePayload::ChatState(chatstate) => chatstate.into(),
-            MessagePayload::Receipt(receipt) => receipt.into(),
+            MessagePayload::ReceiptRequest(request) => request.into(),
+            MessagePayload::ReceiptReceived(received) => received.into(),
             MessagePayload::Delay(delay) => delay.into(),
             MessagePayload::MessageCorrect(replace) => replace.into(),
             MessagePayload::ExplicitMessageEncryption(eme) => eme.into(),
