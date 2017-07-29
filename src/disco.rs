@@ -4,6 +4,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#![deny(missing_docs)]
+
 use try_from::TryFrom;
 
 use minidom::Element;
@@ -14,8 +16,13 @@ use ns;
 
 use data_forms::{DataForm, DataFormType};
 
+/// Structure representing a `<query xmlns='http://jabber.org/protocol/disco#info'/>` element.
+///
+/// It should only be used in an `<iq type='get'/>`, as it can only represent
+/// the request, and not a result.
 #[derive(Debug, Clone)]
 pub struct DiscoInfoQuery {
+    /// Node on which we are doing the discovery.
     pub node: Option<String>,
 }
 
@@ -49,8 +56,10 @@ impl From<DiscoInfoQuery> for Element {
     }
 }
 
+/// Structure representing a `<feature xmlns='http://jabber.org/protocol/disco#info'/>` element.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Feature {
+    /// Namespace of the feature we want to represent.
     pub var: String,
 }
 
@@ -84,11 +93,19 @@ impl From<Feature> for Element {
     }
 }
 
+/// Structure representing an `<identity xmlns='http://jabber.org/protocol/disco#info'/>` element.
 #[derive(Debug, Clone)]
 pub struct Identity {
+    /// Category of this identity.
     pub category: String, // TODO: use an enum here.
+
+    /// Type of this identity.
     pub type_: String, // TODO: use an enum here.
+
+    /// Lang of the name of this identity.
     pub lang: Option<String>,
+
+    /// Name of this identity.
     pub name: Option<String>,
 }
 
@@ -131,11 +148,22 @@ impl From<Identity> for Element {
     }
 }
 
+/// Structure representing a `<query xmlns='http://jabber.org/protocol/disco#info'/>` element.
+///
+/// It should only be used in an `<iq type='result'/>`, as it can only
+/// represent the result, and not a request.
 #[derive(Debug, Clone)]
 pub struct DiscoInfoResult {
+    /// Node on which we have done this discovery.
     pub node: Option<String>,
+
+    /// List of identities exposed by this entity.
     pub identities: Vec<Identity>,
+
+    /// List of features supported by this entity.
     pub features: Vec<Feature>,
+
+    /// List of extensions reported by this entity.
     pub extensions: Vec<DataForm>,
 }
 
@@ -201,8 +229,13 @@ impl From<DiscoInfoResult> for Element {
     }
 }
 
+/// Structure representing a `<query xmlns='http://jabber.org/protocol/disco#items'/>` element.
+///
+/// It should only be used in an `<iq type='get'/>`, as it can only represent
+/// the request, and not a result.
 #[derive(Debug, Clone)]
 pub struct DiscoItemsQuery {
+    /// Node on which we are doing the discovery.
     pub node: Option<String>,
 }
 
@@ -236,10 +269,14 @@ impl From<DiscoItemsQuery> for Element {
     }
 }
 
+/// Structure representing an `<item xmlns='http://jabber.org/protocol/disco#items'/>` element.
 #[derive(Debug, Clone)]
 pub struct Item {
+    /// JID of the entity pointed by this item.
     pub jid: Jid,
+    /// Node of the entity pointed by this item.
     pub node: Option<String>,
+    /// Name of the entity pointed by this item.
     pub name: Option<String>,
 }
 
@@ -277,9 +314,17 @@ impl From<Item> for Element {
     }
 }
 
+/// Structure representing a `<query
+/// xmlns='http://jabber.org/protocol/disco#items'/>` element.
+///
+/// It should only be used in an `<iq type='result'/>`, as it can only
+/// represent the result, and not a request.
 #[derive(Debug, Clone)]
 pub struct DiscoItemsResult {
+    /// Node on which we have done this discovery.
     pub node: Option<String>,
+
+    /// List of items pointed by this entity.
     pub items: Vec<Item>,
 }
 
