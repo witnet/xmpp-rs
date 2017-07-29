@@ -97,8 +97,8 @@ impl From<Set> for Element {
         if set.before.is_some() {
             elem.append_child(Element::builder("before").ns(ns::RSM).append(set.before).build());
         }
-        if set.count.is_some() {
-            elem.append_child(Element::builder("count").ns(ns::RSM).append(format!("{}", set.count.unwrap())).build());
+        if let Some(count) = set.count {
+            elem.append_child(Element::builder("count").ns(ns::RSM).append(format!("{}", count)).build());
         }
         if set.first.is_some() {
             elem.append_child(Element::builder("first")
@@ -106,14 +106,14 @@ impl From<Set> for Element {
                                       .attr("index", set.first_index)
                                       .append(set.first).build());
         }
-        if set.index.is_some() {
-            elem.append_child(Element::builder("index").ns(ns::RSM).append(format!("{}", set.index.unwrap())).build());
+        if let Some(index) = set.index {
+            elem.append_child(Element::builder("index").ns(ns::RSM).append(format!("{}", index)).build());
         }
         if set.last.is_some() {
             elem.append_child(Element::builder("last").ns(ns::RSM).append(set.last).build());
         }
-        if set.max.is_some() {
-            elem.append_child(Element::builder("max").ns(ns::RSM).append(format!("{}", set.max.unwrap())).build());
+        if let Some(max) = set.max {
+            elem.append_child(Element::builder("max").ns(ns::RSM).append(format!("{}", max)).build());
         }
         elem
     }
