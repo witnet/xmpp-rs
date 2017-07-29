@@ -19,7 +19,7 @@ use ns;
 use stanza_error::StanzaError;
 use roster::Roster;
 use disco::{DiscoInfoResult, DiscoInfoQuery};
-use ibb::IBB;
+use ibb::{Open as IbbOpen, Data as IbbData, Close as IbbClose};
 use jingle::Jingle;
 use ping::Ping;
 use mam::{Query as MamQuery, Fin as MamFin, Prefs as MamPrefs};
@@ -40,7 +40,9 @@ pub enum IqGetPayload {
 #[derive(Debug, Clone)]
 pub enum IqSetPayload {
     Roster(Roster),
-    IBB(IBB),
+    IbbOpen(IbbOpen),
+    IbbData(IbbData),
+    IbbClose(IbbClose),
     Jingle(Jingle),
     MamQuery(MamQuery),
     MamPrefs(MamPrefs),
@@ -106,9 +108,9 @@ impl TryFrom<Element> for IqSetPayload {
             ("query", ns::ROSTER) => IqSetPayload::Roster(Roster::try_from(elem)?),
 
             // XEP-0047
-            ("open", ns::IBB)
-          | ("data", ns::IBB)
-          | ("close", ns::IBB) => IqSetPayload::IBB(IBB::try_from(elem)?),
+            ("open", ns::IBB) => IqSetPayload::IbbOpen(IbbOpen::try_from(elem)?),
+            ("data", ns::IBB) => IqSetPayload::IbbData(IbbData::try_from(elem)?),
+            ("close", ns::IBB) => IqSetPayload::IbbClose(IbbClose::try_from(elem)?),
 
             // XEP-0166
             ("jingle", ns::JINGLE) => IqSetPayload::Jingle(Jingle::try_from(elem)?),
@@ -126,7 +128,9 @@ impl From<IqSetPayload> for Element {
     fn from(payload: IqSetPayload) -> Element {
         match payload {
             IqSetPayload::Roster(roster) => roster.into(),
-            IqSetPayload::IBB(ibb) => ibb.into(),
+            IqSetPayload::IbbOpen(open) => open.into(),
+            IqSetPayload::IbbData(data) => data.into(),
+            IqSetPayload::IbbClose(close) => close.into(),
             IqSetPayload::Jingle(jingle) => jingle.into(),
             IqSetPayload::MamQuery(query) => query.into(),
             IqSetPayload::MamPrefs(prefs) => prefs.into(),

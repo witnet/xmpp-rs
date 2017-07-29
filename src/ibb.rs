@@ -20,90 +20,104 @@ generate_attribute!(Stanza, "stanza", {
 }, Default = Iq);
 
 #[derive(Debug, Clone)]
-pub enum IBB {
-    Open {
-        block_size: u16,
-        sid: String,
-        stanza: Stanza,
-    },
-    Data {
-        seq: u16,
-        sid: String,
-        data: Vec<u8>,
-    },
-    Close {
-        sid: String,
-    },
+pub struct Open {
+    pub block_size: u16,
+    pub sid: String,
+    pub stanza: Stanza,
 }
 
-impl TryFrom<Element> for IBB {
+impl TryFrom<Element> for Open {
     type Err = Error;
 
-    fn try_from(elem: Element) -> Result<IBB, Error> {
-        if elem.is("open", ns::IBB) {
-            for _ in elem.children() {
-                return Err(Error::ParseError("Unknown child in open element."));
-            }
-            let block_size = get_attr!(elem, "block-size", required);
-            let sid = get_attr!(elem, "sid", required);
-            let stanza = get_attr!(elem, "stanza", default);
-            Ok(IBB::Open {
-                block_size: block_size,
-                sid: sid,
-                stanza: stanza
-            })
-        } else if elem.is("data", ns::IBB) {
-            for _ in elem.children() {
-                return Err(Error::ParseError("Unknown child in data element."));
-            }
-            let seq = get_attr!(elem, "seq", required);
-            let sid = get_attr!(elem, "sid", required);
-            let data = base64::decode(&elem.text())?;
-            Ok(IBB::Data {
-                seq: seq,
-                sid: sid,
-                data: data
-            })
-        } else if elem.is("close", ns::IBB) {
-            for _ in elem.children() {
-                return Err(Error::ParseError("Unknown child in close element."));
-            }
-            let sid = get_attr!(elem, "sid", required);
-            Ok(IBB::Close {
-                sid: sid,
-            })
-        } else {
-            Err(Error::ParseError("This is not an ibb element."))
+    fn try_from(elem: Element) -> Result<Open, Error> {
+        if !elem.is("open", ns::IBB) {
+            return Err(Error::ParseError("This is not an open element."));
         }
+        for _ in elem.children() {
+            return Err(Error::ParseError("Unknown child in open element."));
+        }
+        Ok(Open {
+            block_size: get_attr!(elem, "block-size", required),
+            sid: get_attr!(elem, "sid", required),
+            stanza: get_attr!(elem, "stanza", default),
+        })
     }
 }
 
-impl From<IBB> for Element {
-    fn from(ibb: IBB) -> Element {
-        match ibb {
-            IBB::Open { block_size, sid, stanza } => {
-                Element::builder("open")
-                        .ns(ns::IBB)
-                        .attr("block-size", block_size)
-                        .attr("sid", sid)
-                        .attr("stanza", stanza)
-                        .build()
-            },
-            IBB::Data { seq, sid, data } => {
-                Element::builder("data")
-                        .ns(ns::IBB)
-                        .attr("seq", seq)
-                        .attr("sid", sid)
-                        .append(base64::encode(&data))
-                        .build()
-            },
-            IBB::Close { sid } => {
-                Element::builder("close")
-                        .ns(ns::IBB)
-                        .attr("sid", sid)
-                        .build()
-            },
+impl From<Open> for Element {
+    fn from(open: Open) -> Element {
+        Element::builder("open")
+                .ns(ns::IBB)
+                .attr("block-size", open.block_size)
+                .attr("sid", open.sid)
+                .attr("stanza", open.stanza)
+                .build()
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct Data {
+    pub seq: u16,
+    pub sid: String,
+    pub data: Vec<u8>,
+}
+
+impl TryFrom<Element> for Data {
+    type Err = Error;
+
+    fn try_from(elem: Element) -> Result<Data, Error> {
+        if !elem.is("data", ns::IBB) {
+            return Err(Error::ParseError("This is not a data element."));
         }
+        for _ in elem.children() {
+            return Err(Error::ParseError("Unknown child in data element."));
+        }
+        Ok(Data {
+            seq: get_attr!(elem, "seq", required),
+            sid: get_attr!(elem, "sid", required),
+            data: base64::decode(&elem.text())?,
+        })
+    }
+}
+
+impl From<Data> for Element {
+    fn from(data: Data) -> Element {
+        Element::builder("data")
+                .ns(ns::IBB)
+                .attr("seq", data.seq)
+                .attr("sid", data.sid)
+                .append(base64::encode(&data.data))
+                .build()
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct Close {
+    pub sid: String,
+}
+
+impl TryFrom<Element> for Close {
+    type Err = Error;
+
+    fn try_from(elem: Element) -> Result<Close, Error> {
+        if !elem.is("close", ns::IBB) {
+            return Err(Error::ParseError("This is not a close element."));
+        }
+        for _ in elem.children() {
+            return Err(Error::ParseError("Unknown child in close element."));
+        }
+        Ok(Close {
+            sid: get_attr!(elem, "sid", required),
+        })
+    }
+}
+
+impl From<Close> for Element {
+    fn from(close: Close) -> Element {
+        Element::builder("close")
+                .ns(ns::IBB)
+                .attr("sid", close.sid)
+                .build()
     }
 }
 
@@ -115,41 +129,26 @@ mod tests {
     #[test]
     fn test_simple() {
         let elem: Element = "<open xmlns='http://jabber.org/protocol/ibb' block-size='3' sid='coucou'/>".parse().unwrap();
-        let open = IBB::try_from(elem).unwrap();
-        match open {
-            IBB::Open { block_size, sid, stanza } => {
-                assert_eq!(block_size, 3);
-                assert_eq!(sid, "coucou");
-                assert_eq!(stanza, Stanza::Iq);
-            },
-            _ => panic!(),
-        }
+        let open = Open::try_from(elem).unwrap();
+        assert_eq!(open.block_size, 3);
+        assert_eq!(open.sid, "coucou");
+        assert_eq!(open.stanza, Stanza::Iq);
 
         let elem: Element = "<data xmlns='http://jabber.org/protocol/ibb' seq='0' sid='coucou'>AAAA</data>".parse().unwrap();
-        let data = IBB::try_from(elem).unwrap();
-        match data {
-            IBB::Data { seq, sid, data } => {
-                assert_eq!(seq, 0);
-                assert_eq!(sid, "coucou");
-                assert_eq!(data, vec!(0, 0, 0));
-            },
-            _ => panic!(),
-        }
+        let data = Data::try_from(elem).unwrap();
+        assert_eq!(data.seq, 0);
+        assert_eq!(data.sid, "coucou");
+        assert_eq!(data.data, vec!(0, 0, 0));
 
         let elem: Element = "<close xmlns='http://jabber.org/protocol/ibb' sid='coucou'/>".parse().unwrap();
-        let close = IBB::try_from(elem).unwrap();
-        match close {
-            IBB::Close { sid } => {
-                assert_eq!(sid, "coucou");
-            },
-            _ => panic!(),
-        }
+        let close = Close::try_from(elem).unwrap();
+        assert_eq!(close.sid, "coucou");
     }
 
     #[test]
     fn test_invalid() {
         let elem: Element = "<open xmlns='http://jabber.org/protocol/ibb'/>".parse().unwrap();
-        let error = IBB::try_from(elem).unwrap_err();
+        let error = Open::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -157,7 +156,7 @@ mod tests {
         assert_eq!(message, "Required attribute 'block-size' missing.");
 
         let elem: Element = "<open xmlns='http://jabber.org/protocol/ibb' block-size='-5'/>".parse().unwrap();
-        let error = IBB::try_from(elem).unwrap_err();
+        let error = Open::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseIntError(error) => error,
             _ => panic!(),
@@ -165,7 +164,7 @@ mod tests {
         assert_eq!(message.description(), "invalid digit found in string");
 
         let elem: Element = "<open xmlns='http://jabber.org/protocol/ibb' block-size='128'/>".parse().unwrap();
-        let error = IBB::try_from(elem).unwrap_err();
+        let error = Open::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(error) => error,
             _ => panic!(),
@@ -176,7 +175,7 @@ mod tests {
     #[test]
     fn test_invalid_stanza() {
         let elem: Element = "<open xmlns='http://jabber.org/protocol/ibb' block-size='128' sid='coucou' stanza='fdsq'/>".parse().unwrap();
-        let error = IBB::try_from(elem).unwrap_err();
+        let error = Open::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
