@@ -13,7 +13,7 @@ use jid::Jid;
 use error::Error;
 use ns;
 
-type Group = String;
+generate_elem_id!(Group, "group", ns::ROSTER);
 
 generate_attribute!(Subscription, "subscription", {
     None => "none",
@@ -52,7 +52,11 @@ impl TryFrom<Element> for Item {
             for _ in child.children() {
                 return Err(Error::ParseError("Roster item group can’t have children."));
             }
-            item.groups.push(child.text());
+            for _ in child.attrs() {
+                return Err(Error::ParseError("Roster item group can’t have attributes."));
+            }
+            let group = Group(child.text());
+            item.groups.push(group);
         }
         Ok(item)
     }
@@ -65,7 +69,7 @@ impl From<Item> for Element {
                 .attr("jid", String::from(item.jid))
                 .attr("name", item.name)
                 .attr("subscription", item.subscription)
-                .append(item.groups.into_iter().map(|group| Element::builder("group").ns(ns::ROSTER).append(group)).collect::<Vec<_>>())
+                .append(item.groups)
                 .build()
     }
 }
@@ -163,7 +167,7 @@ mod tests {
         assert_eq!(roster.items[0].jid, Jid::from_str("romeo@example.net").unwrap());
         assert_eq!(roster.items[0].name, Some(String::from("Romeo")));
         assert_eq!(roster.items[0].subscription, Some(Subscription::Both));
-        assert_eq!(roster.items[0].groups, vec!(String::from("Friends")));
+        assert_eq!(roster.items[0].groups, vec!(Group::from_str("Friends").unwrap()));
     }
 
     #[test]
@@ -183,8 +187,8 @@ mod tests {
         assert_eq!(roster.items[0].jid, Jid::from_str("test@example.org").unwrap());
         assert_eq!(roster.items[0].name, None);
         assert_eq!(roster.items[0].groups.len(), 2);
-        assert_eq!(roster.items[0].groups[0], String::from("A"));
-        assert_eq!(roster.items[0].groups[1], String::from("B"));
+        assert_eq!(roster.items[0].groups[0], Group::from_str("A").unwrap());
+        assert_eq!(roster.items[0].groups[1], Group::from_str("B").unwrap());
         let elem2 = roster.into();
         assert_eq!(elem1, elem2);
     }
@@ -210,7 +214,7 @@ mod tests {
         assert_eq!(roster.items[0].jid, Jid::from_str("nurse@example.com").unwrap());
         assert_eq!(roster.items[0].name, Some(String::from("Nurse")));
         assert_eq!(roster.items[0].groups.len(), 1);
-        assert_eq!(roster.items[0].groups[0], String::from("Servants"));
+        assert_eq!(roster.items[0].groups[0], Group::from_str("Servants").unwrap());
 
         let elem: Element = r#"
 <query xmlns='jabber:iq:roster'>
