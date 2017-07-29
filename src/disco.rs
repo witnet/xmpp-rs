@@ -99,16 +99,17 @@ impl TryFrom<Element> for DiscoInfoResult {
             return Err(Error::ParseError("This is not a disco#info element."));
         }
 
-        let mut identities: Vec<Identity> = vec!();
-        let mut features: Vec<Feature> = vec!();
-        let mut extensions: Vec<DataForm> = vec!();
-
-        let node = get_attr!(elem, "node", optional);
+        let mut result = DiscoInfoResult {
+            node: get_attr!(elem, "node", optional),
+            identities: vec!(),
+            features: vec!(),
+            extensions: vec!(),
+        };
 
         for child in elem.children() {
             if child.is("feature", ns::DISCO_INFO) {
                 let feature = get_attr!(child, "var", required);
-                features.push(Feature {
+                result.features.push(Feature {
                     var: feature,
                 });
             } else if child.is("identity", ns::DISCO_INFO) {
@@ -124,7 +125,7 @@ impl TryFrom<Element> for DiscoInfoResult {
 
                 let lang = get_attr!(child, "xml:lang", optional);
                 let name = get_attr!(child, "name", optional);
-                identities.push(Identity {
+                result.identities.push(Identity {
                     category: category,
                     type_: type_,
                     lang: lang,
@@ -135,31 +136,26 @@ impl TryFrom<Element> for DiscoInfoResult {
                 if data_form.type_ != DataFormType::Result_ {
                     return Err(Error::ParseError("Data form must have a 'result' type in disco#info."));
                 }
-                match data_form.form_type {
-                    Some(_) => extensions.push(data_form),
-                    None => return Err(Error::ParseError("Data form found without a FORM_TYPE.")),
+                if data_form.form_type.is_none() {
+                    return Err(Error::ParseError("Data form found without a FORM_TYPE."));
                 }
+                result.extensions.push(data_form);
             } else {
                 return Err(Error::ParseError("Unknown element in disco#info."));
             }
         }
 
-        if identities.is_empty() {
+        if result.identities.is_empty() {
             return Err(Error::ParseError("There must be at least one identity in disco#info."));
         }
-        if features.is_empty() {
+        if result.features.is_empty() {
             return Err(Error::ParseError("There must be at least one feature in disco#info."));
         }
-        if !features.contains(&Feature { var: ns::DISCO_INFO.to_owned() }) {
+        if !result.features.contains(&Feature { var: ns::DISCO_INFO.to_owned() }) {
             return Err(Error::ParseError("disco#info feature not present in disco#info."));
         }
 
-        Ok(DiscoInfoResult {
-            node: node,
-            identities: identities,
-            features: features,
-            extensions: extensions
-        })
+        Ok(result)
     }
 }
 
