@@ -125,7 +125,7 @@ impl TryFrom<Element> for StanzaError {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<StanzaError, Error> {
-        if !elem.is("error", ns::JABBER_CLIENT) {
+        if !elem.is("error", ns::DEFAULT_NS) {
             return Err(Error::ParseError("This is not an error element."));
         }
 
@@ -175,7 +175,7 @@ impl TryFrom<Element> for StanzaError {
 impl From<StanzaError> for Element {
     fn from(err: StanzaError) -> Element {
         let mut root = Element::builder("error")
-                               .ns(ns::JABBER_CLIENT)
+                               .ns(ns::DEFAULT_NS)
                                .attr("type", err.type_)
                                .attr("by", err.by)
                                .append(err.defined_condition)
@@ -201,7 +201,10 @@ mod tests {
 
     #[test]
     fn test_simple() {
+        #[cfg(not(feature = "component"))]
         let elem: Element = "<error xmlns='jabber:client' type='cancel'><undefined-condition xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/></error>".parse().unwrap();
+        #[cfg(feature = "component")]
+        let elem: Element = "<error xmlns='jabber:component:accept' type='cancel'><undefined-condition xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/></error>".parse().unwrap();
         let error = StanzaError::try_from(elem).unwrap();
         assert_eq!(error.type_, ErrorType::Cancel);
         assert_eq!(error.defined_condition, DefinedCondition::UndefinedCondition);
@@ -209,7 +212,10 @@ mod tests {
 
     #[test]
     fn test_invalid_type() {
+        #[cfg(not(feature = "component"))]
         let elem: Element = "<error xmlns='jabber:client'/>".parse().unwrap();
+        #[cfg(feature = "component")]
+        let elem: Element = "<error xmlns='jabber:component:accept'/>".parse().unwrap();
         let error = StanzaError::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
@@ -217,7 +223,10 @@ mod tests {
         };
         assert_eq!(message, "Required attribute 'type' missing.");
 
+        #[cfg(not(feature = "component"))]
         let elem: Element = "<error xmlns='jabber:client' type='coucou'/>".parse().unwrap();
+        #[cfg(feature = "component")]
+        let elem: Element = "<error xmlns='jabber:component:accept' type='coucou'/>".parse().unwrap();
         let error = StanzaError::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
@@ -228,7 +237,10 @@ mod tests {
 
     #[test]
     fn test_invalid_condition() {
+        #[cfg(not(feature = "component"))]
         let elem: Element = "<error xmlns='jabber:client' type='cancel'/>".parse().unwrap();
+        #[cfg(feature = "component")]
+        let elem: Element = "<error xmlns='jabber:component:accept' type='cancel'/>".parse().unwrap();
         let error = StanzaError::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,

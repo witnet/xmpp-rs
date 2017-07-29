@@ -34,9 +34,9 @@ impl TryFrom<Element> for Forwarded {
         for child in elem.children() {
             if child.is("delay", ns::DELAY) {
                 delay = Some(Delay::try_from(child.clone())?);
-            } else if child.is("message", ns::JABBER_CLIENT) {
+            } else if child.is("message", ns::DEFAULT_NS) {
                 stanza = Some(Message::try_from(child.clone())?);
-            // TODO: also handle the five other possibilities.
+            // TODO: also handle the two other possibilities.
             } else {
                 return Err(Error::ParseError("Unknown child in forwarded element."));
             }

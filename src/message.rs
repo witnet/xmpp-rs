@@ -49,7 +49,7 @@ impl TryFrom<Element> for MessagePayload {
 
     fn try_from(elem: Element) -> Result<MessagePayload, Error> {
         Ok(match (elem.name().as_ref(), elem.ns().unwrap().as_ref()) {
-            ("error", ns::JABBER_CLIENT) => MessagePayload::StanzaError(StanzaError::try_from(elem)?),
+            ("error", ns::DEFAULT_NS) => MessagePayload::StanzaError(StanzaError::try_from(elem)?),
 
             // XEP-0085
             ("active", ns::CHATSTATES)
@@ -116,9 +116,9 @@ generate_attribute!(MessageType, "type", {
 
 type Lang = String;
 
-generate_elem_id!(Body, "body", ns::JABBER_CLIENT);
-generate_elem_id!(Subject, "subject", ns::JABBER_CLIENT);
-generate_elem_id!(Thread, "thread", ns::JABBER_CLIENT);
+generate_elem_id!(Body, "body", ns::DEFAULT_NS);
+generate_elem_id!(Subject, "subject", ns::DEFAULT_NS);
+generate_elem_id!(Thread, "thread", ns::DEFAULT_NS);
 
 /// The main structure representing the `<message/>` stanza.
 #[derive(Debug, Clone)]
@@ -152,7 +152,7 @@ impl TryFrom<Element> for Message {
     type Err = Error;
 
     fn try_from(root: Element) -> Result<Message, Error> {
-        if !root.is("message", ns::JABBER_CLIENT) {
+        if !root.is("message", ns::DEFAULT_NS) {
             return Err(Error::ParseError("This is not a message element."));
         }
         let from = get_attr!(root, "from", optional);
@@ -164,7 +164,7 @@ impl TryFrom<Element> for Message {
         let mut thread = None;
         let mut payloads = vec!();
         for elem in root.children() {
-            if elem.is("body", ns::JABBER_CLIENT) {
+            if elem.is("body", ns::DEFAULT_NS) {
                 for _ in elem.children() {
                     return Err(Error::ParseError("Unknown child in body element."));
                 }
@@ -173,7 +173,7 @@ impl TryFrom<Element> for Message {
                 if bodies.insert(lang, body).is_some() {
                     return Err(Error::ParseError("Body element present twice for the same xml:lang."));
                 }
-            } else if elem.is("subject", ns::JABBER_CLIENT) {
+            } else if elem.is("subject", ns::DEFAULT_NS) {
                 for _ in elem.children() {
                     return Err(Error::ParseError("Unknown child in subject element."));
                 }
@@ -182,7 +182,7 @@ impl TryFrom<Element> for Message {
                 if subjects.insert(lang, subject).is_some() {
                     return Err(Error::ParseError("Subject element present twice for the same xml:lang."));
                 }
-            } else if elem.is("thread", ns::JABBER_CLIENT) {
+            } else if elem.is("thread", ns::DEFAULT_NS) {
                 if thread.is_some() {
                     return Err(Error::ParseError("Thread element present twice."));
                 }
@@ -210,7 +210,7 @@ impl TryFrom<Element> for Message {
 impl From<Message> for Element {
     fn from(message: Message) -> Element {
         Element::builder("message")
-                .ns(ns::JABBER_CLIENT)
+                .ns(ns::DEFAULT_NS)
                 .attr("from", message.from)
                 .attr("to", message.to)
                 .attr("id", message.id)
@@ -246,7 +246,10 @@ mod tests {
 
     #[test]
     fn test_simple() {
+        #[cfg(not(feature = "component"))]
         let elem: Element = "<message xmlns='jabber:client'/>".parse().unwrap();
+        #[cfg(feature = "component")]
+        let elem: Element = "<message xmlns='jabber:component:accept'/>".parse().unwrap();
         let message = Message::try_from(elem).unwrap();
         assert_eq!(message.from, None);
         assert_eq!(message.to, None);
@@ -257,7 +260,10 @@ mod tests {
 
     #[test]
     fn test_serialise() {
+        #[cfg(not(feature = "component"))]
         let elem: Element = "<message xmlns='jabber:client'/>".parse().unwrap();
+        #[cfg(feature = "component")]
+        let elem: Element = "<message xmlns='jabber:component:accept'/>".parse().unwrap();
         let mut message = Message::new(None);
         message.type_ = MessageType::Normal;
         let elem2 = message.into();
@@ -266,7 +272,10 @@ mod tests {
 
     #[test]
     fn test_body() {
+        #[cfg(not(feature = "component"))]
         let elem: Element = "<message xmlns='jabber:client' to='coucou@example.org' type='chat'><body>Hello world!</body></message>".parse().unwrap();
+        #[cfg(feature = "component")]
+        let elem: Element = "<message xmlns='jabber:component:accept' to='coucou@example.org' type='chat'><body>Hello world!</body></message>".parse().unwrap();
         let elem1 = elem.clone();
         let message = Message::try_from(elem).unwrap();
         assert_eq!(message.bodies[""], Body::from_str("Hello world!").unwrap());
@@ -277,7 +286,10 @@ mod tests {
 
     #[test]
     fn test_serialise_body() {
+        #[cfg(not(feature = "component"))]
         let elem: Element = "<message xmlns='jabber:client' to='coucou@example.org' type='chat'><body>Hello world!</body></message>".parse().unwrap();
+        #[cfg(feature = "component")]
+        let elem: Element = "<message xmlns='jabber:component:accept' to='coucou@example.org' type='chat'><body>Hello world!</body></message>".parse().unwrap();
         let mut message = Message::new(Some(Jid::from_str("coucou@example.org").unwrap()));
         message.bodies.insert(String::from(""), Body::from_str("Hello world!").unwrap());
         let elem2 = message.into();
@@ -286,7 +298,10 @@ mod tests {
 
     #[test]
     fn test_subject() {
+        #[cfg(not(feature = "component"))]
         let elem: Element = "<message xmlns='jabber:client' to='coucou@example.org' type='chat'><subject>Hello world!</subject></message>".parse().unwrap();
+        #[cfg(feature = "component")]
+        let elem: Element = "<message xmlns='jabber:component:accept' to='coucou@example.org' type='chat'><subject>Hello world!</subject></message>".parse().unwrap();
         let elem1 = elem.clone();
         let message = Message::try_from(elem).unwrap();
         assert_eq!(message.subjects[""], Subject::from_str("Hello world!").unwrap());
@@ -297,7 +312,10 @@ mod tests {
 
     #[test]
     fn test_attention() {
+        #[cfg(not(feature = "component"))]
         let elem: Element = "<message xmlns='jabber:client' to='coucou@example.org' type='chat'><attention xmlns='urn:xmpp:attention:0'/></message>".parse().unwrap();
+        #[cfg(feature = "component")]
+        let elem: Element = "<message xmlns='jabber:component:accept' to='coucou@example.org' type='chat'><attention xmlns='urn:xmpp:attention:0'/></message>".parse().unwrap();
         let elem1 = elem.clone();
         let message = Message::try_from(elem).unwrap();
         let elem2 = message.into();

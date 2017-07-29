@@ -207,7 +207,7 @@ impl TryFrom<Element> for Iq {
     type Err = Error;
 
     fn try_from(root: Element) -> Result<Iq, Error> {
-        if !root.is("iq", ns::JABBER_CLIENT) {
+        if !root.is("iq", ns::DEFAULT_NS) {
             return Err(Error::ParseError("This is not an iq element."));
         }
         let from = get_attr!(root, "from", optional);
@@ -222,7 +222,7 @@ impl TryFrom<Element> for Iq {
                 return Err(Error::ParseError("Wrong number of children in iq element."));
             }
             if type_ == "error" {
-                if elem.is("error", ns::JABBER_CLIENT) {
+                if elem.is("error", ns::DEFAULT_NS) {
                     if error_payload.is_some() {
                         return Err(Error::ParseError("Wrong number of children in iq element."));
                     }
@@ -275,7 +275,7 @@ impl TryFrom<Element> for Iq {
 impl From<Iq> for Element {
     fn from(iq: Iq) -> Element {
         let mut stanza = Element::builder("iq")
-                                 .ns(ns::JABBER_CLIENT)
+                                 .ns(ns::DEFAULT_NS)
                                  .attr("from", iq.from)
                                  .attr("to", iq.to)
                                  .attr("id", iq.id)
@@ -300,7 +300,10 @@ mod tests {
 
     #[test]
     fn test_require_type() {
+        #[cfg(not(feature = "component"))]
         let elem: Element = "<iq xmlns='jabber:client'/>".parse().unwrap();
+        #[cfg(feature = "component")]
+        let elem: Element = "<iq xmlns='jabber:component:accept'/>".parse().unwrap();
         let error = Iq::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
@@ -311,11 +314,16 @@ mod tests {
 
     #[test]
     fn test_get() {
+        #[cfg(not(feature = "component"))]
         let elem: Element = "<iq xmlns='jabber:client' type='get'>
-            <foo/>
+            <foo xmlns='bar'/>
+        </iq>".parse().unwrap();
+        #[cfg(feature = "component")]
+        let elem: Element = "<iq xmlns='jabber:component:accept' type='get'>
+            <foo xmlns='bar'/>
         </iq>".parse().unwrap();
         let iq = Iq::try_from(elem).unwrap();
-        let query: Element = "<foo xmlns='jabber:client'/>".parse().unwrap();
+        let query: Element = "<foo xmlns='bar'/>".parse().unwrap();
         assert_eq!(iq.from, None);
         assert_eq!(iq.to, None);
         assert_eq!(iq.id, None);
@@ -327,7 +335,12 @@ mod tests {
 
     #[test]
     fn test_set() {
+        #[cfg(not(feature = "component"))]
         let elem: Element = "<iq xmlns='jabber:client' type='set'>
+            <vCard xmlns='vcard-temp'/>
+        </iq>".parse().unwrap();
+        #[cfg(feature = "component")]
+        let elem: Element = "<iq xmlns='jabber:component:accept' type='set'>
             <vCard xmlns='vcard-temp'/>
         </iq>".parse().unwrap();
         let iq = Iq::try_from(elem).unwrap();
@@ -343,7 +356,10 @@ mod tests {
 
     #[test]
     fn test_result_empty() {
+        #[cfg(not(feature = "component"))]
         let elem: Element = "<iq xmlns='jabber:client' type='result'/>".parse().unwrap();
+        #[cfg(feature = "component")]
+        let elem: Element = "<iq xmlns='jabber:component:accept' type='result'/>".parse().unwrap();
         let iq = Iq::try_from(elem).unwrap();
         assert_eq!(iq.from, None);
         assert_eq!(iq.to, None);
@@ -356,7 +372,12 @@ mod tests {
 
     #[test]
     fn test_result() {
+        #[cfg(not(feature = "component"))]
         let elem: Element = "<iq xmlns='jabber:client' type='result'>
+            <query xmlns='http://jabber.org/protocol/disco#items'/>
+        </iq>".parse().unwrap();
+        #[cfg(feature = "component")]
+        let elem: Element = "<iq xmlns='jabber:component:accept' type='result'>
             <query xmlns='http://jabber.org/protocol/disco#items'/>
         </iq>".parse().unwrap();
         let iq = Iq::try_from(elem).unwrap();
@@ -372,7 +393,15 @@ mod tests {
 
     #[test]
     fn test_error() {
+        #[cfg(not(feature = "component"))]
         let elem: Element = "<iq xmlns='jabber:client' type='error'>
+            <ping xmlns='urn:xmpp:ping'/>
+            <error type='cancel'>
+                <service-unavailable xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/>
+            </error>
+        </iq>".parse().unwrap();
+        #[cfg(feature = "component")]
+        let elem: Element = "<iq xmlns='jabber:component:accept' type='error'>
             <ping xmlns='urn:xmpp:ping'/>
             <error type='cancel'>
                 <service-unavailable xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/>
@@ -396,7 +425,10 @@ mod tests {
 
     #[test]
     fn test_children_invalid() {
+        #[cfg(not(feature = "component"))]
         let elem: Element = "<iq xmlns='jabber:client' type='error'></iq>".parse().unwrap();
+        #[cfg(feature = "component")]
+        let elem: Element = "<iq xmlns='jabber:component:accept' type='error'></iq>".parse().unwrap();
         let error = Iq::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
@@ -407,7 +439,10 @@ mod tests {
 
     #[test]
     fn test_serialise() {
+        #[cfg(not(feature = "component"))]
         let elem: Element = "<iq xmlns='jabber:client' type='result'/>".parse().unwrap();
+        #[cfg(feature = "component")]
+        let elem: Element = "<iq xmlns='jabber:component:accept' type='result'/>".parse().unwrap();
         let iq2 = Iq {
             from: None,
             to: None,
@@ -420,7 +455,10 @@ mod tests {
 
     #[test]
     fn test_disco() {
+        #[cfg(not(feature = "component"))]
         let elem: Element = "<iq xmlns='jabber:client' type='get'><query xmlns='http://jabber.org/protocol/disco#info'/></iq>".parse().unwrap();
+        #[cfg(feature = "component")]
+        let elem: Element = "<iq xmlns='jabber:component:accept' type='get'><query xmlns='http://jabber.org/protocol/disco#info'/></iq>".parse().unwrap();
         let iq = Iq::try_from(elem).unwrap();
         let payload = match iq.payload {
             IqType::Get(payload) => IqGetPayload::try_from(payload).unwrap(),

@@ -95,7 +95,7 @@ impl TryFrom<Element> for PresencePayload {
 
     fn try_from(elem: Element) -> Result<PresencePayload, Error> {
         Ok(match (elem.name().as_ref(), elem.ns().unwrap().as_ref()) {
-            ("error", ns::JABBER_CLIENT) => PresencePayload::StanzaError(StanzaError::try_from(elem)?),
+            ("error", ns::DEFAULT_NS) => PresencePayload::StanzaError(StanzaError::try_from(elem)?),
 
             // XEP-0045
             ("x", ns::MUC) => PresencePayload::Muc(Muc::try_from(elem)?),
@@ -248,7 +248,7 @@ impl TryFrom<Element> for Presence {
     type Err = Error;
 
     fn try_from(root: Element) -> Result<Presence, Error> {
-        if !root.is("presence", ns::JABBER_CLIENT) {
+        if !root.is("presence", ns::DEFAULT_NS) {
             return Err(Error::ParseError("This is not a presence element."));
         }
         let mut show = None;
@@ -264,7 +264,7 @@ impl TryFrom<Element> for Presence {
             payloads: vec!(),
         };
         for elem in root.children() {
-            if elem.is("show", ns::JABBER_CLIENT) {
+            if elem.is("show", ns::DEFAULT_NS) {
                 if show.is_some() {
                     return Err(Error::ParseError("More than one show element in a presence."));
                 }
@@ -275,7 +275,7 @@ impl TryFrom<Element> for Presence {
                     return Err(Error::ParseError("Unknown attribute in show element."));
                 }
                 show = Some(Show::from_str(elem.text().as_ref())?);
-            } else if elem.is("status", ns::JABBER_CLIENT) {
+            } else if elem.is("status", ns::DEFAULT_NS) {
                 for _ in elem.children() {
                     return Err(Error::ParseError("Unknown child in status element."));
                 }
@@ -288,7 +288,7 @@ impl TryFrom<Element> for Presence {
                 if presence.statuses.insert(lang, elem.text()).is_some() {
                     return Err(Error::ParseError("Status element present twice for the same xml:lang."));
                 }
-            } else if elem.is("priority", ns::JABBER_CLIENT) {
+            } else if elem.is("priority", ns::DEFAULT_NS) {
                 if priority.is_some() {
                     return Err(Error::ParseError("More than one priority element in a presence."));
                 }
@@ -316,7 +316,7 @@ impl TryFrom<Element> for Presence {
 impl From<Presence> for Element {
     fn from(presence: Presence) -> Element {
         Element::builder("presence")
-                .ns(ns::JABBER_CLIENT)
+                .ns(ns::DEFAULT_NS)
                 .attr("from", presence.from)
                 .attr("to", presence.to)
                 .attr("id", presence.id)
@@ -343,7 +343,10 @@ mod tests {
 
     #[test]
     fn test_simple() {
+        #[cfg(not(feature = "component"))]
         let elem: Element = "<presence xmlns='jabber:client'/>".parse().unwrap();
+        #[cfg(feature = "component")]
+        let elem: Element = "<presence xmlns='jabber:component:accept'/>".parse().unwrap();
         let presence = Presence::try_from(elem).unwrap();
         assert_eq!(presence.from, None);
         assert_eq!(presence.to, None);
@@ -354,7 +357,10 @@ mod tests {
 
     #[test]
     fn test_serialise() {
-        let elem: Element = "<presence xmlns='jabber:client' type='unavailable'/>".parse().unwrap();
+        #[cfg(not(feature = "component"))]
+        let elem: Element = "<presence xmlns='jabber:client' type='unavailable'/>/>".parse().unwrap();
+        #[cfg(feature = "component")]
+        let elem: Element = "<presence xmlns='jabber:component:accept' type='unavailable'/>/>".parse().unwrap();
         let presence = Presence::new(Type::Unavailable);
         let elem2 = presence.into();
         assert_eq!(elem, elem2);
@@ -362,7 +368,10 @@ mod tests {
 
     #[test]
     fn test_show() {
+        #[cfg(not(feature = "component"))]
         let elem: Element = "<presence xmlns='jabber:client'><show>chat</show></presence>".parse().unwrap();
+        #[cfg(feature = "component")]
+        let elem: Element = "<presence xmlns='jabber:component:accept'><show>chat</show></presence>".parse().unwrap();
         let presence = Presence::try_from(elem).unwrap();
         assert_eq!(presence.payloads.len(), 0);
         assert_eq!(presence.show, Show::Chat);
@@ -370,8 +379,10 @@ mod tests {
 
     #[test]
     fn test_missing_show_value() {
-        // "online" used to be a pretty common mistake.
+        #[cfg(not(feature = "component"))]
         let elem: Element = "<presence xmlns='jabber:client'><show/></presence>".parse().unwrap();
+        #[cfg(feature = "component")]
+        let elem: Element = "<presence xmlns='jabber:component:accept'><show/></presence>".parse().unwrap();
         let error = Presence::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
@@ -383,7 +394,10 @@ mod tests {
     #[test]
     fn test_invalid_show() {
         // "online" used to be a pretty common mistake.
+        #[cfg(not(feature = "component"))]
         let elem: Element = "<presence xmlns='jabber:client'><show>online</show></presence>".parse().unwrap();
+        #[cfg(feature = "component")]
+        let elem: Element = "<presence xmlns='jabber:component:accept'><show>online</show></presence>".parse().unwrap();
         let error = Presence::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
@@ -394,7 +408,10 @@ mod tests {
 
     #[test]
     fn test_empty_status() {
+        #[cfg(not(feature = "component"))]
         let elem: Element = "<presence xmlns='jabber:client'><status/></presence>".parse().unwrap();
+        #[cfg(feature = "component")]
+        let elem: Element = "<presence xmlns='jabber:component:accept'><status/></presence>".parse().unwrap();
         let presence = Presence::try_from(elem).unwrap();
         assert_eq!(presence.payloads.len(), 0);
         assert_eq!(presence.statuses.len(), 1);
@@ -403,7 +420,10 @@ mod tests {
 
     #[test]
     fn test_status() {
+        #[cfg(not(feature = "component"))]
         let elem: Element = "<presence xmlns='jabber:client'><status>Here!</status></presence>".parse().unwrap();
+        #[cfg(feature = "component")]
+        let elem: Element = "<presence xmlns='jabber:component:accept'><status>Here!</status></presence>".parse().unwrap();
         let presence = Presence::try_from(elem).unwrap();
         assert_eq!(presence.payloads.len(), 0);
         assert_eq!(presence.statuses.len(), 1);
@@ -412,7 +432,10 @@ mod tests {
 
     #[test]
     fn test_multiple_statuses() {
+        #[cfg(not(feature = "component"))]
         let elem: Element = "<presence xmlns='jabber:client'><status>Here!</status><status xml:lang='fr'>Là!</status></presence>".parse().unwrap();
+        #[cfg(feature = "component")]
+        let elem: Element = "<presence xmlns='jabber:component:accept'><status>Here!</status><status xml:lang='fr'>Là!</status></presence>".parse().unwrap();
         let presence = Presence::try_from(elem).unwrap();
         assert_eq!(presence.payloads.len(), 0);
         assert_eq!(presence.statuses.len(), 2);
@@ -422,7 +445,10 @@ mod tests {
 
     #[test]
     fn test_invalid_multiple_statuses() {
+        #[cfg(not(feature = "component"))]
         let elem: Element = "<presence xmlns='jabber:client'><status xml:lang='fr'>Here!</status><status xml:lang='fr'>Là!</status></presence>".parse().unwrap();
+        #[cfg(feature = "component")]
+        let elem: Element = "<presence xmlns='jabber:component:accept'><status xml:lang='fr'>Here!</status><status xml:lang='fr'>Là!</status></presence>".parse().unwrap();
         let error = Presence::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
@@ -433,7 +459,10 @@ mod tests {
 
     #[test]
     fn test_priority() {
+        #[cfg(not(feature = "component"))]
         let elem: Element = "<presence xmlns='jabber:client'><priority>-1</priority></presence>".parse().unwrap();
+        #[cfg(feature = "component")]
+        let elem: Element = "<presence xmlns='jabber:component:accept'><priority>-1</priority></presence>".parse().unwrap();
         let presence = Presence::try_from(elem).unwrap();
         assert_eq!(presence.payloads.len(), 0);
         assert_eq!(presence.priority, -1i8);
@@ -441,7 +470,10 @@ mod tests {
 
     #[test]
     fn test_invalid_priority() {
+        #[cfg(not(feature = "component"))]
         let elem: Element = "<presence xmlns='jabber:client'><priority>128</priority></presence>".parse().unwrap();
+        #[cfg(feature = "component")]
+        let elem: Element = "<presence xmlns='jabber:component:accept'><priority>128</priority></presence>".parse().unwrap();
         let error = Presence::try_from(elem).unwrap_err();
         match error {
             Error::ParseIntError(_) => (),
@@ -451,7 +483,10 @@ mod tests {
 
     #[test]
     fn test_unknown_child() {
+        #[cfg(not(feature = "component"))]
         let elem: Element = "<presence xmlns='jabber:client'><test xmlns='invalid'/></presence>".parse().unwrap();
+        #[cfg(feature = "component")]
+        let elem: Element = "<presence xmlns='jabber:component:accept'><test xmlns='invalid'/></presence>".parse().unwrap();
         let presence = Presence::try_from(elem).unwrap();
         let payload = &presence.payloads[0];
         assert!(payload.is("test", "invalid"));
@@ -459,7 +494,10 @@ mod tests {
 
     #[test]
     fn test_invalid_status_child() {
+        #[cfg(not(feature = "component"))]
         let elem: Element = "<presence xmlns='jabber:client'><status><coucou/></status></presence>".parse().unwrap();
+        #[cfg(feature = "component")]
+        let elem: Element = "<presence xmlns='jabber:component:accept'><status><coucou/></status></presence>".parse().unwrap();
         let error = Presence::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
@@ -470,7 +508,10 @@ mod tests {
 
     #[test]
     fn test_invalid_attribute() {
+        #[cfg(not(feature = "component"))]
         let elem: Element = "<presence xmlns='jabber:client'><status coucou=''/></presence>".parse().unwrap();
+        #[cfg(feature = "component")]
+        let elem: Element = "<presence xmlns='jabber:component:accept'><status coucou=''/></presence>".parse().unwrap();
         let error = Presence::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
@@ -485,7 +526,7 @@ mod tests {
         let mut presence = Presence::new(Type::Unavailable);
         presence.statuses.insert(String::from(""), status);
         let elem: Element = presence.into();
-        assert!(elem.is("presence", ns::JABBER_CLIENT));
-        assert!(elem.children().next().unwrap().is("status", ns::JABBER_CLIENT));
+        assert!(elem.is("presence", ns::DEFAULT_NS));
+        assert!(elem.children().next().unwrap().is("status", ns::DEFAULT_NS));
     }
 }

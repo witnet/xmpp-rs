@@ -47,6 +47,9 @@ pub const REGISTER: &str = "jabber:iq:register";
 /// XEP-0085: Chat State Notifications
 pub const CHATSTATES: &str = "http://jabber.org/protocol/chatstates";
 
+/// XEP-0114: Jabber Component Protocol
+pub const COMPONENT_ACCEPT: &str = "jabber:component:accept";
+
 /// XEP-0115: Entity Capabilities
 pub const CAPS: &str = "http://jabber.org/protocol/caps";
 
@@ -119,3 +122,8 @@ pub const EME: &str = "urn:xmpp:eme:0";
 pub const ECAPS2: &str = "urn:xmpp:caps";
 /// XEP-0390: Entity Capabilities 2.0
 pub const ECAPS2_OPTIMIZE: &str = "urn:xmpp:caps:optimize";
+
+#[cfg(not(feature = "component"))]
+pub const DEFAULT_NS: &str = JABBER_CLIENT;
+#[cfg(feature = "component")]
+pub const DEFAULT_NS: &str = COMPONENT_ACCEPT;
