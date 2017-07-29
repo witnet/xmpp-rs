@@ -14,54 +14,65 @@ use error::Error;
 use ns;
 
 #[derive(Debug, Clone)]
-pub enum StanzaId {
-    StanzaId {
-        id: String,
-        by: Jid,
-    },
-    OriginId {
-        id: String,
-    },
+pub struct StanzaId {
+    pub id: String,
+    pub by: Jid,
 }
 
 impl TryFrom<Element> for StanzaId {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<StanzaId, Error> {
-        let is_stanza_id = elem.is("stanza-id", ns::SID);
-        if !is_stanza_id && !elem.is("origin-id", ns::SID) {
-            return Err(Error::ParseError("This is not a stanza-id or origin-id element."));
+        if !elem.is("stanza-id", ns::SID) {
+            return Err(Error::ParseError("This is not a stanza-id element."));
         }
         for _ in elem.children() {
-            return Err(Error::ParseError("Unknown child in stanza-id or origin-id element."));
+            return Err(Error::ParseError("Unknown child in stanza-id element."));
         }
-        let id = get_attr!(elem, "id", required);
-        Ok(if is_stanza_id {
-            let by = get_attr!(elem, "by", required);
-            StanzaId::StanzaId { id, by }
-        } else {
-            StanzaId::OriginId { id }
+        Ok(StanzaId {
+            id: get_attr!(elem, "id", required),
+            by: get_attr!(elem, "by", required),
         })
     }
 }
 
 impl From<StanzaId> for Element {
     fn from(stanza_id: StanzaId) -> Element {
-        match stanza_id {
-            StanzaId::StanzaId { id, by } => {
-                Element::builder("stanza-id")
-                        .ns(ns::SID)
-                        .attr("id", id)
-                        .attr("by", String::from(by))
-                        .build()
-            },
-            StanzaId::OriginId { id } => {
-                Element::builder("origin-id")
-                        .ns(ns::SID)
-                        .attr("id", id)
-                        .build()
-            },
+        Element::builder("stanza-id")
+                .ns(ns::SID)
+                .attr("id", stanza_id.id)
+                .attr("by", String::from(stanza_id.by))
+                .build()
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct OriginId {
+    pub id: String,
+}
+
+impl TryFrom<Element> for OriginId {
+    type Err = Error;
+
+    fn try_from(elem: Element) -> Result<OriginId, Error> {
+        if !elem.is("origin-id", ns::SID) {
+            return Err(Error::ParseError("This is not an origin-id element."));
         }
+        for _ in elem.children() {
+            return Err(Error::ParseError("Unknown child in origin-id element."));
+        }
+        Ok(OriginId {
+            id: get_attr!(elem, "id", required),
+        })
+    }
+}
+
+impl From<OriginId> for Element {
+    fn from(origin_id: OriginId) -> Element {
+        Element::builder("origin-id")
+                .ns(ns::SID)
+                .attr("id", origin_id.id)
+                .build()
     }
 }
 
@@ -74,20 +85,12 @@ mod tests {
     fn test_simple() {
         let elem: Element = "<stanza-id xmlns='urn:xmpp:sid:0' id='coucou' by='coucou@coucou'/>".parse().unwrap();
         let stanza_id = StanzaId::try_from(elem).unwrap();
-        if let StanzaId::StanzaId { id, by } = stanza_id {
-            assert_eq!(id, String::from("coucou"));
-            assert_eq!(by, Jid::from_str("coucou@coucou").unwrap());
-        } else {
-            panic!();
-        }
+        assert_eq!(stanza_id.id, String::from("coucou"));
+        assert_eq!(stanza_id.by, Jid::from_str("coucou@coucou").unwrap());
 
         let elem: Element = "<origin-id xmlns='urn:xmpp:sid:0' id='coucou'/>".parse().unwrap();
-        let stanza_id = StanzaId::try_from(elem).unwrap();
-        if let StanzaId::OriginId { id } = stanza_id {
-            assert_eq!(id, String::from("coucou"));
-        } else {
-            panic!();
-        }
+        let origin_id = OriginId::try_from(elem).unwrap();
+        assert_eq!(origin_id.id, String::from("coucou"));
     }
 
     #[test]
@@ -98,7 +101,7 @@ mod tests {
             Error::ParseError(string) => string,
             _ => panic!(),
         };
-        assert_eq!(message, "Unknown child in stanza-id or origin-id element.");
+        assert_eq!(message, "Unknown child in stanza-id element.");
     }
 
     #[test]
@@ -126,7 +129,7 @@ mod tests {
     #[test]
     fn test_serialise() {
         let elem: Element = "<stanza-id xmlns='urn:xmpp:sid:0' id='coucou' by='coucou@coucou'/>".parse().unwrap();
-        let stanza_id = StanzaId::StanzaId { id: String::from("coucou"), by: Jid::from_str("coucou@coucou").unwrap() };
+        let stanza_id = StanzaId { id: String::from("coucou"), by: Jid::from_str("coucou@coucou").unwrap() };
         let elem2 = stanza_id.into();
         assert_eq!(elem, elem2);
     }

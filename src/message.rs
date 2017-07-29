@@ -23,7 +23,7 @@ use delay::Delay;
 use attention::Attention;
 use message_correct::Replace;
 use eme::ExplicitMessageEncryption;
-use stanza_id::StanzaId;
+use stanza_id::{StanzaId, OriginId};
 use mam::Result_ as MamResult;
 
 /// Lists every known payload of a `<message/>`.
@@ -37,6 +37,7 @@ pub enum MessagePayload {
     MessageCorrect(Replace),
     ExplicitMessageEncryption(ExplicitMessageEncryption),
     StanzaId(StanzaId),
+    OriginId(OriginId),
     MamResult(MamResult),
 
     Unknown(Element),
@@ -73,8 +74,8 @@ impl TryFrom<Element> for MessagePayload {
             ("result", ns::MAM) => MessagePayload::MamResult(MamResult::try_from(elem)?),
 
             // XEP-0359
-            ("stanza-id", ns::SID)
-          | ("origin-id", ns::SID) => MessagePayload::StanzaId(StanzaId::try_from(elem)?),
+            ("stanza-id", ns::SID) => MessagePayload::StanzaId(StanzaId::try_from(elem)?),
+            ("origin-id", ns::SID) => MessagePayload::OriginId(OriginId::try_from(elem)?),
 
             // XEP-0380
             ("encryption", ns::EME) => MessagePayload::ExplicitMessageEncryption(ExplicitMessageEncryption::try_from(elem)?),
@@ -95,6 +96,7 @@ impl From<MessagePayload> for Element {
             MessagePayload::MessageCorrect(replace) => replace.into(),
             MessagePayload::ExplicitMessageEncryption(eme) => eme.into(),
             MessagePayload::StanzaId(stanza_id) => stanza_id.into(),
+            MessagePayload::OriginId(origin_id) => origin_id.into(),
             MessagePayload::MamResult(result) => result.into(),
 
             MessagePayload::Unknown(elem) => elem,
