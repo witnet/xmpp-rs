@@ -23,11 +23,19 @@ generate_attribute!(Subscription, "subscription", {
     Remove => "remove",
 });
 
+/// Contact from the user’s contact list.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Item {
+    /// JID of this contact.
     pub jid: Jid,
+
+    /// Name of this contact.
     pub name: Option<String>,
+
+    /// Subscription status of this contact.
     pub subscription: Option<Subscription>,
+
+    /// Groups this contact is part of.
     pub groups: Vec<Group>,
 }
 
@@ -74,9 +82,17 @@ impl From<Item> for Element {
     }
 }
 
+/// The contact list of the user.
 #[derive(Debug, Clone)]
 pub struct Roster {
+    /// Version of the contact list.
+    ///
+    /// This is an opaque string that should only be sent back to the server on
+    /// a new connection, if this client is storing the contact list between
+    /// connections.
     pub ver: Option<String>,
+
+    /// List of the contacts of the user.
     pub items: Vec<Item>,
 }
 
