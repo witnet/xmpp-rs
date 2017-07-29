@@ -1,7 +1,7 @@
 //! A crate parsing common XMPP elements into Rust structures.
 //!
-//! Each module implements the [`TryFrom<Element>`] trait, which takes a minidom
-//! [`Element`] reference and returns a `Result` whose value is `Ok` if the
+//! Each module implements the [`TryFrom<Element>`] trait, which takes a
+//! minidom [`Element`] and returns a `Result` whose value is `Ok` if the
 //! element parsed correctly, `Err(error::Error)` otherwise.
 //!
 //! The returned structure can be manipuled as any Rust structure, with each
