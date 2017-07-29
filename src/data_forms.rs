@@ -186,10 +186,8 @@ impl TryFrom<Element> for DataForm {
                             value: value,
                         });
                     } else if element.is("media", ns::MEDIA_ELEMENT) {
-                        match MediaElement::try_from(element.clone()) {
-                            Ok(media_element) => field.media.push(media_element),
-                            Err(_) => (), // TODO: is it really nice to swallow this error?
-                        }
+                        let media_element = MediaElement::try_from(element.clone())?;
+                        field.media.push(media_element);
                     } else {
                         return Err(Error::ParseError("Field child isn’t a value or media element."));
                     }
