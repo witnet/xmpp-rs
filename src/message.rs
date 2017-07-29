@@ -115,9 +115,10 @@ generate_attribute!(MessageType, "type", {
 }, Default = Normal);
 
 type Lang = String;
-type Body = String;
-type Subject = String;
-type Thread = String;
+
+generate_elem_id!(Body, "body", ns::JABBER_CLIENT);
+generate_elem_id!(Subject, "subject", ns::JABBER_CLIENT);
+generate_elem_id!(Thread, "thread", ns::JABBER_CLIENT);
 
 /// The main structure representing the `<message/>` stanza.
 #[derive(Debug, Clone)]
@@ -168,7 +169,8 @@ impl TryFrom<Element> for Message {
                     return Err(Error::ParseError("Unknown child in body element."));
                 }
                 let lang = get_attr!(root, "xml:lang", default);
-                if bodies.insert(lang, elem.text()).is_some() {
+                let body = Body(elem.text());
+                if bodies.insert(lang, body).is_some() {
                     return Err(Error::ParseError("Body element present twice for the same xml:lang."));
                 }
             } else if elem.is("subject", ns::JABBER_CLIENT) {
@@ -176,7 +178,8 @@ impl TryFrom<Element> for Message {
                     return Err(Error::ParseError("Unknown child in subject element."));
                 }
                 let lang = get_attr!(root, "xml:lang", default);
-                if subjects.insert(lang, elem.text()).is_some() {
+                let subject = Subject(elem.text());
+                if subjects.insert(lang, subject).is_some() {
                     return Err(Error::ParseError("Subject element present twice for the same xml:lang."));
                 }
             } else if elem.is("thread", ns::JABBER_CLIENT) {
@@ -186,7 +189,7 @@ impl TryFrom<Element> for Message {
                 for _ in elem.children() {
                     return Err(Error::ParseError("Unknown child in thread element."));
                 }
-                thread = Some(elem.text());
+                thread = Some(Thread(elem.text()));
             } else {
                 payloads.push(elem.clone())
             }
@@ -214,25 +217,23 @@ impl From<Message> for Element {
                 .attr("type", message.type_)
                 .append(message.subjects.into_iter()
                                         .map(|(lang, subject)| {
-                                             Element::builder("subject")
-                                                     .ns(ns::JABBER_CLIENT)
-                                                     .attr("xml:lang", match lang.as_ref() {
-                                                          "" => None,
-                                                          lang => Some(lang),
-                                                      })
-                                                     .append(subject)
-                                                     .build() })
+                                                 let mut subject = Element::from(subject);
+                                                 subject.set_attr("xml:lang", match lang.as_ref() {
+                                                     "" => None,
+                                                     lang => Some(lang),
+                                                 });
+                                                 subject
+                                             })
                                         .collect::<Vec<_>>())
                 .append(message.bodies.into_iter()
                                       .map(|(lang, body)| {
-                                           Element::builder("body")
-                                                   .ns(ns::JABBER_CLIENT)
-                                                   .attr("xml:lang", match lang.as_ref() {
-                                                        "" => None,
-                                                        lang => Some(lang),
-                                                    })
-                                                   .append(body)
-                                                   .build() })
+                                               let mut body = Element::from(body);
+                                               body.set_attr("xml:lang", match lang.as_ref() {
+                                                   "" => None,
+                                                   lang => Some(lang),
+                                               });
+                                               body
+                                           })
                                       .collect::<Vec<_>>())
                 .append(message.payloads)
                 .build()
@@ -268,7 +269,7 @@ mod tests {
         let elem: Element = "<message xmlns='jabber:client' to='coucou@example.org' type='chat'><body>Hello world!</body></message>".parse().unwrap();
         let elem1 = elem.clone();
         let message = Message::try_from(elem).unwrap();
-        assert_eq!(message.bodies[""], "Hello world!");
+        assert_eq!(message.bodies[""], Body::from_str("Hello world!").unwrap());
 
         let elem2 = message.into();
         assert_eq!(elem1, elem2);
@@ -278,7 +279,7 @@ mod tests {
     fn test_serialise_body() {
         let elem: Element = "<message xmlns='jabber:client' to='coucou@example.org' type='chat'><body>Hello world!</body></message>".parse().unwrap();
         let mut message = Message::new(Some(Jid::from_str("coucou@example.org").unwrap()));
-        message.bodies.insert(String::from(""), String::from("Hello world!"));
+        message.bodies.insert(String::from(""), Body::from_str("Hello world!").unwrap());
         let elem2 = message.into();
         assert_eq!(elem, elem2);
     }
@@ -288,7 +289,7 @@ mod tests {
         let elem: Element = "<message xmlns='jabber:client' to='coucou@example.org' type='chat'><subject>Hello world!</subject></message>".parse().unwrap();
         let elem1 = elem.clone();
         let message = Message::try_from(elem).unwrap();
-        assert_eq!(message.subjects[""], "Hello world!");
+        assert_eq!(message.subjects[""], Subject::from_str("Hello world!").unwrap());
 
         let elem2 = message.into();
         assert_eq!(elem1, elem2);
