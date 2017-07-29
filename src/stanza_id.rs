@@ -41,7 +41,7 @@ impl From<StanzaId> for Element {
         Element::builder("stanza-id")
                 .ns(ns::SID)
                 .attr("id", stanza_id.id)
-                .attr("by", String::from(stanza_id.by))
+                .attr("by", stanza_id.by)
                 .build()
     }
 }

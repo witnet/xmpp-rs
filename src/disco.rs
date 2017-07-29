@@ -307,7 +307,7 @@ impl From<Item> for Element {
     fn from(item: Item) -> Element {
         Element::builder("item")
                 .ns(ns::DISCO_ITEMS)
-                .attr("jid", String::from(item.jid))
+                .attr("jid", item.jid)
                 .attr("node", item.node)
                 .attr("name", item.name)
                 .build()

@@ -74,7 +74,7 @@ impl From<Item> for Element {
     fn from(item: Item) -> Element {
         Element::builder("item")
                 .ns(ns::ROSTER)
-                .attr("jid", String::from(item.jid))
+                .attr("jid", item.jid)
                 .attr("name", item.name)
                 .attr("subscription", item.subscription)
                 .append(item.groups)

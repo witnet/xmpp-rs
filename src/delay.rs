@@ -49,7 +49,7 @@ impl From<Delay> for Element {
     fn from(delay: Delay) -> Element {
         Element::builder("delay")
                 .ns(ns::DELAY)
-                .attr("from", delay.from.map(String::from))
+                .attr("from", delay.from)
                 .attr("stamp", delay.stamp.to_rfc3339())
                 .append(delay.data)
                 .build()

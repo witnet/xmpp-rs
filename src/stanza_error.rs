@@ -177,7 +177,7 @@ impl From<StanzaError> for Element {
         let mut root = Element::builder("error")
                                .ns(ns::JABBER_CLIENT)
                                .attr("type", err.type_)
-                               .attr("by", err.by.map(String::from))
+                               .attr("by", err.by)
                                .append(err.defined_condition)
                                .build();
         for (lang, text) in err.texts {

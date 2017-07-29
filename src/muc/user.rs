@@ -186,7 +186,7 @@ impl From<Actor> for Element {
         let elem = Element::builder("actor").ns(ns::MUC_USER);
 
         (match actor {
-            Actor::Jid(jid) => elem.attr("jid", String::from(jid)),
+            Actor::Jid(jid) => elem.attr("jid", jid),
             Actor::Nick(nick) => elem.attr("nick", nick),
         }).build()
     }
@@ -330,10 +330,7 @@ impl From<Item> for Element {
         Element::builder("item")
                 .ns(ns::MUC_USER)
                 .attr("affiliation", item.affiliation)
-                .attr("jid", match item.jid {
-                    Some(jid) => Some(String::from(jid)),
-                    None => None,
-                })
+                .attr("jid", item.jid)
                 .attr("nick", item.nick)
                 .attr("role", item.role)
                 .append(item.actor)

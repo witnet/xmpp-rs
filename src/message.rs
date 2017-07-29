@@ -211,8 +211,8 @@ impl From<Message> for Element {
     fn from(message: Message) -> Element {
         Element::builder("message")
                 .ns(ns::JABBER_CLIENT)
-                .attr("from", message.from.map(String::from))
-                .attr("to", message.to.map(String::from))
+                .attr("from", message.from)
+                .attr("to", message.to)
                 .attr("id", message.id)
                 .attr("type", message.type_)
                 .append(message.subjects.into_iter()

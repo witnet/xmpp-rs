@@ -317,8 +317,8 @@ impl From<Presence> for Element {
     fn from(presence: Presence) -> Element {
         Element::builder("presence")
                 .ns(ns::JABBER_CLIENT)
-                .attr("from", presence.from.map(String::from))
-                .attr("to", presence.to.map(String::from))
+                .attr("from", presence.from)
+                .attr("to", presence.to)
                 .attr("id", presence.id)
                 .attr("type", presence.type_)
                 .append(presence.show)

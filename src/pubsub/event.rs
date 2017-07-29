@@ -31,7 +31,7 @@ impl From<Item> for Element {
                 .ns(ns::PUBSUB_EVENT)
                 .attr("id", item.id)
                 .attr("node", item.node)
-                .attr("publisher", item.publisher.map(String::from))
+                .attr("publisher", item.publisher)
                 .append(item.payload)
                 .build()
     }
@@ -255,7 +255,7 @@ impl From<PubSubEvent> for Element {
                         .ns(ns::PUBSUB_EVENT)
                         .attr("node", node)
                         .attr("expiry", expiry.map(|expiry| expiry.to_rfc3339()))
-                        .attr("jid", jid.map(String::from))
+                        .attr("jid", jid)
                         .attr("subid", subid)
                         .attr("subscription", subscription)
                         .build()
