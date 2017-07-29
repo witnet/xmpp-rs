@@ -57,6 +57,78 @@ pub struct Field {
     pub media: Vec<MediaElement>,
 }
 
+impl Field {
+    fn is_list(&self) -> bool {
+        self.type_ == FieldType::ListSingle ||
+        self.type_ == FieldType::ListMulti
+    }
+}
+
+impl TryFrom<Element> for Field {
+    type Err = Error;
+
+    fn try_from(elem: Element) -> Result<Field, Error> {
+        let mut field = Field {
+            var: get_attr!(elem, "var", required),
+            type_: get_attr!(elem, "type", default),
+            label: get_attr!(elem, "label", optional),
+            required: false,
+            options: vec!(),
+            values: vec!(),
+            media: vec!(),
+        };
+        for element in elem.children() {
+            if element.is("value", ns::DATA_FORMS) {
+                for _ in element.children() {
+                    return Err(Error::ParseError("Value element must not have any child."));
+                }
+                for _ in element.attrs() {
+                    return Err(Error::ParseError("Value element must not have any attribute."));
+                }
+                field.values.push(element.text());
+            } else if element.is("required", ns::DATA_FORMS) {
+                if field.required {
+                    return Err(Error::ParseError("More than one required element."));
+                }
+                for _ in element.children() {
+                    return Err(Error::ParseError("Required element must not have any child."));
+                }
+                for _ in element.attrs() {
+                    return Err(Error::ParseError("Required element must not have any attribute."));
+                }
+                field.required = true;
+            } else if element.is("option", ns::DATA_FORMS) {
+                if !field.is_list() {
+                    return Err(Error::ParseError("Option element found in non-list field."));
+                }
+                let label = get_attr!(element, "label", optional);
+                let mut value = None;
+                for child2 in element.children() {
+                    if child2.is("value", ns::DATA_FORMS) {
+                        if value.is_some() {
+                            return Err(Error::ParseError("More than one value element in option element"));
+                        }
+                        value = Some(child2.text());
+                    } else {
+                        return Err(Error::ParseError("Non-value element in option element"));
+                    }
+                }
+                let value = value.ok_or(Error::ParseError("No value element in option element"))?;
+                field.options.push(Option_ {
+                    label: label,
+                    value: value,
+                });
+            } else if element.is("media", ns::MEDIA_ELEMENT) {
+                let media_element = MediaElement::try_from(element.clone())?;
+                field.media.push(media_element);
+            } else {
+                return Err(Error::ParseError("Field child isn’t a value or media element."));
+            }
+        }
+        Ok(field)
+    }
+}
+
 impl From<Field> for Element {
     fn from(field: Field) -> Element {
         Element::builder("field")
@@ -129,70 +201,8 @@ impl TryFrom<Element> for DataForm {
                 }
                 form.instructions = Some(child.text());
             } else if child.is("field", ns::DATA_FORMS) {
-                let var: String = get_attr!(child, "var", required);
-                let field_type = get_attr!(child, "type", default);
-                let label = get_attr!(child, "label", optional);
-
-                let is_form_type = var == "FORM_TYPE" && field_type == FieldType::Hidden;
-                let is_list = field_type == FieldType::ListSingle || field_type == FieldType::ListMulti;
-                let mut field = Field {
-                    var: var,
-                    type_: field_type,
-                    label: label,
-                    required: false,
-                    options: vec!(),
-                    values: vec!(),
-                    media: vec!(),
-                };
-                for element in child.children() {
-                    if element.is("value", ns::DATA_FORMS) {
-                        for _ in element.children() {
-                            return Err(Error::ParseError("Value element must not have any child."));
-                        }
-                        for _ in element.attrs() {
-                            return Err(Error::ParseError("Value element must not have any attribute."));
-                        }
-                        field.values.push(element.text());
-                    } else if element.is("required", ns::DATA_FORMS) {
-                        if field.required {
-                            return Err(Error::ParseError("More than one required element."));
-                        }
-                        for _ in element.children() {
-                            return Err(Error::ParseError("Required element must not have any child."));
-                        }
-                        for _ in element.attrs() {
-                            return Err(Error::ParseError("Required element must not have any attribute."));
-                        }
-                        field.required = true;
-                    } else if element.is("option", ns::DATA_FORMS) {
-                        if !is_list {
-                            return Err(Error::ParseError("Option element found in non-list field."));
-                        }
-                        let label = get_attr!(element, "label", optional);
-                        let mut value = None;
-                        for child2 in element.children() {
-                            if child2.is("value", ns::DATA_FORMS) {
-                                if value.is_some() {
-                                    return Err(Error::ParseError("More than one value element in option element"));
-                                }
-                                value = Some(child2.text());
-                            } else {
-                                return Err(Error::ParseError("Non-value element in option element"));
-                            }
-                        }
-                        let value = value.ok_or(Error::ParseError("No value element in option element"))?;
-                        field.options.push(Option_ {
-                            label: label,
-                            value: value,
-                        });
-                    } else if element.is("media", ns::MEDIA_ELEMENT) {
-                        let media_element = MediaElement::try_from(element.clone())?;
-                        field.media.push(media_element);
-                    } else {
-                        return Err(Error::ParseError("Field child isn’t a value or media element."));
-                    }
-                }
-                if is_form_type {
+                let field = Field::try_from(child.clone())?;
+                if field.var == "FORM_TYPE" && field.type_ == FieldType::Hidden {
                     if form.form_type.is_some() {
                         return Err(Error::ParseError("More than one FORM_TYPE in a data form."));
                     }
