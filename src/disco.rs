@@ -191,14 +191,12 @@ impl TryFrom<Element> for DiscoInfoResult {
 
 impl From<DiscoInfoResult> for Element {
     fn from(disco: DiscoInfoResult) -> Element {
-        for _ in disco.extensions {
-            panic!("Not yet implemented!");
-        }
         Element::builder("query")
                 .ns(ns::DISCO_INFO)
                 .attr("node", disco.node)
                 .append(disco.identities)
                 .append(disco.features)
+                .append(disco.extensions)
                 .build()
     }
 }
@@ -337,6 +335,21 @@ mod tests {
         assert_eq!(query.identities.len(), 1);
         assert_eq!(query.features.len(), 1);
         assert!(query.extensions.is_empty());
+    }
+
+    #[test]
+    fn test_extension() {
+        let elem: Element = "<query xmlns='http://jabber.org/protocol/disco#info'><identity category='client' type='pc'/><feature var='http://jabber.org/protocol/disco#info'/><x xmlns='jabber:x:data' type='result'><field var='FORM_TYPE' type='hidden'><value>example</value></field></x></query>".parse().unwrap();
+        let elem1 = elem.clone();
+        let query = DiscoInfoResult::try_from(elem).unwrap();
+        assert!(query.node.is_none());
+        assert_eq!(query.identities.len(), 1);
+        assert_eq!(query.features.len(), 1);
+        assert_eq!(query.extensions.len(), 1);
+        assert_eq!(query.extensions[0].form_type, Some(String::from("example")));
+
+        let elem2 = query.into();
+        assert_eq!(elem1, elem2);
     }
 
     #[test]
