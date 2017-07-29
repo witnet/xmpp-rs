@@ -359,6 +359,19 @@ impl Jid {
 
 }
 
+#[cfg(feature = "minidom")]
+extern crate minidom;
+
+#[cfg(feature = "minidom")]
+use minidom::IntoAttributeValue;
+
+#[cfg(feature = "minidom")]
+impl IntoAttributeValue for Jid {
+    fn into_attribute_value(self) -> Option<String> {
+        Some(String::from(self))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -379,5 +392,13 @@ mod tests {
     #[test]
     fn serialise() {
         assert_eq!(String::from(Jid::full("a", "b", "c")), String::from("a@b/c"));
+    }
+
+    #[cfg(feature = "minidom")]
+    #[test]
+    fn minidom() {
+        let elem: minidom::Element = "<message from='a@b/c'/>".parse().unwrap();
+        let to: Jid = elem.attr("from").unwrap().parse().unwrap();
+        assert_eq!(to, Jid::full("a", "b", "c"));
     }
 }
