@@ -54,6 +54,27 @@ pub struct Feature {
     pub var: String,
 }
 
+impl TryFrom<Element> for Feature {
+    type Err = Error;
+
+    fn try_from(elem: Element) -> Result<Feature, Error> {
+        if !elem.is("feature", ns::DISCO_INFO) {
+            return Err(Error::ParseError("This is not a disco#info feature element."));
+        }
+        for _ in elem.children() {
+            return Err(Error::ParseError("Unknown child in disco#info feature element."));
+        }
+        for (attr, _) in elem.attrs() {
+            if attr != "var" {
+                return Err(Error::ParseError("Unknown attribute in disco#info feature element."));
+            }
+        }
+        Ok(Feature {
+            var: get_attr!(elem, "var", required)
+        })
+    }
+}
+
 impl From<Feature> for Element {
     fn from(feature: Feature) -> Element {
         Element::builder("feature")
@@ -69,6 +90,33 @@ pub struct Identity {
     pub type_: String, // TODO: use an enum here.
     pub lang: Option<String>,
     pub name: Option<String>,
+}
+
+impl TryFrom<Element> for Identity {
+    type Err = Error;
+
+    fn try_from(elem: Element) -> Result<Identity, Error> {
+        if !elem.is("identity", ns::DISCO_INFO) {
+            return Err(Error::ParseError("This is not a disco#info identity element."));
+        }
+
+        let category = get_attr!(elem, "category", required);
+        if category == "" {
+            return Err(Error::ParseError("Identity must have a non-empty 'category' attribute."))
+        }
+
+        let type_ = get_attr!(elem, "type", required);
+        if type_ == "" {
+            return Err(Error::ParseError("Identity must have a non-empty 'type' attribute."))
+        }
+
+        Ok(Identity {
+            category: category,
+            type_: type_,
+            lang: get_attr!(elem, "xml:lang", optional),
+            name: get_attr!(elem, "name", optional),
+        })
+    }
 }
 
 impl From<Identity> for Element {
@@ -108,29 +156,11 @@ impl TryFrom<Element> for DiscoInfoResult {
 
         for child in elem.children() {
             if child.is("feature", ns::DISCO_INFO) {
-                let feature = get_attr!(child, "var", required);
-                result.features.push(Feature {
-                    var: feature,
-                });
+                let feature = Feature::try_from(child.clone())?;
+                result.features.push(feature);
             } else if child.is("identity", ns::DISCO_INFO) {
-                let category = get_attr!(child, "category", required);
-                if category == "" {
-                    return Err(Error::ParseError("Identity must have a non-empty 'category' attribute."))
-                }
-
-                let type_ = get_attr!(child, "type", required);
-                if type_ == "" {
-                    return Err(Error::ParseError("Identity must have a non-empty 'type' attribute."))
-                }
-
-                let lang = get_attr!(child, "xml:lang", optional);
-                let name = get_attr!(child, "name", optional);
-                result.identities.push(Identity {
-                    category: category,
-                    type_: type_,
-                    lang: lang,
-                    name: name,
-                });
+                let identity = Identity::try_from(child.clone())?;
+                result.identities.push(identity);
             } else if child.is("x", ns::DATA_FORMS) {
                 let data_form = DataForm::try_from(child.clone())?;
                 if data_form.type_ != DataFormType::Result_ {
