@@ -47,6 +47,9 @@ pub const REGISTER: &str = "jabber:iq:register";
 /// XEP-0085: Chat State Notifications
 pub const CHATSTATES: &str = "http://jabber.org/protocol/chatstates";
 
+/// XEP-0092: Software Version
+pub const VERSION: &str = "jabber:iq:version";
+
 /// XEP-0114: Jabber Component Protocol
 pub const COMPONENT_ACCEPT: &str = "jabber:component:accept";
 

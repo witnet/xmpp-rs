@@ -207,6 +207,9 @@ pub mod ibr;
 /// XEP-0085: Chat State Notifications
 pub mod chatstates;
 
+/// XEP-0092: Software Version
+pub mod version;
+
 /// XEP-0115: Entity Capabilities
 pub mod caps;
 
