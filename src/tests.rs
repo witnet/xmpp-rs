@@ -44,6 +44,34 @@ fn writer_works() {
 }
 
 #[test]
+fn writer_escapes_attributes() {
+    let root = Element::builder("root")
+        .attr("a", "\"Air\" quotes")
+        .build();
+    let mut writer = Vec::new();
+    {
+        root.write_to(&mut writer).unwrap();
+    }
+    assert_eq!(String::from_utf8(writer).unwrap(),
+               r#"<?xml version="1.0" encoding="utf-8"?><root a="&quot;Air&quot; quotes" />"#
+    );
+}
+
+#[test]
+fn writer_escapes_text() {
+    let root = Element::builder("root")
+        .append("<3")
+        .build();
+    let mut writer = Vec::new();
+    {
+        root.write_to(&mut writer).unwrap();
+    }
+    assert_eq!(String::from_utf8(writer).unwrap(),
+               r#"<?xml version="1.0" encoding="utf-8"?><root>&lt;3</root>"#
+    );
+}
+
+#[test]
 fn builder_works() {
     let elem = Element::builder("a")
                        .ns("b")
