@@ -6,6 +6,7 @@ use std::collections::{btree_map, BTreeMap};
 use std::str;
 use std::cell::RefCell;
 use std::rc::Rc;
+use std::borrow::Cow;
 
 use error::{Error, ErrorKind, Result};
 
@@ -431,8 +432,8 @@ impl Element {
     /// Like `write_to()` but without the `<?xml?>` prelude
     pub fn write_to_inner<W: Write>(&self, writer: &mut W) -> Result<()> {
         let name = match &self.prefix {
-            &None => self.name.to_owned(),
-            &Some(ref prefix) => format!("{}:{}", prefix, self.name),
+            &None => Cow::Borrowed(&self.name),
+            &Some(ref prefix) => Cow::Owned(format!("{}:{}", prefix, self.name)),
         };
         write!(writer, "<{}", name)?;
 
