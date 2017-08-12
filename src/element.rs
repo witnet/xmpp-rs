@@ -18,6 +18,22 @@ use std::slice;
 
 use convert::{IntoElements, IntoAttributeValue, ElementEmitter};
 
+/// Escape XML text
+pub fn write_escaped<W: Write>(writer: &mut W, input: &str) -> Result<()> {
+    for c in input.chars() {
+        match c {
+            '&' => write!(writer, "&amp;")?,
+            '<' => write!(writer, "&lt;")?,
+            '>' => write!(writer, "&gt;")?,
+            '\'' => write!(writer, "&apos;")?,
+            '"' => write!(writer, "&quot;")?,
+            _ => write!(writer, "{}", c)?,
+        }
+    }
+
+    Ok(())
+}
+
 /// A node in an element tree.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Node {
@@ -71,7 +87,7 @@ impl Node {
     fn write_to_inner<W: Write>(&self, writer: &mut W, last_namespace: &mut Option<String>) -> Result<()>{
         match *self {
             Node::Element(ref elmt) => elmt.write_to_inner(writer, last_namespace)?,
-            Node::Text(ref s) => write!(writer, "{}", s)?,
+            Node::Text(ref s) => write_escaped(writer, s)?,
         }
 
         Ok(())
@@ -323,13 +339,17 @@ impl Element {
 
         if let Some(ref ns) = self.namespace {
             if *last_namespace != self.namespace {
-                write!(writer, " xmlns=\"{}\"", ns)?;
+                write!(writer, " xmlns=\"")?;
+                write_escaped(writer, ns)?;
+                write!(writer, "\"")?;
                 *last_namespace = Some(ns.clone());
             }
         }
 
         for (key, value) in &self.attributes {
-            write!(writer, " {}=\"{}\"", key, value)?;
+            write!(writer, " {}=\"", key)?;
+                write_escaped(writer, value)?;
+                write!(writer, "\"")?;
         }
 
         if self.children.is_empty() {
