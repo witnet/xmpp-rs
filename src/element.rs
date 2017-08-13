@@ -138,7 +138,7 @@ impl NamespaceSet {
 
     fn set_parent(&self, parent: &Element) {
         let mut parent_ns = self.parent.borrow_mut();
-        let new_set = ((&parent.namespaces) as &Rc<NamespaceSet>).clone();
+        let new_set = parent.namespaces.clone();
         *parent_ns = Some(new_set);
     }
 
