@@ -70,6 +70,7 @@ extern crate quick_xml;
 pub mod error;
 pub mod element;
 pub mod convert;
+mod namespaces;
 
 #[cfg(test)] mod tests;
 
