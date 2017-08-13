@@ -136,9 +136,9 @@ impl NamespaceSet {
         }
     }
 
-    fn set_parent(&self, parent: &Element) {
+    fn set_parent(&self, parent: Rc<NamespaceSet>) {
         let mut parent_ns = self.parent.borrow_mut();
-        let new_set = parent.namespaces.clone();
+        let new_set = parent;
         *parent_ns = Some(new_set);
     }
 
@@ -579,7 +579,7 @@ impl Element {
     /// assert_eq!(child.name(), "new");
     /// ```
     pub fn append_child(&mut self, child: Element) -> &mut Element {
-        child.namespaces.set_parent(&self);
+        child.namespaces.set_parent(self.namespaces.clone());
 
         self.children.push(Node::Element(child));
         if let Node::Element(ref mut cld) = *self.children.last_mut().unwrap() {
@@ -882,7 +882,7 @@ impl ElementBuilder {
         // Propagate namespaces
         for node in &element.children {
             if let Node::Element(ref e) = *node {
-                e.namespaces.set_parent(&element);
+                e.namespaces.set_parent(element.namespaces.clone());
             }
         }
 
