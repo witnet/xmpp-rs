@@ -103,3 +103,48 @@ impl From<(String, String)> for NamespaceSet {
         Self::from((Some(prefix), namespace))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::rc::Rc;
+
+    #[test]
+    fn get_has() {
+        let namespaces = NamespaceSet::from("foo".to_owned());
+        assert_eq!(namespaces.get(&None), Some("foo".to_owned()));
+        assert!(namespaces.has(&None, "foo"));
+    }
+
+    #[test]
+    fn get_has_prefixed() {
+        let namespaces = NamespaceSet::from(("x".to_owned(), "bar".to_owned()));
+        assert_eq!(namespaces.get(&Some("x".to_owned())), Some("bar".to_owned()));
+        assert!(namespaces.has(&Some("x".to_owned()), "bar"));
+    }
+
+    #[test]
+    fn get_has_recursive() {
+        let mut parent = NamespaceSet::from("foo".to_owned());
+        for _ in 0..1000 {
+            let namespaces = NamespaceSet::default();
+            namespaces.set_parent(Rc::new(parent));
+            assert_eq!(namespaces.get(&None), Some("foo".to_owned()));
+            assert!(namespaces.has(&None, "foo"));
+            parent = namespaces;
+        }
+    }
+
+    #[test]
+    fn get_has_prefixed_recursive() {
+        let mut parent = NamespaceSet::from(("x".to_owned(), "bar".to_owned()));
+        for _ in 0..1000 {
+            let namespaces = NamespaceSet::default();
+            namespaces.set_parent(Rc::new(parent));
+            assert_eq!(namespaces.get(&Some("x".to_owned())), Some("bar".to_owned()));
+            assert!(namespaces.has(&Some("x".to_owned()), "bar"));
+            parent = namespaces;
+        }
+    }
+
+}
