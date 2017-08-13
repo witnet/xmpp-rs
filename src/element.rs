@@ -19,7 +19,7 @@ use std::str::FromStr;
 use std::slice;
 
 use convert::{IntoElements, IntoAttributeValue, ElementEmitter};
-use namespaces::NamespaceSet;
+use namespace_set::NamespaceSet;
 
 /// Escape XML text
 pub fn write_escaped<W: Write>(writer: &mut W, input: &str) -> Result<()> {
