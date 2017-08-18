@@ -269,14 +269,12 @@ impl Element {
     /// Parse a document from an `EventReader`.
     pub fn from_reader<R: BufRead>(reader: &mut EventReader<R>) -> Result<Element> {
         let mut buf = Vec::new();
-        let root: Element;
 
-        loop {
+        let root: Element = loop {
             let e = reader.read_event(&mut buf)?;
             match e {
                 Event::Empty(ref e) | Event::Start(ref e) => {
-                    root = build_element(e)?; // FIXME: could be break build_element(e)? when break value is stable
-                    break;
+                    break build_element(e)?;
                 },
                 Event::Eof => {
                     bail!(ErrorKind::EndOfDocument);
