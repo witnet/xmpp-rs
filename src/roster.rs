@@ -137,6 +137,7 @@ impl From<Roster> for Element {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use compare_elements::NamespaceAwareCompare;
 
     #[test]
     fn test_get() {
@@ -206,7 +207,7 @@ mod tests {
         assert_eq!(roster.items[0].groups[0], Group::from_str("A").unwrap());
         assert_eq!(roster.items[0].groups[1], Group::from_str("B").unwrap());
         let elem2 = roster.into();
-        assert_eq!(elem1, elem2);
+        assert!(elem1.compare_to(&elem2));
     }
 
     #[test]

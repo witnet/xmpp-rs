@@ -387,6 +387,7 @@ impl From<MucUser> for Element {
 mod tests {
     use super::*;
     use std::error::Error as StdError;
+    use compare_elements::NamespaceAwareCompare;
 
     #[test]
     fn test_simple() {
@@ -418,7 +419,7 @@ mod tests {
         ".parse().unwrap();
         let muc = MucUser { status: vec!(), items: vec!() };
         let elem2 = muc.into();
-        assert_eq!(elem, elem2);
+        assert!(elem.compare_to(&elem2));
     }
 
     #[test]

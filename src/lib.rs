@@ -171,6 +171,10 @@ pub mod error;
 /// XML namespace definitions used through XMPP.
 pub mod ns;
 
+#[cfg(test)]
+/// Namespace-aware comparison for tests
+mod compare_elements;
+
 /// RFC 6120: Extensible Messaging and Presence Protocol (XMPP): Core
 pub mod message;
 /// RFC 6120: Extensible Messaging and Presence Protocol (XMPP): Core

@@ -340,6 +340,7 @@ impl From<Presence> for Element {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use compare_elements::NamespaceAwareCompare;
 
     #[test]
     fn test_simple() {
@@ -363,7 +364,7 @@ mod tests {
         let elem: Element = "<presence xmlns='jabber:component:accept' type='unavailable'/>/>".parse().unwrap();
         let presence = Presence::new(Type::Unavailable);
         let elem2 = presence.into();
-        assert_eq!(elem, elem2);
+        assert!(elem.compare_to(&elem2));
     }
 
     #[test]

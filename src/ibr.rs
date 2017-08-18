@@ -81,6 +81,7 @@ impl From<Query> for Element {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use compare_elements::NamespaceAwareCompare;
 
     #[test]
     fn test_simple() {
@@ -157,7 +158,7 @@ mod tests {
         assert!(form.fields.binary_search_by(|field| field.var.cmp(&String::from("x-gender"))).is_ok());
         assert!(form.fields.binary_search_by(|field| field.var.cmp(&String::from("coucou"))).is_err());
         let elem2 = query.into();
-        assert_eq!(elem1, elem2);
+        assert!(elem1.compare_to(&elem2));
     }
 
     #[test]
@@ -190,6 +191,6 @@ mod tests {
             panic!();
         }
         let elem2 = query.into();
-        assert_eq!(elem1, elem2);
+        assert!(elem1.compare_to(&elem2));
     }
 }

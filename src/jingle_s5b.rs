@@ -181,6 +181,7 @@ impl From<Transport> for Element {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use compare_elements::NamespaceAwareCompare;
 
     #[test]
     fn test_simple() {
@@ -205,7 +206,7 @@ mod tests {
             payload: TransportPayload::Activated(String::from("coucou")),
         };
         let elem2: Element = transport.into();
-        assert_eq!(elem, elem2);
+        assert!(elem.compare_to(&elem2));
     }
 
     #[test]
@@ -225,6 +226,6 @@ mod tests {
             })),
         };
         let elem2: Element = transport.into();
-        assert_eq!(elem, elem2);
+        assert!(elem.compare_to(&elem2));
     }
 }

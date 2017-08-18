@@ -243,6 +243,7 @@ impl From<Message> for Element {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use compare_elements::NamespaceAwareCompare;
 
     #[test]
     fn test_simple() {
@@ -281,7 +282,7 @@ mod tests {
         assert_eq!(message.bodies[""], Body::from_str("Hello world!").unwrap());
 
         let elem2 = message.into();
-        assert_eq!(elem1, elem2);
+        assert!(elem1.compare_to(&elem2));
     }
 
     #[test]
@@ -293,7 +294,7 @@ mod tests {
         let mut message = Message::new(Some(Jid::from_str("coucou@example.org").unwrap()));
         message.bodies.insert(String::from(""), Body::from_str("Hello world!").unwrap());
         let elem2 = message.into();
-        assert_eq!(elem, elem2);
+        assert!(elem.compare_to(&elem2));
     }
 
     #[test]
@@ -307,7 +308,7 @@ mod tests {
         assert_eq!(message.subjects[""], Subject::from_str("Hello world!").unwrap());
 
         let elem2 = message.into();
-        assert_eq!(elem1, elem2);
+        assert!(elem1.compare_to(&elem2));
     }
 
     #[test]

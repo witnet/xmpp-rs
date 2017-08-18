@@ -297,6 +297,7 @@ impl From<Iq> for Element {
 mod tests {
     use super::*;
     use stanza_error::{ErrorType, DefinedCondition};
+    use compare_elements::NamespaceAwareCompare;
 
     #[test]
     fn test_require_type() {
@@ -328,7 +329,7 @@ mod tests {
         assert_eq!(iq.to, None);
         assert_eq!(iq.id, None);
         assert!(match iq.payload {
-            IqType::Get(element) => element == query,
+            IqType::Get(element) => element.compare_to(&query),
             _ => false
         });
     }
@@ -349,7 +350,7 @@ mod tests {
         assert_eq!(iq.to, None);
         assert_eq!(iq.id, None);
         assert!(match iq.payload {
-            IqType::Set(element) => element == vcard,
+            IqType::Set(element) => element.compare_to(&vcard),
             _ => false
         });
     }
@@ -386,7 +387,7 @@ mod tests {
         assert_eq!(iq.to, None);
         assert_eq!(iq.id, None);
         assert!(match iq.payload {
-            IqType::Result(Some(element)) => element == query,
+            IqType::Result(Some(element)) => element.compare_to(&query),
             _ => false,
         });
     }

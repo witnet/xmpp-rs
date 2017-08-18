@@ -208,7 +208,8 @@ impl TryFrom<Element> for ReasonElement {
         let mut reason = None;
         let mut text = None;
         for child in elem.children() {
-            if child.ns() != Some(ns::JINGLE) {
+            let child_ns = child.ns();
+            if child_ns.as_ref().map(|ns| ns.as_str()) != Some(ns::JINGLE) {
                 return Err(Error::ParseError("Reason contains a foreign element."));
             }
             match child.name() {

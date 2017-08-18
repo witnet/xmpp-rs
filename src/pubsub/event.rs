@@ -272,6 +272,7 @@ impl From<PubSubEvent> for Element {
 mod tests {
     use super::*;
     use std::str::FromStr;
+    use compare_elements::NamespaceAwareCompare;
 
     #[test]
     fn test_simple() {
@@ -417,6 +418,6 @@ mod tests {
         }
 
         let elem2: Element = event.into();
-        assert_eq!(elem, elem2);
+        assert!(elem.compare_to(&elem2));
     }
 }
