@@ -1,3 +1,9 @@
+Version 0.6.1, released 2017-08-20:
+  * Additions
+    - Astro added Element::has_ns, which checks whether an element's namespace matches the passed argument. ( https://gitlab.com/lumi/minidom-rs/merge_requests/16 )
+    - Link Mauve updated the quick-xml dependency to the latest version.
+  * Fixes
+    - Because break value is now stable, Link Mauve rewrote some code marked FIXME to use it.
 Version 0.6.0, released 2017-08-13:
   * Big changes
     - Astro added proper support for namespace prefixes. ( https://gitlab.com/lumi/minidom-rs/merge_requests/14 )
