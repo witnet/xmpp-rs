@@ -263,7 +263,23 @@ impl Element {
     /// ```
     pub fn is<N: AsRef<str>, NS: AsRef<str>>(&self, name: N, namespace: NS) -> bool {
         self.name == name.as_ref() &&
-            self.namespaces.has(&self.prefix, namespace)
+            self.has_ns(namespace)
+    }
+
+    /// Returns whether the element has the given namespace.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use minidom::Element;
+    ///
+    /// let elem = Element::builder("name").ns("namespace").build();
+    ///
+    /// assert_eq!(elem.has_ns("namespace"), true);
+    /// assert_eq!(elem.has_ns("wrong"), false);
+    /// ```
+    pub fn has_ns<NS: AsRef<str>>(&self, namespace: NS) -> bool {
+        self.namespaces.has(&self.prefix, namespace)
     }
 
     /// Parse a document from an `EventReader`.
