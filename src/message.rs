@@ -168,7 +168,7 @@ impl TryFrom<Element> for Message {
                 for _ in elem.children() {
                     return Err(Error::ParseError("Unknown child in body element."));
                 }
-                let lang = get_attr!(root, "xml:lang", default);
+                let lang = get_attr!(elem, "xml:lang", default);
                 let body = Body(elem.text());
                 if bodies.insert(lang, body).is_some() {
                     return Err(Error::ParseError("Body element present twice for the same xml:lang."));
@@ -177,7 +177,7 @@ impl TryFrom<Element> for Message {
                 for _ in elem.children() {
                     return Err(Error::ParseError("Unknown child in subject element."));
                 }
-                let lang = get_attr!(root, "xml:lang", default);
+                let lang = get_attr!(elem, "xml:lang", default);
                 let subject = Subject(elem.text());
                 if subjects.insert(lang, subject).is_some() {
                     return Err(Error::ParseError("Subject element present twice for the same xml:lang."));
