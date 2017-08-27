@@ -38,8 +38,7 @@ impl TryFrom<Element> for ChatState {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<ChatState, Error> {
-        let ns = elem.ns();
-        if ns.as_ref().map(|ns| ns.as_str()) != Some(ns::CHATSTATES) {
+        if !elem.has_ns(ns::CHATSTATES) {
             return Err(Error::ParseError("This is not a chatstate element."));
         }
         for _ in elem.children() {

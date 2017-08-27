@@ -47,8 +47,7 @@ impl TryFrom<Element> for JingleMI {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<JingleMI, Error> {
-        let ns = elem.ns();
-        if ns.as_ref().map(|ns| ns.as_str()) != Some(ns::JINGLE_MESSAGE) {
+        if !elem.has_ns(ns::JINGLE_MESSAGE) {
             return Err(Error::ParseError("This is not a Jingle message element."));
         }
         Ok(match elem.name() {

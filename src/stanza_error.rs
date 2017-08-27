@@ -136,7 +136,6 @@ impl TryFrom<Element> for StanzaError {
         let mut other = None;
 
         for child in elem.children() {
-            let child_ns = child.ns();
             if child.is("text", ns::XMPP_STANZAS) {
                 for _ in child.children() {
                     return Err(Error::ParseError("Unknown element in error text."));
@@ -145,7 +144,7 @@ impl TryFrom<Element> for StanzaError {
                 if texts.insert(lang, child.text()).is_some() {
                     return Err(Error::ParseError("Text element present twice for the same xml:lang."));
                 }
-            } else if child_ns.as_ref().map(|ns| ns.as_str()) == Some(ns::XMPP_STANZAS) {
+            } else if child.has_ns(ns::XMPP_STANZAS) {
                 if defined_condition.is_some() {
                     return Err(Error::ParseError("Error must not have more than one defined-condition."));
                 }
