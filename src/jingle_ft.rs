@@ -6,9 +6,12 @@
 
 use try_from::TryFrom;
 
+use std::collections::BTreeMap;
+use std::str::FromStr;
+
 use hashes::Hash;
 
-use minidom::{Element, IntoElements, ElementEmitter};
+use minidom::{Element, IntoElements, IntoAttributeValue, ElementEmitter};
 use chrono::{DateTime, FixedOffset};
 
 use error::Error;
@@ -35,12 +38,16 @@ impl IntoElements for Range {
     }
 }
 
+type Lang = String;
+
+generate_id!(Desc);
+
 #[derive(Debug, Clone)]
 pub struct File {
     pub date: Option<DateTime<FixedOffset>>,
     pub media_type: Option<String>,
     pub name: Option<String>,
-    pub desc: Option<String>,
+    pub descs: BTreeMap<Lang, Desc>,
     pub size: Option<u64>,
     pub range: Option<Range>,
     pub hashes: Vec<Hash>,
@@ -98,7 +105,7 @@ impl TryFrom<Element> for Description {
         let mut date = None;
         let mut media_type = None;
         let mut name = None;
-        let mut desc = None;
+        let mut descs = BTreeMap::new();
         let mut size = None;
         let mut range = None;
         let mut hashes = vec!();
@@ -123,10 +130,11 @@ impl TryFrom<Element> for Description {
                     }
                     name = Some(file_payload.text());
                 } else if file_payload.is("desc", ns::JINGLE_FT) {
-                    if desc.is_some() {
-                        return Err(Error::ParseError("File must not have more than one desc."));
+                    let lang = get_attr!(file_payload, "xml:lang", default);
+                    let desc = Desc(file_payload.text());
+                    if descs.insert(lang, desc).is_some() {
+                        return Err(Error::ParseError("Desc element present twice for the same xml:lang."));
                     }
-                    desc = Some(file_payload.text());
                 } else if file_payload.is("size", ns::JINGLE_FT) {
                     if size.is_some() {
                         return Err(Error::ParseError("File must not have more than one size."));
@@ -163,7 +171,7 @@ impl TryFrom<Element> for Description {
                 date: date,
                 media_type: media_type,
                 name: name,
-                desc: desc,
+                descs: descs,
                 size: size,
                 range: range,
                 hashes: hashes,
@@ -195,10 +203,11 @@ impl From<File> for Element {
                                       .append(name)
                                       .build());
         }
-        if let Some(desc) = file.desc {
+        for (lang, desc) in file.descs.into_iter() {
             root.append_child(Element::builder("desc")
                                       .ns(ns::JINGLE_FT)
-                                      .append(desc)
+                                      .attr("xml:lang", lang)
+                                      .append(desc.0)
                                       .build());
         }
         if let Some(size) = file.size {
@@ -250,11 +259,10 @@ mod tests {
   </file>
 </description>
 "#.parse().unwrap();
-
         let desc = Description::try_from(elem).unwrap();
         assert_eq!(desc.file.media_type, Some(String::from("text/plain")));
         assert_eq!(desc.file.name, Some(String::from("test.txt")));
-        assert_eq!(desc.file.desc, None);
+        assert_eq!(desc.file.descs, BTreeMap::new());
         assert_eq!(desc.file.date, Some(DateTime::parse_from_rfc3339("2015-07-26T21:46:00+01:00").unwrap()));
         assert_eq!(desc.file.size, Some(6144u64));
         assert_eq!(desc.file.range, None);
@@ -272,15 +280,51 @@ mod tests {
   </file>
 </description>
 "#.parse().unwrap();
-
         let desc = Description::try_from(elem).unwrap();
         assert_eq!(desc.file.media_type, None);
         assert_eq!(desc.file.name, None);
-        assert_eq!(desc.file.desc, None);
+        assert_eq!(desc.file.descs, BTreeMap::new());
         assert_eq!(desc.file.date, None);
         assert_eq!(desc.file.size, None);
         assert_eq!(desc.file.range, None);
         assert_eq!(desc.file.hashes[0].algo, Algo::Sha_1);
         assert_eq!(desc.file.hashes[0].hash, base64::decode("w0mcJylzCn+AfvuGdqkty2+KP48=").unwrap());
+    }
+
+    #[test]
+    fn test_descs() {
+        let elem: Element = r#"
+<description xmlns='urn:xmpp:jingle:apps:file-transfer:5'>
+  <file>
+    <media-type>text/plain</media-type>
+    <desc xml:lang='fr'>Fichier secret !</desc>
+    <desc xml:lang='en'>Secret file!</desc>
+    <hash xmlns='urn:xmpp:hashes:2'
+          algo='sha-1'>w0mcJylzCn+AfvuGdqkty2+KP48=</hash>
+  </file>
+</description>
+"#.parse().unwrap();
+        let desc = Description::try_from(elem).unwrap();
+        assert_eq!(desc.file.descs.keys().cloned().collect::<Vec<_>>(), ["en", "fr"]);
+        assert_eq!(desc.file.descs["en"], Desc(String::from("Secret file!")));
+        assert_eq!(desc.file.descs["fr"], Desc(String::from("Fichier secret !")));
+
+        let elem: Element = r#"
+<description xmlns='urn:xmpp:jingle:apps:file-transfer:5'>
+  <file>
+    <media-type>text/plain</media-type>
+    <desc xml:lang='fr'>Fichier secret !</desc>
+    <desc xml:lang='fr'>Secret file!</desc>
+    <hash xmlns='urn:xmpp:hashes:2'
+          algo='sha-1'>w0mcJylzCn+AfvuGdqkty2+KP48=</hash>
+  </file>
+</description>
+"#.parse().unwrap();
+        let error = Description::try_from(elem).unwrap_err();
+        let message = match error {
+            Error::ParseError(string) => string,
+            _ => panic!(),
+        };
+        assert_eq!(message, "Desc element present twice for the same xml:lang.");
     }
 }
