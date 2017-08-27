@@ -1,3 +1,6 @@
+Version 0.6.2, released 2017-08-27:
+  * Additions
+    - Link Mauve added an implementation of IntoElements for all Into<Element> ( https://gitlab.com/lumi/minidom-rs/merge_requests/19 )
 Version 0.6.1, released 2017-08-20:
   * Additions
     - Astro added Element::has_ns, which checks whether an element's namespace matches the passed argument. ( https://gitlab.com/lumi/minidom-rs/merge_requests/16 )
