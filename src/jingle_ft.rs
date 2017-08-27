@@ -28,7 +28,7 @@ impl IntoElements for Range {
     fn into_elements(self, emitter: &mut ElementEmitter) {
         let mut elem = Element::builder("range")
                                .ns(ns::JINGLE_FT)
-                               .attr("offset", self.offset)
+                               .attr("offset", if self.offset == 0 { None } else { Some(self.offset) })
                                .attr("length", self.length)
                                .build();
         for hash in self.hashes {
