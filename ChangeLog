@@ -1,4 +1,25 @@
-Version 0.7.0:
+Version 0.8.0:
+2017-08-27  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
+    * New parsers/serialisers:
+        - iq:version (XEP-0092) has been added.
+        - Finally implement extension serialisation in disco.
+    * Breaking changes:
+        - Wrap even more elements into their own type, in jingle,
+          jingle_ft, roster, message.
+        - Split loose enums into multiple structs where it makes sense,
+          such as for IBB, StanzaId, Receipts.
+        - Split disco query and answer elements into their own struct,
+          to enforce more guarantees on both.
+    * Improvements:
+        - Use Vec::into_iter() more to avoid references and clones.
+        - Make data_forms propagate a media_element error.
+        - Document more of disco, roster, chatstates.
+        - Use the minidom feature of jid, for IntoAttributeValue.
+        - Add a component feature, changing the default namespace to
+          jabber:component:accept.
+        - Add support for indicating ranged transfers in jingle_ft.
+
+Version 0.7.1:
 2017-07-24  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
     * Hotfixes:
         - Stub out blake2 support, since the blake2 crate broke its API
