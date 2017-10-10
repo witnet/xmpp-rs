@@ -138,6 +138,14 @@ macro_rules! check_self {
     );
 }
 
+macro_rules! check_ns_only {
+    ($elem:ident, $name:tt, $ns:expr) => (
+        if !$elem.has_ns($ns) {
+            return Err(Error::ParseError(concat!("This is not a ", $name, " element.")));
+        }
+    );
+}
+
 macro_rules! check_no_children {
     ($elem:ident, $name:tt) => (
         for _ in $elem.children() {

@@ -38,15 +38,9 @@ impl TryFrom<Element> for ChatState {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<ChatState, Error> {
-        if !elem.has_ns(ns::CHATSTATES) {
-            return Err(Error::ParseError("This is not a chatstate element."));
-        }
-        for _ in elem.children() {
-            return Err(Error::ParseError("Unknown child in chatstate element."));
-        }
-        for _ in elem.attrs() {
-            return Err(Error::ParseError("Unknown attribute in chatstate element."));
-        }
+        check_ns_only!(elem, "chatstate", ns::CHATSTATES);
+        check_no_children!(elem, "chatstate");
+        check_no_unknown_attributes!(elem, "chatstate", []);
         Ok(match elem.name() {
             "active" => ChatState::Active,
             "composing" => ChatState::Composing,
