@@ -17,11 +17,15 @@ use ns;
 
 use data_forms::DataForm;
 
+generate_id!(NodeName);
+generate_id!(ItemId);
+generate_id!(SubscriptionId);
+
 #[derive(Debug, Clone)]
 pub struct Item {
     payload: Option<Element>,
-    id: Option<String>,
-    node: Option<String>,
+    node: Option<NodeName>,
+    id: Option<ItemId>,
     publisher: Option<Jid>,
 }
 
@@ -71,37 +75,37 @@ pub enum PubSubEvent {
     },
     */
     Configuration {
-        node: String,
+        node: NodeName,
         form: Option<DataForm>,
     },
     Delete {
-        node: String,
+        node: NodeName,
         redirect: Option<String>,
     },
     EmptyItems {
-        node: String,
+        node: NodeName,
     },
     PublishedItems {
-        node: String,
+        node: NodeName,
         items: Vec<Item>,
     },
     RetractedItems {
-        node: String,
-        items: Vec<String>,
+        node: NodeName,
+        items: Vec<ItemId>,
     },
     Purge {
-        node: String,
+        node: NodeName,
     },
     Subscription {
-        node: String,
+        node: NodeName,
         expiry: Option<DateTime<FixedOffset>>,
         jid: Option<Jid>,
-        subid: Option<String>,
+        subid: Option<SubscriptionId>,
         subscription: Option<Subscription>,
     },
 }
 
-fn parse_items(elem: Element, node: String) -> Result<PubSubEvent, Error> {
+fn parse_items(elem: Element, node: NodeName) -> Result<PubSubEvent, Error> {
     let mut is_retract = None;
     let mut items = vec!();
     let mut retracts = vec!();
@@ -234,7 +238,12 @@ impl From<PubSubEvent> for Element {
                 Element::builder("items")
                         .ns(ns::PUBSUB_EVENT)
                         .attr("node", node)
-                        .append(items)
+                        .append(items.into_iter().map(|id| {
+                             Element::builder("retract")
+                                     .ns(ns::PUBSUB_EVENT)
+                                     .attr("id", id)
+                                     .build()
+                         }).collect::<Vec<_>>())
                         .build()
             },
             PubSubEvent::Purge { node } => {
@@ -272,7 +281,7 @@ mod tests {
         let elem: Element = "<event xmlns='http://jabber.org/protocol/pubsub#event'><items node='coucou'/></event>".parse().unwrap();
         let event = PubSubEvent::try_from(elem).unwrap();
         match event {
-            PubSubEvent::EmptyItems { node } => assert_eq!(node, String::from("coucou")),
+            PubSubEvent::EmptyItems { node } => assert_eq!(node, NodeName(String::from("coucou"))),
             _ => panic!(),
         }
     }
@@ -283,9 +292,9 @@ mod tests {
         let event = PubSubEvent::try_from(elem).unwrap();
         match event {
             PubSubEvent::PublishedItems { node, items } => {
-                assert_eq!(node, String::from("coucou"));
-                assert_eq!(items[0].id, Some(String::from("test")));
-                assert_eq!(items[0].node, Some(String::from("huh?")));
+                assert_eq!(node, NodeName(String::from("coucou")));
+                assert_eq!(items[0].id, Some(ItemId(String::from("test"))));
+                assert_eq!(items[0].node, Some(NodeName(String::from("huh?"))));
                 assert_eq!(items[0].publisher, Some(Jid::from_str("test@coucou").unwrap()));
                 assert_eq!(items[0].payload, None);
             },
@@ -299,7 +308,7 @@ mod tests {
         let event = PubSubEvent::try_from(elem).unwrap();
         match event {
             PubSubEvent::PublishedItems { node, items } => {
-                assert_eq!(node, String::from("something"));
+                assert_eq!(node, NodeName(String::from("something")));
                 assert_eq!(items[0].id, None);
                 assert_eq!(items[0].node, None);
                 assert_eq!(items[0].publisher, None);
@@ -318,9 +327,9 @@ mod tests {
         let event = PubSubEvent::try_from(elem).unwrap();
         match event {
             PubSubEvent::RetractedItems { node, items } => {
-                assert_eq!(node, String::from("something"));
-                assert_eq!(items[0], String::from("coucou"));
-                assert_eq!(items[1], String::from("test"));
+                assert_eq!(node, NodeName(String::from("something")));
+                assert_eq!(items[0], ItemId(String::from("coucou")));
+                assert_eq!(items[1], ItemId(String::from("test")));
             },
             _ => panic!(),
         }
@@ -332,7 +341,7 @@ mod tests {
         let event = PubSubEvent::try_from(elem).unwrap();
         match event {
             PubSubEvent::Delete { node, redirect } => {
-                assert_eq!(node, String::from("coucou"));
+                assert_eq!(node, NodeName(String::from("coucou")));
                 assert_eq!(redirect, Some(String::from("hello")));
             },
             _ => panic!(),
@@ -345,7 +354,7 @@ mod tests {
         let event = PubSubEvent::try_from(elem).unwrap();
         match event {
             PubSubEvent::Purge { node } => {
-                assert_eq!(node, String::from("coucou"));
+                assert_eq!(node, NodeName(String::from("coucou")));
             },
             _ => panic!(),
         }
@@ -357,7 +366,7 @@ mod tests {
         let event = PubSubEvent::try_from(elem).unwrap();
         match event {
             PubSubEvent::Configuration { node, form: _ } => {
-                assert_eq!(node, String::from("coucou"));
+                assert_eq!(node, NodeName(String::from("coucou")));
                 //assert_eq!(form.type_, Result_);
             },
             _ => panic!(),
@@ -401,8 +410,8 @@ mod tests {
         let event = PubSubEvent::try_from(elem.clone()).unwrap();
         match event.clone() {
             PubSubEvent::Subscription { node, expiry, jid, subid, subscription } => {
-                assert_eq!(node, String::from("princely_musings"));
-                assert_eq!(subid, Some(String::from("ba49252aaa4f5d320c24d3766f0bdcade78c78d3")));
+                assert_eq!(node, NodeName(String::from("princely_musings")));
+                assert_eq!(subid, Some(SubscriptionId(String::from("ba49252aaa4f5d320c24d3766f0bdcade78c78d3"))));
                 assert_eq!(subscription, Some(Subscription::Subscribed));
                 assert_eq!(jid, Some(Jid::from_str("francisco@denmark.lit").unwrap()));
                 assert_eq!(expiry, Some("2006-02-28T23:59:59Z".parse().unwrap()));
