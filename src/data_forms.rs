@@ -14,23 +14,33 @@ use ns;
 
 use media_element::MediaElement;
 
-generate_attribute!(FieldType, "type", {
-    Boolean => "boolean",
-    Fixed => "fixed",
-    Hidden => "hidden",
-    JidMulti => "jid-multi",
-    JidSingle => "jid-single",
-    ListMulti => "list-multi",
-    ListSingle => "list-single",
-    TextMulti => "text-multi",
-    TextPrivate => "text-private",
-    TextSingle => "text-single",
-}, Default = TextSingle);
-
 #[derive(Debug, Clone)]
 pub struct Option_ {
     pub label: Option<String>,
     pub value: String,
+}
+
+impl TryFrom<Element> for Option_ {
+    type Err = Error;
+
+    fn try_from(elem: Element) -> Result<Option_, Error> {
+        check_self!(elem, "option", ns::DATA_FORMS);
+        check_no_unknown_attributes!(elem, "option", ["label"]);
+        let mut value = None;
+        for child in elem.children() {
+            if !child.is("value", ns::DATA_FORMS) {
+                return Err(Error::ParseError("Non-value element in option element"));
+            }
+            if value.is_some() {
+                return Err(Error::ParseError("More than one value element in option element"));
+            }
+            value = Some(child.text());
+        }
+        Ok(Option_ {
+            label: get_attr!(elem, "label", optional),
+            value: value.ok_or(Error::ParseError("No value element in option element"))?,
+        })
+    }
 }
 
 impl From<Option_> for Element {
@@ -45,6 +55,19 @@ impl From<Option_> for Element {
                 .build()
     }
 }
+
+generate_attribute!(FieldType, "type", {
+    Boolean => "boolean",
+    Fixed => "fixed",
+    Hidden => "hidden",
+    JidMulti => "jid-multi",
+    JidSingle => "jid-single",
+    ListMulti => "list-multi",
+    ListSingle => "list-single",
+    TextMulti => "text-multi",
+    TextPrivate => "text-private",
+    TextSingle => "text-single",
+}, Default = TextSingle);
 
 #[derive(Debug, Clone)]
 pub struct Field {
@@ -68,6 +91,8 @@ impl TryFrom<Element> for Field {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<Field, Error> {
+        check_self!(elem, "field", ns::DATA_FORMS);
+        check_no_unknown_attributes!(elem, "field", ["label", "type", "var"]);
         let mut field = Field {
             var: get_attr!(elem, "var", required),
             type_: get_attr!(elem, "type", default),
@@ -79,50 +104,27 @@ impl TryFrom<Element> for Field {
         };
         for element in elem.children() {
             if element.is("value", ns::DATA_FORMS) {
-                for _ in element.children() {
-                    return Err(Error::ParseError("Value element must not have any child."));
-                }
-                for _ in element.attrs() {
-                    return Err(Error::ParseError("Value element must not have any attribute."));
-                }
+                check_no_children!(element, "value");
+                check_no_unknown_attributes!(element, "value", []);
                 field.values.push(element.text());
             } else if element.is("required", ns::DATA_FORMS) {
                 if field.required {
                     return Err(Error::ParseError("More than one required element."));
                 }
-                for _ in element.children() {
-                    return Err(Error::ParseError("Required element must not have any child."));
-                }
-                for _ in element.attrs() {
-                    return Err(Error::ParseError("Required element must not have any attribute."));
-                }
+                check_no_children!(element, "required");
+                check_no_unknown_attributes!(element, "required", []);
                 field.required = true;
             } else if element.is("option", ns::DATA_FORMS) {
                 if !field.is_list() {
                     return Err(Error::ParseError("Option element found in non-list field."));
                 }
-                let label = get_attr!(element, "label", optional);
-                let mut value = None;
-                for child2 in element.children() {
-                    if child2.is("value", ns::DATA_FORMS) {
-                        if value.is_some() {
-                            return Err(Error::ParseError("More than one value element in option element"));
-                        }
-                        value = Some(child2.text());
-                    } else {
-                        return Err(Error::ParseError("Non-value element in option element"));
-                    }
-                }
-                let value = value.ok_or(Error::ParseError("No value element in option element"))?;
-                field.options.push(Option_ {
-                    label: label,
-                    value: value,
-                });
+                let option = Option_::try_from(element.clone())?;
+                field.options.push(option);
             } else if element.is("media", ns::MEDIA_ELEMENT) {
                 let media_element = MediaElement::try_from(element.clone())?;
                 field.media.push(media_element);
             } else {
-                return Err(Error::ParseError("Field child isn’t a value or media element."));
+                return Err(Error::ParseError("Field child isn’t a value, option or media element."));
             }
         }
         Ok(field)
@@ -166,9 +168,8 @@ impl TryFrom<Element> for DataForm {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<DataForm, Error> {
-        if !elem.is("x", ns::DATA_FORMS) {
-            return Err(Error::ParseError("This is not a data form element."));
-        }
+        check_self!(elem, "x", ns::DATA_FORMS);
+        check_no_unknown_attributes!(elem, "x", ["type"]);
         let type_ = get_attr!(elem, "type", required);
         let mut form = DataForm {
             type_: type_,
@@ -182,23 +183,15 @@ impl TryFrom<Element> for DataForm {
                 if form.title.is_some() {
                     return Err(Error::ParseError("More than one title in form element."));
                 }
-                for _ in child.children() {
-                    return Err(Error::ParseError("Title element must not have any child."));
-                }
-                for _ in child.attrs() {
-                    return Err(Error::ParseError("Title element must not have any attribute."));
-                }
+                check_no_children!(child, "title");
+                check_no_unknown_attributes!(child, "title", []);
                 form.title = Some(child.text());
             } else if child.is("instructions", ns::DATA_FORMS) {
                 if form.instructions.is_some() {
                     return Err(Error::ParseError("More than one instructions in form element."));
                 }
-                for _ in child.children() {
-                    return Err(Error::ParseError("instructions element must not have any child."));
-                }
-                for _ in child.attrs() {
-                    return Err(Error::ParseError("instructions element must not have any attribute."));
-                }
+                check_no_children!(child, "instructions");
+                check_no_unknown_attributes!(child, "instructions", []);
                 form.instructions = Some(child.text());
             } else if child.is("field", ns::DATA_FORMS) {
                 let field = Field::try_from(child.clone())?;
