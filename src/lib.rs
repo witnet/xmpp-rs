@@ -159,6 +159,36 @@ macro_rules! check_no_unknown_attributes {
     );
 }
 
+macro_rules! generate_empty_element {
+    ($elem:ident, $name:tt, $ns:expr) => (
+        // TODO: Find a better way to concatenate doc.
+        #[doc="Structure representing a "]
+        #[doc=$name]
+        #[doc=" element."]
+        #[derive(Debug, Clone)]
+        pub struct $elem;
+
+        impl TryFrom<Element> for $elem {
+            type Err = Error;
+
+            fn try_from(elem: Element) -> Result<$elem, Error> {
+                check_self!(elem, $name, $ns);
+                check_no_children!(elem, $name);
+                check_no_unknown_attributes!(elem, $name, []);
+                Ok($elem)
+            }
+        }
+
+        impl From<$elem> for Element {
+            fn from(_: $elem) -> Element {
+                Element::builder("attention")
+                        .ns($ns)
+                        .build()
+            }
+        }
+    );
+}
+
 macro_rules! generate_id {
     ($elem:ident) => (
         #[derive(Debug, Clone, PartialEq, Eq, Hash)]

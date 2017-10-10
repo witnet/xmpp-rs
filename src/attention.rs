@@ -12,34 +12,7 @@ use error::Error;
 
 use ns;
 
-/// Structure representing an `<attention xmlns='urn:xmpp:attention:0'/>` element.
-#[derive(Debug, Clone)]
-pub struct Attention;
-
-impl TryFrom<Element> for Attention {
-    type Err = Error;
-
-    fn try_from(elem: Element) -> Result<Attention, Error> {
-        if !elem.is("attention", ns::ATTENTION) {
-            return Err(Error::ParseError("This is not an attention element."));
-        }
-        for _ in elem.children() {
-            return Err(Error::ParseError("Unknown child in attention element."));
-        }
-        for _ in elem.attrs() {
-            return Err(Error::ParseError("Unknown attribute in attention element."));
-        }
-        Ok(Attention)
-    }
-}
-
-impl From<Attention> for Element {
-    fn from(_: Attention) -> Element {
-        Element::builder("attention")
-                .ns(ns::ATTENTION)
-                .build()
-    }
-}
+generate_empty_element!(Attention, "attention", ns::ATTENTION);
 
 #[cfg(test)]
 mod tests {

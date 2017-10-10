@@ -13,34 +13,7 @@ use error::Error;
 
 use ns;
 
-/// Structure representing a `<ping xmlns='urn:xmpp:ping'/>` element.
-#[derive(Debug, Clone)]
-pub struct Ping;
-
-impl TryFrom<Element> for Ping {
-    type Err = Error;
-
-    fn try_from(elem: Element) -> Result<Ping, Error> {
-        if !elem.is("ping", ns::PING) {
-            return Err(Error::ParseError("This is not a ping element."));
-        }
-        for _ in elem.children() {
-            return Err(Error::ParseError("Unknown child in ping element."));
-        }
-        for _ in elem.attrs() {
-            return Err(Error::ParseError("Unknown attribute in ping element."));
-        }
-        Ok(Ping)
-    }
-}
-
-impl From<Ping> for Element {
-    fn from(_: Ping) -> Element {
-        Element::builder("ping")
-                .ns(ns::PING)
-                .build()
-    }
-}
+generate_empty_element!(Ping, "ping", ns::PING);
 
 #[cfg(test)]
 mod tests {
