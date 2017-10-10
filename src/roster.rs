@@ -21,7 +21,7 @@ generate_attribute!(Subscription, "subscription", {
     To => "to",
     Both => "both",
     Remove => "remove",
-});
+}, Default = None);
 
 /// Contact from the user’s contact list.
 #[derive(Debug, Clone, PartialEq)]
@@ -33,7 +33,7 @@ pub struct Item {
     pub name: Option<String>,
 
     /// Subscription status of this contact.
-    pub subscription: Option<Subscription>,
+    pub subscription: Subscription,
 
     /// Groups this contact is part of.
     pub groups: Vec<Group>,
@@ -50,7 +50,7 @@ impl TryFrom<Element> for Item {
         let mut item = Item {
             jid: get_attr!(elem, "jid", required),
             name: get_attr!(elem, "name", optional).and_then(|name| if name == "" { None } else { Some(name) }),
-            subscription: get_attr!(elem, "subscription", optional),
+            subscription: get_attr!(elem, "subscription", default),
             groups: vec!(),
         };
         for child in elem.children() {
@@ -183,7 +183,7 @@ mod tests {
         assert_eq!(roster.items.len(), 3);
         assert_eq!(roster.items[0].jid, Jid::from_str("romeo@example.net").unwrap());
         assert_eq!(roster.items[0].name, Some(String::from("Romeo")));
-        assert_eq!(roster.items[0].subscription, Some(Subscription::Both));
+        assert_eq!(roster.items[0].subscription, Subscription::Both);
         assert_eq!(roster.items[0].groups, vec!(Group::from_str("Friends").unwrap()));
     }
 
@@ -245,7 +245,7 @@ mod tests {
         assert_eq!(roster.items[0].jid, Jid::from_str("nurse@example.com").unwrap());
         assert!(roster.items[0].name.is_none());
         assert!(roster.items[0].groups.is_empty());
-        assert_eq!(roster.items[0].subscription, Some(Subscription::Remove));
+        assert_eq!(roster.items[0].subscription, Subscription::Remove);
     }
 
     #[test]
