@@ -30,17 +30,9 @@ impl TryFrom<Element> for DiscoInfoQuery {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<DiscoInfoQuery, Error> {
-        if !elem.is("query", ns::DISCO_INFO) {
-            return Err(Error::ParseError("This is not a disco#info element."));
-        }
-        for _ in elem.children() {
-            return Err(Error::ParseError("Unknown child in disco#info."));
-        }
-        for (attr, _) in elem.attrs() {
-            if attr != "node" {
-                return Err(Error::ParseError("Unknown attribute in disco#info."));
-            }
-        }
+        check_self!(elem, "query", ns::DISCO_INFO);
+        check_no_children!(elem, "query");
+        check_no_unknown_attributes!(elem, "query", ["node"]);
         Ok(DiscoInfoQuery {
             node: get_attr!(elem, "node", optional),
         })
@@ -67,17 +59,9 @@ impl TryFrom<Element> for Feature {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<Feature, Error> {
-        if !elem.is("feature", ns::DISCO_INFO) {
-            return Err(Error::ParseError("This is not a disco#info feature element."));
-        }
-        for _ in elem.children() {
-            return Err(Error::ParseError("Unknown child in disco#info feature element."));
-        }
-        for (attr, _) in elem.attrs() {
-            if attr != "var" {
-                return Err(Error::ParseError("Unknown attribute in disco#info feature element."));
-            }
-        }
+        check_self!(elem, "feature", ns::DISCO_INFO, "disco#info feature");
+        check_no_children!(elem, "disco#info feature");
+        check_no_unknown_attributes!(elem, "disco#info feature", ["var"]);
         Ok(Feature {
             var: get_attr!(elem, "var", required)
         })
@@ -113,9 +97,9 @@ impl TryFrom<Element> for Identity {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<Identity, Error> {
-        if !elem.is("identity", ns::DISCO_INFO) {
-            return Err(Error::ParseError("This is not a disco#info identity element."));
-        }
+        check_self!(elem, "identity", ns::DISCO_INFO, "disco#info identity");
+        check_no_children!(elem, "disco#info identity");
+        check_no_unknown_attributes!(elem, "disco#info identity", ["category", "type", "xml:lang", "name"]);
 
         let category = get_attr!(elem, "category", required);
         if category == "" {
@@ -171,9 +155,8 @@ impl TryFrom<Element> for DiscoInfoResult {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<DiscoInfoResult, Error> {
-        if !elem.is("query", ns::DISCO_INFO) {
-            return Err(Error::ParseError("This is not a disco#info element."));
-        }
+        check_self!(elem, "query", ns::DISCO_INFO, "disco#info result");
+        check_no_unknown_attributes!(elem, "disco#info result", ["node"]);
 
         let mut result = DiscoInfoResult {
             node: get_attr!(elem, "node", optional),
@@ -243,17 +226,9 @@ impl TryFrom<Element> for DiscoItemsQuery {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<DiscoItemsQuery, Error> {
-        if !elem.is("query", ns::DISCO_ITEMS) {
-            return Err(Error::ParseError("This is not a disco#items element."));
-        }
-        for _ in elem.children() {
-            return Err(Error::ParseError("Unknown child in disco#items."));
-        }
-        for (attr, _) in elem.attrs() {
-            if attr != "node" {
-                return Err(Error::ParseError("Unknown attribute in disco#items."));
-            }
-        }
+        check_self!(elem, "query", ns::DISCO_ITEMS, "disco#items query");
+        check_no_children!(elem, "disco#items query");
+        check_no_unknown_attributes!(elem, "disco#items query", ["node"]);
         Ok(DiscoItemsQuery {
             node: get_attr!(elem, "node", optional),
         })
@@ -284,17 +259,9 @@ impl TryFrom<Element> for Item {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<Item, Error> {
-        if !elem.is("item", ns::DISCO_ITEMS) {
-            return Err(Error::ParseError("This is not an item element."));
-        }
-        for _ in elem.children() {
-            return Err(Error::ParseError("Unknown child in item element."));
-        }
-        for (attr, _) in elem.attrs() {
-            if attr != "jid" && attr != "node" && attr != "name" {
-                return Err(Error::ParseError("Unknown attribute in item element."));
-            }
-        }
+        check_self!(elem, "item", ns::DISCO_ITEMS);
+        check_no_children!(elem, "item");
+        check_no_unknown_attributes!(elem, "item", ["jid", "node", "name"]);
         Ok(Item {
             jid: get_attr!(elem, "jid", required),
             node: get_attr!(elem, "node", optional),
@@ -332,14 +299,8 @@ impl TryFrom<Element> for DiscoItemsResult {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<DiscoItemsResult, Error> {
-        if !elem.is("query", ns::DISCO_ITEMS) {
-            return Err(Error::ParseError("This is not a disco#items element."));
-        }
-        for (attr, _) in elem.attrs() {
-            if attr != "node" {
-                return Err(Error::ParseError("Unknown attribute in disco#items."));
-            }
-        }
+        check_self!(elem, "query", ns::DISCO_ITEMS, "disco#items query");
+        check_no_unknown_attributes!(elem, "disco#items query", ["node"]);
 
         let mut items: Vec<Item> = vec!();
         for child in elem.children() {
