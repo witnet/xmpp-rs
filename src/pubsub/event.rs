@@ -25,6 +25,26 @@ pub struct Item {
     publisher: Option<Jid>,
 }
 
+impl TryFrom<Element> for Item {
+    type Err = Error;
+
+    fn try_from(elem: Element) -> Result<Item, Error> {
+        check_self!(elem, "item", ns::PUBSUB_EVENT);
+        check_no_unknown_attributes!(elem, "item", ["id", "node", "publisher"]);
+        let mut payloads = elem.children().cloned().collect::<Vec<_>>();
+        let payload = payloads.pop();
+        if !payloads.is_empty() {
+            return Err(Error::ParseError("More than a single payload in item element."));
+        }
+        Ok(Item {
+            payload,
+            id: get_attr!(elem, "id", optional),
+            node: get_attr!(elem, "node", optional),
+            publisher: get_attr!(elem, "publisher", optional),
+        })
+    }
+}
+
 impl From<Item> for Element {
     fn from(item: Item) -> Element {
         Element::builder("item")
@@ -92,32 +112,15 @@ fn parse_items(elem: Element, node: String) -> Result<PubSubEvent, Error> {
                 Some(false) => (),
                 Some(true) => return Err(Error::ParseError("Mix of item and retract in items element.")),
             }
-            let mut payloads = child.children().cloned().collect::<Vec<_>>();
-            let payload = payloads.pop();
-            if !payloads.is_empty() {
-                return Err(Error::ParseError("More than a single payload in item element."));
-            }
-            let item = Item {
-                payload,
-                id: get_attr!(child, "id", optional),
-                node: get_attr!(child, "node", optional),
-                publisher: get_attr!(child, "publisher", optional),
-            };
-            items.push(item);
+            items.push(Item::try_from(child.clone())?);
         } else if child.is("retract", ns::PUBSUB_EVENT) {
             match is_retract {
                 None => is_retract = Some(true),
                 Some(true) => (),
                 Some(false) => return Err(Error::ParseError("Mix of item and retract in items element.")),
             }
-            for _ in child.children() {
-                return Err(Error::ParseError("Unknown child in retract element."));
-            }
-            for (attr, _) in child.attrs() {
-                if attr != "id" {
-                    return Err(Error::ParseError("Unknown attribute in retract element."));
-                }
-            }
+            check_no_children!(child, "retract");
+            check_no_unknown_attributes!(child, "retract", ["id"]);
             let id = get_attr!(child, "id", required);
             retracts.push(id);
         } else {
@@ -135,21 +138,11 @@ impl TryFrom<Element> for PubSubEvent {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<PubSubEvent, Error> {
-        if !elem.is("event", ns::PUBSUB_EVENT) {
-            return Err(Error::ParseError("This is not an event element."));
-        }
-        for _ in elem.attrs() {
-            return Err(Error::ParseError("Unknown attribute in event element."));
-        }
+        check_self!(elem, "event", ns::PUBSUB_EVENT);
+        check_no_unknown_attributes!(elem, "event", []);
+
         let mut payload = None;
         for child in elem.children() {
-            /*
-            for (attr, _) in child.attrs() {
-                if attr != "node" {
-                    return Err(Error::ParseError("Unknown attribute in items element."));
-                }
-            }
-            */
             let node = get_attr!(child, "node", required);
             if child.is("configuration", ns::PUBSUB_EVENT) {
                 let mut payloads = child.children().cloned().collect::<Vec<_>>();
