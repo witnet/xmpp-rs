@@ -125,6 +125,40 @@ macro_rules! generate_attribute {
     );
 }
 
+macro_rules! check_self {
+    ($elem:ident, $name:tt, $ns:expr) => (
+        if !$elem.is($name, $ns) {
+            return Err(Error::ParseError(concat!("This is not a ", $name, " element.")));
+        }
+    );
+    ($elem:ident, $name:tt, $ns:expr, $pretty_name:tt) => (
+        if !$elem.is($name, $ns) {
+            return Err(Error::ParseError(concat!("This is not a ", $pretty_name, " element.")));
+        }
+    );
+}
+
+macro_rules! check_no_children {
+    ($elem:ident, $name:tt) => (
+        for _ in $elem.children() {
+            return Err(Error::ParseError(concat!("Unknown child in ", $name, " element.")));
+        }
+    );
+}
+
+macro_rules! check_no_unknown_attributes {
+    ($elem:ident, $name:tt, [$($attr:tt),*]) => (
+        for (_attr, _) in $elem.attrs() {
+            $(
+            if _attr == $attr {
+                continue;
+            }
+            )*
+            return Err(Error::ParseError(concat!("Unknown attribute in ", $name, " element.")));
+        }
+    );
+}
+
 macro_rules! generate_id {
     ($elem:ident) => (
         #[derive(Debug, Clone, PartialEq, Eq, Hash)]
