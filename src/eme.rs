@@ -27,12 +27,9 @@ impl TryFrom<Element> for ExplicitMessageEncryption {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<ExplicitMessageEncryption, Error> {
-        if !elem.is("encryption", ns::EME) {
-            return Err(Error::ParseError("This is not an encryption element."));
-        }
-        for _ in elem.children() {
-            return Err(Error::ParseError("Unknown child in encryption element."));
-        }
+        check_self!(elem, "encryption", ns::EME);
+        check_no_children!(elem, "encryption");
+        check_no_unknown_attributes!(elem, "encryption", ["namespace", "name"]);
         Ok(ExplicitMessageEncryption {
             namespace: get_attr!(elem, "namespace", required),
             name: get_attr!(elem, "name", optional),
@@ -75,7 +72,7 @@ mod tests {
             Error::ParseError(string) => string,
             _ => panic!(),
         };
-        assert_eq!(message, "This is not an encryption element.");
+        assert_eq!(message, "This is not a encryption element.");
     }
 
     #[test]
