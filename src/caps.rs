@@ -33,16 +33,12 @@ impl TryFrom<Element> for Caps {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<Caps, Error> {
-        if !elem.is("c", ns::CAPS) {
-            return Err(Error::ParseError("This is not a caps element."));
-        }
-        for _ in elem.children() {
-            return Err(Error::ParseError("Unknown child in caps element."));
-        }
-        let hash = get_attr!(elem, "hash", required);
+        check_self!(elem, "c", ns::CAPS, "caps");
+        check_no_children!(elem, "caps");
+        check_no_unknown_attributes!(elem, "caps", ["hash", "ver", "ext", "node"]);
         let ver: String = get_attr!(elem, "ver", required);
         let hash = Hash {
-            algo: hash,
+            algo: get_attr!(elem, "hash", required),
             hash: base64::decode(&ver)?,
         };
         Ok(Caps {
