@@ -21,17 +21,9 @@ impl TryFrom<Element> for Replace {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<Replace, Error> {
-        if !elem.is("replace", ns::MESSAGE_CORRECT) {
-            return Err(Error::ParseError("This is not a replace element."));
-        }
-        for _ in elem.children() {
-            return Err(Error::ParseError("Unknown child in replace element."));
-        }
-        for (attr, _) in elem.attrs() {
-            if attr != "id" {
-                return Err(Error::ParseError("Unknown attribute in replace element."));
-            }
-        }
+        check_self!(elem, "replace", ns::MESSAGE_CORRECT);
+        check_no_children!(elem, "replace");
+        check_no_unknown_attributes!(elem, "replace", ["id"]);
         let id = get_attr!(elem, "id", required);
         Ok(Replace { id })
     }
