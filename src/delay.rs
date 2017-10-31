@@ -25,21 +25,16 @@ impl TryFrom<Element> for Delay {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<Delay, Error> {
-        if !elem.is("delay", ns::DELAY) {
-            return Err(Error::ParseError("This is not a delay element."));
-        }
-        for _ in elem.children() {
-            return Err(Error::ParseError("Unknown child in delay element."));
-        }
-        let from = get_attr!(elem, "from", optional);
-        let stamp = get_attr!(elem, "stamp", required);
+        check_self!(elem, "delay", ns::DELAY);
+        check_no_children!(elem, "delay");
+        check_no_unknown_attributes!(elem, "delay", ["from", "stamp"]);
         let data = match elem.text().as_ref() {
             "" => None,
             text => Some(text.to_owned()),
         };
         Ok(Delay {
-            from: from,
-            stamp: stamp,
+            from: get_attr!(elem, "from", optional),
+            stamp: get_attr!(elem, "stamp", required),
             data: data,
         })
     }
