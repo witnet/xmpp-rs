@@ -54,134 +54,76 @@ pub struct File {
     pub hashes: Vec<Hash>,
 }
 
-#[derive(Debug, Clone)]
-pub struct Description {
-    pub file: File,
-}
-
-#[derive(Debug, Clone)]
-pub struct Checksum {
-    pub name: ContentId,
-    pub creator: Creator,
-    pub file: File,
-}
-
-#[derive(Debug, Clone)]
-pub struct Received {
-    pub name: ContentId,
-    pub creator: Creator,
-}
-
-impl TryFrom<Element> for Received {
+impl TryFrom<Element> for File {
     type Err = Error;
 
-    fn try_from(elem: Element) -> Result<Received, Error> {
-        check_self!(elem, "received", ns::JINGLE_FT);
-        check_no_children!(elem, "received");
-        check_no_unknown_attributes!(elem, "received", ["name", "creator"]);
-        Ok(Received {
-            name: get_attr!(elem, "name", required),
-            creator: get_attr!(elem, "creator", required),
-        })
-    }
-}
+    fn try_from(elem: Element) -> Result<File, Error> {
+        check_self!(elem, "file", ns::JINGLE_FT);
+        check_no_attributes!(elem, "file");
 
-impl From<Received> for Element {
-    fn from(received: Received) -> Element {
-        Element::builder("received")
-                .ns(ns::JINGLE_FT)
-                .attr("name", received.name)
-                .attr("creator", received.creator)
-                .build()
-    }
-}
+        let mut file = File {
+            date: None,
+            media_type: None,
+            name: None,
+            descs: BTreeMap::new(),
+            size: None,
+            range: None,
+            hashes: vec!(),
+        };
 
-impl TryFrom<Element> for Description {
-    type Err = Error;
-
-    fn try_from(elem: Element) -> Result<Description, Error> {
-        if !elem.is("description", ns::JINGLE_FT) {
-            return Err(Error::ParseError("This is not a JingleFT description element."));
-        }
-        if elem.children().count() != 1 {
-            return Err(Error::ParseError("JingleFT description element must have exactly one child."));
-        }
-
-        let mut date = None;
-        let mut media_type = None;
-        let mut name = None;
-        let mut descs = BTreeMap::new();
-        let mut size = None;
-        let mut range = None;
-        let mut hashes = vec!();
-        for description_payload in elem.children() {
-            if !description_payload.is("file", ns::JINGLE_FT) {
-                return Err(Error::ParseError("Unknown element in JingleFT description."));
-            }
-            for file_payload in description_payload.children() {
-                if file_payload.is("date", ns::JINGLE_FT) {
-                    if date.is_some() {
-                        return Err(Error::ParseError("File must not have more than one date."));
-                    }
-                    date = Some(file_payload.text().parse()?);
-                } else if file_payload.is("media-type", ns::JINGLE_FT) {
-                    if media_type.is_some() {
-                        return Err(Error::ParseError("File must not have more than one media-type."));
-                    }
-                    media_type = Some(file_payload.text());
-                } else if file_payload.is("name", ns::JINGLE_FT) {
-                    if name.is_some() {
-                        return Err(Error::ParseError("File must not have more than one name."));
-                    }
-                    name = Some(file_payload.text());
-                } else if file_payload.is("desc", ns::JINGLE_FT) {
-                    let lang = get_attr!(file_payload, "xml:lang", default);
-                    let desc = Desc(file_payload.text());
-                    if descs.insert(lang, desc).is_some() {
-                        return Err(Error::ParseError("Desc element present twice for the same xml:lang."));
-                    }
-                } else if file_payload.is("size", ns::JINGLE_FT) {
-                    if size.is_some() {
-                        return Err(Error::ParseError("File must not have more than one size."));
-                    }
-                    size = Some(file_payload.text().parse()?);
-                } else if file_payload.is("range", ns::JINGLE_FT) {
-                    if range.is_some() {
-                        return Err(Error::ParseError("File must not have more than one range."));
-                    }
-                    let offset = get_attr!(file_payload, "offset", default);
-                    let length = get_attr!(file_payload, "length", optional);
-                    let mut range_hashes = vec!();
-                    for hash_element in file_payload.children() {
-                        if !hash_element.is("hash", ns::HASHES) {
-                            return Err(Error::ParseError("Unknown element in JingleFT range."));
-                        }
-                        range_hashes.push(Hash::try_from(hash_element.clone())?);
-                    }
-                    range = Some(Range {
-                        offset: offset,
-                        length: length,
-                        hashes: range_hashes,
-                    });
-                } else if file_payload.is("hash", ns::HASHES) {
-                    hashes.push(Hash::try_from(file_payload.clone())?);
-                } else {
-                    return Err(Error::ParseError("Unknown element in JingleFT file."));
+        for child in elem.children() {
+            if child.is("date", ns::JINGLE_FT) {
+                if file.date.is_some() {
+                    return Err(Error::ParseError("File must not have more than one date."));
                 }
+                file.date = Some(child.text().parse()?);
+            } else if child.is("media-type", ns::JINGLE_FT) {
+                if file.media_type.is_some() {
+                    return Err(Error::ParseError("File must not have more than one media-type."));
+                }
+                file.media_type = Some(child.text());
+            } else if child.is("name", ns::JINGLE_FT) {
+                if file.name.is_some() {
+                    return Err(Error::ParseError("File must not have more than one name."));
+                }
+                file.name = Some(child.text());
+            } else if child.is("desc", ns::JINGLE_FT) {
+                let lang = get_attr!(child, "xml:lang", default);
+                let desc = Desc(child.text());
+                if file.descs.insert(lang, desc).is_some() {
+                    return Err(Error::ParseError("Desc element present twice for the same xml:lang."));
+                }
+            } else if child.is("size", ns::JINGLE_FT) {
+                if file.size.is_some() {
+                    return Err(Error::ParseError("File must not have more than one size."));
+                }
+                file.size = Some(child.text().parse()?);
+            } else if child.is("range", ns::JINGLE_FT) {
+                if file.range.is_some() {
+                    return Err(Error::ParseError("File must not have more than one range."));
+                }
+                let offset = get_attr!(child, "offset", default);
+                let length = get_attr!(child, "length", optional);
+                let mut range_hashes = vec!();
+                for hash_element in child.children() {
+                    if !hash_element.is("hash", ns::HASHES) {
+                        return Err(Error::ParseError("Unknown element in JingleFT range."));
+                    }
+                    range_hashes.push(Hash::try_from(hash_element.clone())?);
+                }
+                file.range = Some(Range {
+                    offset: offset,
+                    length: length,
+                    hashes: range_hashes,
+                });
+            } else if child.is("hash", ns::HASHES) {
+                file.hashes.push(Hash::try_from(child.clone())?);
+            } else {
+                return Err(Error::ParseError("Unknown element in JingleFT file."));
             }
         }
 
-        Ok(Description {
-            file: File {
-                date: date,
-                media_type: media_type,
-                name: name,
-                descs: descs,
-                size: size,
-                range: range,
-                hashes: hashes,
-            },
-        })
+        Ok(file)
     }
 }
 
@@ -233,6 +175,32 @@ impl From<File> for Element {
         root
     }
 }
+#[derive(Debug, Clone)]
+pub struct Description {
+    pub file: File,
+}
+
+impl TryFrom<Element> for Description {
+    type Err = Error;
+
+    fn try_from(elem: Element) -> Result<Description, Error> {
+        check_self!(elem, "description", ns::JINGLE_FT, "JingleFT description");
+        check_no_attributes!(elem, "JingleFT description");
+        let mut file = None;
+        for child in elem.children() {
+            if file.is_some() {
+                return Err(Error::ParseError("JingleFT description element must have exactly one child."));
+            }
+            file = Some(File::try_from(child.clone())?);
+        }
+        if file.is_none() {
+            return Err(Error::ParseError("JingleFT description element must have exactly one child."));
+        }
+        Ok(Description {
+            file: file.unwrap(),
+        })
+    }
+}
 
 impl From<Description> for Element {
     fn from(description: Description) -> Element {
@@ -240,6 +208,43 @@ impl From<Description> for Element {
         Element::builder("description")
                 .ns(ns::JINGLE_FT)
                 .append(file)
+                .build()
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct Checksum {
+    pub name: ContentId,
+    pub creator: Creator,
+    pub file: File,
+}
+
+#[derive(Debug, Clone)]
+pub struct Received {
+    pub name: ContentId,
+    pub creator: Creator,
+}
+
+impl TryFrom<Element> for Received {
+    type Err = Error;
+
+    fn try_from(elem: Element) -> Result<Received, Error> {
+        check_self!(elem, "received", ns::JINGLE_FT);
+        check_no_children!(elem, "received");
+        check_no_unknown_attributes!(elem, "received", ["name", "creator"]);
+        Ok(Received {
+            name: get_attr!(elem, "name", required),
+            creator: get_attr!(elem, "creator", required),
+        })
+    }
+}
+
+impl From<Received> for Element {
+    fn from(received: Received) -> Element {
+        Element::builder("received")
+                .ns(ns::JINGLE_FT)
+                .attr("name", received.name)
+                .attr("creator", received.creator)
                 .build()
     }
 }
