@@ -26,6 +26,13 @@ mod tests {
     }
 
     #[test]
+    fn test_serialise() {
+        let elem1 = Element::from(Ping);
+        let elem2: Element = "<ping xmlns='urn:xmpp:ping'/>".parse().unwrap();
+        assert_eq!(elem1, elem2);
+    }
+
+    #[test]
     fn test_invalid() {
         let elem: Element = "<ping xmlns='urn:xmpp:ping'><coucou/></ping>".parse().unwrap();
         let error = Ping::try_from(elem).unwrap_err();
