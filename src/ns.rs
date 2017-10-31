@@ -62,6 +62,11 @@ pub const JINGLE: &str = "urn:xmpp:jingle:1";
 /// XEP-0184: Message Delivery Receipts
 pub const RECEIPTS: &str = "urn:xmpp:receipts";
 
+/// XEP-0191: Blocking Command
+pub const BLOCKING: &str = "urn:xmpp:blocking";
+/// XEP-0191: Blocking Command
+pub const BLOCKING_ERRORS: &str = "urn:xmpp:blocking:errors";
+
 /// XEP-0199: XMPP Ping
 pub const PING: &str = "urn:xmpp:ping";
 

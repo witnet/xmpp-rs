@@ -301,6 +301,9 @@ pub mod jingle;
 /// XEP-0184: Message Delivery Receipts
 pub mod receipts;
 
+/// XEP-0191: Blocking Command
+pub mod blocking;
+
 /// XEP-0199: XMPP Ping
 pub mod ping;
 
