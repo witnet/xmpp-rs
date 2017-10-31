@@ -199,7 +199,7 @@ fn serialise_jid_list(name: &str, jids: Vec<Jid>) -> Option<Element> {
                      .append(jids.into_iter()
                                  .map(|jid| Element::builder("jid")
                                                     .ns(ns::MAM)
-                                                    .append(String::from(jid))
+                                                    .append(jid)
                                                     .build())
                                  .collect::<Vec<_>>())
                      .build())
