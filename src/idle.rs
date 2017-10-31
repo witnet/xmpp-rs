@@ -7,44 +7,20 @@
 use try_from::TryFrom;
 
 use minidom::Element;
-use chrono::{DateTime, FixedOffset};
+use date::DateTime;
 
 use error::Error;
 
 use ns;
 
-#[derive(Debug, Clone)]
-pub struct Idle {
-    pub since: DateTime<FixedOffset>,
-}
-
-impl TryFrom<Element> for Idle {
-    type Err = Error;
-
-    fn try_from(elem: Element) -> Result<Idle, Error> {
-        if !elem.is("idle", ns::IDLE) {
-            return Err(Error::ParseError("This is not an idle element."));
-        }
-        for _ in elem.children() {
-            return Err(Error::ParseError("Unknown child in idle element."));
-        }
-        let since = get_attr!(elem, "since", required, since, DateTime::parse_from_rfc3339(since)?);
-        Ok(Idle { since: since })
-    }
-}
-
-impl From<Idle> for Element {
-    fn from(idle: Idle) -> Element {
-        Element::builder("idle")
-                .ns(ns::IDLE)
-                .attr("since", idle.since.to_rfc3339())
-                .build()
-    }
-}
+generate_element_with_only_attributes!(Idle, "idle", ns::IDLE, [
+    since: DateTime = "since" => required,
+]);
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::str::FromStr;
     use std::error::Error as StdError;
 
     #[test]
@@ -135,7 +111,7 @@ mod tests {
     #[test]
     fn test_serialise() {
         let elem: Element = "<idle xmlns='urn:xmpp:idle:1' since='2017-05-21T20:19:55+01:00'/>".parse().unwrap();
-        let idle = Idle { since: DateTime::parse_from_rfc3339("2017-05-21T20:19:55+01:00").unwrap() };
+        let idle = Idle { since: DateTime::from_str("2017-05-21T20:19:55+01:00").unwrap() };
         let elem2 = idle.into();
         assert_eq!(elem, elem2);
     }

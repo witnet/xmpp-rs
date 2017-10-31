@@ -11,9 +11,9 @@ use std::str::FromStr;
 
 use hashes::Hash;
 use jingle::{Creator, ContentId};
+use date::DateTime;
 
 use minidom::{Element, IntoAttributeValue};
-use chrono::{DateTime, FixedOffset};
 
 use error::Error;
 use ns;
@@ -60,7 +60,7 @@ generate_id!(Desc);
 
 #[derive(Debug, Clone)]
 pub struct File {
-    pub date: Option<DateTime<FixedOffset>>,
+    pub date: Option<DateTime>,
     pub media_type: Option<String>,
     pub name: Option<String>,
     pub descs: BTreeMap<Lang, Desc>,
@@ -137,7 +137,7 @@ impl From<File> for Element {
         if let Some(date) = file.date {
             root.append_child(Element::builder("date")
                                       .ns(ns::JINGLE_FT)
-                                      .append(date.to_rfc3339())
+                                      .append(date)
                                       .build());
         }
         if let Some(media_type) = file.media_type {
@@ -285,7 +285,7 @@ mod tests {
         assert_eq!(desc.file.media_type, Some(String::from("text/plain")));
         assert_eq!(desc.file.name, Some(String::from("test.txt")));
         assert_eq!(desc.file.descs, BTreeMap::new());
-        assert_eq!(desc.file.date, Some(DateTime::parse_from_rfc3339("2015-07-26T21:46:00+01:00").unwrap()));
+        assert_eq!(desc.file.date, DateTime::from_str("2015-07-26T21:46:00+01:00").ok());
         assert_eq!(desc.file.size, Some(6144u64));
         assert_eq!(desc.file.range, None);
         assert_eq!(desc.file.hashes[0].algo, Algo::Sha_1);

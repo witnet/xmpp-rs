@@ -325,6 +325,9 @@ pub mod pubsub;
 /// XEP-0077: In-Band Registration
 pub mod ibr;
 
+/// XEP-0082: XMPP Date and Time Profiles
+pub mod date;
+
 /// XEP-0085: Chat State Notifications
 pub mod chatstates;
 

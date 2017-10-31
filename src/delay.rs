@@ -7,7 +7,7 @@
 use try_from::TryFrom;
 
 use minidom::Element;
-use chrono::{DateTime, FixedOffset};
+use date::DateTime;
 
 use error::Error;
 use jid::Jid;
@@ -17,7 +17,7 @@ use ns;
 #[derive(Debug, Clone)]
 pub struct Delay {
     pub from: Option<Jid>,
-    pub stamp: DateTime<FixedOffset>,
+    pub stamp: DateTime,
     pub data: Option<String>,
 }
 
@@ -32,7 +32,7 @@ impl TryFrom<Element> for Delay {
             return Err(Error::ParseError("Unknown child in delay element."));
         }
         let from = get_attr!(elem, "from", optional);
-        let stamp = get_attr!(elem, "stamp", required, stamp, DateTime::parse_from_rfc3339(stamp)?);
+        let stamp = get_attr!(elem, "stamp", required);
         let data = match elem.text().as_ref() {
             "" => None,
             text => Some(text.to_owned()),
@@ -50,7 +50,7 @@ impl From<Delay> for Element {
         Element::builder("delay")
                 .ns(ns::DELAY)
                 .attr("from", delay.from)
-                .attr("stamp", delay.stamp.to_rfc3339())
+                .attr("stamp", delay.stamp)
                 .append(delay.data)
                 .build()
     }
@@ -60,21 +60,13 @@ impl From<Delay> for Element {
 mod tests {
     use super::*;
     use std::str::FromStr;
-    use chrono::{Datelike, Timelike};
 
     #[test]
     fn test_simple() {
         let elem: Element = "<delay xmlns='urn:xmpp:delay' from='capulet.com' stamp='2002-09-10T23:08:25Z'/>".parse().unwrap();
         let delay = Delay::try_from(elem).unwrap();
         assert_eq!(delay.from, Some(Jid::from_str("capulet.com").unwrap()));
-        assert_eq!(delay.stamp.year(), 2002);
-        assert_eq!(delay.stamp.month(), 9);
-        assert_eq!(delay.stamp.day(), 10);
-        assert_eq!(delay.stamp.hour(), 23);
-        assert_eq!(delay.stamp.minute(), 08);
-        assert_eq!(delay.stamp.second(), 25);
-        assert_eq!(delay.stamp.nanosecond(), 0);
-        assert_eq!(delay.stamp.timezone(), FixedOffset::east(0));
+        assert_eq!(delay.stamp, DateTime::from_str("2002-09-10T23:08:25Z").unwrap());
         assert_eq!(delay.data, None);
     }
 
@@ -105,7 +97,7 @@ mod tests {
         let elem: Element = "<delay xmlns='urn:xmpp:delay' stamp='2002-09-10T23:08:25+00:00'/>".parse().unwrap();
         let delay = Delay {
             from: None,
-            stamp: DateTime::parse_from_rfc3339("2002-09-10T23:08:25Z").unwrap(),
+            stamp: DateTime::from_str("2002-09-10T23:08:25Z").unwrap(),
             data: None,
         };
         let elem2 = delay.into();
@@ -117,7 +109,7 @@ mod tests {
         let elem: Element = "<delay xmlns='urn:xmpp:delay' from='juliet@example.org' stamp='2002-09-10T23:08:25+00:00'>Reason</delay>".parse().unwrap();
         let delay = Delay {
             from: Some(Jid::from_str("juliet@example.org").unwrap()),
-            stamp: DateTime::parse_from_rfc3339("2002-09-10T23:08:25Z").unwrap(),
+            stamp: DateTime::from_str("2002-09-10T23:08:25Z").unwrap(),
             data: Some(String::from("Reason")),
         };
         let elem2 = delay.into();

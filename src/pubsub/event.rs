@@ -9,7 +9,7 @@ use std::str::FromStr;
 
 use minidom::{Element, IntoAttributeValue};
 use jid::Jid;
-use chrono::{DateTime, FixedOffset};
+use date::DateTime;
 
 use error::Error;
 
@@ -98,7 +98,7 @@ pub enum PubSubEvent {
     },
     Subscription {
         node: NodeName,
-        expiry: Option<DateTime<FixedOffset>>,
+        expiry: Option<DateTime>,
         jid: Option<Jid>,
         subid: Option<SubscriptionId>,
         subscription: Option<Subscription>,
@@ -256,7 +256,7 @@ impl From<PubSubEvent> for Element {
                 Element::builder("subscription")
                         .ns(ns::PUBSUB_EVENT)
                         .attr("node", node)
-                        .attr("expiry", expiry.map(|expiry| expiry.to_rfc3339()))
+                        .attr("expiry", expiry)
                         .attr("jid", jid)
                         .attr("subid", subid)
                         .attr("subscription", subscription)
