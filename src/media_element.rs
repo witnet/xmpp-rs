@@ -57,9 +57,8 @@ impl TryFrom<Element> for MediaElement {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<MediaElement, Error> {
-        if !elem.is("media", ns::MEDIA_ELEMENT) {
-            return Err(Error::ParseError("This is not a media element."));
-        }
+        check_self!(elem, "media", ns::MEDIA_ELEMENT);
+        check_no_unknown_attributes!(elem, "media", ["width", "height"]);
 
         let mut media = MediaElement {
             width: get_attr!(elem, "width", optional),
