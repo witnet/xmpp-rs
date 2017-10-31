@@ -43,16 +43,27 @@ generate_attribute!(Senders, "senders", {
     Responder => "responder",
 }, Default = Both);
 
+// From https://www.iana.org/assignments/cont-disp/cont-disp.xhtml
+generate_attribute!(Disposition, "disposition", {
+    Inline => "inline",
+    Attachment => "attachment",
+    FormData => "form-data",
+    Signal => "signal",
+    Alert => "alert",
+    Icon => "icon",
+    Render => "render",
+    RecipientListHistory => "recipient-list-history",
+    Session => "session",
+    Aib => "aib",
+    EarlySession => "early-session",
+    RecipientList => "recipient-list",
+    Notification => "notification",
+    ByReference => "by-reference",
+    InfoPackage => "info-package",
+    RecordingSession => "recording-session",
+}, Default = Session);
+
 generate_id!(ContentId);
-
-// TODO: the list of values is defined, use an enum!
-generate_id!(Disposition);
-
-impl Default for Disposition {
-    fn default() -> Disposition {
-        Disposition(String::from("session"))
-    }
-}
 
 #[derive(Debug, Clone)]
 pub struct Content {
@@ -353,7 +364,7 @@ mod tests {
         assert_eq!(jingle.contents[0].creator, Creator::Initiator);
         assert_eq!(jingle.contents[0].name, ContentId(String::from("coucou")));
         assert_eq!(jingle.contents[0].senders, Senders::Both);
-        assert_eq!(jingle.contents[0].disposition, Disposition(String::from("session")));
+        assert_eq!(jingle.contents[0].disposition, Disposition::Session);
 
         let elem: Element = "<jingle xmlns='urn:xmpp:jingle:1' action='session-initiate' sid='coucou'><content creator='initiator' name='coucou' senders='both'><description/><transport/></content></jingle>".parse().unwrap();
         let jingle = Jingle::try_from(elem).unwrap();
@@ -361,7 +372,7 @@ mod tests {
 
         let elem: Element = "<jingle xmlns='urn:xmpp:jingle:1' action='session-initiate' sid='coucou'><content creator='initiator' name='coucou' disposition='early-session'><description/><transport/></content></jingle>".parse().unwrap();
         let jingle = Jingle::try_from(elem).unwrap();
-        assert_eq!(jingle.contents[0].disposition, Disposition(String::from("early-session")));
+        assert_eq!(jingle.contents[0].disposition, Disposition::EarlySession);
     }
 
     #[test]
