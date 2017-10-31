@@ -19,41 +19,11 @@ generate_attribute!(Stanza, "stanza", {
     Message => "message",
 }, Default = Iq);
 
-#[derive(Debug, Clone)]
-pub struct Open {
-    pub block_size: u16,
-    pub sid: String,
-    pub stanza: Stanza,
-}
-
-impl TryFrom<Element> for Open {
-    type Err = Error;
-
-    fn try_from(elem: Element) -> Result<Open, Error> {
-        if !elem.is("open", ns::IBB) {
-            return Err(Error::ParseError("This is not an open element."));
-        }
-        for _ in elem.children() {
-            return Err(Error::ParseError("Unknown child in open element."));
-        }
-        Ok(Open {
-            block_size: get_attr!(elem, "block-size", required),
-            sid: get_attr!(elem, "sid", required),
-            stanza: get_attr!(elem, "stanza", default),
-        })
-    }
-}
-
-impl From<Open> for Element {
-    fn from(open: Open) -> Element {
-        Element::builder("open")
-                .ns(ns::IBB)
-                .attr("block-size", open.block_size)
-                .attr("sid", open.sid)
-                .attr("stanza", open.stanza)
-                .build()
-    }
-}
+generate_element_with_only_attributes!(Open, "open", ns::IBB, [
+    block_size: u16 = "block-size" => required,
+    sid: String = "sid" => required,
+    stanza: Stanza = "stanza" => default,
+]);
 
 #[derive(Debug, Clone)]
 pub struct Data {
@@ -91,35 +61,9 @@ impl From<Data> for Element {
     }
 }
 
-#[derive(Debug, Clone)]
-pub struct Close {
-    pub sid: String,
-}
-
-impl TryFrom<Element> for Close {
-    type Err = Error;
-
-    fn try_from(elem: Element) -> Result<Close, Error> {
-        if !elem.is("close", ns::IBB) {
-            return Err(Error::ParseError("This is not a close element."));
-        }
-        for _ in elem.children() {
-            return Err(Error::ParseError("Unknown child in close element."));
-        }
-        Ok(Close {
-            sid: get_attr!(elem, "sid", required),
-        })
-    }
-}
-
-impl From<Close> for Element {
-    fn from(close: Close) -> Element {
-        Element::builder("close")
-                .ns(ns::IBB)
-                .attr("sid", close.sid)
-                .build()
-    }
-}
+generate_element_with_only_attributes!(Close, "close", ns::IBB, [
+    sid: String = "sid" => required,
+]);
 
 #[cfg(test)]
 mod tests {

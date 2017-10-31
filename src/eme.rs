@@ -13,39 +13,14 @@ use error::Error;
 use ns;
 
 /// Structure representing an `<encryption xmlns='urn:xmpp:eme:0'/>` element.
-#[derive(Debug, Clone)]
-pub struct ExplicitMessageEncryption {
-    /// Namespace of the encryption scheme used.
-    pub namespace: String,
+generate_element_with_only_attributes!(ExplicitMessageEncryption, "encryption", ns::EME, [
+    // Namespace of the encryption scheme used.
+    namespace: String = "namespace" => required,
 
-    /// User-friendly name for the encryption scheme, should be `None` for OTR,
-    /// legacy OpenPGP and OX.
-    pub name: Option<String>,
-}
-
-impl TryFrom<Element> for ExplicitMessageEncryption {
-    type Err = Error;
-
-    fn try_from(elem: Element) -> Result<ExplicitMessageEncryption, Error> {
-        check_self!(elem, "encryption", ns::EME);
-        check_no_children!(elem, "encryption");
-        check_no_unknown_attributes!(elem, "encryption", ["namespace", "name"]);
-        Ok(ExplicitMessageEncryption {
-            namespace: get_attr!(elem, "namespace", required),
-            name: get_attr!(elem, "name", optional),
-        })
-    }
-}
-
-impl From<ExplicitMessageEncryption> for Element {
-    fn from(eme: ExplicitMessageEncryption) -> Element {
-        Element::builder("encryption")
-                .ns(ns::EME)
-                .attr("namespace", eme.namespace)
-                .attr("name", eme.name)
-                .build()
-    }
-}
+    // User-friendly name for the encryption scheme, should be `None` for OTR,
+    // legacy OpenPGP and OX.
+    name: Option<String> = "name" => optional,
+]);
 
 #[cfg(test)]
 mod tests {

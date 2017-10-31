@@ -12,31 +12,9 @@ use error::Error;
 
 use ns;
 
-#[derive(Debug, Clone)]
-pub struct Replace {
-    pub id: String,
-}
-
-impl TryFrom<Element> for Replace {
-    type Err = Error;
-
-    fn try_from(elem: Element) -> Result<Replace, Error> {
-        check_self!(elem, "replace", ns::MESSAGE_CORRECT);
-        check_no_children!(elem, "replace");
-        check_no_unknown_attributes!(elem, "replace", ["id"]);
-        let id = get_attr!(elem, "id", required);
-        Ok(Replace { id })
-    }
-}
-
-impl From<Replace> for Element {
-    fn from(replace: Replace) -> Element {
-        Element::builder("replace")
-                .ns(ns::MESSAGE_CORRECT)
-                .attr("id", replace.id)
-                .build()
-    }
-}
+generate_element_with_only_attributes!(Replace, "replace", ns::MESSAGE_CORRECT, [
+    id: String = "id" => required,
+]);
 
 #[cfg(test)]
 mod tests {

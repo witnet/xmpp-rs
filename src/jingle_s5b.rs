@@ -30,29 +30,14 @@ generate_id!(CandidateId);
 
 generate_id!(StreamId);
 
-#[derive(Debug, Clone)]
-pub struct Candidate {
-    pub cid: CandidateId,
-    pub host: String,
-    pub jid: Jid,
-    pub port: Option<u16>,
-    pub priority: u32,
-    pub type_: Type,
-}
-
-impl From<Candidate> for Element {
-    fn from(candidate: Candidate) -> Element {
-        Element::builder("candidate")
-                .ns(ns::JINGLE_S5B)
-                .attr("cid", candidate.cid)
-                .attr("host", candidate.host)
-                .attr("jid", String::from(candidate.jid))
-                .attr("port", candidate.port)
-                .attr("priority", candidate.priority)
-                .attr("type", candidate.type_)
-                .build()
-    }
-}
+generate_element_with_only_attributes!(Candidate, "candidate", ns::JINGLE_S5B, [
+    cid: CandidateId = "cid" => required,
+    host: String = "host" => required,
+    jid: Jid = "jid" => required,
+    port: Option<u16> = "port" => optional,
+    priority: u32 = "priority" => required,
+    type_: Type = "type" => default,
+]);
 
 #[derive(Debug, Clone)]
 pub enum TransportPayload {

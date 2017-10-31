@@ -17,41 +17,11 @@ use ibb::Stanza;
 
 generate_id!(StreamId);
 
-#[derive(Debug, Clone)]
-pub struct Transport {
-    pub block_size: u16,
-    pub sid: StreamId,
-    pub stanza: Stanza,
-}
-
-impl TryFrom<Element> for Transport {
-    type Err = Error;
-
-    fn try_from(elem: Element) -> Result<Transport, Error> {
-        if !elem.is("transport", ns::JINGLE_IBB) {
-            return Err(Error::ParseError("This is not an JingleIBB element."))
-        }
-        for _ in elem.children() {
-            return Err(Error::ParseError("Unknown child in JingleIBB element."));
-        }
-        Ok(Transport {
-            block_size: get_attr!(elem, "block-size", required),
-            sid: get_attr!(elem, "sid", required),
-            stanza: get_attr!(elem, "stanza", default),
-        })
-    }
-}
-
-impl From<Transport> for Element {
-    fn from(transport: Transport) -> Element {
-        Element::builder("transport")
-                .ns(ns::JINGLE_IBB)
-                .attr("block-size", transport.block_size)
-                .attr("sid", transport.sid)
-                .attr("stanza", transport.stanza)
-                .build()
-    }
-}
+generate_element_with_only_attributes!(Transport, "transport", ns::JINGLE_IBB, [
+    block_size: u16 = "block-size" => required,
+    sid: StreamId = "sid" => required,
+    stanza: Stanza = "stanza" => default,
+]);
 
 #[cfg(test)]
 mod tests {

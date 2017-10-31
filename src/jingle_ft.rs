@@ -256,35 +256,10 @@ impl From<Checksum> for Element {
     }
 }
 
-#[derive(Debug, Clone)]
-pub struct Received {
-    pub name: ContentId,
-    pub creator: Creator,
-}
-
-impl TryFrom<Element> for Received {
-    type Err = Error;
-
-    fn try_from(elem: Element) -> Result<Received, Error> {
-        check_self!(elem, "received", ns::JINGLE_FT);
-        check_no_children!(elem, "received");
-        check_no_unknown_attributes!(elem, "received", ["name", "creator"]);
-        Ok(Received {
-            name: get_attr!(elem, "name", required),
-            creator: get_attr!(elem, "creator", required),
-        })
-    }
-}
-
-impl From<Received> for Element {
-    fn from(received: Received) -> Element {
-        Element::builder("received")
-                .ns(ns::JINGLE_FT)
-                .attr("name", received.name)
-                .attr("creator", received.creator)
-                .build()
-    }
-}
+generate_element_with_only_attributes!(Received, "received", ns::JINGLE_FT, [
+    name: ContentId = "name" => required,
+    creator: Creator = "creator" => required,
+]);
 
 #[cfg(test)]
 mod tests {

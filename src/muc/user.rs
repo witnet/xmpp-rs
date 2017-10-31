@@ -192,38 +192,9 @@ impl From<Actor> for Element {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct Continue {
-    thread: Option<String>,
-}
-
-impl TryFrom<Element> for Continue {
-    type Err = Error;
-
-    fn try_from(elem: Element) -> Result<Continue, Error> {
-        if !elem.is("continue", ns::MUC_USER) {
-            return Err(Error::ParseError("This is not a continue element."));
-        }
-        for _ in elem.children() {
-            return Err(Error::ParseError("Unknown child in continue element."));
-        }
-        for (attr, _) in elem.attrs() {
-            if attr != "thread" {
-                return Err(Error::ParseError("Unknown attribute in continue element."));
-            }
-        }
-        Ok(Continue { thread: get_attr!(elem, "thread", optional) })
-    }
-}
-
-impl From<Continue> for Element {
-    fn from(cont: Continue) -> Element {
-        Element::builder("continue")
-                .ns(ns::MUC_USER)
-                .attr("thread", cont.thread)
-                .build()
-    }
-}
+generate_element_with_only_attributes!(Continue, "continue", ns::MUC_USER, [
+    thread: Option<String> = "thread" => optional,
+]);
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Reason(String);
@@ -576,7 +547,7 @@ mod tests {
                       thread='foo'/>
         ".parse().unwrap();
         let continue_ = Continue::try_from(elem).unwrap();
-        assert_eq!(continue_, Continue { thread: Some("foo".to_owned()) });
+        assert_eq!(continue_.thread, Some("foo".to_owned()));
     }
 
     #[test]
@@ -725,7 +696,7 @@ mod tests {
         let item = Item::try_from(elem).unwrap();
         let continue_1 = Continue { thread: Some("foobar".to_owned()) };
         match item {
-            Item { continue_: Some(continue_2), .. } => assert_eq!(continue_2, continue_1),
+            Item { continue_: Some(continue_2), .. } => assert_eq!(continue_2.thread, continue_1.thread),
             _ => panic!(),
         }
     }

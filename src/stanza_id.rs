@@ -13,68 +13,14 @@ use error::Error;
 
 use ns;
 
-#[derive(Debug, Clone)]
-pub struct StanzaId {
-    pub id: String,
-    pub by: Jid,
-}
+generate_element_with_only_attributes!(StanzaId, "stanza-id", ns::SID, [
+    id: String = "id" => required,
+    by: Jid = "by" => required,
+]);
 
-impl TryFrom<Element> for StanzaId {
-    type Err = Error;
-
-    fn try_from(elem: Element) -> Result<StanzaId, Error> {
-        if !elem.is("stanza-id", ns::SID) {
-            return Err(Error::ParseError("This is not a stanza-id element."));
-        }
-        for _ in elem.children() {
-            return Err(Error::ParseError("Unknown child in stanza-id element."));
-        }
-        Ok(StanzaId {
-            id: get_attr!(elem, "id", required),
-            by: get_attr!(elem, "by", required),
-        })
-    }
-}
-
-impl From<StanzaId> for Element {
-    fn from(stanza_id: StanzaId) -> Element {
-        Element::builder("stanza-id")
-                .ns(ns::SID)
-                .attr("id", stanza_id.id)
-                .attr("by", stanza_id.by)
-                .build()
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct OriginId {
-    pub id: String,
-}
-
-impl TryFrom<Element> for OriginId {
-    type Err = Error;
-
-    fn try_from(elem: Element) -> Result<OriginId, Error> {
-        if !elem.is("origin-id", ns::SID) {
-            return Err(Error::ParseError("This is not an origin-id element."));
-        }
-        for _ in elem.children() {
-            return Err(Error::ParseError("Unknown child in origin-id element."));
-        }
-        Ok(OriginId {
-            id: get_attr!(elem, "id", required),
-        })
-    }
-}
-
-impl From<OriginId> for Element {
-    fn from(origin_id: OriginId) -> Element {
-        Element::builder("origin-id")
-                .ns(ns::SID)
-                .attr("id", origin_id.id)
-                .build()
-    }
-}
+generate_element_with_only_attributes!(OriginId, "origin-id", ns::SID, [
+    id: String = "id" => required,
+]);
 
 #[cfg(test)]
 mod tests {

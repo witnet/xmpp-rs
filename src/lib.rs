@@ -203,6 +203,46 @@ macro_rules! generate_empty_element {
     );
 }
 
+macro_rules! generate_element_with_only_attributes {
+    ($elem:ident, $name:tt, $ns:expr, [$($attr:ident: $attr_type:ty = $attr_name:tt => $attr_action:tt),+,]) => (
+        generate_element_with_only_attributes!($elem, $name, $ns, [$($attr: $attr_type = $attr_name => $attr_action),*]);
+    );
+    ($elem:ident, $name:tt, $ns:expr, [$($attr:ident: $attr_type:ty = $attr_name:tt => $attr_action:tt),+]) => (
+        #[derive(Debug, Clone)]
+        pub struct $elem {
+            $(
+            pub $attr: $attr_type
+            ),*
+        }
+
+        impl TryFrom<Element> for $elem {
+            type Err = Error;
+
+            fn try_from(elem: Element) -> Result<$elem, Error> {
+                check_self!(elem, $name, $ns);
+                check_no_children!(elem, $name);
+                check_no_unknown_attributes!(elem, $name, [$($attr_name),*]);
+                Ok($elem {
+                    $(
+                    $attr: get_attr!(elem, $attr_name, $attr_action)
+                    ),*
+                })
+            }
+        }
+
+        impl From<$elem> for Element {
+            fn from(elem: $elem) -> Element {
+                Element::builder($name)
+                        .ns($ns)
+                        $(
+                        .attr($attr_name, elem.$attr)
+                        )*
+                        .build()
+            }
+        }
+    );
+}
+
 macro_rules! generate_id {
     ($elem:ident) => (
         #[derive(Debug, Clone, PartialEq, Eq, Hash)]
