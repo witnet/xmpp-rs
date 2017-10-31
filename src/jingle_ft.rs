@@ -12,7 +12,7 @@ use std::str::FromStr;
 use hashes::Hash;
 use jingle::{Creator, ContentId};
 
-use minidom::{Element, IntoElements, IntoAttributeValue, ElementEmitter};
+use minidom::{Element, IntoAttributeValue};
 use chrono::{DateTime, FixedOffset};
 
 use error::Error;
@@ -25,17 +25,32 @@ pub struct Range {
     pub hashes: Vec<Hash>,
 }
 
-impl IntoElements for Range {
-    fn into_elements(self, emitter: &mut ElementEmitter) {
-        let mut elem = Element::builder("range")
-                               .ns(ns::JINGLE_FT)
-                               .attr("offset", if self.offset == 0 { None } else { Some(self.offset) })
-                               .attr("length", self.length)
-                               .build();
-        for hash in self.hashes {
-            elem.append_child(hash.into());
+impl TryFrom<Element> for Range {
+    type Err = Error;
+
+    fn try_from(elem: Element) -> Result<Range, Error> {
+        check_self!(elem, "range", ns::JINGLE_FT);
+        check_no_unknown_attributes!(elem, "range", ["offset", "length"]);
+        let mut hashes = vec!();
+        for child in elem.children() {
+            hashes.push(Hash::try_from(child.clone())?);
         }
-        emitter.append_child(elem);
+        Ok(Range {
+            offset: get_attr!(elem, "offset", default),
+            length: get_attr!(elem, "length", optional),
+            hashes: hashes,
+        })
+    }
+}
+
+impl From<Range> for Element {
+    fn from(range: Range) -> Element {
+        Element::builder("range")
+                .ns(ns::JINGLE_FT)
+                .attr("offset", if range.offset == 0 { None } else { Some(range.offset) })
+                .attr("length", range.length)
+                .append(range.hashes)
+                .build()
     }
 }
 
@@ -102,20 +117,7 @@ impl TryFrom<Element> for File {
                 if file.range.is_some() {
                     return Err(Error::ParseError("File must not have more than one range."));
                 }
-                let offset = get_attr!(child, "offset", default);
-                let length = get_attr!(child, "length", optional);
-                let mut range_hashes = vec!();
-                for hash_element in child.children() {
-                    if !hash_element.is("hash", ns::HASHES) {
-                        return Err(Error::ParseError("Unknown element in JingleFT range."));
-                    }
-                    range_hashes.push(Hash::try_from(hash_element.clone())?);
-                }
-                file.range = Some(Range {
-                    offset: offset,
-                    length: length,
-                    hashes: range_hashes,
-                });
+                file.range = Some(Range::try_from(child.clone())?);
             } else if child.is("hash", ns::HASHES) {
                 file.hashes.push(Hash::try_from(child.clone())?);
             } else {
@@ -462,5 +464,34 @@ mod tests {
             _ => panic!(),
         };
         assert_eq!(message, "Unknown value for 'creator' attribute.");
+    }
+
+    #[test]
+    fn test_range() {
+        let elem: Element = "<range xmlns='urn:xmpp:jingle:apps:file-transfer:5'/>".parse().unwrap();
+        let range = Range::try_from(elem).unwrap();
+        assert_eq!(range.offset, 0);
+        assert_eq!(range.length, None);
+        assert_eq!(range.hashes, vec!());
+
+        let elem: Element = "<range xmlns='urn:xmpp:jingle:apps:file-transfer:5' offset='2048' length='1024'><hash xmlns='urn:xmpp:hashes:2' algo='sha-1'>kHp5RSzW/h7Gm1etSf90Mr5PC/k=</hash></range>".parse().unwrap();
+        let hashes = vec!(Hash { algo: Algo::Sha_1, hash: vec!(144, 122, 121, 69, 44, 214, 254, 30, 198, 155, 87, 173, 73, 255, 116, 50, 190, 79, 11, 249) });
+        let range = Range::try_from(elem).unwrap();
+        assert_eq!(range.offset, 2048);
+        assert_eq!(range.length, Some(1024));
+        assert_eq!(range.hashes, hashes);
+        let elem2 = Element::from(range);
+        let range2 = Range::try_from(elem2).unwrap();
+        assert_eq!(range2.offset, 2048);
+        assert_eq!(range2.length, Some(1024));
+        assert_eq!(range2.hashes, hashes);
+
+        let elem: Element = "<range xmlns='urn:xmpp:jingle:apps:file-transfer:5' coucou=''/>".parse().unwrap();
+        let error = Range::try_from(elem).unwrap_err();
+        let message = match error {
+            Error::ParseError(string) => string,
+            _ => panic!(),
+        };
+        assert_eq!(message, "Unknown attribute in range element.");
     }
 }
