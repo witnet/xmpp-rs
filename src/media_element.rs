@@ -18,6 +18,24 @@ pub struct URI {
     pub uri: String,
 }
 
+impl TryFrom<Element> for URI {
+    type Err = Error;
+
+    fn try_from(elem: Element) -> Result<URI, Error> {
+        check_self!(elem, "uri", ns::MEDIA_ELEMENT);
+        check_no_unknown_attributes!(elem, "uri", ["type"]);
+        check_no_children!(elem, "uri");
+        let uri = elem.text().trim().to_owned();
+        if uri == "" {
+            return Err(Error::ParseError("URI missing in uri."));
+        }
+        Ok(URI {
+            type_: get_attr!(elem, "type", required),
+            uri: uri,
+        })
+    }
+}
+
 impl From<URI> for Element {
     fn from(uri: URI) -> Element {
         Element::builder("uri")
@@ -48,14 +66,9 @@ impl TryFrom<Element> for MediaElement {
             height: get_attr!(elem, "height", optional),
             uris: vec!(),
         };
-        for uri in elem.children() {
-            if uri.is("uri", ns::MEDIA_ELEMENT) {
-                let type_ = get_attr!(uri, "type", required);
-                let text = uri.text().trim().to_owned();
-                if text == "" {
-                    return Err(Error::ParseError("URI missing in uri."));
-                }
-                media.uris.push(URI { type_: type_, uri: text });
+        for child in elem.children() {
+            if child.is("uri", ns::MEDIA_ELEMENT) {
+                media.uris.push(URI::try_from(child.clone())?);
             } else {
                 return Err(Error::ParseError("Unknown child in media element."));
             }
