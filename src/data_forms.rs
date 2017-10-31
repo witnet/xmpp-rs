@@ -105,14 +105,14 @@ impl TryFrom<Element> for Field {
         for element in elem.children() {
             if element.is("value", ns::DATA_FORMS) {
                 check_no_children!(element, "value");
-                check_no_unknown_attributes!(element, "value", []);
+                check_no_attributes!(element, "value");
                 field.values.push(element.text());
             } else if element.is("required", ns::DATA_FORMS) {
                 if field.required {
                     return Err(Error::ParseError("More than one required element."));
                 }
                 check_no_children!(element, "required");
-                check_no_unknown_attributes!(element, "required", []);
+                check_no_attributes!(element, "required");
                 field.required = true;
             } else if element.is("option", ns::DATA_FORMS) {
                 if !field.is_list() {
@@ -184,14 +184,14 @@ impl TryFrom<Element> for DataForm {
                     return Err(Error::ParseError("More than one title in form element."));
                 }
                 check_no_children!(child, "title");
-                check_no_unknown_attributes!(child, "title", []);
+                check_no_attributes!(child, "title");
                 form.title = Some(child.text());
             } else if child.is("instructions", ns::DATA_FORMS) {
                 if form.instructions.is_some() {
                     return Err(Error::ParseError("More than one instructions in form element."));
                 }
                 check_no_children!(child, "instructions");
-                check_no_unknown_attributes!(child, "instructions", []);
+                check_no_attributes!(child, "instructions");
                 form.instructions = Some(child.text());
             } else if child.is("field", ns::DATA_FORMS) {
                 let field = Field::try_from(child.clone())?;

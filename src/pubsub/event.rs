@@ -143,7 +143,7 @@ impl TryFrom<Element> for PubSubEvent {
 
     fn try_from(elem: Element) -> Result<PubSubEvent, Error> {
         check_self!(elem, "event", ns::PUBSUB_EVENT);
-        check_no_unknown_attributes!(elem, "event", []);
+        check_no_attributes!(elem, "event");
 
         let mut payload = None;
         for child in elem.children() {

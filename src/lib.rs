@@ -154,6 +154,12 @@ macro_rules! check_no_children {
     );
 }
 
+macro_rules! check_no_attributes {
+    ($elem:ident, $name:tt) => (
+        check_no_unknown_attributes!($elem, $name, []);
+    );
+}
+
 macro_rules! check_no_unknown_attributes {
     ($elem:ident, $name:tt, [$($attr:tt),*]) => (
         for (_attr, _) in $elem.attrs() {
@@ -182,7 +188,7 @@ macro_rules! generate_empty_element {
             fn try_from(elem: Element) -> Result<$elem, Error> {
                 check_self!(elem, $name, $ns);
                 check_no_children!(elem, $name);
-                check_no_unknown_attributes!(elem, $name, []);
+                check_no_attributes!(elem, $name);
                 Ok($elem)
             }
         }

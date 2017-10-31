@@ -40,7 +40,7 @@ impl TryFrom<Element> for ChatState {
     fn try_from(elem: Element) -> Result<ChatState, Error> {
         check_ns_only!(elem, "chatstate", ns::CHATSTATES);
         check_no_children!(elem, "chatstate");
-        check_no_unknown_attributes!(elem, "chatstate", []);
+        check_no_attributes!(elem, "chatstate");
         Ok(match elem.name() {
             "active" => ChatState::Active,
             "composing" => ChatState::Composing,
