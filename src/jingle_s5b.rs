@@ -74,14 +74,7 @@ impl TryFrom<Element> for Transport {
                         Some(_) => return Err(Error::ParseError("Non-candidate child already present in JingleS5B transport element.")),
                         None => vec!(),
                     };
-                    candidates.push(Candidate {
-                        cid: get_attr!(child, "cid", required),
-                        host: get_attr!(child, "host", required),
-                        jid: get_attr!(child, "jid", required),
-                        port: get_attr!(child, "port", optional),
-                        priority: get_attr!(child, "priority", required),
-                        type_: get_attr!(child, "type", default),
-                    });
+                    candidates.push(Candidate::try_from(child.clone())?);
                     TransportPayload::Candidates(candidates)
                 } else if child.is("activated", ns::JINGLE_S5B) {
                     if payload.is_some() {
