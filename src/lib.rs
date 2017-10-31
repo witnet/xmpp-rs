@@ -127,9 +127,7 @@ macro_rules! generate_attribute {
 
 macro_rules! check_self {
     ($elem:ident, $name:tt, $ns:expr) => (
-        if !$elem.is($name, $ns) {
-            return Err(Error::ParseError(concat!("This is not a ", $name, " element.")));
-        }
+        check_self!($elem, $name, $ns, $name);
     );
     ($elem:ident, $name:tt, $ns:expr, $pretty_name:tt) => (
         if !$elem.is($name, $ns) {
