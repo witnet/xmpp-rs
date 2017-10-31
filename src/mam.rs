@@ -56,9 +56,8 @@ impl TryFrom<Element> for Query {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<Query, Error> {
-        if !elem.is("query", ns::MAM) {
-            return Err(Error::ParseError("This is not a query element."));
-        }
+        check_self!(elem, "query", ns::MAM);
+        check_no_unknown_attributes!(elem, "query", ["queryid", "node"]);
         let mut form = None;
         let mut set = None;
         for child in elem.children() {
@@ -80,9 +79,8 @@ impl TryFrom<Element> for Result_ {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<Result_, Error> {
-        if !elem.is("result", ns::MAM) {
-            return Err(Error::ParseError("This is not a result element."));
-        }
+        check_self!(elem, "result", ns::MAM);
+        check_no_unknown_attributes!(elem, "result", ["queryid", "id"]);
         let mut forwarded = None;
         for child in elem.children() {
             if child.is("forwarded", ns::FORWARD) {
@@ -106,9 +104,8 @@ impl TryFrom<Element> for Fin {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<Fin, Error> {
-        if !elem.is("fin", ns::MAM) {
-            return Err(Error::ParseError("This is not a fin element."));
-        }
+        check_self!(elem, "fin", ns::MAM);
+        check_no_unknown_attributes!(elem, "fin", ["complete"]);
         let mut set = None;
         for child in elem.children() {
             if child.is("set", ns::RSM) {
@@ -132,9 +129,8 @@ impl TryFrom<Element> for Prefs {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<Prefs, Error> {
-        if !elem.is("prefs", ns::MAM) {
-            return Err(Error::ParseError("This is not a prefs element."));
-        }
+        check_self!(elem, "prefs", ns::MAM);
+        check_no_unknown_attributes!(elem, "prefs", ["default"]);
         let mut always = vec!();
         let mut never = vec!();
         for child in elem.children() {
@@ -167,66 +163,57 @@ impl From<Query> for Element {
                 .ns(ns::MAM)
                 .attr("queryid", query.queryid)
                 .attr("node", query.node)
-                //.append(query.form.map(Element::from))
-                .append(query.set.map(Element::from))
+                //.append(query.form)
+                .append(query.set)
                 .build()
     }
 }
 
 impl From<Result_> for Element {
     fn from(result: Result_) -> Element {
-        let mut elem = Element::builder("result")
-                               .ns(ns::MAM)
-                               .attr("queryid", result.queryid)
-                               .attr("id", result.id)
-                               .build();
-        elem.append_child(result.forwarded.into());
-        elem
+        Element::builder("result")
+                .ns(ns::MAM)
+                .attr("queryid", result.queryid)
+                .attr("id", result.id)
+                .append(result.forwarded)
+                .build()
     }
 }
 
 impl From<Fin> for Element {
     fn from(fin: Fin) -> Element {
-        let mut elem = Element::builder("fin")
-                               .ns(ns::MAM)
-                               .attr("complete", if fin.complete { Some("true") } else { None })
-                               .build();
-        elem.append_child(fin.set.into());
-        elem
+        Element::builder("fin")
+                .ns(ns::MAM)
+                .attr("complete", if fin.complete { Some("true") } else { None })
+                .append(fin.set)
+                .build()
+    }
+}
+
+fn serialise_jid_list(name: &str, jids: Vec<Jid>) -> Option<Element> {
+    if jids.is_empty() {
+        None
+    } else {
+        Some(Element::builder(name)
+                     .ns(ns::MAM)
+                     .append(jids.into_iter()
+                                 .map(|jid| Element::builder("jid")
+                                                    .ns(ns::MAM)
+                                                    .append(String::from(jid))
+                                                    .build())
+                                 .collect::<Vec<_>>())
+                     .build())
     }
 }
 
 impl From<Prefs> for Element {
     fn from(prefs: Prefs) -> Element {
-        let mut elem = Element::builder("prefs")
-                               .ns(ns::MAM)
-                               .attr("default", prefs.default_)
-                               .build();
-        if !prefs.always.is_empty() {
-            let mut always = Element::builder("always")
-                                     .ns(ns::RSM)
-                                     .build();
-            for jid in prefs.always {
-                always.append_child(Element::builder("jid")
-                                            .ns(ns::RSM)
-                                            .append(String::from(jid))
-                                            .build());
-            }
-            elem.append_child(always);
-        }
-        if !prefs.never.is_empty() {
-            let mut never = Element::builder("never")
-                                     .ns(ns::RSM)
-                                     .build();
-            for jid in prefs.never {
-                never.append_child(Element::builder("jid")
-                                            .ns(ns::RSM)
-                                            .append(String::from(jid))
-                                            .build());
-            }
-            elem.append_child(never);
-        }
-        elem
+        Element::builder("prefs")
+                .ns(ns::MAM)
+                .attr("default", prefs.default_)
+                .append(serialise_jid_list("always", prefs.always))
+                .append(serialise_jid_list("never", prefs.never))
+                .build()
     }
 }
 
@@ -320,7 +307,9 @@ mod tests {
     #[test]
     fn test_prefs_get() {
         let elem: Element = "<prefs xmlns='urn:xmpp:mam:2' default='always'/>".parse().unwrap();
-        Prefs::try_from(elem).unwrap();
+        let prefs = Prefs::try_from(elem).unwrap();
+        assert_eq!(prefs.always, vec!());
+        assert_eq!(prefs.never, vec!());
 
         let elem: Element = r#"
 <prefs xmlns='urn:xmpp:mam:2' default='roster'>
@@ -328,7 +317,9 @@ mod tests {
   <never/>
 </prefs>
 "#.parse().unwrap();
-        Prefs::try_from(elem).unwrap();
+        let prefs = Prefs::try_from(elem).unwrap();
+        assert_eq!(prefs.always, vec!());
+        assert_eq!(prefs.never, vec!());
     }
 
     #[test]
@@ -343,7 +334,16 @@ mod tests {
   </never>
 </prefs>
 "#.parse().unwrap();
-        Prefs::try_from(elem).unwrap();
+        let prefs = Prefs::try_from(elem).unwrap();
+        assert_eq!(prefs.always, vec!(Jid::from_str("romeo@montague.lit").unwrap()));
+        assert_eq!(prefs.never, vec!(Jid::from_str("montague@montague.lit").unwrap()));
+
+        let elem2 = Element::from(prefs.clone());
+        println!("{:?}", elem2);
+        let prefs2 = Prefs::try_from(elem2).unwrap();
+        assert_eq!(prefs.default_, prefs2.default_);
+        assert_eq!(prefs.always, prefs2.always);
+        assert_eq!(prefs.never, prefs2.never);
     }
 
     #[test]
