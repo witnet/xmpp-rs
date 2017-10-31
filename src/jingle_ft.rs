@@ -219,6 +219,41 @@ pub struct Checksum {
     pub file: File,
 }
 
+impl TryFrom<Element> for Checksum {
+    type Err = Error;
+
+    fn try_from(elem: Element) -> Result<Checksum, Error> {
+        check_self!(elem, "checksum", ns::JINGLE_FT);
+        check_no_unknown_attributes!(elem, "checksum", ["name", "creator"]);
+        let mut file = None;
+        for child in elem.children() {
+            if file.is_some() {
+                return Err(Error::ParseError("JingleFT checksum element must have exactly one child."));
+            }
+            file = Some(File::try_from(child.clone())?);
+        }
+        if file.is_none() {
+            return Err(Error::ParseError("JingleFT checksum element must have exactly one child."));
+        }
+        Ok(Checksum {
+            name: get_attr!(elem, "name", required),
+            creator: get_attr!(elem, "creator", required),
+            file: file.unwrap(),
+        })
+    }
+}
+
+impl From<Checksum> for Element {
+    fn from(checksum: Checksum) -> Element {
+        Element::builder("checksum")
+                .ns(ns::JINGLE_FT)
+                .attr("name", checksum.name)
+                .attr("creator", checksum.creator)
+                .append(checksum.file)
+                .build()
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct Received {
     pub name: ContentId,
@@ -375,6 +410,53 @@ mod tests {
 
         let elem: Element = "<received xmlns='urn:xmpp:jingle:apps:file-transfer:5' name='coucou' creator='coucou'/>".parse().unwrap();
         let error = Received::try_from(elem).unwrap_err();
+        let message = match error {
+            Error::ParseError(string) => string,
+            _ => panic!(),
+        };
+        assert_eq!(message, "Unknown value for 'creator' attribute.");
+    }
+
+    #[test]
+    fn test_checksum() {
+        let elem: Element = "<checksum xmlns='urn:xmpp:jingle:apps:file-transfer:5' name='coucou' creator='initiator'><file><hash xmlns='urn:xmpp:hashes:2' algo='sha-1'>w0mcJylzCn+AfvuGdqkty2+KP48=</hash></file></checksum>".parse().unwrap();
+        let hash = vec!(195, 73, 156, 39, 41, 115, 10, 127, 128, 126, 251, 134, 118, 169, 45, 203, 111, 138, 63, 143);
+        let checksum = Checksum::try_from(elem).unwrap();
+        assert_eq!(checksum.name, ContentId(String::from("coucou")));
+        assert_eq!(checksum.creator, Creator::Initiator);
+        assert_eq!(checksum.file.hashes, vec!(Hash { algo: Algo::Sha_1, hash: hash.clone() }));
+        let elem2 = Element::from(checksum);
+        let checksum2 = Checksum::try_from(elem2).unwrap();
+        assert_eq!(checksum2.name, ContentId(String::from("coucou")));
+        assert_eq!(checksum2.creator, Creator::Initiator);
+        assert_eq!(checksum2.file.hashes, vec!(Hash { algo: Algo::Sha_1, hash: hash.clone() }));
+
+        let elem: Element = "<checksum xmlns='urn:xmpp:jingle:apps:file-transfer:5' name='coucou' creator='initiator'><coucou/></checksum>".parse().unwrap();
+        let error = Checksum::try_from(elem).unwrap_err();
+        let message = match error {
+            Error::ParseError(string) => string,
+            _ => panic!(),
+        };
+        assert_eq!(message, "This is not a file element.");
+
+        let elem: Element = "<checksum xmlns='urn:xmpp:jingle:apps:file-transfer:5' name='coucou' creator='initiator' coucou=''><file><hash xmlns='urn:xmpp:hashes:2' algo='sha-1'>w0mcJylzCn+AfvuGdqkty2+KP48=</hash></file></checksum>".parse().unwrap();
+        let error = Checksum::try_from(elem).unwrap_err();
+        let message = match error {
+            Error::ParseError(string) => string,
+            _ => panic!(),
+        };
+        assert_eq!(message, "Unknown attribute in checksum element.");
+
+        let elem: Element = "<checksum xmlns='urn:xmpp:jingle:apps:file-transfer:5' creator='initiator'><file><hash xmlns='urn:xmpp:hashes:2' algo='sha-1'>w0mcJylzCn+AfvuGdqkty2+KP48=</hash></file></checksum>".parse().unwrap();
+        let error = Checksum::try_from(elem).unwrap_err();
+        let message = match error {
+            Error::ParseError(string) => string,
+            _ => panic!(),
+        };
+        assert_eq!(message, "Required attribute 'name' missing.");
+
+        let elem: Element = "<checksum xmlns='urn:xmpp:jingle:apps:file-transfer:5' name='coucou' creator='coucou'><file><hash xmlns='urn:xmpp:hashes:2' algo='sha-1'>w0mcJylzCn+AfvuGdqkty2+KP48=</hash></file></checksum>".parse().unwrap();
+        let error = Checksum::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
