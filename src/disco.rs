@@ -16,66 +16,23 @@ use ns;
 
 use data_forms::{DataForm, DataFormType};
 
+generate_element_with_only_attributes!(
 /// Structure representing a `<query xmlns='http://jabber.org/protocol/disco#info'/>` element.
 ///
 /// It should only be used in an `<iq type='get'/>`, as it can only represent
 /// the request, and not a result.
-#[derive(Debug, Clone)]
-pub struct DiscoInfoQuery {
+DiscoInfoQuery, "query", ns::DISCO_INFO, [
     /// Node on which we are doing the discovery.
-    pub node: Option<String>,
-}
+    node: Option<String> = "node" => optional,
+]);
 
-impl TryFrom<Element> for DiscoInfoQuery {
-    type Err = Error;
-
-    fn try_from(elem: Element) -> Result<DiscoInfoQuery, Error> {
-        check_self!(elem, "query", ns::DISCO_INFO);
-        check_no_children!(elem, "query");
-        check_no_unknown_attributes!(elem, "query", ["node"]);
-        Ok(DiscoInfoQuery {
-            node: get_attr!(elem, "node", optional),
-        })
-    }
-}
-
-impl From<DiscoInfoQuery> for Element {
-    fn from(disco: DiscoInfoQuery) -> Element {
-        Element::builder("query")
-                .ns(ns::DISCO_INFO)
-                .attr("node", disco.node)
-                .build()
-    }
-}
-
+generate_element_with_only_attributes!(
 /// Structure representing a `<feature xmlns='http://jabber.org/protocol/disco#info'/>` element.
-#[derive(Debug, Clone, PartialEq)]
-pub struct Feature {
+#[derive(PartialEq)]
+Feature, "feature", ns::DISCO_INFO, [
     /// Namespace of the feature we want to represent.
-    pub var: String,
-}
-
-impl TryFrom<Element> for Feature {
-    type Err = Error;
-
-    fn try_from(elem: Element) -> Result<Feature, Error> {
-        check_self!(elem, "feature", ns::DISCO_INFO, "disco#info feature");
-        check_no_children!(elem, "disco#info feature");
-        check_no_unknown_attributes!(elem, "disco#info feature", ["var"]);
-        Ok(Feature {
-            var: get_attr!(elem, "var", required)
-        })
-    }
-}
-
-impl From<Feature> for Element {
-    fn from(feature: Feature) -> Element {
-        Element::builder("feature")
-                .ns(ns::DISCO_INFO)
-                .attr("var", feature.var)
-                .build()
-    }
-}
+    var: String = "var" => required,
+]);
 
 /// Structure representing an `<identity xmlns='http://jabber.org/protocol/disco#info'/>` element.
 #[derive(Debug, Clone)]
@@ -223,74 +180,26 @@ impl From<DiscoInfoResult> for Element {
     }
 }
 
+generate_element_with_only_attributes!(
 /// Structure representing a `<query xmlns='http://jabber.org/protocol/disco#items'/>` element.
 ///
 /// It should only be used in an `<iq type='get'/>`, as it can only represent
 /// the request, and not a result.
-#[derive(Debug, Clone)]
-pub struct DiscoItemsQuery {
+DiscoItemsQuery, "query", ns::DISCO_ITEMS, [
     /// Node on which we are doing the discovery.
-    pub node: Option<String>,
-}
+    node: Option<String> = "node" => optional,
+]);
 
-impl TryFrom<Element> for DiscoItemsQuery {
-    type Err = Error;
-
-    fn try_from(elem: Element) -> Result<DiscoItemsQuery, Error> {
-        check_self!(elem, "query", ns::DISCO_ITEMS, "disco#items query");
-        check_no_children!(elem, "disco#items query");
-        check_no_unknown_attributes!(elem, "disco#items query", ["node"]);
-        Ok(DiscoItemsQuery {
-            node: get_attr!(elem, "node", optional),
-        })
-    }
-}
-
-impl From<DiscoItemsQuery> for Element {
-    fn from(disco: DiscoItemsQuery) -> Element {
-        Element::builder("query")
-                .ns(ns::DISCO_ITEMS)
-                .attr("node", disco.node)
-                .build()
-    }
-}
-
+generate_element_with_only_attributes!(
 /// Structure representing an `<item xmlns='http://jabber.org/protocol/disco#items'/>` element.
-#[derive(Debug, Clone)]
-pub struct Item {
+Item, "item", ns::DISCO_ITEMS, [
     /// JID of the entity pointed by this item.
-    pub jid: Jid,
+    jid: Jid = "jid" => required,
     /// Node of the entity pointed by this item.
-    pub node: Option<String>,
+    node: Option<String> = "node" => optional,
     /// Name of the entity pointed by this item.
-    pub name: Option<String>,
-}
-
-impl TryFrom<Element> for Item {
-    type Err = Error;
-
-    fn try_from(elem: Element) -> Result<Item, Error> {
-        check_self!(elem, "item", ns::DISCO_ITEMS);
-        check_no_children!(elem, "item");
-        check_no_unknown_attributes!(elem, "item", ["jid", "node", "name"]);
-        Ok(Item {
-            jid: get_attr!(elem, "jid", required),
-            node: get_attr!(elem, "node", optional),
-            name: get_attr!(elem, "name", optional),
-        })
-    }
-}
-
-impl From<Item> for Element {
-    fn from(item: Item) -> Element {
-        Element::builder("item")
-                .ns(ns::DISCO_ITEMS)
-                .attr("jid", item.jid)
-                .attr("node", item.node)
-                .attr("name", item.name)
-                .build()
-    }
-}
+    name: Option<String> = "name" => optional,
+]);
 
 /// Structure representing a `<query
 /// xmlns='http://jabber.org/protocol/disco#items'/>` element.
