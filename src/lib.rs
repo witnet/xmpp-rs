@@ -174,11 +174,8 @@ macro_rules! check_no_unknown_attributes {
 }
 
 macro_rules! generate_empty_element {
-    ($elem:ident, $name:tt, $ns:expr) => (
-        // TODO: Find a better way to concatenate doc.
-        #[doc="Structure representing a "]
-        #[doc=$name]
-        #[doc=" element."]
+    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:expr) => (
+        $(#[$meta])*
         #[derive(Debug, Clone)]
         pub struct $elem;
 
@@ -204,13 +201,15 @@ macro_rules! generate_empty_element {
 }
 
 macro_rules! generate_element_with_only_attributes {
-    ($elem:ident, $name:tt, $ns:expr, [$($attr:ident: $attr_type:ty = $attr_name:tt => $attr_action:tt),+,]) => (
-        generate_element_with_only_attributes!($elem, $name, $ns, [$($attr: $attr_type = $attr_name => $attr_action),*]);
+    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:expr, [$($(#[$attr_meta:meta])* $attr:ident: $attr_type:ty = $attr_name:tt => $attr_action:tt),+,]) => (
+        generate_element_with_only_attributes!($(#[$meta])* $elem, $name, $ns, [$($(#[$attr_meta])* $attr: $attr_type = $attr_name => $attr_action),*]);
     );
-    ($elem:ident, $name:tt, $ns:expr, [$($attr:ident: $attr_type:ty = $attr_name:tt => $attr_action:tt),+]) => (
+    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:expr, [$($(#[$attr_meta:meta])* $attr:ident: $attr_type:ty = $attr_name:tt => $attr_action:tt),+]) => (
+        $(#[$meta])*
         #[derive(Debug, Clone)]
         pub struct $elem {
             $(
+            $(#[$attr_meta])*
             pub $attr: $attr_type
             ),*
         }
