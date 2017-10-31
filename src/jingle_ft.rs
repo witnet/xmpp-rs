@@ -10,6 +10,7 @@ use std::collections::BTreeMap;
 use std::str::FromStr;
 
 use hashes::Hash;
+use jingle::Creator;
 
 use minidom::{Element, IntoElements, IntoAttributeValue, ElementEmitter};
 use chrono::{DateTime, FixedOffset};
@@ -59,12 +60,6 @@ pub struct Description {
 }
 
 #[derive(Debug, Clone)]
-pub enum Creator {
-    Initiator,
-    Responder,
-}
-
-#[derive(Debug, Clone)]
 pub struct Checksum {
     pub name: String,
     pub creator: Creator,
@@ -77,17 +72,27 @@ pub struct Received {
     pub creator: Creator,
 }
 
-impl IntoElements for Received {
-    fn into_elements(self, emitter: &mut ElementEmitter) {
-        let elem = Element::builder("received")
-                           .ns(ns::JINGLE_FT)
-                           .attr("name", self.name)
-                           .attr("creator", match self.creator {
-                                Creator::Initiator => "initiator",
-                                Creator::Responder => "responder",
-                            })
-                           .build();
-        emitter.append_child(elem);
+impl TryFrom<Element> for Received {
+    type Err = Error;
+
+    fn try_from(elem: Element) -> Result<Received, Error> {
+        check_self!(elem, "received", ns::JINGLE_FT);
+        check_no_children!(elem, "received");
+        check_no_unknown_attributes!(elem, "received", ["name", "creator"]);
+        Ok(Received {
+            name: get_attr!(elem, "name", required),
+            creator: get_attr!(elem, "creator", required),
+        })
+    }
+}
+
+impl From<Received> for Element {
+    fn from(received: Received) -> Element {
+        Element::builder("received")
+                .ns(ns::JINGLE_FT)
+                .attr("name", received.name)
+                .attr("creator", received.creator)
+                .build()
     }
 }
 
@@ -326,5 +331,49 @@ mod tests {
             _ => panic!(),
         };
         assert_eq!(message, "Desc element present twice for the same xml:lang.");
+    }
+
+    #[test]
+    fn test_received() {
+        let elem: Element = "<received xmlns='urn:xmpp:jingle:apps:file-transfer:5' name='coucou' creator='initiator'/>".parse().unwrap();
+        let received = Received::try_from(elem).unwrap();
+        assert_eq!(received.name, String::from("coucou"));
+        assert_eq!(received.creator, Creator::Initiator);
+        let elem2 = Element::from(received.clone());
+        let received2 = Received::try_from(elem2).unwrap();
+        assert_eq!(received2.name, String::from("coucou"));
+        assert_eq!(received2.creator, Creator::Initiator);
+
+        let elem: Element = "<received xmlns='urn:xmpp:jingle:apps:file-transfer:5' name='coucou' creator='initiator'><coucou/></received>".parse().unwrap();
+        let error = Received::try_from(elem).unwrap_err();
+        let message = match error {
+            Error::ParseError(string) => string,
+            _ => panic!(),
+        };
+        assert_eq!(message, "Unknown child in received element.");
+
+        let elem: Element = "<received xmlns='urn:xmpp:jingle:apps:file-transfer:5' name='coucou' creator='initiator' coucou=''/>".parse().unwrap();
+        let error = Received::try_from(elem).unwrap_err();
+        let message = match error {
+            Error::ParseError(string) => string,
+            _ => panic!(),
+        };
+        assert_eq!(message, "Unknown attribute in received element.");
+
+        let elem: Element = "<received xmlns='urn:xmpp:jingle:apps:file-transfer:5' creator='initiator'/>".parse().unwrap();
+        let error = Received::try_from(elem).unwrap_err();
+        let message = match error {
+            Error::ParseError(string) => string,
+            _ => panic!(),
+        };
+        assert_eq!(message, "Required attribute 'name' missing.");
+
+        let elem: Element = "<received xmlns='urn:xmpp:jingle:apps:file-transfer:5' name='coucou' creator='coucou'/>".parse().unwrap();
+        let error = Received::try_from(elem).unwrap_err();
+        let message = match error {
+            Error::ParseError(string) => string,
+            _ => panic!(),
+        };
+        assert_eq!(message, "Unknown value for 'creator' attribute.");
     }
 }
