@@ -218,8 +218,8 @@ impl From<DataForm> for Element {
         Element::builder("x")
                 .ns(ns::DATA_FORMS)
                 .attr("type", form.type_)
-                .append(if form.title.is_some() { Some(Element::builder("title").ns(ns::DATA_FORMS).append(form.title)) } else { None })
-                .append(if form.instructions.is_some() { Some(Element::builder("instructions").ns(ns::DATA_FORMS).append(form.instructions)) } else { None })
+                .append(form.title.map(|title| Element::builder("title").ns(ns::DATA_FORMS).append(title)))
+                .append(form.instructions.map(|text| Element::builder("instructions").ns(ns::DATA_FORMS).append(text)))
                 .append(form.fields)
                 .build()
     }
