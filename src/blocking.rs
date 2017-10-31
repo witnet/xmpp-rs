@@ -15,17 +15,6 @@ use ns;
 
 generate_empty_element!(BlocklistRequest, "blocklist", ns::BLOCKING);
 
-fn get_children_items(elem: Element) -> Result<Vec<Jid>, Error> {
-    let mut items = vec!();
-    for child in elem.children() {
-        check_self!(child, "item", ns::BLOCKING);
-        check_no_unknown_attributes!(child, "item", ["jid"]);
-        check_no_children!(child, "item");
-        items.push(get_attr!(child, "jid", required));
-    }
-    Ok(items)
-}
-
 macro_rules! generate_blocking_element {
     ($elem:ident, $name:tt) => (
         #[derive(Debug, Clone)]
@@ -39,9 +28,14 @@ macro_rules! generate_blocking_element {
             fn try_from(elem: Element) -> Result<$elem, Error> {
                 check_self!(elem, $name, ns::BLOCKING);
                 check_no_attributes!(elem, $name);
-                Ok($elem {
-                    items: get_children_items(elem)?,
-                })
+                let mut items = vec!();
+                for child in elem.children() {
+                    check_self!(child, "item", ns::BLOCKING);
+                    check_no_unknown_attributes!(child, "item", ["jid"]);
+                    check_no_children!(child, "item");
+                    items.push(get_attr!(child, "jid", required));
+                }
+                Ok($elem { items })
             }
         }
 
