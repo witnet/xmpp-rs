@@ -10,7 +10,7 @@ use std::collections::BTreeMap;
 use std::str::FromStr;
 
 use hashes::Hash;
-use jingle::Creator;
+use jingle::{Creator, ContentId};
 
 use minidom::{Element, IntoElements, IntoAttributeValue, ElementEmitter};
 use chrono::{DateTime, FixedOffset};
@@ -61,14 +61,14 @@ pub struct Description {
 
 #[derive(Debug, Clone)]
 pub struct Checksum {
-    pub name: String,
+    pub name: ContentId,
     pub creator: Creator,
     pub file: File,
 }
 
 #[derive(Debug, Clone)]
 pub struct Received {
-    pub name: String,
+    pub name: ContentId,
     pub creator: Creator,
 }
 
@@ -337,11 +337,11 @@ mod tests {
     fn test_received() {
         let elem: Element = "<received xmlns='urn:xmpp:jingle:apps:file-transfer:5' name='coucou' creator='initiator'/>".parse().unwrap();
         let received = Received::try_from(elem).unwrap();
-        assert_eq!(received.name, String::from("coucou"));
+        assert_eq!(received.name, ContentId(String::from("coucou")));
         assert_eq!(received.creator, Creator::Initiator);
         let elem2 = Element::from(received.clone());
         let received2 = Received::try_from(elem2).unwrap();
-        assert_eq!(received2.name, String::from("coucou"));
+        assert_eq!(received2.name, ContentId(String::from("coucou")));
         assert_eq!(received2.creator, Creator::Initiator);
 
         let elem: Element = "<received xmlns='urn:xmpp:jingle:apps:file-transfer:5' name='coucou' creator='initiator'><coucou/></received>".parse().unwrap();
