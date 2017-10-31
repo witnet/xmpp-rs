@@ -195,7 +195,7 @@ macro_rules! generate_empty_element {
 
         impl From<$elem> for Element {
             fn from(_: $elem) -> Element {
-                Element::builder("attention")
+                Element::builder($name)
                         .ns($ns)
                         .build()
             }
