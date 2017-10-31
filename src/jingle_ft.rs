@@ -166,10 +166,7 @@ impl From<File> for Element {
                                       .build());
         }
         if let Some(range) = file.range {
-            root.append_child(Element::builder("range")
-                                      .ns(ns::JINGLE_FT)
-                                      .append(range)
-                                      .build());
+            root.append_child(range.into());
         }
         for hash in file.hashes {
             root.append_child(hash.into());
