@@ -88,34 +88,22 @@ impl TryFrom<Element> for Set {
 
 impl From<Set> for Element {
     fn from(set: Set) -> Element {
-        let mut elem = Element::builder("set")
-                               .ns(ns::RSM)
-                               .build();
-        if set.after.is_some() {
-            elem.append_child(Element::builder("after").ns(ns::RSM).append(set.after).build());
-        }
-        if set.before.is_some() {
-            elem.append_child(Element::builder("before").ns(ns::RSM).append(set.before).build());
-        }
-        if let Some(count) = set.count {
-            elem.append_child(Element::builder("count").ns(ns::RSM).append(format!("{}", count)).build());
-        }
-        if set.first.is_some() {
-            elem.append_child(Element::builder("first")
-                                      .ns(ns::RSM)
-                                      .attr("index", set.first_index)
-                                      .append(set.first).build());
-        }
-        if let Some(index) = set.index {
-            elem.append_child(Element::builder("index").ns(ns::RSM).append(format!("{}", index)).build());
-        }
-        if set.last.is_some() {
-            elem.append_child(Element::builder("last").ns(ns::RSM).append(set.last).build());
-        }
-        if let Some(max) = set.max {
-            elem.append_child(Element::builder("max").ns(ns::RSM).append(format!("{}", max)).build());
-        }
-        elem
+        let first = set.first.clone()
+                             .map(|first| Element::builder("first")
+                                                  .ns(ns::RSM)
+                                                  .attr("index", set.first_index)
+                                                  .append(first)
+                                                  .build());
+        Element::builder("set")
+                .ns(ns::RSM)
+                .append(set.after.map(|after| Element::builder("after").ns(ns::RSM).append(after).build()))
+                .append(set.before.map(|before| Element::builder("before").ns(ns::RSM).append(before).build()))
+                .append(set.count.map(|count| Element::builder("count").ns(ns::RSM).append(format!("{}", count)).build()))
+                .append(first)
+                .append(set.index.map(|index| Element::builder("index").ns(ns::RSM).append(format!("{}", index)).build()))
+                .append(set.last.map(|last| Element::builder("last").ns(ns::RSM).append(last).build()))
+                .append(set.max.map(|max| Element::builder("max").ns(ns::RSM).append(format!("{}", max)).build()))
+                .build()
     }
 }
 
