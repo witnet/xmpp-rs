@@ -363,12 +363,19 @@ impl Jid {
 extern crate minidom;
 
 #[cfg(feature = "minidom")]
-use minidom::IntoAttributeValue;
+use minidom::{IntoAttributeValue, IntoElements, ElementEmitter};
 
 #[cfg(feature = "minidom")]
 impl IntoAttributeValue for Jid {
     fn into_attribute_value(self) -> Option<String> {
         Some(String::from(self))
+    }
+}
+
+#[cfg(feature = "minidom")]
+impl IntoElements for Jid {
+    fn into_elements(self, emitter: &mut ElementEmitter) {
+        emitter.append_text_node(String::from(self))
     }
 }
 
