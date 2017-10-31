@@ -30,17 +30,11 @@ impl TryFrom<Element> for ECaps2 {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<ECaps2, Error> {
-        if !elem.is("c", ns::ECAPS2) {
-            return Err(Error::ParseError("This is not an ecaps2 element."));
-        }
+        check_self!(elem, "c", ns::ECAPS2, "ecaps2");
+        check_no_attributes!(elem, "ecaps2");
         let mut hashes = vec!();
         for child in elem.children() {
-            if child.is("hash", ns::HASHES) {
-                let hash = Hash::try_from(child.clone())?;
-                hashes.push(hash);
-            } else {
-                return Err(Error::ParseError("Unknown child in ecaps2 element."));
-            }
+            hashes.push(Hash::try_from(child.clone())?);
         }
         Ok(ECaps2 {
             hashes: hashes,
@@ -52,9 +46,7 @@ impl From<ECaps2> for Element {
     fn from(ecaps2: ECaps2) -> Element {
         Element::builder("c")
                 .ns(ns::ECAPS2)
-                .append(ecaps2.hashes.into_iter()
-                                     .map(Element::from)
-                                     .collect::<Vec<_>>())
+                .append(ecaps2.hashes)
                 .build()
     }
 }
@@ -207,7 +199,7 @@ mod tests {
             Error::ParseError(string) => string,
             _ => panic!(),
         };
-        assert_eq!(message, "Unknown child in ecaps2 element.");
+        assert_eq!(message, "This is not a hash element.");
     }
 
     #[test]
