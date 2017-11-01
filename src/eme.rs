@@ -12,13 +12,14 @@ use error::Error;
 
 use ns;
 
+generate_element_with_only_attributes!(
 /// Structure representing an `<encryption xmlns='urn:xmpp:eme:0'/>` element.
-generate_element_with_only_attributes!(ExplicitMessageEncryption, "encryption", ns::EME, [
-    // Namespace of the encryption scheme used.
+ExplicitMessageEncryption, "encryption", ns::EME, [
+    /// Namespace of the encryption scheme used.
     namespace: String = "namespace" => required,
 
-    // User-friendly name for the encryption scheme, should be `None` for OTR,
-    // legacy OpenPGP and OX.
+    /// User-friendly name for the encryption scheme, should be `None` for OTR,
+    /// legacy OpenPGP and OX.
     name: Option<String> = "name" => optional,
 ]);
 
