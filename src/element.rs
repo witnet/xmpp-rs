@@ -290,12 +290,12 @@ impl Element {
             let e = reader.read_event(&mut buf)?;
             match e {
                 Event::Empty(ref e) | Event::Start(ref e) => {
-                    break build_element(e)?;
+                    break build_element(&reader, e)?;
                 },
                 Event::Eof => {
                     bail!(ErrorKind::EndOfDocument);
                 },
-                _ => () // TODO: may need more errors
+                _ => (), // TODO: may need more errors
             }
         };
 
@@ -304,12 +304,12 @@ impl Element {
         loop {
             match reader.read_event(&mut buf)? {
                 Event::Empty(ref e) => {
-                    let elem = build_element(e)?;
+                    let elem = build_element(&reader, e)?;
                     // Since there is no Event::End after, directly append it to the current node
                     stack.last_mut().unwrap().append_child(elem);
                 },
                 Event::Start(ref e) => {
-                    let elem = build_element(e)?;
+                    let elem = build_element(&reader, e)?;
                     stack.push(elem);
                 },
                 Event::End(ref e) => {
@@ -629,13 +629,13 @@ fn split_element_name<S: AsRef<str>>(s: S) -> Result<(Option<String>, String)> {
     }
 }
 
-fn build_element(event: &BytesStart) -> Result<Element> {
+fn build_element<R: BufRead>(reader: &EventReader<R>, event: &BytesStart) -> Result<Element> {
     let mut namespaces = BTreeMap::new();
     let attributes = event.attributes()
         .map(|o| {
             let o = o?;
             let key = str::from_utf8(o.key)?.to_owned();
-            let value = str::from_utf8(o.value)?.to_owned();
+            let value = o.unescape_and_decode_value(reader)?;
             Ok((key, value))
         })
         .filter(|o| {

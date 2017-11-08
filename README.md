@@ -4,7 +4,7 @@ minidom-rs
 What's this?
 ------------
 
-A minimal DOM library on top of xml-rs.
+A minimal DOM library on top of quick-xml.
 
 What license is it under?
 -------------------------
