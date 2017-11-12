@@ -290,7 +290,7 @@ impl Element {
             let e = reader.read_event(&mut buf)?;
             match e {
                 Event::Empty(ref e) | Event::Start(ref e) => {
-                    break build_element(&reader, e)?;
+                    break build_element(reader, e)?;
                 },
                 Event::Eof => {
                     bail!(ErrorKind::EndOfDocument);
@@ -304,12 +304,12 @@ impl Element {
         loop {
             match reader.read_event(&mut buf)? {
                 Event::Empty(ref e) => {
-                    let elem = build_element(&reader, e)?;
+                    let elem = build_element(reader, e)?;
                     // Since there is no Event::End after, directly append it to the current node
                     stack.last_mut().unwrap().append_child(elem);
                 },
                 Event::Start(ref e) => {
-                    let elem = build_element(&reader, e)?;
+                    let elem = build_element(reader, e)?;
                     stack.push(elem);
                 },
                 Event::End(ref e) => {
@@ -348,20 +348,20 @@ impl Element {
 
     /// Like `write_to()` but without the `<?xml?>` prelude
     pub fn write_to_inner<W: Write>(&self, writer: &mut W) -> Result<()> {
-        let name = match &self.prefix {
-            &None => Cow::Borrowed(&self.name),
-            &Some(ref prefix) => Cow::Owned(format!("{}:{}", prefix, self.name)),
+        let name = match self.prefix {
+            None => Cow::Borrowed(&self.name),
+            Some(ref prefix) => Cow::Owned(format!("{}:{}", prefix, self.name)),
         };
         write!(writer, "<{}", name)?;
 
         for (prefix, ns) in self.namespaces.declared_ns() {
-            match prefix {
-                &None => {
+            match *prefix {
+                None => {
                     write!(writer, " xmlns=\"")?;
                     write_escaped(writer, ns)?;
                     write!(writer, "\"")?;
                 },
-                &Some(ref prefix) => {
+                Some(ref prefix) => {
                     write!(writer, " xmlns:{}=\"", prefix)?;
                     write_escaped(writer, ns)?;
                     write!(writer, "\"")?;
@@ -496,7 +496,7 @@ impl Element {
     /// assert_eq!(child.name(), "new");
     /// ```
     pub fn append_child(&mut self, child: Element) -> &mut Element {
-        child.namespaces.set_parent(self.namespaces.clone());
+        child.namespaces.set_parent(Rc::clone(&self.namespaces));
 
         self.children.push(Node::Element(child));
         if let Node::Element(ref mut cld) = *self.children.last_mut().unwrap() {
@@ -639,12 +639,12 @@ fn build_element<R: BufRead>(reader: &EventReader<R>, event: &BytesStart) -> Res
             Ok((key, value))
         })
         .filter(|o| {
-            match o {
-                &Ok((ref key, ref value)) if key == "xmlns" => {
+            match *o {
+                Ok((ref key, ref value)) if key == "xmlns" => {
                     namespaces.insert(None, value.to_owned());
                     false
                 },
-                &Ok((ref key, ref value)) if key.starts_with("xmlns:") => {
+                Ok((ref key, ref value)) if key.starts_with("xmlns:") => {
                     namespaces.insert(Some(key[6..].to_owned()), value.to_owned());
                     false
                 },
@@ -799,7 +799,7 @@ impl ElementBuilder {
         // Propagate namespaces
         for node in &element.children {
             if let Node::Element(ref e) = *node {
-                e.namespaces.set_parent(element.namespaces.clone());
+                e.namespaces.set_parent(Rc::clone(&element.namespaces));
             }
         }
 

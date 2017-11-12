@@ -2,7 +2,7 @@ extern crate minidom;
 
 use minidom::Element;
 
-const DATA: &'static str = r#"<articles xmlns="article">
+const DATA: &str = r#"<articles xmlns="article">
     <article>
         <title>10 Terrible Bugs You Would NEVER Believe Happened</title>
         <body>
@@ -17,7 +17,7 @@ const DATA: &'static str = r#"<articles xmlns="article">
     </article>
 </articles>"#;
 
-const ARTICLE_NS: &'static str = "article";
+const ARTICLE_NS: &str = "article";
 
 #[derive(Debug)]
 pub struct Article {
