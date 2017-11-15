@@ -120,27 +120,19 @@ pub fn hash_ecaps2(data: &[u8], algo: Algo) -> Result<Hash, String> {
     Ok(Hash {
         hash: match algo {
             Algo::Sha_256 => {
-                let mut hasher = Sha256::default();
-                hasher.input(data);
-                let hash = hasher.result();
+                let hash = Sha256::digest(data);
                 get_hash_vec(hash.as_slice())
             },
             Algo::Sha_512 => {
-                let mut hasher = Sha512::default();
-                hasher.input(data);
-                let hash = hasher.result();
+                let hash = Sha512::digest(data);
                 get_hash_vec(hash.as_slice())
             },
             Algo::Sha3_256 => {
-                let mut hasher = Sha3_256::default();
-                hasher.input(data);
-                let hash = hasher.result();
+                let hash = Sha3_256::digest(data);
                 get_hash_vec(hash.as_slice())
             },
             Algo::Sha3_512 => {
-                let mut hasher = Sha3_512::default();
-                hasher.input(data);
-                let hash = hasher.result();
+                let hash = Sha3_512::digest(data);
                 get_hash_vec(hash.as_slice())
             },
             Algo::Blake2b_256 => {
