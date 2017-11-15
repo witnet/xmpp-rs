@@ -16,7 +16,7 @@ use ns;
 use base64;
 
 use digest::Digest;
-use sha_1::Sha1;
+use sha1::Sha1;
 use sha2::{Sha256, Sha512};
 use sha3::{Sha3_256, Sha3_512};
 //use blake2::Blake2b;

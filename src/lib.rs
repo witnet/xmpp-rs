@@ -26,7 +26,7 @@ extern crate minidom;
 extern crate jid;
 extern crate base64;
 extern crate digest;
-extern crate sha_1;
+extern crate sha1;
 extern crate sha2;
 extern crate sha3;
 extern crate blake2;
