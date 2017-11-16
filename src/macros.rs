@@ -251,3 +251,45 @@ macro_rules! generate_elem_id {
         }
     );
 }
+
+macro_rules! generate_element_with_text {
+    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:expr, [$($(#[$attr_meta:meta])* $attr:ident: $attr_type:ty = $attr_name:tt => $attr_action:tt),+], $text_ident:ident: $codec:ident < $text_type:ty >) => (
+        $(#[$meta])*
+        #[derive(Debug, Clone)]
+        pub struct $elem {
+            $(
+            $(#[$attr_meta])*
+            pub $attr: $attr_type
+            ),*,
+            pub $text_ident: $text_type,
+        }
+
+        impl TryFrom<Element> for $elem {
+            type Err = Error;
+
+            fn try_from(elem: Element) -> Result<$elem, Error> {
+                check_self!(elem, $name, $ns);
+                check_no_children!(elem, $name);
+                check_no_unknown_attributes!(elem, $name, [$($attr_name),*]);
+                Ok($elem {
+                    $(
+                    $attr: get_attr!(elem, $attr_name, $attr_action)
+                    ),*,
+                    $text_ident: $codec::decode(&elem.text())?,
+                })
+            }
+        }
+
+        impl From<$elem> for Element {
+            fn from(elem: $elem) -> Element {
+                Element::builder($name)
+                        .ns($ns)
+                        $(
+                        .attr($attr_name, elem.$attr)
+                        )*
+                        .append($codec::encode(&elem.$text_ident))
+                        .build()
+            }
+        }
+    );
+}

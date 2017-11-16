@@ -25,41 +25,26 @@ generate_element_with_only_attributes!(Open, "open", ns::IBB, [
     stanza: Stanza = "stanza" => default,
 ]);
 
-#[derive(Debug, Clone)]
-pub struct Data {
-    pub seq: u16,
-    pub sid: String,
-    pub data: Vec<u8>,
-}
+/// Codec wrapping base64 encode/decode
+struct Base64;
 
-impl TryFrom<Element> for Data {
-    type Err = Error;
+impl Base64 {
+    fn decode(s: &str) -> Result<Vec<u8>, Error> {
+        Ok(base64::decode(s)?)
+    }
 
-    fn try_from(elem: Element) -> Result<Data, Error> {
-        if !elem.is("data", ns::IBB) {
-            return Err(Error::ParseError("This is not a data element."));
-        }
-        for _ in elem.children() {
-            return Err(Error::ParseError("Unknown child in data element."));
-        }
-        Ok(Data {
-            seq: get_attr!(elem, "seq", required),
-            sid: get_attr!(elem, "sid", required),
-            data: base64::decode(&elem.text())?,
-        })
+    fn encode(b: &Vec<u8>) -> String {
+        base64::encode(b)
     }
 }
 
-impl From<Data> for Element {
-    fn from(data: Data) -> Element {
-        Element::builder("data")
-                .ns(ns::IBB)
-                .attr("seq", data.seq)
-                .attr("sid", data.sid)
-                .append(base64::encode(&data.data))
-                .build()
-    }
-}
+generate_element_with_text!(Data, "data", ns::IBB,
+    [
+        seq: u16 = "seq" => required,
+        sid: String = "sid" => required
+    ],
+    data: Base64<Vec<u8>>
+);
 
 generate_element_with_only_attributes!(Close, "close", ns::IBB, [
     sid: String = "sid" => required,
