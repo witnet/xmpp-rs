@@ -201,52 +201,22 @@ Item, "item", ns::DISCO_ITEMS, [
     name: Option<String> = "name" => optional,
 ]);
 
-/// Structure representing a `<query
-/// xmlns='http://jabber.org/protocol/disco#items'/>` element.
-///
-/// It should only be used in an `<iq type='result'/>`, as it can only
-/// represent the result, and not a request.
-#[derive(Debug, Clone)]
-pub struct DiscoItemsResult {
-    /// Node on which we have done this discovery.
-    pub node: Option<String>,
-
-    /// List of items pointed by this entity.
-    pub items: Vec<Item>,
-}
-
-impl TryFrom<Element> for DiscoItemsResult {
-    type Err = Error;
-
-    fn try_from(elem: Element) -> Result<DiscoItemsResult, Error> {
-        check_self!(elem, "query", ns::DISCO_ITEMS, "disco#items query");
-        check_no_unknown_attributes!(elem, "disco#items query", ["node"]);
-
-        let mut items: Vec<Item> = vec!();
-        for child in elem.children() {
-            if child.is("item", ns::DISCO_ITEMS) {
-                items.push(Item::try_from(child.clone())?);
-            } else {
-                return Err(Error::ParseError("Unknown element in disco#items."));
-            }
-        }
-
-        Ok(DiscoItemsResult {
-            node: get_attr!(elem, "node", optional),
-            items: items,
-        })
-    }
-}
-
-impl From<DiscoItemsResult> for Element {
-    fn from(disco: DiscoItemsResult) -> Element {
-        Element::builder("query")
-                .ns(ns::DISCO_ITEMS)
-                .attr("node", disco.node)
-                .append(disco.items)
-                .build()
-    }
-}
+generate_element_with_children!(
+    /// Structure representing a `<query
+    /// xmlns='http://jabber.org/protocol/disco#items'/>` element.
+    ///
+    /// It should only be used in an `<iq type='result'/>`, as it can only
+    /// represent the result, and not a request.
+    DiscoItemsResult, "query", ns::DISCO_ITEMS,
+    attributes: [
+        /// Node on which we have done this discovery.
+        node: Option<String> = "node" => optional
+    ],
+    children: [
+        /// List of items pointed by this entity.
+        items: Vec<Item> = "item" => Item
+    ]
+);
 
 #[cfg(test)]
 mod tests {

@@ -293,3 +293,55 @@ macro_rules! generate_element_with_text {
         }
     );
 }
+
+macro_rules! generate_element_with_children {
+    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:expr, attributes: [$($(#[$attr_meta:meta])* $attr:ident: $attr_type:ty = $attr_name:tt => $attr_action:tt),+], children: [$($(#[$child_meta:meta])* $child_ident:ident: Vec<$child_type:ty> = $child_name:tt => $child_constructor:ident),+]) => (
+        $(#[$meta])*
+        #[derive(Debug, Clone)]
+        pub struct $elem {
+            $(
+            $(#[$attr_meta])*
+            pub $attr: $attr_type
+            ),*,
+            $(
+            $(#[$child_meta])*
+            pub $child_ident: Vec<$child_type>
+            ),*
+        }
+
+        impl TryFrom<Element> for $elem {
+            type Err = Error;
+
+            fn try_from(elem: Element) -> Result<$elem, Error> {
+                check_self!(elem, $name, $ns);
+                check_no_unknown_attributes!(elem, $name, [$($attr_name),*]);
+                let mut parsed_children = vec!();
+                for child in elem.children() {
+                    $(
+                    let parsed_child = $child_constructor::try_from(child.clone())?;
+                    parsed_children.push(parsed_child);
+                    )*
+                }
+                Ok($elem {
+                    $(
+                    $attr: get_attr!(elem, $attr_name, $attr_action)
+                    ),*,
+                    $(
+                    $child_ident: parsed_children
+                    )*
+                })
+            }
+        }
+
+        impl From<$elem> for Element {
+            fn from(elem: $elem) -> Element {
+                Element::builder($name)
+                        .ns($ns)
+                        $(
+                        .attr($attr_name, elem.$attr)
+                        )*
+                        .build()
+            }
+        }
+    );
+}
