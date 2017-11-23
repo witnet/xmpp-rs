@@ -179,8 +179,8 @@ macro_rules! generate_element_with_only_attributes {
         pub struct $elem {
             $(
             $(#[$attr_meta])*
-            pub $attr: $attr_type
-            ),*
+            pub $attr: $attr_type,
+            )*
         }
 
         impl TryFrom<Element> for $elem {
@@ -192,8 +192,8 @@ macro_rules! generate_element_with_only_attributes {
                 check_no_unknown_attributes!(elem, $name, [$($attr_name),*]);
                 Ok($elem {
                     $(
-                    $attr: get_attr!(elem, $attr_name, $attr_action)
-                    ),*
+                    $attr: get_attr!(elem, $attr_name, $attr_action),
+                    )*
                 })
             }
         }
@@ -259,8 +259,8 @@ macro_rules! generate_element_with_text {
         pub struct $elem {
             $(
             $(#[$attr_meta])*
-            pub $attr: $attr_type
-            ),*,
+            pub $attr: $attr_type,
+            )*
             pub $text_ident: $text_type,
         }
 
@@ -273,8 +273,8 @@ macro_rules! generate_element_with_text {
                 check_no_unknown_attributes!(elem, $name, [$($attr_name),*]);
                 Ok($elem {
                     $(
-                    $attr: get_attr!(elem, $attr_name, $attr_action)
-                    ),*,
+                    $attr: get_attr!(elem, $attr_name, $attr_action),
+                    )*
                     $text_ident: $codec::decode(&elem.text())?,
                 })
             }
@@ -301,12 +301,12 @@ macro_rules! generate_element_with_children {
         pub struct $elem {
             $(
             $(#[$attr_meta])*
-            pub $attr: $attr_type
-            ),*,
+            pub $attr: $attr_type,
+            )*
             $(
             $(#[$child_meta])*
-            pub $child_ident: Vec<$child_type>
-            ),*
+            pub $child_ident: Vec<$child_type>,
+            )*
         }
 
         impl TryFrom<Element> for $elem {
@@ -324,10 +324,10 @@ macro_rules! generate_element_with_children {
                 }
                 Ok($elem {
                     $(
-                    $attr: get_attr!(elem, $attr_name, $attr_action)
-                    ),*,
+                    $attr: get_attr!(elem, $attr_name, $attr_action),
+                    )*
                     $(
-                    $child_ident: parsed_children
+                    $child_ident: parsed_children,
                     )*
                 })
             }
