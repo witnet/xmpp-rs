@@ -82,57 +82,22 @@ impl From<Item> for Element {
     }
 }
 
-/// The contact list of the user.
-#[derive(Debug, Clone)]
-pub struct Roster {
-    /// Version of the contact list.
-    ///
-    /// This is an opaque string that should only be sent back to the server on
-    /// a new connection, if this client is storing the contact list between
-    /// connections.
-    pub ver: Option<String>,
-
-    /// List of the contacts of the user.
-    pub items: Vec<Item>,
-}
-
-impl TryFrom<Element> for Roster {
-    type Err = Error;
-
-    fn try_from(elem: Element) -> Result<Roster, Error> {
-        if !elem.is("query", ns::ROSTER) {
-            return Err(Error::ParseError("This is not a roster element."));
-        }
-        for (attr, _) in elem.attrs() {
-            if attr != "ver" {
-                return Err(Error::ParseError("Unknown attribute in roster element."));
-            }
-        }
-
-        let mut roster = Roster {
-            ver: get_attr!(elem, "ver", optional),
-            items: vec!(),
-        };
-        for child in elem.children() {
-            if !child.is("item", ns::ROSTER) {
-                return Err(Error::ParseError("Unknown element in roster element."));
-            }
-            let item = Item::try_from(child.clone())?;
-            roster.items.push(item);
-        }
-        Ok(roster)
-    }
-}
-
-impl From<Roster> for Element {
-    fn from(roster: Roster) -> Element {
-        Element::builder("query")
-                .ns(ns::ROSTER)
-                .attr("ver", roster.ver)
-                .append(roster.items)
-                .build()
-    }
-}
+generate_element_with_children!(
+    /// The contact list of the user.
+    Roster, "query", ns::ROSTER,
+    attributes: [
+        /// Version of the contact list.
+        ///
+        /// This is an opaque string that should only be sent back to the server on
+        /// a new connection, if this client is storing the contact list between
+        /// connections.
+        ver: Option<String> = "ver" => optional
+    ],
+    children: [
+        /// List of the contacts of the user.
+        items: Vec<Item> = ("item", ns::ROSTER) => Item
+    ]
+);
 
 #[cfg(test)]
 mod tests {
@@ -256,7 +221,7 @@ mod tests {
             Error::ParseError(string) => string,
             _ => panic!(),
         };
-        assert_eq!(message, "Unknown element in roster element.");
+        assert_eq!(message, "Unknown child in query element.");
 
         let elem: Element = "<query xmlns='jabber:iq:roster' coucou=''/>".parse().unwrap();
         let error = Roster::try_from(elem).unwrap_err();
@@ -264,7 +229,7 @@ mod tests {
             Error::ParseError(string) => string,
             _ => panic!(),
         };
-        assert_eq!(message, "Unknown attribute in roster element.");
+        assert_eq!(message, "Unknown attribute in query element.");
     }
 
     #[test]
