@@ -340,6 +340,9 @@ macro_rules! generate_element_with_children {
                         $(
                         .attr($attr_name, elem.$attr)
                         )*
+                        $(
+                        .append(elem.$child_ident)
+                        )*
                         .build()
             }
         }

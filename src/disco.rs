@@ -377,6 +377,8 @@ mod tests {
     fn test_answers_items_result() {
         let elem: Element = "<query xmlns='http://jabber.org/protocol/disco#items'><item jid='component'/><item jid='component2' node='test' name='A component'/></query>".parse().unwrap();
         let query = DiscoItemsResult::try_from(elem).unwrap();
+        let elem2 = Element::from(query);
+        let query = DiscoItemsResult::try_from(elem2).unwrap();
         assert_eq!(query.items.len(), 2);
         assert_eq!(query.items[0].jid, Jid::from_str("component").unwrap());
         assert_eq!(query.items[0].node, None);
