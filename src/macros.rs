@@ -295,7 +295,7 @@ macro_rules! generate_element_with_text {
 }
 
 macro_rules! generate_element_with_children {
-    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:expr, attributes: [$($(#[$attr_meta:meta])* $attr:ident: $attr_type:ty = $attr_name:tt => $attr_action:tt),+], children: [$($(#[$child_meta:meta])* $child_ident:ident: Vec<$child_type:ty> = $child_name:tt => $child_constructor:ident),+]) => (
+    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:expr, attributes: [$($(#[$attr_meta:meta])* $attr:ident: $attr_type:ty = $attr_name:tt => $attr_action:tt),+], children: [$($(#[$child_meta:meta])* $child_ident:ident: Vec<$child_type:ty> = ($child_name:tt, $child_ns:expr) => $child_constructor:ident),+]) => (
         $(#[$meta])*
         #[derive(Debug, Clone)]
         pub struct $elem {
@@ -318,9 +318,13 @@ macro_rules! generate_element_with_children {
                 let mut parsed_children = vec!();
                 for child in elem.children() {
                     $(
-                    let parsed_child = $child_constructor::try_from(child.clone())?;
-                    parsed_children.push(parsed_child);
+                    if child.is($child_name, $child_ns) {
+                        let parsed_child = $child_constructor::try_from(child.clone())?;
+                        parsed_children.push(parsed_child);
+                        continue;
+                    }
                     )*
+                    return Err(Error::ParseError(concat!("Unknown child in ", $name, " element.")));
                 }
                 Ok($elem {
                     $(

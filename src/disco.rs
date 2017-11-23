@@ -214,7 +214,7 @@ generate_element_with_children!(
     ],
     children: [
         /// List of items pointed by this entity.
-        items: Vec<Item> = "item" => Item
+        items: Vec<Item> = ("item", ns::DISCO_ITEMS) => Item
     ]
 );
 
