@@ -37,6 +37,8 @@ extern crate try_from;
 pub mod error;
 /// XML namespace definitions used through XMPP.
 pub mod ns;
+/// Various helpers.
+pub mod helpers;
 /// Helper macros to parse and serialise more easily.
 #[macro_use]
 pub mod macros;

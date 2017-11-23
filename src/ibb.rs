@@ -8,11 +8,11 @@ use try_from::TryFrom;
 use std::str::FromStr;
 
 use minidom::{Element, IntoAttributeValue};
-use base64;
 
 use error::Error;
 
 use ns;
+use helpers::Base64;
 
 generate_attribute!(Stanza, "stanza", {
     Iq => "iq",
@@ -24,19 +24,6 @@ generate_element_with_only_attributes!(Open, "open", ns::IBB, [
     sid: String = "sid" => required,
     stanza: Stanza = "stanza" => default,
 ]);
-
-/// Codec wrapping base64 encode/decode
-struct Base64;
-
-impl Base64 {
-    fn decode(s: &str) -> Result<Vec<u8>, Error> {
-        Ok(base64::decode(s)?)
-    }
-
-    fn encode(b: &Vec<u8>) -> String {
-        base64::encode(b)
-    }
-}
 
 generate_element_with_text!(Data, "data", ns::IBB,
     [
