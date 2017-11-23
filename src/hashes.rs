@@ -12,8 +12,7 @@ use minidom::{Element, IntoAttributeValue};
 use error::Error;
 
 use ns;
-
-use base64;
+use helpers::Base64;
 
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -68,47 +67,19 @@ impl IntoAttributeValue for Algo {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct Hash {
-    pub algo: Algo,
-    pub hash: Vec<u8>,
-}
-
-impl TryFrom<Element> for Hash {
-    type Err = Error;
-
-    fn try_from(elem: Element) -> Result<Hash, Error> {
-        if !elem.is("hash", ns::HASHES) {
-            return Err(Error::ParseError("This is not a hash element."));
-        }
-        for _ in elem.children() {
-            return Err(Error::ParseError("Unknown child in hash element."));
-        }
-        let algo = get_attr!(elem, "algo", required);
-        let hash = match elem.text().as_ref() {
-            "" => return Err(Error::ParseError("Hash element shouldn’t be empty.")),
-            text => base64::decode(text)?,
-        };
-        Ok(Hash {
-            algo: algo,
-            hash: hash,
-        })
-    }
-}
-
-impl From<Hash> for Element {
-    fn from(hash: Hash) -> Element {
-        Element::builder("hash")
-                .ns(ns::HASHES)
-                .attr("algo", hash.algo)
-                .append(base64::encode(&hash.hash))
-                .build()
-    }
-}
+generate_element_with_text!(
+    #[derive(PartialEq)]
+    Hash, "hash", ns::HASHES,
+    [
+        algo: Algo = "algo" => required
+    ],
+    hash: Base64<Vec<u8>>
+);
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use base64;
 
     #[test]
     fn test_simple() {
