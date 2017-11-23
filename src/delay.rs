@@ -13,43 +13,15 @@ use error::Error;
 use jid::Jid;
 
 use ns;
+use helpers::PlainText;
 
-#[derive(Debug, Clone)]
-pub struct Delay {
-    pub from: Option<Jid>,
-    pub stamp: DateTime,
-    pub data: Option<String>,
-}
-
-impl TryFrom<Element> for Delay {
-    type Err = Error;
-
-    fn try_from(elem: Element) -> Result<Delay, Error> {
-        check_self!(elem, "delay", ns::DELAY);
-        check_no_children!(elem, "delay");
-        check_no_unknown_attributes!(elem, "delay", ["from", "stamp"]);
-        let data = match elem.text().as_ref() {
-            "" => None,
-            text => Some(text.to_owned()),
-        };
-        Ok(Delay {
-            from: get_attr!(elem, "from", optional),
-            stamp: get_attr!(elem, "stamp", required),
-            data: data,
-        })
-    }
-}
-
-impl From<Delay> for Element {
-    fn from(delay: Delay) -> Element {
-        Element::builder("delay")
-                .ns(ns::DELAY)
-                .attr("from", delay.from)
-                .attr("stamp", delay.stamp)
-                .append(delay.data)
-                .build()
-    }
-}
+generate_element_with_text!(Delay, "delay", ns::DELAY,
+    [
+        from: Option<Jid> = "from" => optional,
+        stamp: DateTime = "stamp" => required
+    ],
+    data: PlainText<Option<String>>
+);
 
 #[cfg(test)]
 mod tests {
