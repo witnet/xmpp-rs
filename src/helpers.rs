@@ -7,6 +7,24 @@
 use base64;
 use error::Error;
 
+/// Codec for plain text content.
+pub struct PlainText;
+
+impl PlainText {
+    pub fn decode(s: &str) -> Result<Option<String>, Error> {
+        Ok(match s {
+            "" => None,
+            text => Some(text.to_owned()),
+        })
+    }
+
+    pub fn encode(string: &Option<String>) -> Option<String> {
+        string.as_ref().map(|text| {
+            text.to_owned()
+        })
+    }
+}
+
 /// Codec wrapping base64 encode/decode
 pub struct Base64;
 
@@ -15,7 +33,7 @@ impl Base64 {
         Ok(base64::decode(s)?)
     }
 
-    pub fn encode(b: &Vec<u8>) -> String {
-        base64::encode(b)
+    pub fn encode(b: &Vec<u8>) -> Option<String> {
+        Some(base64::encode(b))
     }
 }
