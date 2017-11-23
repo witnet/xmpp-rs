@@ -18,41 +18,17 @@ use minidom::{Element, IntoAttributeValue};
 use error::Error;
 use ns;
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct Range {
-    pub offset: u64,
-    pub length: Option<u64>,
-    pub hashes: Vec<Hash>,
-}
-
-impl TryFrom<Element> for Range {
-    type Err = Error;
-
-    fn try_from(elem: Element) -> Result<Range, Error> {
-        check_self!(elem, "range", ns::JINGLE_FT);
-        check_no_unknown_attributes!(elem, "range", ["offset", "length"]);
-        let mut hashes = vec!();
-        for child in elem.children() {
-            hashes.push(Hash::try_from(child.clone())?);
-        }
-        Ok(Range {
-            offset: get_attr!(elem, "offset", default),
-            length: get_attr!(elem, "length", optional),
-            hashes: hashes,
-        })
-    }
-}
-
-impl From<Range> for Element {
-    fn from(range: Range) -> Element {
-        Element::builder("range")
-                .ns(ns::JINGLE_FT)
-                .attr("offset", if range.offset == 0 { None } else { Some(range.offset) })
-                .attr("length", range.length)
-                .append(range.hashes)
-                .build()
-    }
-}
+generate_element_with_children!(
+    #[derive(PartialEq)]
+    Range, "range", ns::JINGLE_FT,
+    attributes: [
+        offset: u64 = "offset" => default,
+        length: Option<u64> = "length" => optional
+    ],
+    children: [
+        hashes: Vec<Hash> = ("hash", ns::HASHES) => Hash
+    ]
+);
 
 type Lang = String;
 
