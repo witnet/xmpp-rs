@@ -108,46 +108,45 @@ impl TryFrom<Element> for File {
 impl From<File> for Element {
     fn from(file: File) -> Element {
         let mut root = Element::builder("file")
-                               .ns(ns::JINGLE_FT)
-                               .build();
+                               .ns(ns::JINGLE_FT);
         if let Some(date) = file.date {
-            root.append_child(Element::builder("date")
-                                      .ns(ns::JINGLE_FT)
-                                      .append(date)
-                                      .build());
+            root = root.append(Element::builder("date")
+                                       .ns(ns::JINGLE_FT)
+                                       .append(date)
+                                       .build());
         }
         if let Some(media_type) = file.media_type {
-            root.append_child(Element::builder("media-type")
-                                      .ns(ns::JINGLE_FT)
-                                      .append(media_type)
-                                      .build());
+            root = root.append(Element::builder("media-type")
+                                       .ns(ns::JINGLE_FT)
+                                       .append(media_type)
+                                       .build());
         }
         if let Some(name) = file.name {
-            root.append_child(Element::builder("name")
-                                      .ns(ns::JINGLE_FT)
-                                      .append(name)
-                                      .build());
+            root = root.append(Element::builder("name")
+                                       .ns(ns::JINGLE_FT)
+                                       .append(name)
+                                       .build());
         }
         for (lang, desc) in file.descs.into_iter() {
-            root.append_child(Element::builder("desc")
-                                      .ns(ns::JINGLE_FT)
-                                      .attr("xml:lang", lang)
-                                      .append(desc.0)
-                                      .build());
+            root = root.append(Element::builder("desc")
+                                       .ns(ns::JINGLE_FT)
+                                       .attr("xml:lang", lang)
+                                       .append(desc.0)
+                                       .build());
         }
         if let Some(size) = file.size {
-            root.append_child(Element::builder("size")
-                                      .ns(ns::JINGLE_FT)
-                                      .append(format!("{}", size))
-                                      .build());
+            root = root.append(Element::builder("size")
+                                       .ns(ns::JINGLE_FT)
+                                       .append(format!("{}", size))
+                                       .build());
         }
         if let Some(range) = file.range {
-            root.append_child(range.into());
+            root = root.append(range);
         }
         for hash in file.hashes {
-            root.append_child(hash.into());
+            root = root.append(hash);
         }
-        root
+        root.build()
     }
 }
 #[derive(Debug, Clone)]
@@ -179,10 +178,9 @@ impl TryFrom<Element> for Description {
 
 impl From<Description> for Element {
     fn from(description: Description) -> Element {
-        let file: Element = description.file.into();
         Element::builder("description")
                 .ns(ns::JINGLE_FT)
-                .append(file)
+                .append(description.file)
                 .build()
     }
 }
