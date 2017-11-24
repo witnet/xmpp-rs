@@ -14,56 +14,26 @@ use error::Error;
 
 use ns;
 
-/// Enum representing chatstate elements part of the
-/// `http://jabber.org/protocol/chatstates` namespace.
-#[derive(Debug, Clone)]
-pub enum ChatState {
-    /// `<active xmlns='http://jabber.org/protocol/chatstates'/>`
-    Active,
+generate_element_enum!(
+    /// Enum representing chatstate elements part of the
+    /// `http://jabber.org/protocol/chatstates` namespace.
+    ChatState, "chatstate", ns::CHATSTATES, {
+        /// `<active xmlns='http://jabber.org/protocol/chatstates'/>`
+        Active => "active",
 
-    /// `<composing xmlns='http://jabber.org/protocol/chatstates'/>`
-    Composing,
+        /// `<composing xmlns='http://jabber.org/protocol/chatstates'/>`
+        Composing => "composing",
 
-    /// `<gone xmlns='http://jabber.org/protocol/chatstates'/>`
-    Gone,
+        /// `<gone xmlns='http://jabber.org/protocol/chatstates'/>`
+        Gone => "gone",
 
-    /// `<inactive xmlns='http://jabber.org/protocol/chatstates'/>`
-    Inactive,
+        /// `<inactive xmlns='http://jabber.org/protocol/chatstates'/>`
+        Inactive => "inactive",
 
-    /// `<paused xmlns='http://jabber.org/protocol/chatstates'/>`
-    Paused,
-}
-
-impl TryFrom<Element> for ChatState {
-    type Err = Error;
-
-    fn try_from(elem: Element) -> Result<ChatState, Error> {
-        check_ns_only!(elem, "chatstate", ns::CHATSTATES);
-        check_no_children!(elem, "chatstate");
-        check_no_attributes!(elem, "chatstate");
-        Ok(match elem.name() {
-            "active" => ChatState::Active,
-            "composing" => ChatState::Composing,
-            "gone" => ChatState::Gone,
-            "inactive" => ChatState::Inactive,
-            "paused" => ChatState::Paused,
-            _ => return Err(Error::ParseError("This is not a chatstate element.")),
-        })
+        /// `<paused xmlns='http://jabber.org/protocol/chatstates'/>`
+        Paused => "paused",
     }
-}
-
-impl From<ChatState> for Element {
-    fn from(chatstate: ChatState) -> Element {
-        Element::builder(match chatstate {
-            ChatState::Active => "active",
-            ChatState::Composing => "composing",
-            ChatState::Gone => "gone",
-            ChatState::Inactive => "inactive",
-            ChatState::Paused => "paused",
-        }).ns(ns::CHATSTATES)
-          .build()
-    }
-}
+);
 
 #[cfg(test)]
 mod tests {

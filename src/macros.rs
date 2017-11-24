@@ -96,6 +96,42 @@ macro_rules! generate_attribute {
     );
 }
 
+macro_rules! generate_element_enum {
+    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:expr, {$($(#[$enum_meta:meta])* $enum:ident => $enum_name:tt),+,}) => (
+        generate_element_enum!($(#[$meta])* $elem, $name, $ns, {$($(#[$enum_meta])* $enum => $enum_name),+});
+    );
+    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:expr, {$($(#[$enum_meta:meta])* $enum:ident => $enum_name:tt),+}) => (
+        $(#[$meta])*
+        #[derive(Debug, Clone, PartialEq)]
+        pub enum $elem {
+            $(
+            $(#[$enum_meta])*
+            $enum
+            ),+
+        }
+        impl TryFrom<Element> for $elem {
+            type Err = Error;
+            fn try_from(elem: Element) -> Result<$elem, Error> {
+                check_ns_only!(elem, $name, $ns);
+                check_no_children!(elem, $name);
+                check_no_attributes!(elem, $name);
+                Ok(match elem.name() {
+                    $($enum_name => $elem::$enum,)+
+                    _ => return Err(Error::ParseError(concat!("This is not a ", $name, " element."))),
+                })
+            }
+        }
+        impl From<$elem> for Element {
+            fn from(elem: $elem) -> Element {
+                Element::builder(match elem {
+                    $($elem::$enum => $enum_name,)+
+                }).ns($ns)
+                  .build()
+            }
+        }
+    );
+}
+
 macro_rules! check_self {
     ($elem:ident, $name:tt, $ns:expr) => (
         check_self!($elem, $name, $ns, $name);
