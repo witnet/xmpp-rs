@@ -20,46 +20,15 @@ generate_element_with_text!(URI, "uri", ns::MEDIA_ELEMENT,
     uri: TrimmedPlainText<String>
 );
 
-#[derive(Debug, Clone)]
-pub struct MediaElement {
-    pub width: Option<usize>,
-    pub height: Option<usize>,
-    pub uris: Vec<URI>,
-}
-
-impl TryFrom<Element> for MediaElement {
-    type Err = Error;
-
-    fn try_from(elem: Element) -> Result<MediaElement, Error> {
-        check_self!(elem, "media", ns::MEDIA_ELEMENT);
-        check_no_unknown_attributes!(elem, "media", ["width", "height"]);
-
-        let mut media = MediaElement {
-            width: get_attr!(elem, "width", optional),
-            height: get_attr!(elem, "height", optional),
-            uris: vec!(),
-        };
-        for child in elem.children() {
-            if child.is("uri", ns::MEDIA_ELEMENT) {
-                media.uris.push(URI::try_from(child.clone())?);
-            } else {
-                return Err(Error::ParseError("Unknown child in media element."));
-            }
-        }
-        Ok(media)
-    }
-}
-
-impl From<MediaElement> for Element {
-    fn from(media: MediaElement) -> Element {
-        Element::builder("media")
-                .ns(ns::MEDIA_ELEMENT)
-                .attr("width", media.width)
-                .attr("height", media.height)
-                .append(media.uris)
-                .build()
-    }
-}
+generate_element_with_children!(MediaElement, "media", ns::MEDIA_ELEMENT,
+    attributes: [
+        width: Option<usize> = "width" => optional,
+        height: Option<usize> = "height" => optional
+    ],
+    children: [
+        uris: Vec<URI> = ("uri", ns::MEDIA_ELEMENT) => URI
+    ]
+);
 
 #[cfg(test)]
 mod tests {
