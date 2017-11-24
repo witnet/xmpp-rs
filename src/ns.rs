@@ -50,6 +50,9 @@ pub const CHATSTATES: &str = "http://jabber.org/protocol/chatstates";
 /// XEP-0092: Software Version
 pub const VERSION: &str = "jabber:iq:version";
 
+/// XEP-0107: User Mood
+pub const MOOD: &str = "http://jabber.org/protocol/mood";
+
 /// XEP-0114: Jabber Component Protocol
 pub const COMPONENT_ACCEPT: &str = "jabber:component:accept";
 

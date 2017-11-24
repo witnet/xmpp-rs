@@ -89,6 +89,9 @@ pub mod chatstates;
 /// XEP-0092: Software Version
 pub mod version;
 
+/// XEP-0107: User Mood
+pub mod mood;
+
 /// XEP-0115: Entity Capabilities
 pub mod caps;
 
