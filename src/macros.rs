@@ -139,6 +139,44 @@ macro_rules! generate_element_enum {
     );
 }
 
+macro_rules! generate_attribute_enum {
+    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:expr, $attr:tt, {$($(#[$enum_meta:meta])* $enum:ident => $enum_name:tt),+,}) => (
+        generate_attribute_enum!($(#[$meta])* $elem, $name, $ns, $attr, {$($(#[$enum_meta])* $enum => $enum_name),+});
+    );
+    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:expr, $attr:tt, {$($(#[$enum_meta:meta])* $enum:ident => $enum_name:tt),+}) => (
+        $(#[$meta])*
+        #[derive(Debug, Clone, PartialEq)]
+        pub enum $elem {
+            $(
+            $(#[$enum_meta])*
+            $enum
+            ),+
+        }
+        impl TryFrom<Element> for $elem {
+            type Err = Error;
+            fn try_from(elem: Element) -> Result<$elem, Error> {
+                check_ns_only!(elem, $name, $ns);
+                check_no_children!(elem, $name);
+                check_no_unknown_attributes!(elem, $name, [$attr]);
+                Ok(match get_attr!(elem, $attr, required) {
+                    $($enum_name => $elem::$enum,)+
+                    _ => return Err(Error::ParseError(concat!("Invalid ", $name, " ", $attr, " value."))),
+                })
+            }
+        }
+        impl From<$elem> for Element {
+            fn from(elem: $elem) -> Element {
+                Element::builder($name)
+                        .ns($ns)
+                        .attr($attr, match elem {
+                             $($elem::$enum => $enum_name,)+
+                         })
+                         .build()
+            }
+        }
+    );
+}
+
 macro_rules! check_self {
     ($elem:ident, $name:tt, $ns:expr) => (
         check_self!($elem, $name, $ns, $name);

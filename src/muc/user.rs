@@ -16,131 +16,61 @@ use error::Error;
 
 use ns;
 
-#[derive(Debug, Clone, PartialEq)]
-pub enum Status {
+generate_attribute_enum!(Status, "status", ns::MUC_USER, "code", {
     /// Status: 100
-    NonAnonymousRoom,
+    NonAnonymousRoom => 100,
 
     /// Status: 101
-    AffiliationChange,
+    AffiliationChange => 101,
 
     /// Status: 102
-    ConfigShowsUnavailableMembers,
+    ConfigShowsUnavailableMembers => 102,
 
     /// Status: 103
-    ConfigHidesUnavailableMembers,
+    ConfigHidesUnavailableMembers => 103,
 
     /// Status: 104
-    ConfigNonPrivacyRelated,
+    ConfigNonPrivacyRelated => 104,
 
     /// Status: 110
-    SelfPresence,
+    SelfPresence => 110,
 
     /// Status: 170
-    ConfigRoomLoggingEnabled,
+    ConfigRoomLoggingEnabled => 170,
 
     /// Status: 171
-    ConfigRoomLoggingDisabled,
+    ConfigRoomLoggingDisabled => 171,
 
     /// Status: 172
-    ConfigRoomNonAnonymous,
+    ConfigRoomNonAnonymous => 172,
 
     /// Status: 173
-    ConfigRoomSemiAnonymous,
+    ConfigRoomSemiAnonymous => 173,
 
     /// Status: 201
-    RoomHasBeenCreated,
+    RoomHasBeenCreated => 201,
 
     /// Status: 210
-    AssignedNick,
+    AssignedNick => 210,
 
     /// Status: 301
-    Banned,
+    Banned => 301,
 
     /// Status: 303
-    NewNick,
+    NewNick => 303,
 
     /// Status: 307
-    Kicked,
+    Kicked => 307,
 
     /// Status: 321
-    RemovalFromRoom,
+    RemovalFromRoom => 321,
 
     /// Status: 322
-    ConfigMembersOnly,
+    ConfigMembersOnly => 322,
 
     /// Status: 332
-    ServiceShutdown,
-}
-
-impl TryFrom<Element> for Status {
-    type Err = Error;
-
-    fn try_from(elem: Element) -> Result<Status, Error> {
-        if !elem.is("status", ns::MUC_USER) {
-            return Err(Error::ParseError("This is not a status element."));
-        }
-        for _ in elem.children() {
-            return Err(Error::ParseError("Unknown child in status element."));
-        }
-        for (attr, _) in elem.attrs() {
-            if attr != "code" {
-                return Err(Error::ParseError("Unknown attribute in status element."));
-            }
-        }
-        let code = get_attr!(elem, "code", required);
-
-        Ok(match code {
-             100 => Status::NonAnonymousRoom,
-             101 => Status::AffiliationChange,
-             102 => Status::ConfigShowsUnavailableMembers,
-             103 => Status::ConfigHidesUnavailableMembers,
-             104 => Status::ConfigNonPrivacyRelated,
-             110 => Status::SelfPresence,
-             170 => Status::ConfigRoomLoggingEnabled,
-             171 => Status::ConfigRoomLoggingDisabled,
-             172 => Status::ConfigRoomNonAnonymous,
-             173 => Status::ConfigRoomSemiAnonymous,
-             201 => Status::RoomHasBeenCreated,
-             210 => Status::AssignedNick,
-             301 => Status::Banned,
-             303 => Status::NewNick,
-             307 => Status::Kicked,
-             321 => Status::RemovalFromRoom,
-             322 => Status::ConfigMembersOnly,
-             332 => Status::ServiceShutdown,
-             _ => return Err(Error::ParseError("Invalid status code.")),
-        })
-    }
-}
-
-impl From<Status> for Element {
-    fn from(status: Status) -> Element {
-        Element::builder("status")
-                .ns(ns::MUC_USER)
-                .attr("code", match status {
-                     Status::NonAnonymousRoom => 100,
-                     Status::AffiliationChange => 101,
-                     Status::ConfigShowsUnavailableMembers => 102,
-                     Status::ConfigHidesUnavailableMembers => 103,
-                     Status::ConfigNonPrivacyRelated => 104,
-                     Status::SelfPresence => 110,
-                     Status::ConfigRoomLoggingEnabled => 170,
-                     Status::ConfigRoomLoggingDisabled => 171,
-                     Status::ConfigRoomNonAnonymous => 172,
-                     Status::ConfigRoomSemiAnonymous => 173,
-                     Status::RoomHasBeenCreated => 201,
-                     Status::AssignedNick => 210,
-                     Status::Banned => 301,
-                     Status::NewNick => 303,
-                     Status::Kicked => 307,
-                     Status::RemovalFromRoom => 321,
-                     Status::ConfigMembersOnly => 322,
-                     Status::ServiceShutdown => 332,
-                })
-                .build()
-    }
-}
+    ServiceShutdown => 332,
+});
 
 /// Optional <actor/> element used in <item/> elements inside presence stanzas of type
 /// "unavailable" that are sent to users who are kick or banned, as well as within IQs for tracking
@@ -434,7 +364,7 @@ mod tests {
             Error::ParseError(string) => string,
             _ => panic!(),
         };
-        assert_eq!(message, "Invalid status code.");
+        assert_eq!(message, "Invalid status code value.");
     }
 
     #[test]
