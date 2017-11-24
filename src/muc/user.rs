@@ -16,59 +16,65 @@ use error::Error;
 
 use ns;
 
-generate_attribute_enum!(Status, "status", ns::MUC_USER, "code", {
-    /// Status: 100
+generate_attribute_enum!(
+/// Lists all of the possible status codes used in MUC presences.
+Status, "status", ns::MUC_USER, "code", {
+    /// Inform user that any occupant is allowed to see the user's full JID
     NonAnonymousRoom => 100,
 
-    /// Status: 101
+    /// Inform user that his or her affiliation changed while not in the room
     AffiliationChange => 101,
 
-    /// Status: 102
+    /// Inform occupants that room now shows unavailable members
     ConfigShowsUnavailableMembers => 102,
 
-    /// Status: 103
+    /// Inform occupants that room now does not show unavailable members
     ConfigHidesUnavailableMembers => 103,
 
-    /// Status: 104
+    /// Inform occupants that a non-privacy-related room configuration change has occurred
     ConfigNonPrivacyRelated => 104,
 
-    /// Status: 110
+    /// Inform user that presence refers to itself
     SelfPresence => 110,
 
-    /// Status: 170
+    /// Inform occupants that room logging is now enabled
     ConfigRoomLoggingEnabled => 170,
 
-    /// Status: 171
+    /// Inform occupants that room logging is now disabled
     ConfigRoomLoggingDisabled => 171,
 
-    /// Status: 172
+    /// Inform occupants that the room is now non-anonymous
     ConfigRoomNonAnonymous => 172,
 
-    /// Status: 173
+    /// Inform occupants that the room is now semi-anonymous
     ConfigRoomSemiAnonymous => 173,
 
-    /// Status: 201
+    /// Inform user that a new room has been created
     RoomHasBeenCreated => 201,
 
-    /// Status: 210
+    /// Inform user that service has assigned or modified occupant's roomnick
     AssignedNick => 210,
 
-    /// Status: 301
+    /// Inform user that he or she has been banned from the room
     Banned => 301,
 
-    /// Status: 303
+    /// Inform all occupants of new room nickname
     NewNick => 303,
 
-    /// Status: 307
+    /// Inform user that he or she has been kicked from the room
     Kicked => 307,
 
-    /// Status: 321
+    /// Inform user that he or she is being removed from the room
+    /// because of an affiliation change
     RemovalFromRoom => 321,
 
-    /// Status: 322
+    /// Inform user that he or she is being removed from the room
+    /// because the room has been changed to members-only and the
+    /// user is not a member
     ConfigMembersOnly => 322,
 
-    /// Status: 332
+    /// Inform user that he or she is being removed from the room
+    /// because the MUC service is being shut down
     ServiceShutdown => 332,
 });
 
