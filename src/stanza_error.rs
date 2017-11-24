@@ -8,7 +8,7 @@ use try_from::TryFrom;
 use std::str::FromStr;
 use std::collections::BTreeMap;
 
-use minidom::{Element, IntoElements, IntoAttributeValue, ElementEmitter};
+use minidom::{Element, IntoAttributeValue};
 
 use error::Error;
 use jid::Jid;
@@ -22,93 +22,30 @@ generate_attribute!(ErrorType, "type", {
     Wait => "wait",
 });
 
-#[derive(Debug, Clone, PartialEq)]
-pub enum DefinedCondition {
-    BadRequest,
-    Conflict,
-    FeatureNotImplemented,
-    Forbidden,
-    Gone,
-    InternalServerError,
-    ItemNotFound,
-    JidMalformed,
-    NotAcceptable,
-    NotAllowed,
-    NotAuthorized,
-    PolicyViolation,
-    RecipientUnavailable,
-    Redirect,
-    RegistrationRequired,
-    RemoteServerNotFound,
-    RemoteServerTimeout,
-    ResourceConstraint,
-    ServiceUnavailable,
-    SubscriptionRequired,
-    UndefinedCondition,
-    UnexpectedRequest,
-}
-
-impl FromStr for DefinedCondition {
-    type Err = Error;
-
-    fn from_str(s: &str) -> Result<DefinedCondition, Error> {
-        Ok(match s {
-            "bad-request" => DefinedCondition::BadRequest,
-            "conflict" => DefinedCondition::Conflict,
-            "feature-not-implemented" => DefinedCondition::FeatureNotImplemented,
-            "forbidden" => DefinedCondition::Forbidden,
-            "gone" => DefinedCondition::Gone,
-            "internal-server-error" => DefinedCondition::InternalServerError,
-            "item-not-found" => DefinedCondition::ItemNotFound,
-            "jid-malformed" => DefinedCondition::JidMalformed,
-            "not-acceptable" => DefinedCondition::NotAcceptable,
-            "not-allowed" => DefinedCondition::NotAllowed,
-            "not-authorized" => DefinedCondition::NotAuthorized,
-            "policy-violation" => DefinedCondition::PolicyViolation,
-            "recipient-unavailable" => DefinedCondition::RecipientUnavailable,
-            "redirect" => DefinedCondition::Redirect,
-            "registration-required" => DefinedCondition::RegistrationRequired,
-            "remote-server-not-found" => DefinedCondition::RemoteServerNotFound,
-            "remote-server-timeout" => DefinedCondition::RemoteServerTimeout,
-            "resource-constraint" => DefinedCondition::ResourceConstraint,
-            "service-unavailable" => DefinedCondition::ServiceUnavailable,
-            "subscription-required" => DefinedCondition::SubscriptionRequired,
-            "undefined-condition" => DefinedCondition::UndefinedCondition,
-            "unexpected-request" => DefinedCondition::UnexpectedRequest,
-
-            _ => return Err(Error::ParseError("Unknown defined-condition.")),
-        })
-    }
-}
-
-impl IntoElements for DefinedCondition {
-    fn into_elements(self, emitter: &mut ElementEmitter) {
-        emitter.append_child(Element::builder(match self {
-            DefinedCondition::BadRequest => "bad-request",
-            DefinedCondition::Conflict => "conflict",
-            DefinedCondition::FeatureNotImplemented => "feature-not-implemented",
-            DefinedCondition::Forbidden => "forbidden",
-            DefinedCondition::Gone => "gone",
-            DefinedCondition::InternalServerError => "internal-server-error",
-            DefinedCondition::ItemNotFound => "item-not-found",
-            DefinedCondition::JidMalformed => "jid-malformed",
-            DefinedCondition::NotAcceptable => "not-acceptable",
-            DefinedCondition::NotAllowed => "not-allowed",
-            DefinedCondition::NotAuthorized => "not-authorized",
-            DefinedCondition::PolicyViolation => "policy-violation",
-            DefinedCondition::RecipientUnavailable => "recipient-unavailable",
-            DefinedCondition::Redirect => "redirect",
-            DefinedCondition::RegistrationRequired => "registration-required",
-            DefinedCondition::RemoteServerNotFound => "remote-server-not-found",
-            DefinedCondition::RemoteServerTimeout => "remote-server-timeout",
-            DefinedCondition::ResourceConstraint => "resource-constraint",
-            DefinedCondition::ServiceUnavailable => "service-unavailable",
-            DefinedCondition::SubscriptionRequired => "subscription-required",
-            DefinedCondition::UndefinedCondition => "undefined-condition",
-            DefinedCondition::UnexpectedRequest => "unexpected-request",
-        }).ns(ns::XMPP_STANZAS).build());
-    }
-}
+generate_element_enum!(DefinedCondition, "condition", ns::XMPP_STANZAS, {
+    BadRequest => "bad-request",
+    Conflict => "conflict",
+    FeatureNotImplemented => "feature-not-implemented",
+    Forbidden => "forbidden",
+    Gone => "gone",
+    InternalServerError => "internal-server-error",
+    ItemNotFound => "item-not-found",
+    JidMalformed => "jid-malformed",
+    NotAcceptable => "not-acceptable",
+    NotAllowed => "not-allowed",
+    NotAuthorized => "not-authorized",
+    PolicyViolation => "policy-violation",
+    RecipientUnavailable => "recipient-unavailable",
+    Redirect => "redirect",
+    RegistrationRequired => "registration-required",
+    RemoteServerNotFound => "remote-server-not-found",
+    RemoteServerTimeout => "remote-server-timeout",
+    ResourceConstraint => "resource-constraint",
+    ServiceUnavailable => "service-unavailable",
+    SubscriptionRequired => "subscription-required",
+    UndefinedCondition => "undefined-condition",
+    UnexpectedRequest => "unexpected-request",
+});
 
 pub type Lang = String;
 
@@ -151,7 +88,7 @@ impl TryFrom<Element> for StanzaError {
                 for _ in child.children() {
                     return Err(Error::ParseError("Unknown element in defined-condition."));
                 }
-                let condition = DefinedCondition::from_str(child.name())?;
+                let condition = DefinedCondition::try_from(child.clone())?;
                 defined_condition = Some(condition);
             } else {
                 if other.is_some() {
