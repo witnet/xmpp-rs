@@ -25,6 +25,22 @@ impl PlainText {
     }
 }
 
+/// Codec for trimmed plain text content.
+pub struct TrimmedPlainText;
+
+impl TrimmedPlainText {
+    pub fn decode(s: &str) -> Result<String, Error> {
+        Ok(match s.trim() {
+            "" => return Err(Error::ParseError("URI missing in uri.")),
+            text => text.to_owned(),
+        })
+    }
+
+    pub fn encode(string: &String) -> String {
+        string.to_owned()
+    }
+}
+
 /// Codec wrapping base64 encode/decode
 pub struct Base64;
 

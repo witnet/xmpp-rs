@@ -11,40 +11,14 @@ use minidom::Element;
 use error::Error;
 
 use ns;
+use helpers::TrimmedPlainText;
 
-#[derive(Debug, Clone)]
-pub struct URI {
-    pub type_: String,
-    pub uri: String,
-}
-
-impl TryFrom<Element> for URI {
-    type Err = Error;
-
-    fn try_from(elem: Element) -> Result<URI, Error> {
-        check_self!(elem, "uri", ns::MEDIA_ELEMENT);
-        check_no_unknown_attributes!(elem, "uri", ["type"]);
-        check_no_children!(elem, "uri");
-        let uri = elem.text().trim().to_owned();
-        if uri == "" {
-            return Err(Error::ParseError("URI missing in uri."));
-        }
-        Ok(URI {
-            type_: get_attr!(elem, "type", required),
-            uri: uri,
-        })
-    }
-}
-
-impl From<URI> for Element {
-    fn from(uri: URI) -> Element {
-        Element::builder("uri")
-                .ns(ns::MEDIA_ELEMENT)
-                .attr("type", uri.type_)
-                .append(uri.uri)
-                .build()
-    }
-}
+generate_element_with_text!(URI, "uri", ns::MEDIA_ELEMENT,
+    [
+        type_: String = "type" => required
+    ],
+    uri: TrimmedPlainText<String>
+);
 
 #[derive(Debug, Clone)]
 pub struct MediaElement {
