@@ -23,64 +23,26 @@ generate_attribute!(Subscription, "subscription", {
     Remove => "remove",
 }, Default = None);
 
-/// Contact from the user’s contact list.
-#[derive(Debug, Clone, PartialEq)]
-pub struct Item {
-    /// JID of this contact.
-    pub jid: Jid,
+generate_element_with_children!(
+    /// Contact from the user’s contact list.
+    #[derive(PartialEq)]
+    Item, "item", ns::ROSTER,
+    attributes: [
+        /// JID of this contact.
+        jid: Jid = "jid" => required,
 
-    /// Name of this contact.
-    pub name: Option<String>,
+        /// Name of this contact.
+        name: Option<String> = "name" => optional_empty,
 
-    /// Subscription status of this contact.
-    pub subscription: Subscription,
+        /// Subscription status of this contact.
+        subscription: Subscription = "subscription" => default
+    ],
 
-    /// Groups this contact is part of.
-    pub groups: Vec<Group>,
-}
-
-impl TryFrom<Element> for Item {
-    type Err = Error;
-
-    fn try_from(elem: Element) -> Result<Item, Error> {
-        if !elem.is("item", ns::ROSTER) {
-            return Err(Error::ParseError("This is not a roster item element."));
-        }
-
-        let mut item = Item {
-            jid: get_attr!(elem, "jid", required),
-            name: get_attr!(elem, "name", optional).and_then(|name| if name == "" { None } else { Some(name) }),
-            subscription: get_attr!(elem, "subscription", default),
-            groups: vec!(),
-        };
-        for child in elem.children() {
-            if !child.is("group", ns::ROSTER) {
-                return Err(Error::ParseError("Unknown element in roster item element."));
-            }
-            for _ in child.children() {
-                return Err(Error::ParseError("Roster item group can’t have children."));
-            }
-            for _ in child.attrs() {
-                return Err(Error::ParseError("Roster item group can’t have attributes."));
-            }
-            let group = Group(child.text());
-            item.groups.push(group);
-        }
-        Ok(item)
-    }
-}
-
-impl From<Item> for Element {
-    fn from(item: Item) -> Element {
-        Element::builder("item")
-                .ns(ns::ROSTER)
-                .attr("jid", item.jid)
-                .attr("name", item.name)
-                .attr("subscription", item.subscription)
-                .append(item.groups)
-                .build()
-    }
-}
+    children: [
+        /// Groups this contact is part of.
+        groups: Vec<Group> = ("group", ns::ROSTER) => Group
+    ]
+);
 
 generate_element_with_children!(
     /// The contact list of the user.
@@ -258,6 +220,6 @@ mod tests {
             Error::ParseError(string) => string,
             _ => panic!(),
         };
-        assert_eq!(message, "Unknown element in roster item element.");
+        assert_eq!(message, "Unknown child in item element.");
     }
 }

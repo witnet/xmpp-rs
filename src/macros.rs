@@ -8,6 +8,13 @@ macro_rules! get_attr {
     ($elem:ident, $attr:tt, $type:tt) => (
         get_attr!($elem, $attr, $type, value, value.parse()?)
     );
+    ($elem:ident, $attr:tt, optional_empty, $value:ident, $func:expr) => (
+        match $elem.attr($attr) {
+            Some("") => None,
+            Some($value) => Some($func),
+            None => None,
+        }
+    );
     ($elem:ident, $attr:tt, optional, $value:ident, $func:expr) => (
         match $elem.attr($attr) {
             Some($value) => Some($func),
@@ -275,6 +282,16 @@ macro_rules! generate_elem_id {
             fn from_str(s: &str) -> Result<$elem, Error> {
                 // TODO: add a way to parse that differently when needed.
                 Ok($elem(String::from(s)))
+            }
+        }
+        impl TryFrom<Element> for $elem {
+            type Err = Error;
+            fn try_from(elem: Element) -> Result<$elem, Error> {
+                check_self!(elem, $name, $ns);
+                check_no_children!(elem, $name);
+                check_no_attributes!(elem, $name);
+                // TODO: add a way to parse that differently when needed.
+                Ok($elem(elem.text()))
             }
         }
         impl From<$elem> for Element {
