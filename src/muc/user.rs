@@ -196,34 +196,7 @@ generate_element_with_only_attributes!(Continue, "continue", ns::MUC_USER, [
     thread: Option<String> = "thread" => optional,
 ]);
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct Reason(String);
-
-impl TryFrom<Element> for Reason {
-    type Err = Error;
-
-    fn try_from(elem: Element) -> Result<Reason, Error> {
-        if !elem.is("reason", ns::MUC_USER) {
-            return Err(Error::ParseError("This is not a reason element."));
-        }
-        for _ in elem.children() {
-            return Err(Error::ParseError("Unknown child in reason element."));
-        }
-        for _ in elem.attrs() {
-            return Err(Error::ParseError("Unknown attribute in reason element."));
-        }
-        Ok(Reason(elem.text()))
-    }
-}
-
-impl From<Reason> for Element {
-    fn from(reason: Reason) -> Element {
-        Element::builder("reason")
-                .ns(ns::MUC_USER)
-                .append(reason.0)
-                .build()
-    }
-}
+generate_elem_id!(Reason, "reason", ns::MUC_USER);
 
 generate_attribute!(Affiliation, "affiliation", {
     Owner => "owner",
