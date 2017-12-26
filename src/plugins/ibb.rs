@@ -10,7 +10,7 @@ use jid::Jid;
 use plugins::stanza::Iq;
 use plugins::disco::DiscoPlugin;
 use xmpp_parsers::iq::{IqType, IqSetPayload};
-use xmpp_parsers::ibb::{IBB, Stanza};
+use xmpp_parsers::ibb::{Open, Data, Close, Stanza};
 use xmpp_parsers::stanza_error::{StanzaError, ErrorType, DefinedCondition};
 use xmpp_parsers::ns;
 
@@ -86,74 +86,79 @@ impl IbbPlugin {
         }
     }
 
-    fn handle_ibb(&self, from: Jid, ibb: IBB) -> Result<(), StanzaError> {
+    fn handle_ibb_open(&self, from: Jid, open: Open) -> Result<(), StanzaError> {
         let mut sessions = self.sessions.lock().unwrap();
-        match ibb {
-            IBB::Open { block_size, sid, stanza } => {
-                match sessions.entry((from.clone(), sid.clone())) {
-                    Entry::Vacant(_) => Ok(()),
-                    Entry::Occupied(_) => Err(generate_error(
-                        ErrorType::Cancel,
-                        DefinedCondition::NotAcceptable,
-                        "This session is already open."
-                    )),
-                }?;
-                let session = Session {
-                    stanza,
-                    block_size,
-                    cur_seq: 65535u16,
-                };
-                sessions.insert((from, sid), session.clone());
-                self.proxy.dispatch(IbbOpen {
-                    session: session,
-                });
-            },
-            IBB::Data { seq, sid, data } => {
-                let entry = match sessions.entry((from, sid)) {
-                    Entry::Occupied(entry) => Ok(entry),
-                    Entry::Vacant(_) => Err(generate_error(
-                        ErrorType::Cancel,
-                        DefinedCondition::ItemNotFound,
-                        "This session doesn’t exist."
-                    )),
-                }?;
-                let mut session = entry.into_mut();
-                if session.stanza != Stanza::Iq {
-                    return Err(generate_error(
-                        ErrorType::Cancel,
-                        DefinedCondition::NotAcceptable,
-                        "Wrong stanza type."
-                    ))
-                }
-                let cur_seq = session.cur_seq.wrapping_add(1);
-                if seq != cur_seq {
-                    return Err(generate_error(
-                        ErrorType::Cancel,
-                        DefinedCondition::NotAcceptable,
-                        "Wrong seq number."
-                    ))
-                }
-                session.cur_seq = cur_seq;
-                self.proxy.dispatch(IbbData {
-                    session: session.clone(),
-                    data,
-                });
-            },
-            IBB::Close { sid } => {
-                let entry = match sessions.entry((from, sid)) {
-                    Entry::Occupied(entry) => Ok(entry),
-                    Entry::Vacant(_) => Err(generate_error(
-                        ErrorType::Cancel,
-                        DefinedCondition::ItemNotFound,
-                        "This session doesn’t exist."
-                    )),
-                }?;
-                let session = entry.remove();
-                self.proxy.dispatch(IbbClose {
-                    session,
-                });
-            },
+        let Open { block_size, sid, stanza } = open;
+        match sessions.entry((from.clone(), sid.clone())) {
+            Entry::Vacant(_) => Ok(()),
+            Entry::Occupied(_) => Err(generate_error(
+                ErrorType::Cancel,
+                DefinedCondition::NotAcceptable,
+                "This session is already open."
+            )),
+        }?;
+        let session = Session {
+            stanza,
+            block_size,
+            cur_seq: 65535u16,
+        };
+        sessions.insert((from, sid), session.clone());
+        self.proxy.dispatch(IbbOpen {
+            session: session,
+        });
+        Ok(())
+    }
+
+    fn handle_ibb_data(&self, from: Jid, data: Data) -> Result<(), StanzaError> {
+        let mut sessions = self.sessions.lock().unwrap();
+        let Data { seq, sid, data } = data;
+        let entry = match sessions.entry((from, sid)) {
+            Entry::Occupied(entry) => Ok(entry),
+            Entry::Vacant(_) => Err(generate_error(
+                ErrorType::Cancel,
+                DefinedCondition::ItemNotFound,
+                "This session doesn’t exist."
+            )),
+        }?;
+        let session = entry.into_mut();
+        if session.stanza != Stanza::Iq {
+            return Err(generate_error(
+                ErrorType::Cancel,
+                DefinedCondition::NotAcceptable,
+                "Wrong stanza type."
+            ))
         }
+        let cur_seq = session.cur_seq.wrapping_add(1);
+        if seq != cur_seq {
+            return Err(generate_error(
+                ErrorType::Cancel,
+                DefinedCondition::NotAcceptable,
+                "Wrong seq number."
+            ))
+        }
+        session.cur_seq = cur_seq;
+        self.proxy.dispatch(IbbData {
+            session: session.clone(),
+            data,
+        });
+        Ok(())
+    }
+
+    fn handle_ibb_close(&self, from: Jid, close: Close) -> Result<(), StanzaError> {
+        let mut sessions = self.sessions.lock().unwrap();
+        let Close { sid } = close;
+        let entry = match sessions.entry((from, sid)) {
+            Entry::Occupied(entry) => Ok(entry),
+            Entry::Vacant(_) => Err(generate_error(
+                ErrorType::Cancel,
+                DefinedCondition::ItemNotFound,
+                "This session doesn’t exist."
+            )),
+        }?;
+        let session = entry.remove();
+        self.proxy.dispatch(IbbClose {
+            session,
+        });
         Ok(())
     }
 
@@ -164,8 +169,20 @@ impl IbbPlugin {
             let id = iq.id.unwrap();
             // TODO: use an intermediate plugin to parse this payload.
             let payload = match IqSetPayload::try_from(payload) {
-                Ok(IqSetPayload::IBB(ibb)) => {
-                    match self.handle_ibb(from.clone(), ibb) {
+                Ok(IqSetPayload::IbbOpen(open)) => {
+                    match self.handle_ibb_open(from.clone(), open) {
+                        Ok(_) => IqType::Result(None),
+                        Err(error) => IqType::Error(error),
+                    }
+                },
+                Ok(IqSetPayload::IbbData(data)) => {
+                    match self.handle_ibb_data(from.clone(), data) {
+                        Ok(_) => IqType::Result(None),
+                        Err(error) => IqType::Error(error),
+                    }
+                },
+                Ok(IqSetPayload::IbbClose(close)) => {
+                    match self.handle_ibb_close(from.clone(), close) {
                         Ok(_) => IqType::Result(None),
                         Err(error) => IqType::Error(error),
                     }
