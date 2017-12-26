@@ -15,12 +15,12 @@ license = "LGPL-3.0+"
 gitlab = { repository = "lumi/xmpp-rs" }
 
 [dependencies]
-xml-rs = "0.4.1"
-xmpp-parsers = "0.7.0"
+quick-xml = "0.10.0"
+xmpp-parsers = "0.9.0"
 openssl = "0.9.12"
 base64 = "0.6.0"
-minidom = "0.4.1"
-jid = "0.2.1"
+minidom = "0.7.0"
+jid = { version = "0.4", features = ["minidom"] }
 sasl = "0.4.0"
 sha-1 = "0.4"
 chrono = "0.4.0"
