@@ -9,7 +9,7 @@ use jid::Jid;
 use plugins::stanza::Message;
 use xmpp_parsers::message::{MessagePayload, MessageType};
 use xmpp_parsers::chatstates::ChatState;
-use xmpp_parsers::receipts::Receipt;
+use xmpp_parsers::receipts::{Request, Received};
 use xmpp_parsers::stanza_id::StanzaId;
 
 // TODO: use the id (maybe even stanza-id) to identify every message.
@@ -98,11 +98,11 @@ impl MessagingPlugin {
                     chat_state: chat_state,
                 }),
                 // XEP-0184
-                MessagePayload::Receipt(Receipt::Request) => self.proxy.dispatch(ReceiptRequestEvent {
+                MessagePayload::ReceiptRequest(Request) => self.proxy.dispatch(ReceiptRequestEvent {
                     from: from.clone(),
                 }),
                 // XEP-0184
-                MessagePayload::Receipt(Receipt::Received(id)) => self.proxy.dispatch(ReceiptReceivedEvent {
+                MessagePayload::ReceiptReceived(Received {id}) => self.proxy.dispatch(ReceiptReceivedEvent {
                     from: from.clone(),
                     id: id.unwrap(),
                 }),
