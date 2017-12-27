@@ -1,3 +1,23 @@
+Version 0.9.0:
+2017-10-31  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
+    * New parsers/serialisers:
+        - Blocking Command (XEP-0191) has been added.
+        - Date and Time Profiles (XEP-0082) has been added, replacing
+          ad-hoc use of chrono in various places.
+        - User Mood (XEP-0107) has been added.
+    * Breaking changes:
+        - Fix subscription="none" not being the default.
+        - Add more type safety to pubsub#event.
+        - Reuse Jingle’s ContentId type in JingleFT.
+        - Import the disposition attribute values in Jingle.
+    * Improvements:
+        - Refactor a good part of the code using macros.
+        - Simplify the parsing code wherever it makes sense.
+        - Check for children ordering in disco#info result.
+        - Finish implementation of <received/>, <checksum/> and
+          <range/> in JingleFT.
+        - Correctly serialise <ping/>, and test it.
+
 Version 0.8.0:
 2017-08-27  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
     * New parsers/serialisers:
