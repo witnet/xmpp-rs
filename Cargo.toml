@@ -1,7 +1,11 @@
 [package]
 name = "jid"
-version = "0.3.1"
-authors = ["lumi <lumi@pew.im>", "Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>"]
+version = "0.4.0"
+authors = [
+  "lumi <lumi@pew.im>",
+  "Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>",
+  "Maxime “pep” Buquet <pep@bouah.net>",
+]
 description = "A crate which provides a Jid struct for Jabber IDs."
 homepage = "https://gitlab.com/lumi/jid-rs"
 repository = "https://gitlab.com/lumi/jid-rs"
@@ -14,4 +18,4 @@ license = "LGPL-3.0+"
 gitlab = { repository = "lumi/jid-rs" }
 
 [dependencies]
-minidom = { version = "0.6.1", optional = true }
+minidom = { version = "0.7", optional = true }
