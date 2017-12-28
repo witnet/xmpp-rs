@@ -138,24 +138,22 @@ impl Component {
             let e = transport.read_event()?;
             match e {
                 XmlEvent::Start(ref e) => {
-                    let mut attributes = e.attributes()
-                        .map(|o| {
-                            let o = o?;
-                            let key = str::from_utf8(o.key)?;
-                            let value = str::from_utf8(&o.value)?;
-                            Ok((key, value))
-                            }
-                        )
-                        .collect::<Result<Vec<(&str, &str)>, Error>>()?;
-                    for &(name, value) in &attributes {
-                        if name == "id" {
-                            sid = value.to_owned();
+                    for attr_result in e.attributes() {
+                        match attr_result {
+                            Ok(attr) => {
+                                let name = str::from_utf8(attr.key)?;
+                                let value = str::from_utf8(&attr.value)?;
+                                if name == "id" {
+                                    sid = value.to_owned();
+                                }
+                            },
+                            _ => panic!()
                         }
                     }
+                    break;
                 },
                 _ => (),
             }
-            break
         }
         let concatenated = format!("{}{}", sid, secret);
         let mut hasher = Sha1::default();
