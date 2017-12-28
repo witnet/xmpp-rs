@@ -1,11 +1,13 @@
 //! Provides transports for the xml streams.
 
+use std::io::BufReader;
 use std::io::prelude::*;
+use std::str;
 
 use std::net::{TcpStream, Shutdown};
 
-use xml::reader::{EventReader, XmlEvent as XmlReaderEvent};
-use xml::writer::{EventWriter, XmlEvent as XmlWriterEvent, EmitterConfig};
+use quick_xml::reader::{Reader as EventReader};
+use quick_xml::events::Event;
 
 use std::sync::{Arc, Mutex};
 
@@ -24,11 +26,11 @@ use sasl::common::ChannelBinding;
 
 /// A trait which transports are required to implement.
 pub trait Transport {
-    /// Writes an `xml::writer::XmlEvent` to the stream.
-    fn write_event<'a, E: Into<XmlWriterEvent<'a>>>(&mut self, event: E) -> Result<(), Error>;
+    /// Writes a `quick_xml::events::Event` to the stream.
+    fn write_event<'a, E: Into<Event<'a>>>(&mut self, event: E) -> Result<usize, Error>;
 
-    /// Reads an `xml::reader::XmlEvent` from the stream.
-    fn read_event(&mut self) -> Result<XmlReaderEvent, Error>;
+    /// Reads a `quick_xml::events::Event` from the stream.
+    fn read_event(&mut self) -> Result<Event, Error>;
 
     /// Writes a `minidom::Element` to the stream.
     fn write_element(&mut self, element: &minidom::Element) -> Result<(), Error>;
@@ -48,19 +50,20 @@ pub trait Transport {
 /// A plain text transport, completely unencrypted.
 pub struct PlainTransport {
     inner: Arc<Mutex<TcpStream>>, // TODO: this feels rather ugly
-    reader: EventReader<LockedIO<TcpStream>>, // TODO: especially feels ugly because
-                                              //       this read would keep the lock
-                                              //       held very long (potentially)
-    writer: EventWriter<LockedIO<TcpStream>>,
+    // TODO: especially feels ugly because this read would keep the lock held very long
+    // (potentially)
+    reader: EventReader<BufReader<LockedIO<TcpStream>>>,
+    writer: LockedIO<TcpStream>,
+    buf: Vec<u8>,
 }
 
 impl Transport for PlainTransport {
-    fn write_event<'a, E: Into<XmlWriterEvent<'a>>>(&mut self, event: E) -> Result<(), Error> {
-        Ok(self.writer.write(event)?)
+    fn write_event<'a, E: Into<Event<'a>>>(&mut self, event: E) -> Result<usize, Error> {
+        Ok(self.writer.write(&event.into())?)
     }
 
-    fn read_event(&mut self) -> Result<XmlReaderEvent, Error> {
-        Ok(self.reader.next()?)
+    fn read_event(&mut self) -> Result<Event, Error> {
+        Ok(self.reader.read_event(&mut self.buf)?)
     }
 
     fn write_element(&mut self, element: &minidom::Element) -> Result<(), Error> {
@@ -74,13 +77,8 @@ impl Transport for PlainTransport {
 
     fn reset_stream(&mut self) {
         let locked_io = LockedIO::from(self.inner.clone());
-        self.reader = EventReader::new(locked_io.clone());
-        self.writer = EventWriter::new_with_config(locked_io, EmitterConfig {
-            line_separator: "".into(),
-            perform_indent: false,
-            normalize_empty_elements: false,
-            .. Default::default()
-        });
+        self.reader = EventReader::from_reader(BufReader::new(locked_io.clone()));
+        self.writer = locked_io;
     }
 
     fn channel_bind(&self) -> ChannelBinding {
@@ -93,21 +91,16 @@ impl PlainTransport {
     /// Connects to a server without any encryption.
     pub fn connect(host: &str, port: u16) -> Result<PlainTransport, Error> {
         let tcp_stream = TcpStream::connect((host, port))?;
-        let parser = EventReader::new(tcp_stream);
-        let parser_stream = parser.into_inner();
-        let stream = Arc::new(Mutex::new(parser_stream));
+        let stream = Arc::new(Mutex::new(tcp_stream));
         let locked_io = LockedIO::from(stream.clone());
-        let reader = EventReader::new(locked_io.clone());
-        let writer = EventWriter::new_with_config(locked_io, EmitterConfig {
-            line_separator: "".into(),
-            perform_indent: false,
-            normalize_empty_elements: false,
-            .. Default::default()
-        });
+        let reader = EventReader::from_reader(BufReader::new(locked_io.clone()));
+        let writer = locked_io;
+
         Ok(PlainTransport {
             inner: stream,
             reader: reader,
             writer: writer,
+            buf: Vec::new(),
         })
     }
 
@@ -123,19 +116,20 @@ impl PlainTransport {
 /// A transport which uses STARTTLS.
 pub struct SslTransport {
     inner: Arc<Mutex<SslStream<TcpStream>>>, // TODO: this feels rather ugly
-    reader: EventReader<LockedIO<SslStream<TcpStream>>>, // TODO: especially feels ugly because
-                                                         //       this read would keep the lock
-                                                         //       held very long (potentially)
-    writer: EventWriter<LockedIO<SslStream<TcpStream>>>,
+    // TODO: especially feels ugly because this read would keep the lock held very long
+    // (potentially)
+    reader: EventReader<BufReader<LockedIO<SslStream<TcpStream>>>>,
+    writer: LockedIO<SslStream<TcpStream>>,
+    buf: Vec<u8>,
 }
 
 impl Transport for SslTransport {
-    fn write_event<'a, E: Into<XmlWriterEvent<'a>>>(&mut self, event: E) -> Result<(), Error> {
-        Ok(self.writer.write(event)?)
+    fn write_event<'a, E: Into<Event<'a>>>(&mut self, event: E) -> Result<usize, Error> {
+        Ok(self.writer.write(&event.into())?)
     }
 
-    fn read_event(&mut self) -> Result<XmlReaderEvent, Error> {
-        Ok(self.reader.next()?)
+    fn read_event(&mut self) -> Result<Event, Error> {
+        Ok(self.reader.read_event(&mut self.buf)?)
     }
 
     fn write_element(&mut self, element: &minidom::Element) -> Result<(), Error> {
@@ -148,13 +142,8 @@ impl Transport for SslTransport {
 
     fn reset_stream(&mut self) {
         let locked_io = LockedIO::from(self.inner.clone());
-        self.reader = EventReader::new(locked_io.clone());
-        self.writer = EventWriter::new_with_config(locked_io, EmitterConfig {
-            line_separator: "".into(),
-            perform_indent: false,
-            normalize_empty_elements: false,
-            .. Default::default()
-        });
+        self.reader = EventReader::from_reader(BufReader::new(locked_io.clone()));
+        self.writer = locked_io;
     }
 
     fn channel_bind(&self) -> ChannelBinding {
@@ -172,23 +161,28 @@ impl SslTransport {
                      , ns::CLIENT, ns::STREAM, host)?;
         write!(stream, "<starttls xmlns='{}'/>"
                      , ns::TLS)?;
-        let mut parser = EventReader::new(stream);
-        loop { // TODO: possibly a timeout?
-            match parser.next()? {
-                XmlReaderEvent::StartElement { name, .. } => {
-                    if let Some(ns) = name.namespace {
-                        if ns == ns::TLS && name.local_name == "proceed" {
-                            break;
-                        }
-                        else if ns == ns::STREAM && name.local_name == "error" {
-                            return Err(Error::StreamError);
+        {
+            let mut parser = EventReader::from_reader(BufReader::new(&stream));
+            let mut buf = Vec::new();
+            let ns_buf = Vec::new();
+            loop { // TODO: possibly a timeout?
+                match parser.read_event(&mut buf)? {
+                    Event::Start(ref e) => {
+                        let (namespace, local_name) = parser.resolve_namespace(e.name(), &ns_buf);
+                        let namespace = namespace.map(str::from_utf8);
+                        let local_name = str::from_utf8(local_name)?;
+
+                        if let Some(ns) = namespace {
+                            if ns == Ok(ns::TLS) && local_name == "proceed" {
+                                break;
+                            } else if ns == Ok(ns::STREAM) && local_name == "error" {
+                                return Err(Error::StreamError);
+                            }
                         }
                     }
-                },
-                _ => {},
+                }
             }
         }
-        let stream = parser.into_inner();
         #[cfg(feature = "insecure")]
         let ssl_stream = {
             let mut ctx = SslContextBuilder::new(SslMethod::tls())?;
@@ -203,17 +197,14 @@ impl SslTransport {
         };
         let ssl_stream = Arc::new(Mutex::new(ssl_stream));
         let locked_io = LockedIO::from(ssl_stream.clone());
-        let reader = EventReader::new(locked_io.clone());
-        let writer = EventWriter::new_with_config(locked_io, EmitterConfig {
-            line_separator: "".into(),
-            perform_indent: false,
-            normalize_empty_elements: false,
-            .. Default::default()
-        });
+        let reader = EventReader::from_reader(BufReader::new(locked_io.clone()));
+        let writer = locked_io;
+
         Ok(SslTransport {
             inner: ssl_stream,
             reader: reader,
             writer: writer,
+            buf: Vec::new(),
         })
     }
 

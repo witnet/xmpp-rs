@@ -5,6 +5,7 @@ use std::fmt::Error as FormatError;
 use std::io;
 
 use std::net::TcpStream;
+use std::str::Utf8Error;
 
 use openssl::ssl::HandshakeError;
 use openssl::error::ErrorStack;
@@ -29,6 +30,7 @@ pub enum Error {
     SaslError(Option<String>),
     XmppSaslError(SaslError),
     FormatError(FormatError),
+    Utf8Error(Utf8Error),
     StreamError,
     EndOfDocument,
 }
@@ -72,5 +74,11 @@ impl From<DecodeError> for Error {
 impl From<FormatError> for Error {
     fn from(err: FormatError) -> Error {
         Error::FormatError(err)
+    }
+}
+
+impl From<Utf8Error> for Error {
+    fn from(err: Utf8Error) -> Error {
+        Error::Utf8Error(err)
     }
 }
