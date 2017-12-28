@@ -1,4 +1,3 @@
-use xml;
 use jid::Jid;
 use transport::{Transport, SslTransport};
 use error::Error;
@@ -17,7 +16,7 @@ use base64;
 
 use minidom::Element;
 
-use xml::reader::XmlEvent as ReaderEvent;
+use quick_xml::events::Event as XmlEvent;
 
 use std::sync::{Mutex, Arc};
 
@@ -156,10 +155,6 @@ impl Client {
         self.transport.lock().unwrap().write_element(elem)
     }
 
-    fn read_event(&self) -> Result<xml::reader::XmlEvent, Error> {
-        self.transport.lock().unwrap().read_event()
-    }
-
     fn connect(&mut self, mut credentials: SaslCredentials) -> Result<(), Error> {
         let features = self.wait_for_features()?;
         let ms = &features.sasl_mechanisms.ok_or(Error::SaslError(Some("no SASL mechanisms".to_owned())))?;
@@ -269,9 +264,10 @@ impl Client {
     fn wait_for_features(&mut self) -> Result<StreamFeatures, Error> {
         // TODO: this is very ugly
         loop {
-            let e = self.read_event()?;
+            let mut transport = self.transport.lock().unwrap();
+            let e = transport.read_event();
             match e {
-                ReaderEvent::StartElement { .. } => {
+                Ok(XmlEvent::Start { .. }) => {
                     break;
                 },
                 _ => (),
