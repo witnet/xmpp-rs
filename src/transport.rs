@@ -27,7 +27,7 @@ use sasl::common::ChannelBinding;
 /// A trait which transports are required to implement.
 pub trait Transport {
     /// Writes a `quick_xml::events::Event` to the stream.
-    fn write_event<'a, E: Into<Event<'a>>>(&mut self, event: E) -> Result<usize, Error>;
+    fn write_event<'a, E: Into<Event<'a>>>(&mut self, event: E) -> Result<(), Error>;
 
     /// Reads a `quick_xml::events::Event` from the stream.
     fn read_event(&mut self) -> Result<Event, Error>;
@@ -58,8 +58,9 @@ pub struct PlainTransport {
 }
 
 impl Transport for PlainTransport {
-    fn write_event<'a, E: Into<Event<'a>>>(&mut self, event: E) -> Result<usize, Error> {
-        Ok(self.writer.write(&event.into())?)
+    fn write_event<'a, E: Into<Event<'a>>>(&mut self, event: E) -> Result<(), Error> {
+        self.writer.write(&event.into())?;
+        Ok(())
     }
 
     fn read_event(&mut self) -> Result<Event, Error> {
@@ -124,8 +125,9 @@ pub struct SslTransport {
 }
 
 impl Transport for SslTransport {
-    fn write_event<'a, E: Into<Event<'a>>>(&mut self, event: E) -> Result<usize, Error> {
-        Ok(self.writer.write(&event.into())?)
+    fn write_event<'a, E: Into<Event<'a>>>(&mut self, event: E) -> Result<(), Error> {
+        self.writer.write(&event.into())?;
+        Ok(())
     }
 
     fn read_event(&mut self) -> Result<Event, Error> {
@@ -179,7 +181,8 @@ impl SslTransport {
                                 return Err(Error::StreamError);
                             }
                         }
-                    }
+                    },
+                    _ => (),
                 }
             }
         }

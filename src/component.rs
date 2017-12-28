@@ -152,7 +152,8 @@ impl Component {
                             sid = value.to_owned();
                         }
                     }
-                }
+                },
+                _ => (),
             }
             break
         }

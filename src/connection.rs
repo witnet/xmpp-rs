@@ -29,14 +29,14 @@ impl Connection for C2S {
         elem.push_attribute(("id", id));
         elem.push_attribute(("xmlns", ns::CLIENT));
         elem.push_attribute(("xmlns:stream", ns::STREAM));
-        transport.write_event(WriterEvent::Start(elem));
+        transport.write_event(WriterEvent::Start(elem))?;
         Ok(())
     }
 
     fn close<T: Transport>(transport: &mut T) -> Result<(), Error> {
         let name = "stream:stream";
         let elem = BytesEnd::borrowed(name.as_bytes());
-        transport.write_event(WriterEvent::End(elem));
+        transport.write_event(WriterEvent::End(elem))?;
         Ok(())
     }
 }
@@ -56,14 +56,14 @@ impl Connection for Component2S {
         elem.push_attribute(("id", id));
         elem.push_attribute(("xmlns", ns::COMPONENT_ACCEPT));
         elem.push_attribute(("xmlns:stream", ns::STREAM));
-        transport.write_event(WriterEvent::Start(elem));
+        transport.write_event(WriterEvent::Start(elem))?;
         Ok(())
     }
 
     fn close<T: Transport>(transport: &mut T) -> Result<(), Error> {
         let name = "stream:stream";
         let elem = BytesEnd::borrowed(name.as_bytes());
-        transport.write_event(WriterEvent::End(elem));
+        transport.write_event(WriterEvent::End(elem))?;
         Ok(())
     }
 }
