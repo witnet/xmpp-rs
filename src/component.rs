@@ -1,4 +1,3 @@
-use xml;
 use jid::Jid;
 use transport::{Transport, PlainTransport};
 use error::Error;
@@ -10,8 +9,9 @@ use sha_1::{Sha1, Digest};
 
 use minidom::Element;
 
-use xml::reader::XmlEvent as ReaderEvent;
+use quick_xml::events::Event as XmlEvent;
 
+use std::str;
 use std::fmt::Write;
 use std::sync::{Mutex, Arc};
 
@@ -131,25 +131,30 @@ impl Component {
         self.transport.lock().unwrap().write_element(elem)
     }
 
-    fn read_event(&self) -> Result<xml::reader::XmlEvent, Error> {
-        self.transport.lock().unwrap().read_event()
-    }
-
     fn connect(&mut self, secret: String) -> Result<(), Error> {
         let mut sid = String::new();
         loop {
-            let e = self.read_event()?;
+            let mut transport = self.transport.lock().unwrap();
+            let e = transport.read_event()?;
             match e {
-                ReaderEvent::StartElement { attributes, .. } => {
-                    for attribute in attributes {
-                        if attribute.name.namespace == None && attribute.name.local_name == "id" {
-                            sid = attribute.value;
+                XmlEvent::Start(ref e) => {
+                    let mut attributes = e.attributes()
+                        .map(|o| {
+                            let o = o?;
+                            let key = str::from_utf8(o.key)?;
+                            let value = str::from_utf8(&o.value)?;
+                            Ok((key, value))
+                            }
+                        )
+                        .collect::<Result<Vec<(&str, &str)>, Error>>()?;
+                    for &(name, value) in &attributes {
+                        if name == "id" {
+                            sid = value.to_owned();
                         }
                     }
-                    break;
-                },
-                _ => (),
+                }
             }
+            break
         }
         let concatenated = format!("{}{}", sid, secret);
         let mut hasher = Sha1::default();
