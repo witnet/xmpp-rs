@@ -191,6 +191,11 @@ impl Element {
         &self.name
     }
 
+    /// Returns a reference to the prefix of this element.
+    pub fn prefix(&self) -> Option<String> {
+        self.prefix.clone()
+    }
+
     /// Returns a reference to the namespace of this element, if it has one, else `None`.
     pub fn ns(&self) -> Option<String> {
         self.namespaces.get(&self.prefix)
@@ -318,7 +323,11 @@ impl Element {
                     }
                     let elem = stack.pop().unwrap();
                     if let Some(to) = stack.last_mut() {
-                        if elem.name().as_bytes() != e.name() {
+                        let name = match elem.prefix() {
+                            Some(ref prefix) => format!("{}:", prefix.clone()),
+                            None => String::from(""),
+                        } + elem.name();
+                        if name.as_bytes() != e.name() {
                             bail!(ErrorKind::InvalidElementClosed);
                         }
                         to.append_child(elem);
