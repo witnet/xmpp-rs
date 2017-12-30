@@ -192,6 +192,17 @@ impl Element {
     }
 
     /// Returns a reference to the prefix of this element.
+    ///
+    /// # Examples
+    /// ```rust
+    /// use minidom::Element;
+    ///
+    /// let elem = Element::builder("prefix:name")
+    ///                    .build();
+    ///
+    /// assert_eq!(elem.name(), "name");
+    /// assert_eq!(elem.prefix(), Some("prefix".to_owned()));
+    /// ```
     pub fn prefix(&self) -> Option<String> {
         self.prefix.clone()
     }
