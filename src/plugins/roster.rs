@@ -77,7 +77,7 @@ impl RosterPlugin {
 
     // TODO: use a better error type.
     pub fn send_roster_set(&self, to: Option<Jid>, item: Item) -> Result<(), String> {
-        if item.subscription != Subscription::Remove {
+        if item.subscription.is_some() && item.subscription != Some(Subscription::Remove) {
             return Err(String::from("Subscription must be either nothing or Remove."));
         }
         let iq = Iq {
@@ -117,10 +117,10 @@ impl RosterPlugin {
         let mut jids = self.jids.lock().unwrap();
         let previous = jids.insert(item.jid.clone(), item.clone());
         if previous.is_none() {
-            assert!(item.subscription != Subscription::Remove);
+            assert!(item.subscription != Some(Subscription::Remove));
             self.proxy.dispatch(RosterPush::Added(item));
         } else {
-            if item.subscription == Subscription::Remove {
+            if item.subscription == Some(Subscription::Remove) {
                 self.proxy.dispatch(RosterPush::Removed(item));
             } else {
                 self.proxy.dispatch(RosterPush::Modified(item));

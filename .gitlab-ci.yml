@@ -1,4 +1,4 @@
-image: "pitkley/rust:nightly"
+image: "scorpil/rust:nightly"
 
 before_script:
 - apt-get update -yqq

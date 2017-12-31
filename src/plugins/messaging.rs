@@ -7,9 +7,9 @@ use error::Error;
 use jid::Jid;
 
 use plugins::stanza::Message;
-use xmpp_parsers::message::{MessagePayload, MessageType, Body};
+use xmpp_parsers::message::{MessagePayload, MessageType};
 use xmpp_parsers::chatstates::ChatState;
-use xmpp_parsers::receipts::{Request, Received};
+use xmpp_parsers::receipts::Receipt;
 use xmpp_parsers::stanza_id::StanzaId;
 
 // TODO: use the id (maybe even stanza-id) to identify every message.
@@ -70,7 +70,7 @@ impl MessagingPlugin {
             id: Some(self.proxy.gen_id()),
             bodies: {
                 let mut bodies = BTreeMap::new();
-                bodies.insert(String::new(), Body(body.to_owned()));
+                bodies.insert(String::new(), String::from(body));
                 bodies
             },
             subjects: BTreeMap::new(),
@@ -98,11 +98,11 @@ impl MessagingPlugin {
                     chat_state: chat_state,
                 }),
                 // XEP-0184
-                MessagePayload::ReceiptRequest(Request) => self.proxy.dispatch(ReceiptRequestEvent {
+                MessagePayload::Receipt(Receipt::Request) => self.proxy.dispatch(ReceiptRequestEvent {
                     from: from.clone(),
                 }),
                 // XEP-0184
-                MessagePayload::ReceiptReceived(Received {id}) => self.proxy.dispatch(ReceiptReceivedEvent {
+                MessagePayload::Receipt(Receipt::Received(id)) => self.proxy.dispatch(ReceiptReceivedEvent {
                     from: from.clone(),
                     id: id.unwrap(),
                 }),
@@ -118,9 +118,9 @@ impl MessagingPlugin {
         if message.bodies.contains_key("") {
             self.proxy.dispatch(MessageEvent {
                 from: from,
-                body: message.bodies[""].clone().0,
-                subject: if message.subjects.contains_key("") { Some(message.subjects[""].clone().0) } else { None },
-                thread: match message.thread.clone() { Some(thread) => Some(thread.0), None => None },
+                body: message.bodies[""].clone(),
+                subject: if message.subjects.contains_key("") { Some(message.subjects[""].clone()) } else { None },
+                thread: message.thread.clone(),
             });
         }
         Propagation::Stop
