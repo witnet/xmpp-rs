@@ -843,3 +843,46 @@ fn test_element_new() {
     assert_eq!(elem.attr("name"), Some("value"));
     assert_eq!(elem.attr("inexistent"), None);
 }
+
+#[test]
+fn test_from_reader_simple() {
+    let xml = "<foo></foo>";
+    let mut reader = EventReader::from_str(xml);
+    let elem = Element::from_reader(&mut reader);
+
+    let elem2 = Element::builder("foo").build();
+
+    assert_eq!(elem.unwrap(), elem2);
+}
+
+#[test]
+fn test_from_reader_nested() {
+    let xml = "<foo><bar baz='qxx' /></foo>";
+    let mut reader = EventReader::from_str(xml);
+    let elem = Element::from_reader(&mut reader);
+
+    let nested = Element::builder("bar")
+                         .attr("baz", "qxx")
+                         .build();
+    let elem2 = Element::builder("foo")
+                        .append(nested)
+                        .build();
+
+    assert_eq!(elem.unwrap(), elem2);
+}
+
+#[test]
+fn test_from_reader_with_prefix() {
+    let xml = "<foo><prefix:bar baz='qxx' /></foo>";
+    let mut reader = EventReader::from_str(xml);
+    let elem = Element::from_reader(&mut reader);
+
+    let nested = Element::builder("prefix:bar")
+                         .attr("baz", "qxx")
+                         .build();
+    let elem2 = Element::builder("foo")
+                        .append(nested)
+                        .build();
+
+    assert_eq!(elem.unwrap(), elem2);
+}
