@@ -201,10 +201,10 @@ impl Element {
     ///                    .build();
     ///
     /// assert_eq!(elem.name(), "name");
-    /// assert_eq!(elem.prefix(), Some("prefix".to_owned()));
+    /// assert_eq!(elem.prefix(), Some("prefix"));
     /// ```
-    pub fn prefix(&self) -> Option<String> {
-        self.prefix.clone()
+    pub fn prefix(&self) -> Option<&str> {
+        self.prefix.as_ref().map(String::as_ref)
     }
 
     /// Returns a reference to the namespace of this element, if it has one, else `None`.
@@ -335,7 +335,7 @@ impl Element {
                     let elem = stack.pop().unwrap();
                     if let Some(to) = stack.last_mut() {
                         let name = match elem.prefix() {
-                            Some(ref prefix) => format!("{}:", prefix.clone()),
+                            Some(ref prefix) => format!("{}:", prefix),
                             None => String::from(""),
                         } + elem.name();
                         if name.as_bytes() != e.name() {
