@@ -295,7 +295,13 @@ impl Element {
                 Event::Eof => {
                     bail!(ErrorKind::EndOfDocument);
                 },
-                _ => (), // TODO: may need more errors
+                Event::Text { .. } |
+                Event::End { .. } |
+                Event::Comment { .. } |
+                Event::CData { .. } |
+                Event::Decl { .. } |
+                Event::PI { .. } |
+                Event::DocType { .. } => (), // TODO: may need more errors
             }
         };
 
@@ -334,7 +340,10 @@ impl Element {
                 Event::Eof => {
                     break;
                 },
-                _ => (), // TODO: may need to implement more
+                Event::Comment { .. } |
+                Event::Decl { .. } |
+                Event::PI { .. } |
+                Event::DocType { .. } => (),
             }
         }
         Ok(stack.pop().unwrap())
