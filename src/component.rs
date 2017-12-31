@@ -1,3 +1,4 @@
+use xml;
 use jid::Jid;
 use transport::{Transport, PlainTransport};
 use error::Error;
@@ -9,9 +10,8 @@ use sha_1::{Sha1, Digest};
 
 use minidom::Element;
 
-use quick_xml::events::Event as XmlEvent;
+use xml::reader::XmlEvent as ReaderEvent;
 
-use std::str;
 use std::fmt::Write;
 use std::sync::{Mutex, Arc};
 
@@ -131,23 +131,19 @@ impl Component {
         self.transport.lock().unwrap().write_element(elem)
     }
 
+    fn read_event(&self) -> Result<xml::reader::XmlEvent, Error> {
+        self.transport.lock().unwrap().read_event()
+    }
+
     fn connect(&mut self, secret: String) -> Result<(), Error> {
         let mut sid = String::new();
         loop {
-            let mut transport = self.transport.lock().unwrap();
-            let e = transport.read_event()?;
+            let e = self.read_event()?;
             match e {
-                XmlEvent::Start(ref e) => {
-                    for attr_result in e.attributes() {
-                        match attr_result {
-                            Ok(attr) => {
-                                let name = str::from_utf8(attr.key)?;
-                                let value = str::from_utf8(&attr.value)?;
-                                if name == "id" {
-                                    sid = value.to_owned();
-                                }
-                            },
-                            _ => panic!()
+                ReaderEvent::StartElement { attributes, .. } => {
+                    for attribute in attributes {
+                        if attribute.name.namespace == None && attribute.name.local_name == "id" {
+                            sid = attribute.value;
                         }
                     }
                     break;

@@ -1,4 +1,4 @@
-extern crate quick_xml;
+extern crate xml;
 extern crate xmpp_parsers;
 extern crate openssl;
 extern crate minidom;

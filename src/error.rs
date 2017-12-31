@@ -5,12 +5,12 @@ use std::fmt::Error as FormatError;
 use std::io;
 
 use std::net::TcpStream;
-use std::str::Utf8Error;
 
 use openssl::ssl::HandshakeError;
 use openssl::error::ErrorStack;
 
-use quick_xml::errors::Error as XmlError;
+use xml::reader::Error as XmlError;
+use xml::writer::Error as EmitterError;
 
 use minidom::Error as MinidomError;
 
@@ -22,6 +22,7 @@ use components::sasl_error::SaslError;
 #[derive(Debug)]
 pub enum Error {
     XmlError(XmlError),
+    EmitterError(EmitterError),
     IoError(io::Error),
     HandshakeError(HandshakeError<TcpStream>),
     OpenSslErrorStack(ErrorStack),
@@ -30,7 +31,6 @@ pub enum Error {
     SaslError(Option<String>),
     XmppSaslError(SaslError),
     FormatError(FormatError),
-    Utf8Error(Utf8Error),
     StreamError,
     EndOfDocument,
 }
@@ -38,6 +38,12 @@ pub enum Error {
 impl From<XmlError> for Error {
     fn from(err: XmlError) -> Error {
         Error::XmlError(err)
+    }
+}
+
+impl From<EmitterError> for Error {
+    fn from(err: EmitterError) -> Error {
+        Error::EmitterError(err)
     }
 }
 
@@ -74,11 +80,5 @@ impl From<DecodeError> for Error {
 impl From<FormatError> for Error {
     fn from(err: FormatError) -> Error {
         Error::FormatError(err)
-    }
-}
-
-impl From<Utf8Error> for Error {
-    fn from(err: Utf8Error) -> Error {
-        Error::Utf8Error(err)
     }
 }

@@ -2,7 +2,7 @@ use transport::Transport;
 use error::Error;
 use ns;
 
-use quick_xml::events::{Event as WriterEvent, BytesStart, BytesEnd};
+use xml::writer::XmlEvent as WriterEvent;
 
 pub trait Connection {
     type InitError;
@@ -23,20 +23,16 @@ impl Connection for C2S {
     fn namespace() -> &'static str { ns::CLIENT }
 
     fn init<T: Transport>(transport: &mut T, domain: &str, id: &str) -> Result<(), Error> {
-        let name = "stream:stream";
-        let mut elem = BytesStart::borrowed(name.as_bytes(), name.len());
-        elem.push_attribute(("to", domain));
-        elem.push_attribute(("id", id));
-        elem.push_attribute(("xmlns", ns::CLIENT));
-        elem.push_attribute(("xmlns:stream", ns::STREAM));
-        transport.write_event(WriterEvent::Start(elem))?;
+        transport.write_event(WriterEvent::start_element("stream:stream")
+                                          .attr("to", domain)
+                                          .attr("id", id)
+                                          .default_ns(ns::CLIENT)
+                                          .ns("stream", ns::STREAM))?;
         Ok(())
     }
 
     fn close<T: Transport>(transport: &mut T) -> Result<(), Error> {
-        let name = "stream:stream";
-        let elem = BytesEnd::borrowed(name.as_bytes());
-        transport.write_event(WriterEvent::End(elem))?;
+        transport.write_event(WriterEvent::end_element())?;
         Ok(())
     }
 }
@@ -50,20 +46,16 @@ impl Connection for Component2S {
     fn namespace() -> &'static str { ns::COMPONENT_ACCEPT }
 
     fn init<T: Transport>(transport: &mut T, domain: &str, id: &str) -> Result<(), Error> {
-        let name = "stream:stream";
-        let mut elem = BytesStart::borrowed(name.as_bytes(), name.len());
-        elem.push_attribute(("to", domain));
-        elem.push_attribute(("id", id));
-        elem.push_attribute(("xmlns", ns::COMPONENT_ACCEPT));
-        elem.push_attribute(("xmlns:stream", ns::STREAM));
-        transport.write_event(WriterEvent::Start(elem))?;
+        transport.write_event(WriterEvent::start_element("stream:stream")
+                                          .attr("to", domain)
+                                          .attr("id", id)
+                                          .default_ns(ns::COMPONENT_ACCEPT)
+                                          .ns("stream", ns::STREAM))?;
         Ok(())
     }
 
     fn close<T: Transport>(transport: &mut T) -> Result<(), Error> {
-        let name = "stream:stream";
-        let elem = BytesEnd::borrowed(name.as_bytes());
-        transport.write_event(WriterEvent::End(elem))?;
+        transport.write_event(WriterEvent::end_element())?;
         Ok(())
     }
 }
