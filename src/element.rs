@@ -191,6 +191,22 @@ impl Element {
         &self.name
     }
 
+    /// Returns a reference to the prefix of this element.
+    ///
+    /// # Examples
+    /// ```rust
+    /// use minidom::Element;
+    ///
+    /// let elem = Element::builder("prefix:name")
+    ///                    .build();
+    ///
+    /// assert_eq!(elem.name(), "name");
+    /// assert_eq!(elem.prefix(), Some("prefix"));
+    /// ```
+    pub fn prefix(&self) -> Option<&str> {
+        self.prefix.as_ref().map(String::as_ref)
+    }
+
     /// Returns a reference to the namespace of this element, if it has one, else `None`.
     pub fn ns(&self) -> Option<String> {
         self.namespaces.get(&self.prefix)
@@ -324,7 +340,11 @@ impl Element {
                     }
                     let elem = stack.pop().unwrap();
                     if let Some(to) = stack.last_mut() {
-                        if elem.name().as_bytes() != e.name() {
+                        let name = match elem.prefix() {
+                            Some(ref prefix) => format!("{}:", prefix),
+                            None => String::from(""),
+                        } + elem.name();
+                        if name.as_bytes() != e.name() {
                             bail!(ErrorKind::InvalidElementClosed);
                         }
                         to.append_child(elem);
@@ -831,4 +851,47 @@ fn test_element_new() {
     assert_eq!(elem.ns(), Some("namespace".to_owned()));
     assert_eq!(elem.attr("name"), Some("value"));
     assert_eq!(elem.attr("inexistent"), None);
+}
+
+#[test]
+fn test_from_reader_simple() {
+    let xml = "<foo></foo>";
+    let mut reader = EventReader::from_str(xml);
+    let elem = Element::from_reader(&mut reader);
+
+    let elem2 = Element::builder("foo").build();
+
+    assert_eq!(elem.unwrap(), elem2);
+}
+
+#[test]
+fn test_from_reader_nested() {
+    let xml = "<foo><bar baz='qxx' /></foo>";
+    let mut reader = EventReader::from_str(xml);
+    let elem = Element::from_reader(&mut reader);
+
+    let nested = Element::builder("bar")
+                         .attr("baz", "qxx")
+                         .build();
+    let elem2 = Element::builder("foo")
+                        .append(nested)
+                        .build();
+
+    assert_eq!(elem.unwrap(), elem2);
+}
+
+#[test]
+fn test_from_reader_with_prefix() {
+    let xml = "<foo><prefix:bar baz='qxx' /></foo>";
+    let mut reader = EventReader::from_str(xml);
+    let elem = Element::from_reader(&mut reader);
+
+    let nested = Element::builder("prefix:bar")
+                         .attr("baz", "qxx")
+                         .build();
+    let elem2 = Element::builder("foo")
+                        .append(nested)
+                        .build();
+
+    assert_eq!(elem.unwrap(), elem2);
 }

@@ -1,7 +1,13 @@
 [package]
 name = "minidom"
 version = "0.7.0"
-authors = ["lumi <lumi@pew.im>", "Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>", "Bastien Orivel <eijebong+minidom@bananium.fr>", "Astro <astro@spaceboyz.net>"]
+authors = [
+  "lumi <lumi@pew.im>",
+  "Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>",
+  "Bastien Orivel <eijebong+minidom@bananium.fr>",
+  "Astro <astro@spaceboyz.net>",
+  "Maxime “pep” Buquet <pep@bouah.net>",
+]
 description = "A small, simple DOM implementation on top of quick-xml"
 homepage = "https://gitlab.com/lumi/minidom-rs"
 repository = "https://gitlab.com/lumi/minidom-rs"
