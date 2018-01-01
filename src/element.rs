@@ -917,3 +917,14 @@ fn test_from_reader_with_prefix() {
 
     assert_eq!(elem.unwrap(), elem2);
 }
+
+#[test]
+fn parses_spectest_xml() { // From: https://gitlab.com/lumi/minidom-rs/issues/8
+    let xml = r#"
+        <rng:grammar xmlns:rng="http://relaxng.org/ns/structure/1.0">
+            <rng:name xmlns:rng="http://relaxng.org/ns/structure/1.0"></rng:name>
+        </rng:grammar>
+    "#;
+    let mut reader = EventReader::from_str(xml);
+    let _ = Element::from_reader(&mut reader);
+}
