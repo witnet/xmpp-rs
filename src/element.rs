@@ -926,5 +926,5 @@ fn parses_spectest_xml() { // From: https://gitlab.com/lumi/minidom-rs/issues/8
         </rng:grammar>
     "#;
     let mut reader = EventReader::from_str(xml);
-    let _ = Element::from_reader(&mut reader);
+    let _ = Element::from_reader(&mut reader).unwrap();
 }
