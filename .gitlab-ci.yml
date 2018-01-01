@@ -1,4 +1,4 @@
-image: "scorpil/rust:stable"
+image: "pitkley/rust:stable"
 
 test:cargo:
   script:
