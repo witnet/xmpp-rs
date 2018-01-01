@@ -340,12 +340,34 @@ impl Element {
                     }
                     let elem = stack.pop().unwrap();
                     if let Some(to) = stack.last_mut() {
-                        let name = match elem.prefix() {
-                            Some(ref prefix) => format!("{}:", prefix),
-                            None => String::from(""),
-                        } + elem.name();
-                        if name.as_bytes() != e.name() {
-                            bail!(ErrorKind::InvalidElementClosed);
+                        // TODO: check whether this is correct, we are comparing &[u8]s, not &strs
+                        let elem_name = e.name();
+                        let mut split_iter = elem_name.splitn(2, |u| *u == 0x3A);
+                        let possible_prefix = split_iter.next().unwrap(); // Can't be empty.
+                        match split_iter.next() {
+                            Some(name) => {
+                                match elem.prefix() {
+                                    Some(prefix) => {
+                                        if possible_prefix != prefix.as_bytes() {
+                                            bail!(ErrorKind::InvalidElementClosed);
+                                        }
+                                    },
+                                    None => {
+                                        bail!(ErrorKind::InvalidElementClosed);
+                                    },
+                                }
+                                if name != elem.name().as_bytes() {
+                                    bail!(ErrorKind::InvalidElementClosed);
+                                }
+                            },
+                            None => {
+                                if elem.prefix().is_some() {
+                                    bail!(ErrorKind::InvalidElementClosed);
+                                }
+                                if possible_prefix != elem.name().as_bytes() {
+                                    bail!(ErrorKind::InvalidElementClosed);
+                                }
+                            },
                         }
                         to.append_child(elem);
                     }
