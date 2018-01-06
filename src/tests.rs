@@ -4,7 +4,7 @@ use quick_xml::reader::Reader;
 
 use element::Element;
 
-const TEST_STRING: &'static str = r#"<?xml version="1.0" encoding="utf-8"?><root xmlns="root_ns" a="b" xml:lang="en">meow<child c="d" /><child xmlns="child_ns" d="e" xml:lang="fr" />nya</root>"#;
+const TEST_STRING: &'static str = r#"<?xml version="1.0" encoding="utf-8"?><root xmlns="root_ns" a="b" xml:lang="en">meow<child c="d"/><child xmlns="child_ns" d="e" xml:lang="fr"/>nya</root>"#;
 
 fn build_test_tree() -> Element {
     let mut root = Element::builder("root")
@@ -24,6 +24,19 @@ fn build_test_tree() -> Element {
                               .build();
     root.append_child(other_child);
     root.append_text_node("nya");
+    root
+}
+
+const COMMENT_TEST_STRING: &'static str = r#"<?xml version="1.0" encoding="utf-8"?><root><!--This is a child.--><child attr="val"><!--This is a grandchild.--><grandchild/></child></root>"#;
+
+fn build_comment_test_tree() -> Element {
+    let mut root = Element::builder("root").build();
+    root.append_comment_node("This is a child.");
+    let mut child = Element::builder("child").attr("attr", "val").build();
+    child.append_comment_node("This is a grandchild.");
+    let grand_child = Element::builder("grandchild").build();
+    child.append_child(grand_child);
+    root.append_child(child);
     root
 }
 
@@ -53,7 +66,7 @@ fn writer_escapes_attributes() {
         root.write_to(&mut writer).unwrap();
     }
     assert_eq!(String::from_utf8(writer).unwrap(),
-               r#"<?xml version="1.0" encoding="utf-8"?><root a="&quot;Air&quot; quotes" />"#
+               r#"<?xml version="1.0" encoding="utf-8"?><root a="&quot;Air&quot; quotes"/>"#
     );
 }
 
@@ -196,4 +209,20 @@ fn namespace_inherited_prefixed2() {
     let child = elem.children().next().unwrap();
     assert_eq!(child.name(), "message");
     assert_eq!(child.ns(), Some("jabber:client".to_owned()));
+}
+
+#[test]
+fn read_comments() {
+    let mut reader = Reader::from_str(COMMENT_TEST_STRING);
+    assert_eq!(Element::from_reader(&mut reader).unwrap(), build_comment_test_tree());
+}
+
+#[test]
+fn write_comments() {
+    let root = build_comment_test_tree();
+    let mut writer = Vec::new();
+    {
+        root.write_to(&mut writer).unwrap();
+    }
+    assert_eq!(String::from_utf8(writer).unwrap(), COMMENT_TEST_STRING);
 }
