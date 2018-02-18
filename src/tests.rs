@@ -197,3 +197,24 @@ fn namespace_inherited_prefixed2() {
     assert_eq!(child.name(), "message");
     assert_eq!(child.ns(), Some("jabber:client".to_owned()));
 }
+
+#[test]
+fn xml_error() {
+    match "<a></b>".parse::<Element>() {
+        Err(::error::Error(::error::ErrorKind::XmlError(_), _)) => (),
+        err => panic!("No or wrong error: {:?}", err)
+    }
+
+    match "<a></".parse::<Element>() {
+        Err(::error::Error(::error::ErrorKind::XmlError(_), _)) => (),
+        err => panic!("No or wrong error: {:?}", err)
+    }
+}
+
+#[test]
+fn invalid_element_error() {
+    match "<a:b:c>".parse::<Element>() {
+        Err(::error::Error(::error::ErrorKind::InvalidElement, _)) => (),
+        err => panic!("No or wrong error: {:?}", err)
+    }
+}
