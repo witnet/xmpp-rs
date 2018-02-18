@@ -13,8 +13,13 @@ use std::str::FromStr;
 /// An error that signifies that a `Jid` cannot be parsed from a string.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum JidParseError {
-    /// Happens when there is no domain. (really, only happens when the string is empty)
+    /// Happens when there is no domain, that is either the string is empty,
+    /// starts with a /, or contains the @/ sequence.
     NoDomain,
+    /// Happens when the node is empty, that is the string starts with a @.
+    EmptyNode,
+    /// Happens when the resource is empty, that is the string ends with a /.
+    EmptyResource,
 }
 
 /// A struct representing a Jabber ID.
@@ -86,11 +91,17 @@ impl FromStr for Jid {
                 ParserState::Node => {
                     match c {
                         '@' => {
+                            if buf == "" {
+                                return Err(JidParseError::EmptyNode);
+                            }
                             state = ParserState::Domain;
                             node = Some(buf.clone()); // TODO: performance tweaks, do not need to copy it
                             buf.clear();
                         },
                         '/' => {
+                            if buf == "" {
+                                return Err(JidParseError::NoDomain);
+                            }
                             state = ParserState::Resource;
                             domain = Some(buf.clone()); // TODO: performance tweaks
                             buf.clear();
@@ -103,6 +114,9 @@ impl FromStr for Jid {
                 ParserState::Domain => {
                     match c {
                         '/' => {
+                            if buf == "" {
+                                return Err(JidParseError::NoDomain);
+                            }
                             state = ParserState::Resource;
                             domain = Some(buf.clone()); // TODO: performance tweaks
                             buf.clear();
@@ -129,6 +143,8 @@ impl FromStr for Jid {
                     resource = Some(buf);
                 },
             }
+        } else if let ParserState::Resource = state {
+            return Err(JidParseError::EmptyResource);
         }
         Ok(Jid {
             node: node,
@@ -399,6 +415,34 @@ mod tests {
     #[test]
     fn serialise() {
         assert_eq!(String::from(Jid::full("a", "b", "c")), String::from("a@b/c"));
+    }
+
+    #[test]
+    fn invalid() {
+        match Jid::from_str("") {
+            Err(JidParseError::NoDomain) => (),
+            err => panic!("Invalid error: {:?}", err)
+        }
+
+        match Jid::from_str("a@/c") {
+            Err(JidParseError::NoDomain) => (),
+            err => panic!("Invalid error: {:?}", err)
+        }
+
+        match Jid::from_str("/c") {
+            Err(JidParseError::NoDomain) => (),
+            err => panic!("Invalid error: {:?}", err)
+        }
+
+        match Jid::from_str("@b") {
+            Err(JidParseError::EmptyNode) => (),
+            err => panic!("Invalid error: {:?}", err)
+        }
+
+        match Jid::from_str("b/") {
+            Err(JidParseError::EmptyResource) => (),
+            err => panic!("Invalid error: {:?}", err)
+        }
     }
 
     #[cfg(feature = "minidom")]
