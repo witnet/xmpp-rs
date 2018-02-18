@@ -10,7 +10,8 @@ use std::borrow::Cow;
 use error::{Error, ErrorKind, Result};
 
 use quick_xml::reader::Reader as EventReader;
-use quick_xml::events::{Event, BytesStart};
+use quick_xml::writer::Writer as EventWriter;
+use quick_xml::events::{Event, BytesStart, BytesEnd, BytesText, BytesDecl};
 
 use std::io::BufRead;
 
@@ -21,20 +22,50 @@ use std::slice;
 use convert::{IntoElements, IntoAttributeValue, ElementEmitter};
 use namespace_set::NamespaceSet;
 
-/// Escape XML text
-pub fn write_escaped<W: Write>(writer: &mut W, input: &str) -> Result<()> {
-    for c in input.chars() {
-        match c {
-            '&' => write!(writer, "&amp;")?,
-            '<' => write!(writer, "&lt;")?,
-            '>' => write!(writer, "&gt;")?,
-            '\'' => write!(writer, "&apos;")?,
-            '"' => write!(writer, "&quot;")?,
-            _ => write!(writer, "{}", c)?,
+/// helper function to escape a `&[u8]` and replace all
+/// xml special characters (<, >, &, ', ") with their corresponding
+/// xml escaped value.
+pub fn escape(raw: &[u8]) -> Cow<[u8]> {
+    let mut escapes: Vec<(usize, &'static [u8])> = Vec::new();
+    let mut bytes = raw.iter();
+    fn to_escape(b: u8) -> bool {
+        match b {
+            b'<' | b'>' | b'\'' | b'&' | b'"' => true,
+            _ => false,
         }
     }
 
-    Ok(())
+    let mut loc = 0;
+    while let Some(i) = bytes.position(|&b| to_escape(b)) {
+        loc += i;
+        match raw[loc] {
+            b'<' => escapes.push((loc, b"&lt;")),
+            b'>' => escapes.push((loc, b"&gt;")),
+            b'\'' => escapes.push((loc, b"&apos;")),
+            b'&' => escapes.push((loc, b"&amp;")),
+            b'"' => escapes.push((loc, b"&quot;")),
+            _ => unreachable!("Only '<', '>','\', '&' and '\"' are escaped"),
+        }
+        loc += 1;
+    }
+
+    if escapes.is_empty() {
+        Cow::Borrowed(raw)
+    } else {
+        let len = raw.len();
+        let mut v = Vec::with_capacity(len);
+        let mut start = 0;
+        for (i, r) in escapes {
+            v.extend_from_slice(&raw[start..i]);
+            v.extend_from_slice(r);
+            start = i + 1;
+        }
+
+        if start < len {
+            v.extend_from_slice(&raw[start..]);
+        }
+        Cow::Owned(v)
+    }
 }
 
 /// A node in an element tree.
@@ -44,6 +75,8 @@ pub enum Node {
     Element(Element),
     /// A text node.
     Text(String),
+    /// A comment node.
+    Comment(String),
 }
 
 impl Node {
@@ -64,6 +97,7 @@ impl Node {
         match *self {
             Node::Element(ref e) => Some(e),
             Node::Text(_) => None,
+            Node::Comment(_) => None,
         }
     }
 
@@ -84,14 +118,22 @@ impl Node {
         match *self {
             Node::Element(_) => None,
             Node::Text(ref s) => Some(s),
+            Node::Comment(_) => None,
         }
     }
 
-    fn write_to_inner<W: Write>(&self, writer: &mut W) -> Result<()>{
+    fn write_to_inner<W: Write>(&self, writer: &mut EventWriter<W>) -> Result<()>{
         match *self {
             Node::Element(ref elmt) => elmt.write_to_inner(writer)?,
-            Node::Text(ref s) => write_escaped(writer, s)?,
-        }
+            Node::Text(ref s) => {
+                writer.write_event(Event::Text(BytesText::from_str(s)))?;
+                ()
+            },
+            Node::Comment(ref s) => {
+                writer.write_event(Event::Comment(BytesText::from_str(s)))?;
+                ()
+            },
+        };
 
         Ok(())
     }
@@ -382,7 +424,13 @@ impl Element {
                 Event::Eof => {
                     break;
                 },
-                Event::Comment { .. } |
+                Event::Comment(s) => {
+                    let comment = reader.decode(&s).into_owned();
+                    if comment != "" {
+                        let current_elem = stack.last_mut().unwrap();
+                        current_elem.append_comment_node(comment);
+                    }
+                },
                 Event::Decl { .. } |
                 Event::PI { .. } |
                 Event::DocType { .. } => (),
@@ -393,51 +441,48 @@ impl Element {
 
     /// Output a document to a `Writer`.
     pub fn write_to<W: Write>(&self, writer: &mut W) -> Result<()> {
-        write!(writer, "<?xml version=\"1.0\" encoding=\"utf-8\"?>")?;
+        self.to_writer(&mut EventWriter::new(writer))
+    }
+
+    /// Output the document to quick-xml `Writer`
+    pub fn to_writer<W: Write>(&self, writer: &mut EventWriter<W>) -> Result<()> {
+        writer.write_event(Event::Decl(BytesDecl::new(b"1.0", Some(b"utf-8"), None)))?;
         self.write_to_inner(writer)
     }
 
     /// Like `write_to()` but without the `<?xml?>` prelude
-    pub fn write_to_inner<W: Write>(&self, writer: &mut W) -> Result<()> {
+    pub fn write_to_inner<W: Write>(&self, writer: &mut EventWriter<W>) -> Result<()> {
         let name = match self.prefix {
             None => Cow::Borrowed(&self.name),
             Some(ref prefix) => Cow::Owned(format!("{}:{}", prefix, self.name)),
         };
-        write!(writer, "<{}", name)?;
 
+        let mut start = BytesStart::borrowed(name.as_bytes(), name.len());
         for (prefix, ns) in self.namespaces.declared_ns() {
             match *prefix {
-                None => {
-                    write!(writer, " xmlns=\"")?;
-                    write_escaped(writer, ns)?;
-                    write!(writer, "\"")?;
-                },
+                None => start.push_attribute(("xmlns", ns.as_ref())),
                 Some(ref prefix) => {
-                    write!(writer, " xmlns:{}=\"", prefix)?;
-                    write_escaped(writer, ns)?;
-                    write!(writer, "\"")?;
+                    let key = format!("xmlns:{}", prefix);
+                    start.push_attribute((key.as_bytes(), ns.as_bytes()))
                 },
             }
         }
-
         for (key, value) in &self.attributes {
-            write!(writer, " {}=\"", key)?;
-                write_escaped(writer, value)?;
-                write!(writer, "\"")?;
+            start.push_attribute((key.as_bytes(), escape(value.as_bytes()).as_ref()));
         }
 
         if self.children.is_empty() {
-            write!(writer, " />")?;
+            writer.write_event(Event::Empty(start))?;
             return Ok(())
         }
 
-        write!(writer, ">")?;
+        writer.write_event(Event::Start(start))?;
 
         for child in &self.children {
             child.write_to_inner(writer)?;
         }
 
-        write!(writer, "</{}>", name)?;
+        writer.write_event(Event::End(BytesEnd::borrowed(name.as_bytes())))?;
         Ok(())
     }
 
@@ -574,6 +619,21 @@ impl Element {
     /// ```
     pub fn append_text_node<S: Into<String>>(&mut self, child: S) {
         self.children.push(Node::Text(child.into()));
+    }
+
+    /// Appends a comment node to an `Element`.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use minidom::Element;
+    ///
+    /// let mut elem = Element::bare("node");
+    ///
+    /// elem.append_comment_node("comment");
+    /// ```
+    pub fn append_comment_node<S: Into<String>>(&mut self, child: S) {
+        self.children.push(Node::Comment(child.into()));
     }
 
     /// Appends a node to an `Element`.
