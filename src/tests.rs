@@ -201,12 +201,12 @@ fn namespace_inherited_prefixed2() {
 #[test]
 fn xml_error() {
     match "<a></b>".parse::<Element>() {
-        Err(::error::Error(::error::ErrorKind::XmlError(_), _)) => (),
+        Err(::error::Error::XmlError(_)) => (),
         err => panic!("No or wrong error: {:?}", err)
     }
 
     match "<a></".parse::<Element>() {
-        Err(::error::Error(::error::ErrorKind::XmlError(_), _)) => (),
+        Err(::error::Error::XmlError(_)) => (),
         err => panic!("No or wrong error: {:?}", err)
     }
 }
@@ -214,7 +214,7 @@ fn xml_error() {
 #[test]
 fn invalid_element_error() {
     match "<a:b:c>".parse::<Element>() {
-        Err(::error::Error(::error::ErrorKind::InvalidElement, _)) => (),
+        Err(::error::Error::InvalidElement) => (),
         err => panic!("No or wrong error: {:?}", err)
     }
 }

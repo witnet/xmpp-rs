@@ -7,7 +7,7 @@ use std::str;
 use std::rc::Rc;
 use std::borrow::Cow;
 
-use error::{Error, ErrorKind, Result};
+use error::{Error, Result};
 
 use quick_xml::reader::Reader as EventReader;
 use quick_xml::events::{Event, BytesStart};
@@ -309,7 +309,7 @@ impl Element {
                     break build_element(reader, e)?;
                 },
                 Event::Eof => {
-                    bail!(ErrorKind::EndOfDocument);
+                    return Err(Error::EndOfDocument);
                 },
                 Event::Text { .. } |
                 Event::End { .. } |
@@ -349,23 +349,23 @@ impl Element {
                                 match elem.prefix() {
                                     Some(prefix) => {
                                         if possible_prefix != prefix.as_bytes() {
-                                            bail!(ErrorKind::InvalidElementClosed);
+                                            return Err(Error::InvalidElementClosed);
                                         }
                                     },
                                     None => {
-                                        bail!(ErrorKind::InvalidElementClosed);
+                                        return Err(Error::InvalidElementClosed);
                                     },
                                 }
                                 if name != elem.name().as_bytes() {
-                                    bail!(ErrorKind::InvalidElementClosed);
+                                    return Err(Error::InvalidElementClosed);
                                 }
                             },
                             None => {
                                 if elem.prefix().is_some() {
-                                    bail!(ErrorKind::InvalidElementClosed);
+                                    return Err(Error::InvalidElementClosed);
                                 }
                                 if possible_prefix != elem.name().as_bytes() {
-                                    bail!(ErrorKind::InvalidElementClosed);
+                                    return Err(Error::InvalidElementClosed);
                                 }
                             },
                         }
@@ -676,7 +676,7 @@ fn split_element_name<S: AsRef<str>>(s: S) -> Result<(Option<String>, String)> {
     match name_parts.len() {
         2 => Ok((Some(name_parts[0].to_owned()), name_parts[1].to_owned())),
         1 => Ok((None, name_parts[0].to_owned())),
-        _ => bail!(ErrorKind::InvalidElement),
+        _ => Err(Error::InvalidElement),
     }
 }
 
