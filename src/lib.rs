@@ -65,7 +65,8 @@
 //! ```
 
 extern crate quick_xml;
-#[macro_use] extern crate error_chain;
+extern crate failure;
+#[macro_use] extern crate failure_derive;
 
 pub mod error;
 pub mod element;
@@ -74,6 +75,6 @@ mod namespace_set;
 
 #[cfg(test)] mod tests;
 
-pub use error::{Error, ErrorKind, Result, ResultExt};
+pub use error::{Error, Result};
 pub use element::{Element, Node, Children, ChildrenMut, ElementBuilder};
 pub use convert::{IntoElements, IntoAttributeValue, ElementEmitter};

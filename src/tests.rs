@@ -226,3 +226,24 @@ fn write_comments() {
     }
     assert_eq!(String::from_utf8(writer).unwrap(), COMMENT_TEST_STRING);
 }
+
+#[test]
+fn xml_error() {
+    match "<a></b>".parse::<Element>() {
+        Err(::error::Error::XmlError(_)) => (),
+        err => panic!("No or wrong error: {:?}", err)
+    }
+
+    match "<a></".parse::<Element>() {
+        Err(::error::Error::XmlError(_)) => (),
+        err => panic!("No or wrong error: {:?}", err)
+    }
+}
+
+#[test]
+fn invalid_element_error() {
+    match "<a:b:c>".parse::<Element>() {
+        Err(::error::Error::InvalidElement) => (),
+        err => panic!("No or wrong error: {:?}", err)
+    }
+}
