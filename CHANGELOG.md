@@ -1,3 +1,6 @@
+Version 0.8.0, released 2018-02-18:
+  * Additions
+    - Link Mauve replaced error\_chain with failure ( https://gitlab.com/lumi/minidom-rs/merge_requests/27 )
 Version 0.6.2, released 2017-08-27:
   * Additions
     - Link Mauve added an implementation of IntoElements for all Into<Element> ( https://gitlab.com/lumi/minidom-rs/merge_requests/19 )
