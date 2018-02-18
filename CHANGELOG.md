@@ -1,3 +1,8 @@
+Version 0.5.0, released 2018-02-18:
+  * Updates
+    - Link Mauve has updated the optional `minidom` dependency.
+    - Link Mauve has added tests for invalid JIDs, which adds more error cases.
+
 Version 0.4.0, released 2017-12-27:
   * Updates
     - Maxime Buquet has updated the optional `minidom` dependency.
