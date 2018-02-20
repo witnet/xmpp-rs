@@ -9,7 +9,6 @@ use std::io;
 use std::num;
 use std::string;
 use std::fmt;
-use std::error;
 
 use base64;
 use minidom;
@@ -39,21 +38,6 @@ impl fmt::Display for Error {
             Error::ParseStringError(ref e) => write!(fmt, "{}", e),
             Error::JidParseError(_) => write!(fmt, "JID parse error"),
             Error::ChronoParseError(ref e) => write!(fmt, "{}", e),
-        }
-    }
-}
-
-impl error::Error for Error {
-    fn description(&self) -> &str {
-        match *self {
-            Error::ParseError(s) => s,
-            Error::IoError(ref e) => e.description(),
-            Error::XMLError(ref e) => e.description(),
-            Error::Base64Error(ref e) => e.description(),
-            Error::ParseIntError(ref e) => e.description(),
-            Error::ParseStringError(ref e) => e.description(),
-            Error::JidParseError(_) => "JID parse error",
-            Error::ChronoParseError(ref e) => e.description(),
         }
     }
 }
