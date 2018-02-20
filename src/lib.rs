@@ -59,6 +59,9 @@ pub mod stanza_error;
 /// RFC 6121: Extensible Messaging and Presence Protocol (XMPP): Instant Messaging and Presence
 pub mod roster;
 
+/// RFC 7395: An Extensible Messaging and Presence Protocol (XMPP) Subprotocol for WebSocket
+pub mod websocket;
+
 /// XEP-0004: Data Forms
 pub mod data_forms;
 

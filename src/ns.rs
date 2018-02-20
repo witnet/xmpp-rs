@@ -13,6 +13,9 @@ pub const XMPP_STANZAS: &str = "urn:ietf:params:xml:ns:xmpp-stanzas";
 /// RFC 6121: Extensible Messaging and Presence Protocol (XMPP): Instant Messaging and Presence
 pub const ROSTER: &str = "jabber:iq:roster";
 
+/// RFC 7395: An Extensible Messaging and Presence Protocol (XMPP) Subprotocol for WebSocket
+pub const WEBSOCKET: &str = "urn:ietf:params:xml:ns:xmpp-framing";
+
 /// XEP-0004: Data Forms
 pub const DATA_FORMS: &str = "jabber:x:data";
 
