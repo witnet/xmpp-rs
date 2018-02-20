@@ -11,6 +11,8 @@ pub const JABBER_CLIENT: &str = "jabber:client";
 pub const XMPP_STANZAS: &str = "urn:ietf:params:xml:ns:xmpp-stanzas";
 /// RFC 6120: Extensible Messaging and Presence Protocol (XMPP): Core
 pub const SASL: &str = "urn:ietf:params:xml:ns:xmpp-sasl";
+/// RFC 6120: Extensible Messaging and Presence Protocol (XMPP): Core
+pub const BIND: &str = "urn:ietf:params:xml:ns:xmpp-bind";
 
 /// RFC 6121: Extensible Messaging and Presence Protocol (XMPP): Instant Messaging and Presence
 pub const ROSTER: &str = "jabber:iq:roster";
