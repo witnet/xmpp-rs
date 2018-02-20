@@ -344,7 +344,10 @@ macro_rules! generate_elem_id {
 }
 
 macro_rules! generate_element_with_text {
-    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:expr, [$($(#[$attr_meta:meta])* $attr:ident: $attr_type:ty = $attr_name:tt => $attr_action:tt),+], $text_ident:ident: $codec:ident < $text_type:ty >) => (
+    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:expr, $text_ident:ident: $codec:ident < $text_type:ty >) => (
+        generate_element_with_text!($(#[$meta])* $elem, $name, $ns, [], $text_ident: $codec<$text_type>);
+    );
+    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:expr, [$($(#[$attr_meta:meta])* $attr:ident: $attr_type:ty = $attr_name:tt => $attr_action:tt),*], $text_ident:ident: $codec:ident < $text_type:ty >) => (
         $(#[$meta])*
         #[derive(Debug, Clone)]
         pub struct $elem {
