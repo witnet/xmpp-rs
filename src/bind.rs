@@ -13,17 +13,18 @@ use error::Error;
 use jid::Jid;
 use ns;
 
-#[derive(Debug, Clone)]
-pub struct Bind {
-    pub resource: Option<String>,
-    pub jid: Option<Jid>,
+#[derive(Debug, Clone, PartialEq)]
+pub enum Bind {
+    None,
+    Resource(String),
+    Jid(Jid),
 }
 
 impl Bind {
     pub fn new(resource: Option<String>) -> Bind {
-        Bind {
-            resource,
-            jid: None,
+        match resource {
+            None => Bind::None,
+            Some(resource) => Bind::Resource(resource),
         }
     }
 }
@@ -35,23 +36,17 @@ impl TryFrom<Element> for Bind {
         check_self!(elem, "bind", ns::BIND);
         check_no_attributes!(elem, "bind");
 
-        let mut bind = Bind {
-            resource: None,
-            jid: None,
-        };
-        let mut already_set = false;
+        let mut bind = Bind::None;
         for child in elem.children() {
-            if already_set {
+            if bind != Bind::None {
                 return Err(Error::ParseError("Bind can only have one child."));
             }
             if child.is("resource", ns::BIND) {
                 check_no_children!(child, "resource");
-                bind.resource = Some(child.text());
-                already_set = true;
+                bind = Bind::Resource(child.text());
             } else if child.is("jid", ns::BIND) {
                 check_no_children!(child, "jid");
-                bind.jid = Some(Jid::from_str(&child.text())?);
-                already_set = true;
+                bind = Bind::Jid(Jid::from_str(&child.text())?);
             } else {
                 return Err(Error::ParseError("Unknown element in bind."));
             }
@@ -65,16 +60,21 @@ impl From<Bind> for Element {
     fn from(bind: Bind) -> Element {
         Element::builder("bind")
                 .ns(ns::BIND)
-                .append(bind.resource.map(|resource|
-                     Element::builder("resource")
-                             .ns(ns::BIND)
-                             .append(resource)
-                             .build()))
-                .append(bind.jid.map(|jid|
-                     Element::builder("jid")
-                             .ns(ns::BIND)
-                             .append(jid)
-                             .build()))
+                .append(match bind {
+                     Bind::None => vec!(),
+                     Bind::Resource(resource) => vec!(
+                         Element::builder("resource")
+                                 .ns(ns::BIND)
+                                 .append(resource)
+                                 .build()
+                     ),
+                     Bind::Jid(jid) => vec!(
+                         Element::builder("jid")
+                                 .ns(ns::BIND)
+                                 .append(jid)
+                                 .build()
+                     ),
+                 })
                 .build()
     }
 }
@@ -87,7 +87,6 @@ mod tests {
     fn test_simple() {
         let elem: Element = "<bind xmlns='urn:ietf:params:xml:ns:xmpp-bind'/>".parse().unwrap();
         let bind = Bind::try_from(elem).unwrap();
-        assert_eq!(bind.resource, None);
-        assert_eq!(bind.jid, None);
+        assert_eq!(bind, Bind::None);
     }
 }
