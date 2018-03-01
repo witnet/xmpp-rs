@@ -404,9 +404,6 @@ mod tests {
         assert_eq!(Jid::from_str("a@b.c/d"), Ok(Jid::full("a", "b.c", "d")));
         assert_eq!(Jid::from_str("a@b.c"), Ok(Jid::bare("a", "b.c")));
         assert_eq!(Jid::from_str("b.c"), Ok(Jid::domain("b.c")));
-
-        assert_eq!(Jid::from_str(""), Err(JidParseError::NoDomain));
-
         assert_eq!(Jid::from_str("a/b@c"), Ok(Jid::domain_with_resource("a", "b@c")));
     }
 
