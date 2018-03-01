@@ -101,6 +101,9 @@ pub mod version;
 /// XEP-0107: User Mood
 pub mod mood;
 
+/// XEP-0114: Jabber Component Protocol
+pub mod component;
+
 /// XEP-0115: Entity Capabilities
 pub mod caps;
 

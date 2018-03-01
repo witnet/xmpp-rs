@@ -65,6 +65,9 @@ pub const MOOD: &str = "http://jabber.org/protocol/mood";
 /// XEP-0114: Jabber Component Protocol
 pub const COMPONENT_ACCEPT: &str = "jabber:component:accept";
 
+/// XEP-0114: Jabber Component Protocol
+pub const COMPONENT: &str = "jabber:component:accept";
+
 /// XEP-0115: Entity Capabilities
 pub const CAPS: &str = "http://jabber.org/protocol/caps";
 
