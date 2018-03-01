@@ -57,15 +57,13 @@ impl From<Jid> for String {
 
 impl fmt::Debug for Jid {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        write!(fmt, "JID({})", self)?;
-        Ok(())
+        write!(fmt, "JID({})", self)
     }
 }
 
 impl fmt::Display for Jid {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        fmt.write_str(String::from(self.clone()).as_ref())?;
-        Ok(())
+        fmt.write_str(String::from(self.clone()).as_ref())
     }
 }
 
