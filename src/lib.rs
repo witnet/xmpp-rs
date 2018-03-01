@@ -421,31 +421,12 @@ mod tests {
     }
 
     #[test]
-    fn invalid() {
-        match Jid::from_str("") {
-            Err(JidParseError::NoDomain) => (),
-            err => panic!("Invalid error: {:?}", err)
-        }
-
-        match Jid::from_str("a@/c") {
-            Err(JidParseError::NoDomain) => (),
-            err => panic!("Invalid error: {:?}", err)
-        }
-
-        match Jid::from_str("/c") {
-            Err(JidParseError::NoDomain) => (),
-            err => panic!("Invalid error: {:?}", err)
-        }
-
-        match Jid::from_str("@b") {
-            Err(JidParseError::EmptyNode) => (),
-            err => panic!("Invalid error: {:?}", err)
-        }
-
-        match Jid::from_str("b/") {
-            Err(JidParseError::EmptyResource) => (),
-            err => panic!("Invalid error: {:?}", err)
-        }
+    fn invalid_jids() {
+        assert_eq!(Jid::from_str(""), Err(JidParseError::NoDomain));
+        assert_eq!(Jid::from_str("/c"), Err(JidParseError::NoDomain));
+        assert_eq!(Jid::from_str("a@/c"), Err(JidParseError::NoDomain));
+        assert_eq!(Jid::from_str("@b"), Err(JidParseError::EmptyNode));
+        assert_eq!(Jid::from_str("b/"), Err(JidParseError::EmptyResource));
     }
 
     #[cfg(feature = "minidom")]
