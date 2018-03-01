@@ -15,7 +15,7 @@
 //! [`TryFrom<Element>`]: ../try_from/trait.TryFrom.html
 //! [`Element`]: ../minidom/element/struct.Element.html
 
-// Copyright (c) 2017 Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
+// Copyright (c) 2017-2018 Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
 // Copyright (c) 2017 Maxime “pep” Buquet <pep+code@bouah.net>
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
