@@ -1,3 +1,8 @@
+Version 0.5.1, released 2018-03-01:
+  * Updates
+    - Link Mauve implemented failure::Fail on JidParseError.
+    - Link Mauve simplified the code a bit.
+
 Version 0.5.0, released 2018-02-18:
   * Updates
     - Link Mauve has updated the optional `minidom` dependency.
