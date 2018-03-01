@@ -4,6 +4,9 @@
 //!
 //! For usage, check the documentation on the `Jid` struct.
 
+extern crate failure;
+#[macro_use] extern crate failure_derive;
+
 use std::fmt;
 
 use std::convert::Into;
@@ -11,14 +14,19 @@ use std::convert::Into;
 use std::str::FromStr;
 
 /// An error that signifies that a `Jid` cannot be parsed from a string.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Fail)]
 pub enum JidParseError {
     /// Happens when there is no domain, that is either the string is empty,
     /// starts with a /, or contains the @/ sequence.
+    #[fail(display = "no domain found in this JID")]
     NoDomain,
+
     /// Happens when the node is empty, that is the string starts with a @.
+    #[fail(display = "nodepart empty despite the presence of a @")]
     EmptyNode,
+
     /// Happens when the resource is empty, that is the string ends with a /.
+    #[fail(display = "resource empty despite the presence of a /")]
     EmptyResource,
 }
 
