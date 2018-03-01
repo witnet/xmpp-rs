@@ -10,6 +10,8 @@ pub const JABBER_CLIENT: &str = "jabber:client";
 /// RFC 6120: Extensible Messaging and Presence Protocol (XMPP): Core
 pub const XMPP_STANZAS: &str = "urn:ietf:params:xml:ns:xmpp-stanzas";
 /// RFC 6120: Extensible Messaging and Presence Protocol (XMPP): Core
+pub const STREAM: &str = "http://etherx.jabber.org/streams";
+/// RFC 6120: Extensible Messaging and Presence Protocol (XMPP): Core
 pub const SASL: &str = "urn:ietf:params:xml:ns:xmpp-sasl";
 /// RFC 6120: Extensible Messaging and Presence Protocol (XMPP): Core
 pub const BIND: &str = "urn:ietf:params:xml:ns:xmpp-bind";
