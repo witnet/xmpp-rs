@@ -8,11 +8,11 @@ use try_from::TryFrom;
 
 use minidom::Element;
 use error::Error;
-use helpers::Base64;
+use helpers::PlainText;
 use ns;
 
 generate_element_with_text!(Handshake, "handshake", ns::COMPONENT,
-    data: Base64<Vec<u8>>
+    data: PlainText<Option<String>>
 );
 
 #[cfg(test)]
@@ -23,10 +23,10 @@ mod tests {
     fn test_simple() {
         let elem: Element = "<handshake xmlns='jabber:component:accept'/>".parse().unwrap();
         let handshake = Handshake::try_from(elem).unwrap();
-        assert!(handshake.data.is_empty());
+        assert_eq!(handshake.data, None);
 
-        let elem: Element = "<handshake xmlns='jabber:component:accept'>AAAA</handshake>".parse().unwrap();
+        let elem: Element = "<handshake xmlns='jabber:component:accept'>Coucou</handshake>".parse().unwrap();
         let handshake = Handshake::try_from(elem).unwrap();
-        assert_eq!(handshake.data, b"\0\0\0");
+        assert_eq!(handshake.data, Some(String::from("Coucou")));
     }
 }
