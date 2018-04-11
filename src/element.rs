@@ -9,8 +9,8 @@ use std::borrow::Cow;
 
 use error::{Error, Result};
 
-use quick_xml::reader::Reader as EventReader;
-use quick_xml::writer::Writer as EventWriter;
+use quick_xml::Reader as EventReader;
+use quick_xml::Writer as EventWriter;
 use quick_xml::events::{Event, BytesStart, BytesEnd, BytesText, BytesDecl};
 
 use std::io::BufRead;
@@ -126,11 +126,11 @@ impl Node {
         match *self {
             Node::Element(ref elmt) => elmt.write_to_inner(writer)?,
             Node::Text(ref s) => {
-                writer.write_event(Event::Text(BytesText::from_str(s)))?;
+                writer.write_event(Event::Text(BytesText::from_plain_str(s)))?;
                 ()
             },
             Node::Comment(ref s) => {
-                writer.write_event(Event::Comment(BytesText::from_str(s)))?;
+                writer.write_event(Event::Comment(BytesText::from_plain_str(s)))?;
                 ()
             },
         };

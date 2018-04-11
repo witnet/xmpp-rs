@@ -7,7 +7,7 @@ use std::convert::From;
 pub enum Error {
     /// An error from quick_xml.
     #[fail(display = "XML error: {}", _0)]
-    XmlError(#[cause] ::quick_xml::errors::Error),
+    XmlError(#[cause] ::quick_xml::Error),
 
     /// An UTF-8 conversion error.
     #[fail(display = "UTF-8 error: {}", _0)]
@@ -30,8 +30,8 @@ pub enum Error {
     InvalidElement,
 }
 
-impl From<::quick_xml::errors::Error> for Error {
-    fn from(err: ::quick_xml::errors::Error) -> Error {
+impl From<::quick_xml::Error> for Error {
+    fn from(err: ::quick_xml::Error) -> Error {
         Error::XmlError(err)
     }
 }
