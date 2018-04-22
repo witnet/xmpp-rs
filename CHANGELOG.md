@@ -1,3 +1,6 @@
+Version 0.9.0, released 2018-04-10:
+  * Small changes
+    - Upgrade quick_xml to 0.12.1
 Version 0.8.0, released 2018-02-18:
   * Additions
     - Link Mauve replaced error\_chain with failure ( https://gitlab.com/lumi/minidom-rs/merge_requests/27 )

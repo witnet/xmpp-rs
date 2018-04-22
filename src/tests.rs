@@ -1,6 +1,6 @@
 use std::iter::Iterator;
 
-use quick_xml::reader::Reader;
+use quick_xml::Reader;
 
 use element::Element;
 
