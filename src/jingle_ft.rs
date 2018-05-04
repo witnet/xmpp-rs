@@ -19,7 +19,7 @@ use error::Error;
 use ns;
 
 generate_element_with_children!(
-    #[derive(PartialEq)]
+    #[derive(PartialEq, Default)]
     Range, "range", ns::JINGLE_FT,
     attributes: [
         offset: u64 = "offset" => default,
@@ -29,6 +29,12 @@ generate_element_with_children!(
         hashes: Vec<Hash> = ("hash", ns::HASHES) => Hash
     ]
 );
+
+impl Range {
+    pub fn new() -> Range {
+        Default::default()
+    }
+}
 
 type Lang = String;
 
@@ -43,6 +49,60 @@ pub struct File {
     pub size: Option<u64>,
     pub range: Option<Range>,
     pub hashes: Vec<Hash>,
+}
+
+impl File {
+    pub fn new() -> File {
+        File {
+            date: None,
+            media_type: None,
+            name: None,
+            descs: BTreeMap::new(),
+            size: None,
+            range: None,
+            hashes: Vec::new(),
+        }
+    }
+
+    pub fn with_date(mut self, date: DateTime) -> File {
+        self.date = Some(date);
+        self
+    }
+
+    pub fn with_date_str(mut self, date: &str) -> Result<File, Error> {
+        self.date = Some(DateTime::from_str(date)?);
+        Ok(self)
+    }
+
+    pub fn with_media_type(mut self, media_type: String) -> File {
+        self.media_type = Some(media_type);
+        self
+    }
+
+    pub fn with_name(mut self, name: String) -> File {
+        self.name = Some(name);
+        self
+    }
+
+    pub fn add_desc(mut self, lang: &str, desc: Desc) -> File {
+        self.descs.insert(Lang::from(lang), desc);
+        self
+    }
+
+    pub fn with_size(mut self, size: u64) -> File {
+        self.size = Some(size);
+        self
+    }
+
+    pub fn with_range(mut self, range: Range) -> File {
+        self.range = Some(range);
+        self
+    }
+
+    pub fn add_hash(mut self, hash: Hash) -> File {
+        self.hashes.push(hash);
+        self
+    }
 }
 
 impl TryFrom<Element> for File {
