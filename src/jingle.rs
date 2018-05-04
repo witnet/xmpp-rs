@@ -76,6 +76,45 @@ pub struct Content {
     pub security: Option<Element>,
 }
 
+impl Content {
+    pub fn new(creator: Creator, name: ContentId) -> Content {
+        Content {
+            creator,
+            name,
+            disposition: Disposition::Session,
+            senders: Senders::Both,
+            description: None,
+            transport: None,
+            security: None,
+        }
+    }
+
+    pub fn with_disposition(mut self, disposition: Disposition) -> Content {
+        self.disposition = disposition;
+        self
+    }
+
+    pub fn with_senders(mut self, senders: Senders) -> Content {
+        self.senders = senders;
+        self
+    }
+
+    pub fn with_description(mut self, description: Element) -> Content {
+        self.description = Some(description);
+        self
+    }
+
+    pub fn with_transport(mut self, transport: Element) -> Content {
+        self.transport = Some(transport);
+        self
+    }
+
+    pub fn with_security(mut self, security: Element) -> Content {
+        self.security = Some(security);
+        self
+    }
+}
+
 impl TryFrom<Element> for Content {
     type Err = Error;
 
@@ -265,6 +304,40 @@ pub struct Jingle {
     pub contents: Vec<Content>,
     pub reason: Option<ReasonElement>,
     pub other: Vec<Element>,
+}
+
+impl Jingle {
+    pub fn new(action: Action, sid: SessionId) -> Jingle {
+        Jingle {
+            action: action,
+            sid: sid,
+            initiator: None,
+            responder: None,
+            contents: Vec::new(),
+            reason: None,
+            other: Vec::new(),
+        }
+    }
+
+    pub fn with_initiator(mut self, initiator: Jid) -> Jingle {
+        self.initiator = Some(initiator);
+        self
+    }
+
+    pub fn with_responder(mut self, responder: Jid) -> Jingle {
+        self.responder = Some(responder);
+        self
+    }
+
+    pub fn add_content(mut self, content: Content) -> Jingle {
+        self.contents.push(content);
+        self
+    }
+
+    pub fn set_reason(mut self, content: Content) -> Jingle {
+        self.contents.push(content);
+        self
+    }
 }
 
 impl TryFrom<Element> for Jingle {
