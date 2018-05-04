@@ -9,6 +9,7 @@ use std::io;
 use std::num;
 use std::string;
 use std::fmt;
+use std::net;
 
 use base64;
 use minidom;
@@ -23,6 +24,7 @@ pub enum Error {
     Base64Error(base64::DecodeError),
     ParseIntError(num::ParseIntError),
     ParseStringError(string::ParseError),
+    ParseAddrError(net::AddrParseError),
     JidParseError(jid::JidParseError),
     ChronoParseError(chrono::ParseError),
 }
@@ -36,6 +38,7 @@ impl fmt::Display for Error {
             Error::Base64Error(ref e) => write!(fmt, "{}", e),
             Error::ParseIntError(ref e) => write!(fmt, "{}", e),
             Error::ParseStringError(ref e) => write!(fmt, "{}", e),
+            Error::ParseAddrError(ref e) => write!(fmt, "{}", e),
             Error::JidParseError(_) => write!(fmt, "JID parse error"),
             Error::ChronoParseError(ref e) => write!(fmt, "{}", e),
         }
@@ -69,6 +72,12 @@ impl From<num::ParseIntError> for Error {
 impl From<string::ParseError> for Error {
     fn from(err: string::ParseError) -> Error {
         Error::ParseStringError(err)
+    }
+}
+
+impl From<net::AddrParseError> for Error {
+    fn from(err: net::AddrParseError) -> Error {
+        Error::ParseAddrError(err)
     }
 }
 

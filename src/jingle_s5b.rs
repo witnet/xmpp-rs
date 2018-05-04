@@ -6,6 +6,7 @@
 
 use try_from::TryFrom;
 use std::str::FromStr;
+use std::net::IpAddr;
 
 use minidom::{Element, IntoAttributeValue};
 use jid::Jid;
@@ -32,7 +33,7 @@ generate_id!(StreamId);
 
 generate_element_with_only_attributes!(Candidate, "candidate", ns::JINGLE_S5B, [
     cid: CandidateId = "cid" => required,
-    host: String = "host" => required,
+    host: IpAddr = "host" => required,
     jid: Jid = "jid" => required,
     port: Option<u16> = "port" => optional,
     priority: u32 = "priority" => required,
@@ -40,7 +41,7 @@ generate_element_with_only_attributes!(Candidate, "candidate", ns::JINGLE_S5B, [
 ]);
 
 impl Candidate {
-    pub fn new(cid: CandidateId, host: String, jid: Jid, priority: u32) -> Candidate {
+    pub fn new(cid: CandidateId, host: IpAddr, jid: Jid, priority: u32) -> Candidate {
         Candidate {
             cid,
             host,
@@ -238,14 +239,14 @@ mod tests {
 
     #[test]
     fn test_serialise_candidate() {
-        let elem: Element = "<transport xmlns='urn:xmpp:jingle:transports:s5b:1' sid='coucou'><candidate cid='coucou' host='coucou' jid='coucou@coucou' priority='0'/></transport>".parse().unwrap();
+        let elem: Element = "<transport xmlns='urn:xmpp:jingle:transports:s5b:1' sid='coucou'><candidate cid='coucou' host='127.0.0.1' jid='coucou@coucou' priority='0'/></transport>".parse().unwrap();
         let transport = Transport {
             sid: StreamId(String::from("coucou")),
             dstaddr: None,
             mode: Mode::Tcp,
             payload: TransportPayload::Candidates(vec!(Candidate {
                 cid: CandidateId(String::from("coucou")),
-                host: String::from("coucou"),
+                host: IpAddr::from_str("127.0.0.1").unwrap(),
                 jid: Jid::from_str("coucou@coucou").unwrap(),
                 port: None,
                 priority: 0u32,
