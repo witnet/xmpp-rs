@@ -39,6 +39,29 @@ generate_element_with_only_attributes!(Candidate, "candidate", ns::JINGLE_S5B, [
     type_: Type = "type" => default,
 ]);
 
+impl Candidate {
+    pub fn new(cid: CandidateId, host: String, jid: Jid, priority: u32) -> Candidate {
+        Candidate {
+            cid,
+            host,
+            jid,
+            priority,
+            port: Default::default(),
+            type_: Default::default(),
+        }
+    }
+
+    pub fn with_port(mut self, port: u16) -> Candidate {
+        self.port = Some(port);
+        self
+    }
+
+    pub fn with_type(mut self, type_: Type) -> Candidate {
+        self.type_ = type_;
+        self
+    }
+}
+
 #[derive(Debug, Clone)]
 pub enum TransportPayload {
     Activated(String),
@@ -55,6 +78,32 @@ pub struct Transport {
     pub dstaddr: Option<String>,
     pub mode: Mode,
     pub payload: TransportPayload,
+}
+
+impl Transport {
+    pub fn new(sid: StreamId) -> Transport {
+        Transport {
+            sid,
+            dstaddr: None,
+            mode: Default::default(),
+            payload: TransportPayload::None,
+        }
+    }
+
+    pub fn with_dstaddr(mut self, dstaddr: String) -> Transport {
+        self.dstaddr = Some(dstaddr);
+        self
+    }
+
+    pub fn with_mode(mut self, mode: Mode) -> Transport {
+        self.mode = mode;
+        self
+    }
+
+    pub fn with_payload(mut self, payload: TransportPayload) -> Transport {
+        self.payload = payload;
+        self
+    }
 }
 
 impl TryFrom<Element> for Transport {
