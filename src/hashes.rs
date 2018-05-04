@@ -13,6 +13,7 @@ use error::Error;
 
 use ns;
 use helpers::Base64;
+use base64;
 
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -76,10 +77,22 @@ generate_element_with_text!(
     hash: Base64<Vec<u8>>
 );
 
+impl Hash {
+    pub fn new(algo: Algo, hash: Vec<u8>) -> Hash {
+        Hash {
+            algo,
+            hash,
+        }
+    }
+
+    pub fn from_base64(algo: Algo, hash: &str) -> Result<Hash, Error> {
+        Ok(Hash::new(algo, base64::decode(hash)?))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use base64;
 
     #[test]
     fn test_simple() {
