@@ -152,12 +152,12 @@ impl Message {
             return None;
         }
         for lang in preferred_langs {
-            if map.contains_key(lang) {
-                return Some((Lang::from(lang), &map[lang]));
+            if let Some(body) = map.get(lang) {
+                return Some((Lang::from(lang), body));
             }
         }
-        if map.contains_key("") {
-            return Some((Lang::new(), &map[""]));
+        if let Some(body) = map.get("") {
+            return Some((Lang::new(), body));
         }
         map.iter().map(|(lang, body)| (lang.clone(), body)).next()
     }
