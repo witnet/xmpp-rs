@@ -93,9 +93,7 @@ impl TryFrom<Element> for Actor {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<Actor, Error> {
-        if !elem.is("actor", ns::MUC_USER) {
-            return Err(Error::ParseError("This is not a actor element."));
-        }
+        check_self!(elem, "actor", ns::MUC_USER);
         check_no_unknown_attributes!(elem, "actor", ["jid", "nick"]);
         for _ in elem.children() {
             return Err(Error::ParseError("Unknown child in actor element."));
@@ -160,9 +158,7 @@ impl TryFrom<Element> for Item {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<Item, Error> {
-        if !elem.is("item", ns::MUC_USER) {
-            return Err(Error::ParseError("This is not a item element."));
-        }
+        check_self!(elem, "item", ns::MUC_USER);
         check_no_unknown_attributes!(elem, "item", ["affiliation", "jid", "nick", "role"]);
         let mut actor: Option<Actor> = None;
         let mut continue_: Option<Continue> = None;
@@ -221,9 +217,7 @@ impl TryFrom<Element> for MucUser {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<MucUser, Error> {
-        if !elem.is("x", ns::MUC_USER) {
-            return Err(Error::ParseError("This is not an x element."));
-        }
+        check_self!(elem, "x", ns::MUC_USER);
         check_no_attributes!(elem, "x");
         let mut status = vec!();
         let mut items = vec!();

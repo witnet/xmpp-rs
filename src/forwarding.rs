@@ -26,9 +26,7 @@ impl TryFrom<Element> for Forwarded {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<Forwarded, Error> {
-        if !elem.is("forwarded", ns::FORWARD) {
-            return Err(Error::ParseError("This is not a forwarded element."));
-        }
+        check_self!(elem, "forwarded", ns::FORWARD);
         let mut delay = None;
         let mut stanza = None;
         for child in elem.children() {

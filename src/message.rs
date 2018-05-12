@@ -189,9 +189,7 @@ impl TryFrom<Element> for Message {
     type Err = Error;
 
     fn try_from(root: Element) -> Result<Message, Error> {
-        if !root.is("message", ns::DEFAULT_NS) {
-            return Err(Error::ParseError("This is not a message element."));
-        }
+        check_self!(root, "message", ns::DEFAULT_NS);
         let from = get_attr!(root, "from", optional);
         let to = get_attr!(root, "to", optional);
         let id = get_attr!(root, "id", optional);

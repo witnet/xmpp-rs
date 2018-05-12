@@ -28,9 +28,7 @@ impl TryFrom<Element> for Set {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<Set, Error> {
-        if !elem.is("set", ns::RSM) {
-            return Err(Error::ParseError("This is not a RSM element."));
-        }
+        check_self!(elem, "set", ns::RSM, "RSM set");
         let mut set = Set {
             after: None,
             before: None,
@@ -136,7 +134,7 @@ mod tests {
             Error::ParseError(string) => string,
             _ => panic!(),
         };
-        assert_eq!(message, "This is not a RSM element.");
+        assert_eq!(message, "This is not a RSM set element.");
     }
 
     #[test]

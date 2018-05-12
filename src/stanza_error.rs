@@ -62,9 +62,7 @@ impl TryFrom<Element> for StanzaError {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<StanzaError, Error> {
-        if !elem.is("error", ns::DEFAULT_NS) {
-            return Err(Error::ParseError("This is not an error element."));
-        }
+        check_self!(elem, "error", ns::DEFAULT_NS);
 
         let type_ = get_attr!(elem, "type", required);
         let by = get_attr!(elem, "by", optional);

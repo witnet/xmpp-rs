@@ -22,9 +22,7 @@ impl TryFrom<Element> for Muc {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<Muc, Error> {
-        if !elem.is("x", ns::MUC) {
-            return Err(Error::ParseError("This is not an x element."));
-        }
+        check_self!(elem, "x", ns::MUC);
         check_no_attributes!(elem, "x");
 
         let mut password = None;

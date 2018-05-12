@@ -119,9 +119,7 @@ impl TryFrom<Element> for Content {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<Content, Error> {
-        if !elem.is("content", ns::JINGLE) {
-            return Err(Error::ParseError("This is not a content element."));
-        }
+        check_self!(elem, "content", ns::JINGLE);
 
         let mut content = Content {
             creator: get_attr!(elem, "creator", required),
@@ -252,9 +250,7 @@ impl TryFrom<Element> for ReasonElement {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<ReasonElement, Error> {
-        if !elem.is("reason", ns::JINGLE) {
-            return Err(Error::ParseError("This is not a reason element."));
-        }
+        check_self!(elem, "reason", ns::JINGLE);
         let mut reason = None;
         let mut text = None;
         for child in elem.children() {
@@ -344,9 +340,7 @@ impl TryFrom<Element> for Jingle {
     type Err = Error;
 
     fn try_from(root: Element) -> Result<Jingle, Error> {
-        if !root.is("jingle", ns::JINGLE) {
-            return Err(Error::ParseError("This is not a Jingle element."));
-        }
+        check_self!(root, "jingle", ns::JINGLE, "Jingle");
 
         let mut jingle = Jingle {
             action: get_attr!(root, "action", required),

@@ -111,57 +111,54 @@ impl TryFrom<Element> for Transport {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<Transport, Error> {
-        if elem.is("transport", ns::JINGLE_S5B) {
-            let sid = get_attr!(elem, "sid", required);
-            let dstaddr = get_attr!(elem, "dstaddr", optional);
-            let mode = get_attr!(elem, "mode", default);
+        check_self!(elem, "transport", ns::JINGLE_S5B);
+        let sid = get_attr!(elem, "sid", required);
+        let dstaddr = get_attr!(elem, "dstaddr", optional);
+        let mode = get_attr!(elem, "mode", default);
 
-            let mut payload = None;
-            for child in elem.children() {
-                payload = Some(if child.is("candidate", ns::JINGLE_S5B) {
-                    let mut candidates = match payload {
-                        Some(TransportPayload::Candidates(candidates)) => candidates,
-                        Some(_) => return Err(Error::ParseError("Non-candidate child already present in JingleS5B transport element.")),
-                        None => vec!(),
-                    };
-                    candidates.push(Candidate::try_from(child.clone())?);
-                    TransportPayload::Candidates(candidates)
-                } else if child.is("activated", ns::JINGLE_S5B) {
-                    if payload.is_some() {
-                        return Err(Error::ParseError("Non-activated child already present in JingleS5B transport element."));
-                    }
-                    let cid = get_attr!(child, "cid", required);
-                    TransportPayload::Activated(cid)
-                } else if child.is("candidate-error", ns::JINGLE_S5B) {
-                    if payload.is_some() {
-                        return Err(Error::ParseError("Non-candidate-error child already present in JingleS5B transport element."));
-                    }
-                    TransportPayload::CandidateError
-                } else if child.is("candidate-used", ns::JINGLE_S5B) {
-                    if payload.is_some() {
-                        return Err(Error::ParseError("Non-candidate-used child already present in JingleS5B transport element."));
-                    }
-                    let cid = get_attr!(child, "cid", required);
-                    TransportPayload::CandidateUsed(cid)
-                } else if child.is("proxy-error", ns::JINGLE_S5B) {
-                    if payload.is_some() {
-                        return Err(Error::ParseError("Non-proxy-error child already present in JingleS5B transport element."));
-                    }
-                    TransportPayload::ProxyError
-                } else {
-                    return Err(Error::ParseError("Unknown child in JingleS5B transport element."));
-                });
-            }
-            let payload = payload.unwrap_or(TransportPayload::None);
-            Ok(Transport {
-                sid: sid,
-                dstaddr: dstaddr,
-                mode: mode,
-                payload: payload,
-            })
-        } else {
-            Err(Error::ParseError("This is not an JingleS5B transport element."))
+        let mut payload = None;
+        for child in elem.children() {
+            payload = Some(if child.is("candidate", ns::JINGLE_S5B) {
+                let mut candidates = match payload {
+                    Some(TransportPayload::Candidates(candidates)) => candidates,
+                    Some(_) => return Err(Error::ParseError("Non-candidate child already present in JingleS5B transport element.")),
+                    None => vec!(),
+                };
+                candidates.push(Candidate::try_from(child.clone())?);
+                TransportPayload::Candidates(candidates)
+            } else if child.is("activated", ns::JINGLE_S5B) {
+                if payload.is_some() {
+                    return Err(Error::ParseError("Non-activated child already present in JingleS5B transport element."));
+                }
+                let cid = get_attr!(child, "cid", required);
+                TransportPayload::Activated(cid)
+            } else if child.is("candidate-error", ns::JINGLE_S5B) {
+                if payload.is_some() {
+                    return Err(Error::ParseError("Non-candidate-error child already present in JingleS5B transport element."));
+                }
+                TransportPayload::CandidateError
+            } else if child.is("candidate-used", ns::JINGLE_S5B) {
+                if payload.is_some() {
+                    return Err(Error::ParseError("Non-candidate-used child already present in JingleS5B transport element."));
+                }
+                let cid = get_attr!(child, "cid", required);
+                TransportPayload::CandidateUsed(cid)
+            } else if child.is("proxy-error", ns::JINGLE_S5B) {
+                if payload.is_some() {
+                    return Err(Error::ParseError("Non-proxy-error child already present in JingleS5B transport element."));
+                }
+                TransportPayload::ProxyError
+            } else {
+                return Err(Error::ParseError("Unknown child in JingleS5B transport element."));
+            });
         }
+        let payload = payload.unwrap_or(TransportPayload::None);
+        Ok(Transport {
+            sid: sid,
+            dstaddr: dstaddr,
+            mode: mode,
+            payload: payload,
+        })
     }
 }
 

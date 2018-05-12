@@ -29,9 +29,7 @@ impl TryFrom<Element> for Query {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<Query, Error> {
-        if !elem.is("query", ns::REGISTER) {
-            return Err(Error::ParseError("This is not an ibr element."));
-        }
+        check_self!(elem, "query", ns::REGISTER, "IBR query");
         let mut query = Query {
             registered: false,
             fields: HashMap::new(),

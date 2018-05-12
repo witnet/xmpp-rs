@@ -20,9 +20,7 @@ impl TryFrom<Element> for Version {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<Version, Error> {
-        if !elem.is("query", ns::VERSION) {
-            return Err(Error::ParseError("This is not a version element."));
-        }
+        check_self!(elem, "query", ns::VERSION, "version");
         check_no_attributes!(elem, "version");
         let mut name = None;
         let mut version = None;
