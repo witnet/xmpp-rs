@@ -152,14 +152,14 @@ impl Message {
             return None;
         }
         for lang in preferred_langs {
-            if let Some(body) = map.get(lang) {
-                return Some((Lang::from(lang), body));
+            if let Some(value) = map.get(lang) {
+                return Some((Lang::from(lang), value));
             }
         }
-        if let Some(body) = map.get("") {
-            return Some((Lang::new(), body));
+        if let Some(value) = map.get("") {
+            return Some((Lang::new(), value));
         }
-        map.iter().map(|(lang, body)| (lang.clone(), body)).next()
+        map.iter().map(|(lang, value)| (lang.clone(), value)).next()
     }
 
     /// Returns the best matching body from a list of languages.
