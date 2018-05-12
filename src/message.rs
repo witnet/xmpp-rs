@@ -146,6 +146,43 @@ impl Message {
             payloads: vec!(),
         }
     }
+
+    fn get_best<'a, T>(map: &'a BTreeMap<Lang, T>, preferred_langs: Vec<&str>) -> Option<(Lang, &'a T)> {
+        if map.is_empty() {
+            return None;
+        }
+        for lang in preferred_langs {
+            if map.contains_key(lang) {
+                return Some((Lang::from(lang), &map[lang]));
+            }
+        }
+        if map.contains_key("") {
+            return Some((Lang::new(), &map[""]));
+        }
+        map.iter().map(|(lang, body)| (lang.clone(), body)).next()
+    }
+
+    /// Returns the best matching body from a list of languages.
+    ///
+    /// For instance, if a message contains both an xml:lang='de', an xml:lang='fr' and an English
+    /// body without an xml:lang attribute, and you pass ["fr", "en"] as your preferred languages,
+    /// `Some(("fr", the_second_body))` will be returned.
+    ///
+    /// If no body matches, an undefined body will be returned.
+    pub fn get_best_body(&self, preferred_langs: Vec<&str>) -> Option<(Lang, &Body)> {
+        Message::get_best::<Body>(&self.bodies, preferred_langs)
+    }
+
+    /// Returns the best matching subject from a list of languages.
+    ///
+    /// For instance, if a message contains both an xml:lang='de', an xml:lang='fr' and an English
+    /// subject without an xml:lang attribute, and you pass ["fr", "en"] as your preferred
+    /// languages, `Some(("fr", the_second_subject))` will be returned.
+    ///
+    /// If no subject matches, an undefined subject will be returned.
+    pub fn get_best_subject(&self, preferred_langs: Vec<&str>) -> Option<(Lang, &Subject)> {
+        Message::get_best::<Subject>(&self.subjects, preferred_langs)
+    }
 }
 
 impl TryFrom<Element> for Message {
@@ -281,6 +318,12 @@ mod tests {
         let message = Message::try_from(elem).unwrap();
         assert_eq!(message.bodies[""], Body::from_str("Hello world!").unwrap());
 
+        {
+            let (lang, body) = message.get_best_body(vec!("en")).unwrap();
+            assert_eq!(lang, "");
+            assert_eq!(body, &Body::from_str("Hello world!").unwrap());
+        }
+
         let elem2 = message.into();
         assert!(elem1.compare_to(&elem2));
     }
@@ -307,8 +350,56 @@ mod tests {
         let message = Message::try_from(elem).unwrap();
         assert_eq!(message.subjects[""], Subject::from_str("Hello world!").unwrap());
 
+        {
+            let (lang, subject) = message.get_best_subject(vec!("en")).unwrap();
+            assert_eq!(lang, "");
+            assert_eq!(subject, &Subject::from_str("Hello world!").unwrap());
+        }
+
         let elem2 = message.into();
         assert!(elem1.compare_to(&elem2));
+    }
+
+    #[test]
+    fn get_best_body() {
+        #[cfg(not(feature = "component"))]
+        let elem: Element = "<message xmlns='jabber:client' to='coucou@example.org' type='chat'><body xml:lang='de'>Hallo Welt!</body><body xml:lang='fr'>Salut le monde !</body><body>Hello world!</body></message>".parse().unwrap();
+        #[cfg(feature = "component")]
+        let elem: Element = "<message xmlns='jabber:component:accept' to='coucou@example.org' type='chat'><body>Hello world!</body></message>".parse().unwrap();
+        let message = Message::try_from(elem).unwrap();
+
+        // Tests basic feature.
+        {
+            let (lang, body) = message.get_best_body(vec!("fr")).unwrap();
+            assert_eq!(lang, "fr");
+            assert_eq!(body, &Body::from_str("Salut le monde !").unwrap());
+        }
+
+        // Tests order.
+        {
+            let (lang, body) = message.get_best_body(vec!("en", "de")).unwrap();
+            assert_eq!(lang, "de");
+            assert_eq!(body, &Body::from_str("Hallo Welt!").unwrap());
+        }
+
+        // Tests fallback.
+        {
+            let (lang, body) = message.get_best_body(vec!()).unwrap();
+            assert_eq!(lang, "");
+            assert_eq!(body, &Body::from_str("Hello world!").unwrap());
+        }
+
+        // Tests fallback.
+        {
+            let (lang, body) = message.get_best_body(vec!("ja")).unwrap();
+            assert_eq!(lang, "");
+            assert_eq!(body, &Body::from_str("Hello world!").unwrap());
+        }
+
+        let message = Message::new(None);
+
+        // Tests without a body.
+        assert_eq!(message.get_best_body(vec!("ja")), None);
     }
 
     #[test]
