@@ -206,7 +206,9 @@ macro_rules! check_no_children {
 
 macro_rules! check_no_attributes {
     ($elem:ident, $name:tt) => (
-        check_no_unknown_attributes!($elem, $name, []);
+        for _ in $elem.attrs() {
+            return Err(Error::ParseError(concat!("Unknown attribute in ", $name, " element.")));
+        }
     );
 }
 
