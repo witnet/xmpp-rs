@@ -23,9 +23,7 @@ impl TryFrom<Element> for Version {
         if !elem.is("query", ns::VERSION) {
             return Err(Error::ParseError("This is not a version element."));
         }
-        for _ in elem.attrs() {
-            return Err(Error::ParseError("Unknown child in version element."));
-        }
+        check_no_attributes!(elem, "version");
         let mut name = None;
         let mut version = None;
         let mut os = None;

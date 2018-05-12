@@ -28,11 +28,7 @@ pub enum JingleMI {
 }
 
 fn get_sid(elem: Element) -> Result<SessionId, Error> {
-    for (attr, _) in elem.attrs() {
-        if attr != "id" {
-            return Err(Error::ParseError("Unknown attribute in Jingle message element."));
-        }
-    }
+    check_no_unknown_attributes!(elem, "Jingle message", ["id"]);
     Ok(SessionId(get_attr!(elem, "id", required)))
 }
 

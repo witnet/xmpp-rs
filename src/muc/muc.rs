@@ -25,6 +25,7 @@ impl TryFrom<Element> for Muc {
         if !elem.is("x", ns::MUC) {
             return Err(Error::ParseError("This is not an x element."));
         }
+        check_no_attributes!(elem, "x");
 
         let mut password = None;
         for child in elem.children() {
@@ -33,10 +34,6 @@ impl TryFrom<Element> for Muc {
             } else {
                 return Err(Error::ParseError("Unknown child in x element."));
             }
-        }
-
-        for _ in elem.attrs() {
-            return Err(Error::ParseError("Unknown attribute in x element."));
         }
 
         Ok(Muc {

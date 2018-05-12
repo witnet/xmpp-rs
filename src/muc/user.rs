@@ -96,13 +96,9 @@ impl TryFrom<Element> for Actor {
         if !elem.is("actor", ns::MUC_USER) {
             return Err(Error::ParseError("This is not a actor element."));
         }
+        check_no_unknown_attributes!(elem, "actor", ["jid", "nick"]);
         for _ in elem.children() {
             return Err(Error::ParseError("Unknown child in actor element."));
-        }
-        for (attr, _) in elem.attrs() {
-            if attr != "jid" && attr != "nick" {
-                return Err(Error::ParseError("Unknown attribute in actor element."));
-            }
         }
         let jid: Option<Jid> = get_attr!(elem, "jid", optional);
         let nick = get_attr!(elem, "nick", optional);
@@ -167,6 +163,7 @@ impl TryFrom<Element> for Item {
         if !elem.is("item", ns::MUC_USER) {
             return Err(Error::ParseError("This is not a item element."));
         }
+        check_no_unknown_attributes!(elem, "item", ["affiliation", "jid", "nick", "role"]);
         let mut actor: Option<Actor> = None;
         let mut continue_: Option<Continue> = None;
         let mut reason: Option<Reason> = None;
@@ -179,12 +176,6 @@ impl TryFrom<Element> for Item {
                 reason = Some(child.clone().try_into()?);
             } else {
                 return Err(Error::ParseError("Unknown child in item element."));
-            }
-        }
-        for (attr, _) in elem.attrs() {
-            if attr != "affiliation" && attr != "jid" &&
-               attr != "nick" && attr != "role" {
-                return Err(Error::ParseError("Unknown attribute in item element."));
             }
         }
 
@@ -233,6 +224,7 @@ impl TryFrom<Element> for MucUser {
         if !elem.is("x", ns::MUC_USER) {
             return Err(Error::ParseError("This is not an x element."));
         }
+        check_no_attributes!(elem, "x");
         let mut status = vec!();
         let mut items = vec!();
         for child in elem.children() {
@@ -243,9 +235,6 @@ impl TryFrom<Element> for MucUser {
             } else {
                 return Err(Error::ParseError("Unknown child in x element."));
             }
-        }
-        for _ in elem.attrs() {
-            return Err(Error::ParseError("Unknown attribute in x element."));
         }
         Ok(MucUser {
             status,

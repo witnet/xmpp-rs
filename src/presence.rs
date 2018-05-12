@@ -268,21 +268,15 @@ impl TryFrom<Element> for Presence {
                 if show.is_some() {
                     return Err(Error::ParseError("More than one show element in a presence."));
                 }
+                check_no_attributes!(elem, "show");
                 for _ in elem.children() {
                     return Err(Error::ParseError("Unknown child in show element."));
                 }
-                for _ in elem.attrs() {
-                    return Err(Error::ParseError("Unknown attribute in show element."));
-                }
                 show = Some(Show::from_str(elem.text().as_ref())?);
             } else if elem.is("status", ns::DEFAULT_NS) {
+                check_no_unknown_attributes!(elem, "status", ["xml:lang"]);
                 for _ in elem.children() {
                     return Err(Error::ParseError("Unknown child in status element."));
-                }
-                for (attr, _) in elem.attrs() {
-                    if attr != "xml:lang" {
-                        return Err(Error::ParseError("Unknown attribute in status element."));
-                    }
                 }
                 let lang = get_attr!(elem, "xml:lang", default);
                 if presence.statuses.insert(lang, elem.text()).is_some() {
@@ -292,11 +286,9 @@ impl TryFrom<Element> for Presence {
                 if priority.is_some() {
                     return Err(Error::ParseError("More than one priority element in a presence."));
                 }
+                check_no_attributes!(elem, "status");
                 for _ in elem.children() {
                     return Err(Error::ParseError("Unknown child in priority element."));
-                }
-                for _ in elem.attrs() {
-                    return Err(Error::ParseError("Unknown attribute in priority element."));
                 }
                 priority = Some(Priority::from_str(elem.text().as_ref())?);
             } else {
