@@ -4,8 +4,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use try_from::TryFrom;
-
 use minidom::Element;
 use date::DateTime;
 
@@ -26,6 +24,7 @@ generate_element_with_text!(Delay, "delay", ns::DELAY,
 #[cfg(test)]
 mod tests {
     use super::*;
+    use try_from::TryFrom;
     use std::str::FromStr;
 
     #[test]

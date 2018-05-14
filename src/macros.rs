@@ -116,7 +116,7 @@ macro_rules! generate_element_enum {
             $enum
             ),+
         }
-        impl TryFrom<Element> for $elem {
+        impl ::try_from::TryFrom<Element> for $elem {
             type Err = Error;
             fn try_from(elem: Element) -> Result<$elem, Error> {
                 check_ns_only!(elem, $name, $ns);
@@ -152,7 +152,7 @@ macro_rules! generate_attribute_enum {
             $enum
             ),+
         }
-        impl TryFrom<Element> for $elem {
+        impl ::try_from::TryFrom<Element> for $elem {
             type Err = Error;
             fn try_from(elem: Element) -> Result<$elem, Error> {
                 check_ns_only!(elem, $name, $ns);
@@ -231,7 +231,7 @@ macro_rules! generate_empty_element {
         #[derive(Debug, Clone)]
         pub struct $elem;
 
-        impl TryFrom<Element> for $elem {
+        impl ::try_from::TryFrom<Element> for $elem {
             type Err = Error;
 
             fn try_from(elem: Element) -> Result<$elem, Error> {
@@ -266,7 +266,7 @@ macro_rules! generate_element_with_only_attributes {
             )*
         }
 
-        impl TryFrom<Element> for $elem {
+        impl ::try_from::TryFrom<Element> for $elem {
             type Err = Error;
 
             fn try_from(elem: Element) -> Result<$elem, Error> {
@@ -324,7 +324,7 @@ macro_rules! generate_elem_id {
                 Ok($elem(String::from(s)))
             }
         }
-        impl TryFrom<Element> for $elem {
+        impl ::try_from::TryFrom<Element> for $elem {
             type Err = Error;
             fn try_from(elem: Element) -> Result<$elem, Error> {
                 check_self!(elem, $name, $ns);
@@ -360,7 +360,7 @@ macro_rules! generate_element_with_text {
             pub $text_ident: $text_type,
         }
 
-        impl TryFrom<Element> for $elem {
+        impl ::try_from::TryFrom<Element> for $elem {
             type Err = Error;
 
             fn try_from(elem: Element) -> Result<$elem, Error> {
@@ -405,7 +405,7 @@ macro_rules! generate_element_with_children {
             )*
         }
 
-        impl TryFrom<Element> for $elem {
+        impl ::try_from::TryFrom<Element> for $elem {
             type Err = Error;
 
             fn try_from(elem: Element) -> Result<$elem, Error> {
