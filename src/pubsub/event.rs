@@ -16,7 +16,7 @@ use ns;
 
 use data_forms::DataForm;
 
-use pubsub::{NodeName, ItemId, SubscriptionId};
+use pubsub::{NodeName, ItemId, Subscription, SubscriptionId};
 
 #[derive(Debug, Clone)]
 pub struct Item {
@@ -57,13 +57,6 @@ impl From<Item> for Element {
                 .build()
     }
 }
-
-generate_attribute!(Subscription, "subscription", {
-    None => "none",
-    Pending => "pending",
-    Subscribed => "subscribed",
-    Unconfigured => "unconfigured",
-}, Default = None);
 
 #[derive(Debug, Clone)]
 pub enum PubSubEvent {

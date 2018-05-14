@@ -11,3 +11,10 @@ pub use self::event::PubSubEvent;
 generate_id!(NodeName);
 generate_id!(ItemId);
 generate_id!(SubscriptionId);
+
+generate_attribute!(Subscription, "subscription", {
+    None => "none",
+    Pending => "pending",
+    Subscribed => "subscribed",
+    Unconfigured => "unconfigured",
+}, Default = None);
