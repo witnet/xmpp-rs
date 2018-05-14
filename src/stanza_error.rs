@@ -71,9 +71,7 @@ impl TryFrom<Element> for StanzaError {
 
         for child in elem.children() {
             if child.is("text", ns::XMPP_STANZAS) {
-                for _ in child.children() {
-                    return Err(Error::ParseError("Unknown element in error text."));
-                }
+                check_no_children!(child, "text");
                 let lang = get_attr!(elem, "xml:lang", default);
                 if texts.insert(lang, child.text()).is_some() {
                     return Err(Error::ParseError("Text element present twice for the same xml:lang."));
@@ -82,9 +80,7 @@ impl TryFrom<Element> for StanzaError {
                 if defined_condition.is_some() {
                     return Err(Error::ParseError("Error must not have more than one defined-condition."));
                 }
-                for _ in child.children() {
-                    return Err(Error::ParseError("Unknown element in defined-condition."));
-                }
+                check_no_children!(child, "defined-condition");
                 let condition = DefinedCondition::try_from(child.clone())?;
                 defined_condition = Some(condition);
             } else {

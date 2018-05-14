@@ -94,9 +94,7 @@ impl TryFrom<Element> for Actor {
     fn try_from(elem: Element) -> Result<Actor, Error> {
         check_self!(elem, "actor", MUC_USER);
         check_no_unknown_attributes!(elem, "actor", ["jid", "nick"]);
-        for _ in elem.children() {
-            return Err(Error::ParseError("Unknown child in actor element."));
-        }
+        check_no_children!(elem, "actor");
         let jid: Option<Jid> = get_attr!(elem, "jid", optional);
         let nick = get_attr!(elem, "nick", optional);
 

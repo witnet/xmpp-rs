@@ -33,9 +33,7 @@ fn get_sid(elem: Element) -> Result<SessionId, Error> {
 }
 
 fn check_empty_and_get_sid(elem: Element) -> Result<SessionId, Error> {
-    for _ in elem.children() {
-        return Err(Error::ParseError("Unknown child in Jingle message element."));
-    }
+    check_no_children!(elem, "Jingle message");
     get_sid(elem)
 }
 

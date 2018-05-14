@@ -175,14 +175,10 @@ impl TryFrom<Element> for PubSubEvent {
             } else if child.is("items", ns::PUBSUB_EVENT) {
                 payload = Some(parse_items(child.clone(), node)?);
             } else if child.is("purge", ns::PUBSUB_EVENT) {
-                for _ in child.children() {
-                    return Err(Error::ParseError("Unknown child in purge element."));
-                }
+                check_no_children!(child, "purge");
                 payload = Some(PubSubEvent::Purge { node });
             } else if child.is("subscription", ns::PUBSUB_EVENT) {
-                for _ in child.children() {
-                    return Err(Error::ParseError("Unknown child in purge element."));
-                }
+                check_no_children!(child, "subscription");
                 payload = Some(PubSubEvent::Subscription {
                     node: node,
                     expiry: get_attr!(child, "expiry", optional),

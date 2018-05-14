@@ -199,18 +199,14 @@ impl TryFrom<Element> for Message {
         let mut payloads = vec!();
         for elem in root.children() {
             if elem.is("body", ns::DEFAULT_NS) {
-                for _ in elem.children() {
-                    return Err(Error::ParseError("Unknown child in body element."));
-                }
+                check_no_children!(elem, "body");
                 let lang = get_attr!(elem, "xml:lang", default);
                 let body = Body(elem.text());
                 if bodies.insert(lang, body).is_some() {
                     return Err(Error::ParseError("Body element present twice for the same xml:lang."));
                 }
             } else if elem.is("subject", ns::DEFAULT_NS) {
-                for _ in elem.children() {
-                    return Err(Error::ParseError("Unknown child in subject element."));
-                }
+                check_no_children!(elem, "subject");
                 let lang = get_attr!(elem, "xml:lang", default);
                 let subject = Subject(elem.text());
                 if subjects.insert(lang, subject).is_some() {
@@ -220,9 +216,7 @@ impl TryFrom<Element> for Message {
                 if thread.is_some() {
                     return Err(Error::ParseError("Thread element present twice."));
                 }
-                for _ in elem.children() {
-                    return Err(Error::ParseError("Unknown child in thread element."));
-                }
+                check_no_children!(elem, "thread");
                 thread = Some(Thread(elem.text()));
             } else {
                 payloads.push(elem.clone())
