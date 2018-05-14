@@ -111,6 +111,7 @@ impl TryFrom<Element> for Transport {
 
     fn try_from(elem: Element) -> Result<Transport, Error> {
         check_self!(elem, "transport", JINGLE_S5B);
+        check_no_unknown_attributes!(elem, "transport", ["sid", "dstaddr", "mode"]);
         let sid = get_attr!(elem, "sid", required);
         let dstaddr = get_attr!(elem, "dstaddr", optional);
         let mode = get_attr!(elem, "mode", default);

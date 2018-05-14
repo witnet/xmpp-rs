@@ -120,6 +120,7 @@ impl TryFrom<Element> for Content {
 
     fn try_from(elem: Element) -> Result<Content, Error> {
         check_self!(elem, "content", JINGLE);
+        check_no_unknown_attributes!(elem, "content", ["creator", "disposition", "name", "senders"]);
 
         let mut content = Content {
             creator: get_attr!(elem, "creator", required),
@@ -146,6 +147,8 @@ impl TryFrom<Element> for Content {
                     return Err(Error::ParseError("Content must not have more than one security."));
                 }
                 content.security = Some(child.clone());
+            } else {
+                return Err(Error::ParseError("Unknown child in content element."));
             }
         }
         Ok(content)
@@ -341,6 +344,7 @@ impl TryFrom<Element> for Jingle {
 
     fn try_from(root: Element) -> Result<Jingle, Error> {
         check_self!(root, "jingle", JINGLE, "Jingle");
+        check_no_unknown_attributes!(root, "Jingle", ["action", "initiator", "responder", "sid"]);
 
         let mut jingle = Jingle {
             action: get_attr!(root, "action", required),
