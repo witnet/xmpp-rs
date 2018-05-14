@@ -6,7 +6,7 @@
 
 use std::str::FromStr;
 
-use minidom::{Element, IntoAttributeValue};
+use minidom::IntoAttributeValue;
 
 use error::Error;
 
@@ -93,6 +93,7 @@ impl Hash {
 mod tests {
     use super::*;
     use try_from::TryFrom;
+    use minidom::Element;
 
     #[test]
     fn test_simple() {

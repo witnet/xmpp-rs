@@ -4,8 +4,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use minidom::Element;
-
 use error::Error;
 
 use ns;
@@ -40,6 +38,7 @@ generate_element_with_text!(Success, "success", ns::SASL,
 mod tests {
     use super::*;
     use try_from::TryFrom;
+    use minidom::Element;
 
     #[test]
     fn test_simple() {

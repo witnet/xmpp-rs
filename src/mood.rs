@@ -6,8 +6,6 @@
 
 #![deny(missing_docs)]
 
-use minidom::Element;
-
 use error::Error;
 
 use ns;
@@ -273,6 +271,7 @@ generate_element_enum!(
 mod tests {
     use super::*;
     use try_from::TryFrom;
+    use minidom::Element;
 
     #[test]
     fn test_simple() {

@@ -116,9 +116,9 @@ macro_rules! generate_element_enum {
             $enum
             ),+
         }
-        impl ::try_from::TryFrom<Element> for $elem {
+        impl ::try_from::TryFrom<::minidom::Element> for $elem {
             type Err = Error;
-            fn try_from(elem: Element) -> Result<$elem, Error> {
+            fn try_from(elem: ::minidom::Element) -> Result<$elem, Error> {
                 check_ns_only!(elem, $name, $ns);
                 check_no_children!(elem, $name);
                 check_no_attributes!(elem, $name);
@@ -128,9 +128,9 @@ macro_rules! generate_element_enum {
                 })
             }
         }
-        impl From<$elem> for Element {
-            fn from(elem: $elem) -> Element {
-                Element::builder(match elem {
+        impl From<$elem> for ::minidom::Element {
+            fn from(elem: $elem) -> ::minidom::Element {
+                ::minidom::Element::builder(match elem {
                     $($elem::$enum => $enum_name,)+
                 }).ns($ns)
                   .build()
@@ -152,9 +152,9 @@ macro_rules! generate_attribute_enum {
             $enum
             ),+
         }
-        impl ::try_from::TryFrom<Element> for $elem {
+        impl ::try_from::TryFrom<::minidom::Element> for $elem {
             type Err = Error;
-            fn try_from(elem: Element) -> Result<$elem, Error> {
+            fn try_from(elem: ::minidom::Element) -> Result<$elem, Error> {
                 check_ns_only!(elem, $name, $ns);
                 check_no_children!(elem, $name);
                 check_no_unknown_attributes!(elem, $name, [$attr]);
@@ -164,9 +164,9 @@ macro_rules! generate_attribute_enum {
                 })
             }
         }
-        impl From<$elem> for Element {
-            fn from(elem: $elem) -> Element {
-                Element::builder($name)
+        impl From<$elem> for ::minidom::Element {
+            fn from(elem: $elem) -> ::minidom::Element {
+                ::minidom::Element::builder($name)
                         .ns($ns)
                         .attr($attr, match elem {
                              $($elem::$enum => $enum_name,)+
@@ -231,10 +231,10 @@ macro_rules! generate_empty_element {
         #[derive(Debug, Clone)]
         pub struct $elem;
 
-        impl ::try_from::TryFrom<Element> for $elem {
+        impl ::try_from::TryFrom<::minidom::Element> for $elem {
             type Err = Error;
 
-            fn try_from(elem: Element) -> Result<$elem, Error> {
+            fn try_from(elem: ::minidom::Element) -> Result<$elem, Error> {
                 check_self!(elem, $name, $ns);
                 check_no_children!(elem, $name);
                 check_no_attributes!(elem, $name);
@@ -242,9 +242,9 @@ macro_rules! generate_empty_element {
             }
         }
 
-        impl From<$elem> for Element {
-            fn from(_: $elem) -> Element {
-                Element::builder($name)
+        impl From<$elem> for ::minidom::Element {
+            fn from(_: $elem) -> ::minidom::Element {
+                ::minidom::Element::builder($name)
                         .ns($ns)
                         .build()
             }
@@ -266,10 +266,10 @@ macro_rules! generate_element_with_only_attributes {
             )*
         }
 
-        impl ::try_from::TryFrom<Element> for $elem {
+        impl ::try_from::TryFrom<::minidom::Element> for $elem {
             type Err = Error;
 
-            fn try_from(elem: Element) -> Result<$elem, Error> {
+            fn try_from(elem: ::minidom::Element) -> Result<$elem, Error> {
                 check_self!(elem, $name, $ns);
                 check_no_children!(elem, $name);
                 check_no_unknown_attributes!(elem, $name, [$($attr_name),*]);
@@ -281,9 +281,9 @@ macro_rules! generate_element_with_only_attributes {
             }
         }
 
-        impl From<$elem> for Element {
-            fn from(elem: $elem) -> Element {
-                Element::builder($name)
+        impl From<$elem> for ::minidom::Element {
+            fn from(elem: $elem) -> ::minidom::Element {
+                ::minidom::Element::builder($name)
                         .ns($ns)
                         $(
                         .attr($attr_name, elem.$attr)
@@ -324,9 +324,9 @@ macro_rules! generate_elem_id {
                 Ok($elem(String::from(s)))
             }
         }
-        impl ::try_from::TryFrom<Element> for $elem {
+        impl ::try_from::TryFrom<::minidom::Element> for $elem {
             type Err = Error;
-            fn try_from(elem: Element) -> Result<$elem, Error> {
+            fn try_from(elem: ::minidom::Element) -> Result<$elem, Error> {
                 check_self!(elem, $name, $ns);
                 check_no_children!(elem, $name);
                 check_no_attributes!(elem, $name);
@@ -334,9 +334,9 @@ macro_rules! generate_elem_id {
                 Ok($elem(elem.text()))
             }
         }
-        impl From<$elem> for Element {
-            fn from(elem: $elem) -> Element {
-                Element::builder($name)
+        impl From<$elem> for ::minidom::Element {
+            fn from(elem: $elem) -> ::minidom::Element {
+                ::minidom::Element::builder($name)
                         .ns($ns)
                         .append(elem.0)
                         .build()
@@ -360,10 +360,10 @@ macro_rules! generate_element_with_text {
             pub $text_ident: $text_type,
         }
 
-        impl ::try_from::TryFrom<Element> for $elem {
+        impl ::try_from::TryFrom<::minidom::Element> for $elem {
             type Err = Error;
 
-            fn try_from(elem: Element) -> Result<$elem, Error> {
+            fn try_from(elem: ::minidom::Element) -> Result<$elem, Error> {
                 check_self!(elem, $name, $ns);
                 check_no_children!(elem, $name);
                 check_no_unknown_attributes!(elem, $name, [$($attr_name),*]);
@@ -376,9 +376,9 @@ macro_rules! generate_element_with_text {
             }
         }
 
-        impl From<$elem> for Element {
-            fn from(elem: $elem) -> Element {
-                Element::builder($name)
+        impl From<$elem> for ::minidom::Element {
+            fn from(elem: $elem) -> ::minidom::Element {
+                ::minidom::Element::builder($name)
                         .ns($ns)
                         $(
                         .attr($attr_name, elem.$attr)
@@ -405,10 +405,10 @@ macro_rules! generate_element_with_children {
             )*
         }
 
-        impl ::try_from::TryFrom<Element> for $elem {
+        impl ::try_from::TryFrom<::minidom::Element> for $elem {
             type Err = Error;
 
-            fn try_from(elem: Element) -> Result<$elem, Error> {
+            fn try_from(elem: ::minidom::Element) -> Result<$elem, Error> {
                 check_self!(elem, $name, $ns);
                 check_no_unknown_attributes!(elem, $name, [$($attr_name),*]);
                 let mut parsed_children = vec!();
@@ -433,9 +433,9 @@ macro_rules! generate_element_with_children {
             }
         }
 
-        impl From<$elem> for Element {
-            fn from(elem: $elem) -> Element {
-                Element::builder($name)
+        impl From<$elem> for ::minidom::Element {
+            fn from(elem: $elem) -> ::minidom::Element {
+                ::minidom::Element::builder($name)
                         .ns($ns)
                         $(
                         .attr($attr_name, elem.$attr)
