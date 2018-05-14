@@ -110,6 +110,9 @@ pub mod caps;
 /// XEP-0166: Jingle
 pub mod jingle;
 
+/// XEP-0172: User Nickname
+pub mod nick;
+
 /// XEP-0184: Message Delivery Receipts
 pub mod receipts;
 
