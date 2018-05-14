@@ -5,7 +5,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use try_from::TryFrom;
-use std::str::FromStr;
 use std::collections::BTreeMap;
 
 use minidom::{Element, IntoAttributeValue};
@@ -278,6 +277,7 @@ impl From<Message> for Element {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::str::FromStr;
     use compare_elements::NamespaceAwareCompare;
 
     #[test]

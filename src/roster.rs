@@ -4,8 +4,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use std::str::FromStr;
-
 use minidom::{Element, IntoAttributeValue};
 use jid::Jid;
 
@@ -64,6 +62,7 @@ generate_element_with_children!(
 mod tests {
     use super::*;
     use try_from::TryFrom;
+    use std::str::FromStr;
     use compare_elements::NamespaceAwareCompare;
 
     #[test]

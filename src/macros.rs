@@ -51,7 +51,7 @@ macro_rules! generate_attribute {
                 $a
             ),+
         }
-        impl FromStr for $elem {
+        impl ::std::str::FromStr for $elem {
             type Err = Error;
             fn from_str(s: &str) -> Result<$elem, Error> {
                 Ok(match s {
@@ -77,7 +77,7 @@ macro_rules! generate_attribute {
                 $a
             ),+
         }
-        impl FromStr for $elem {
+        impl ::std::str::FromStr for $elem {
             type Err = Error;
             fn from_str(s: &str) -> Result<$elem, Error> {
                 Ok(match s {
@@ -298,7 +298,7 @@ macro_rules! generate_id {
     ($elem:ident) => (
         #[derive(Debug, Clone, PartialEq, Eq, Hash)]
         pub struct $elem(pub String);
-        impl FromStr for $elem {
+        impl ::std::str::FromStr for $elem {
             type Err = Error;
             fn from_str(s: &str) -> Result<$elem, Error> {
                 // TODO: add a way to parse that differently when needed.
@@ -317,7 +317,7 @@ macro_rules! generate_elem_id {
     ($elem:ident, $name:tt, $ns:expr) => (
         #[derive(Debug, Clone, PartialEq, Eq, Hash)]
         pub struct $elem(pub String);
-        impl FromStr for $elem {
+        impl ::std::str::FromStr for $elem {
             type Err = Error;
             fn from_str(s: &str) -> Result<$elem, Error> {
                 // TODO: add a way to parse that differently when needed.
