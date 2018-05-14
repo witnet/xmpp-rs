@@ -5,8 +5,10 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 pub mod event;
+pub mod pubsub;
 
 pub use self::event::PubSubEvent;
+pub use self::pubsub::PubSub;
 
 generate_id!(NodeName);
 generate_id!(ItemId);

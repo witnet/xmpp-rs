@@ -101,6 +101,38 @@ macro_rules! generate_attribute {
             }
         }
     );
+    ($elem:ident, $name:tt, bool) => (
+        #[derive(Debug, Clone, PartialEq)]
+        pub enum $elem {
+            /// True value, represented by either 'true' or '1'.
+            True,
+            /// False value, represented by either 'false' or '0'.
+            False,
+        }
+        impl ::std::str::FromStr for $elem {
+            type Err = ::error::Error;
+            fn from_str(s: &str) -> Result<Self, ::error::Error> {
+                Ok(match s {
+                    "true" | "1" => $elem::True,
+                    "false" | "0" => $elem::False,
+                    _ => return Err(::error::Error::ParseError(concat!("Unknown value for '", $name, "' attribute."))),
+                })
+            }
+        }
+        impl ::minidom::IntoAttributeValue for $elem {
+            fn into_attribute_value(self) -> Option<String> {
+                match self {
+                    $elem::True => Some(String::from("true")),
+                    $elem::False => None
+                }
+            }
+        }
+        impl ::std::default::Default for $elem {
+            fn default() -> $elem {
+                $elem::False
+            }
+        }
+    );
 }
 
 macro_rules! generate_element_enum {
@@ -392,6 +424,9 @@ macro_rules! generate_element_with_text {
 }
 
 macro_rules! generate_element_with_children {
+    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident, attributes: [$($(#[$attr_meta:meta])* $attr:ident: $attr_type:ty = $attr_name:tt => $attr_action:tt),*,], children: [$($(#[$child_meta:meta])* $child_ident:ident: Vec<$child_type:ty> = ($child_name:tt, $child_ns:ident) => $child_constructor:ident),+]) => (
+        generate_element_with_children!($(#[$meta])* $elem, $name, $ns, attributes: [$($(#[$attr_meta])* $attr: $attr_type = $attr_name => $attr_action),*], children: [$($(#[$child_meta])* $child_ident: Vec<$child_type> = ($child_name, $child_ns) => $child_constructor),+]);
+    );
     ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident, attributes: [$($(#[$attr_meta:meta])* $attr:ident: $attr_type:ty = $attr_name:tt => $attr_action:tt),*], children: [$($(#[$child_meta:meta])* $child_ident:ident: Vec<$child_type:ty> = ($child_name:tt, $child_ns:ident) => $child_constructor:ident),+]) => (
         $(#[$meta])*
         #[derive(Debug, Clone)]
@@ -444,6 +479,109 @@ macro_rules! generate_element_with_children {
                         $(
                         .append(elem.$child_ident)
                         )*
+                        .build()
+            }
+        }
+    );
+    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident, child: ($(#[$child_meta:meta])* $child_ident:ident: Option<$child_type:ty> = ($child_name:tt, $child_ns:ident) => $child_constructor:ident)) => (
+        generate_element_with_children!($(#[$meta])* $elem, $name, $ns, attributes: [], child: ($(#[$child_meta])* $child_ident: Option<$child_type> = ($child_name, $child_ns) => $child_constructor));
+    );
+    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident, attributes: [$($(#[$attr_meta:meta])* $attr:ident: $attr_type:ty = $attr_name:tt => $attr_action:tt),*,], child: ($(#[$child_meta:meta])* $child_ident:ident: Option<$child_type:ty> = ($child_name:tt, $child_ns:ident) => $child_constructor:ident)) => (
+        generate_element_with_children!($(#[$meta])* $elem, $name, $ns, attributes: [$($(#[$attr_meta])* $attr: $attr_type = $attr_name => $attr_action),*], child: ($(#[$child_meta])* $child_ident: Option<$child_type> = ($child_name, $child_ns) => $child_constructor));
+    );
+    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident, attributes: [$($(#[$attr_meta:meta])* $attr:ident: $attr_type:ty = $attr_name:tt => $attr_action:tt),*], child: ($(#[$child_meta:meta])* $child_ident:ident: Option<$child_type:ty> = ($child_name:tt, $child_ns:ident) => $child_constructor:ident)) => (
+        $(#[$meta])*
+        #[derive(Debug, Clone)]
+        pub struct $elem {
+            $(
+            $(#[$attr_meta])*
+            pub $attr: $attr_type,
+            )*
+            $(#[$child_meta])*
+            pub $child_ident: Option<$child_type>,
+        }
+
+        impl ::try_from::TryFrom<::minidom::Element> for $elem {
+            type Err = ::error::Error;
+
+            fn try_from(elem: ::minidom::Element) -> Result<$elem, ::error::Error> {
+                check_self!(elem, $name, $ns);
+                check_no_unknown_attributes!(elem, $name, [$($attr_name),*]);
+                let mut parsed_child = None;
+                for child in elem.children() {
+                    if child.is($child_name, ::ns::$child_ns) {
+                        parsed_child = Some($child_constructor::try_from(child.clone())?);
+                        continue;
+                    }
+                    return Err(::error::Error::ParseError(concat!("Unknown child in ", $name, " element.")));
+                }
+                Ok($elem {
+                    $(
+                    $attr: get_attr!(elem, $attr_name, $attr_action),
+                    )*
+                    $child_ident: parsed_child,
+                })
+            }
+        }
+
+        impl From<$elem> for ::minidom::Element {
+            fn from(elem: $elem) -> ::minidom::Element {
+                ::minidom::Element::builder($name)
+                        .ns(::ns::$ns)
+                        $(
+                        .attr($attr_name, elem.$attr)
+                        )*
+                        .append(elem.$child_ident)
+                        .build()
+            }
+        }
+    );
+    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident, child: ($(#[$child_meta:meta])* $child_ident:ident: $child_type:ty = ($child_name:tt, $child_ns:ident) => $child_constructor:ident)) => (
+        generate_element_with_children!($(#[$meta])* $elem, $name, $ns, attributes: [], child: ($(#[$child_meta])* $child_ident: $child_type = ($child_name, $child_ns) => $child_constructor));
+    );
+    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident, attributes: [$($(#[$attr_meta:meta])* $attr:ident: $attr_type:ty = $attr_name:tt => $attr_action:tt),*], child: ($(#[$child_meta:meta])* $child_ident:ident: $child_type:ty = ($child_name:tt, $child_ns:ident) => $child_constructor:ident)) => (
+        $(#[$meta])*
+        #[derive(Debug, Clone)]
+        pub struct $elem {
+            $(
+            $(#[$attr_meta])*
+            pub $attr: $attr_type,
+            )*
+            $(#[$child_meta])*
+            pub $child_ident: $child_type,
+        }
+
+        impl ::try_from::TryFrom<::minidom::Element> for $elem {
+            type Err = ::error::Error;
+
+            fn try_from(elem: ::minidom::Element) -> Result<$elem, ::error::Error> {
+                check_self!(elem, $name, $ns);
+                check_no_unknown_attributes!(elem, $name, [$($attr_name),*]);
+                let mut parsed_child = None;
+                for child in elem.children() {
+                    if child.is($child_name, ::ns::$child_ns) {
+                        parsed_child = Some($child_constructor::try_from(child.clone())?);
+                        continue;
+                    }
+                    return Err(::error::Error::ParseError(concat!("Unknown child in ", $name, " element.")));
+                }
+                Ok($elem {
+                    $(
+                    $attr: get_attr!(elem, $attr_name, $attr_action),
+                    )*
+                    $child_ident: parsed_child.ok_or(::error::Error::ParseError(concat!("Missing child ", $child_name, " in ", $name, " element.")))?,
+                })
+            }
+        }
+
+        impl From<$elem> for ::minidom::Element {
+            fn from(elem: $elem) -> ::minidom::Element {
+                ::minidom::Element::builder($name)
+                        .ns(::ns::$ns)
+                        $(
+                        .attr($attr_name, elem.$attr)
+                        )*
+                        .append(elem.$child_ident)
                         .build()
             }
         }
