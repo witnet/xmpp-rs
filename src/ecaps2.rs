@@ -4,14 +4,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use try_from::TryFrom;
-
 use disco::{Feature, Identity, DiscoInfoResult, DiscoInfoQuery};
 use data_forms::DataForm;
 use hashes::{Hash, Algo};
 
-use minidom::Element;
-use error::Error;
 use ns;
 use base64;
 
@@ -20,35 +16,12 @@ use sha3::{Sha3_256, Sha3_512};
 use blake2::Blake2b;
 use digest::{Digest, VariableOutput};
 
-#[derive(Debug, Clone)]
-pub struct ECaps2 {
-    hashes: Vec<Hash>,
-}
-
-impl TryFrom<Element> for ECaps2 {
-    type Err = Error;
-
-    fn try_from(elem: Element) -> Result<ECaps2, Error> {
-        check_self!(elem, "c", ECAPS2, "ecaps2");
-        check_no_attributes!(elem, "ecaps2");
-        let mut hashes = vec!();
-        for child in elem.children() {
-            hashes.push(Hash::try_from(child.clone())?);
-        }
-        Ok(ECaps2 {
-            hashes: hashes,
-        })
-    }
-}
-
-impl From<ECaps2> for Element {
-    fn from(ecaps2: ECaps2) -> Element {
-        Element::builder("c")
-                .ns(ns::ECAPS2)
-                .append(ecaps2.hashes)
-                .build()
-    }
-}
+generate_element_with_children!(
+    ECaps2, "c", ECAPS2,
+    children: [
+        hashes: Vec<Hash> = ("hash", HASHES) => Hash
+    ]
+);
 
 fn compute_item(field: &str) -> Vec<u8> {
     let mut bytes = field.as_bytes().to_vec();
@@ -165,7 +138,9 @@ pub fn query_ecaps2(hash: Hash) -> DiscoInfoQuery {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ecaps2;
+    use try_from::TryFrom;
+    use minidom::Element;
+    use error::Error;
 
     #[test]
     fn test_parse() {
@@ -186,14 +161,14 @@ mod tests {
             Error::ParseError(string) => string,
             _ => panic!(),
         };
-        assert_eq!(message, "This is not a hash element.");
+        assert_eq!(message, "Unknown child in c element.");
     }
 
     #[test]
     fn test_simple() {
         let elem: Element = "<query xmlns='http://jabber.org/protocol/disco#info'><identity category='client' type='pc'/><feature var='http://jabber.org/protocol/disco#info'/></query>".parse().unwrap();
         let disco = DiscoInfoResult::try_from(elem).unwrap();
-        let ecaps2 = ecaps2::compute_disco(&disco);
+        let ecaps2 = compute_disco(&disco);
         assert_eq!(ecaps2.len(), 54);
     }
 
@@ -256,13 +231,13 @@ mod tests {
             98, 105, 108, 101, 31, 31, 66, 111, 109, 98, 117, 115, 77, 111,
             100, 31, 30, 28, 28];
         let disco = DiscoInfoResult::try_from(elem).unwrap();
-        let ecaps2 = ecaps2::compute_disco(&disco);
+        let ecaps2 = compute_disco(&disco);
         assert_eq!(ecaps2.len(), 0x1d9);
         assert_eq!(ecaps2, expected);
 
-        let sha_256 = ecaps2::hash_ecaps2(&ecaps2, Algo::Sha_256).unwrap();
+        let sha_256 = hash_ecaps2(&ecaps2, Algo::Sha_256).unwrap();
         assert_eq!(sha_256.hash, base64::decode("kzBZbkqJ3ADrj7v08reD1qcWUwNGHaidNUgD7nHpiw8=").unwrap());
-        let sha3_256 = ecaps2::hash_ecaps2(&ecaps2, Algo::Sha3_256).unwrap();
+        let sha3_256 = hash_ecaps2(&ecaps2, Algo::Sha3_256).unwrap();
         assert_eq!(sha3_256.hash, base64::decode("79mdYAfU9rEdTOcWDO7UEAt6E56SUzk/g6TnqUeuD9Q=").unwrap());
     }
 
@@ -428,19 +403,19 @@ mod tests {
             48, 49, 49, 49, 50, 49, 54, 45, 109, 111, 100, 32, 40, 84, 99, 108,
             47, 84, 107, 32, 56, 46,54, 98, 50, 41, 31, 30, 29, 28];
         let disco = DiscoInfoResult::try_from(elem).unwrap();
-        let ecaps2 = ecaps2::compute_disco(&disco);
+        let ecaps2 = compute_disco(&disco);
         assert_eq!(ecaps2.len(), 0x543);
         assert_eq!(ecaps2, expected);
 
-        let sha_256 = ecaps2::hash_ecaps2(&ecaps2, Algo::Sha_256).unwrap();
+        let sha_256 = hash_ecaps2(&ecaps2, Algo::Sha_256).unwrap();
         assert_eq!(sha_256.hash, base64::decode("u79ZroNJbdSWhdSp311mddz44oHHPsEBntQ5b1jqBSY=").unwrap());
-        let sha3_256 = ecaps2::hash_ecaps2(&ecaps2, Algo::Sha3_256).unwrap();
+        let sha3_256 = hash_ecaps2(&ecaps2, Algo::Sha3_256).unwrap();
         assert_eq!(sha3_256.hash, base64::decode("XpUJzLAc93258sMECZ3FJpebkzuyNXDzRNwQog8eycg=").unwrap());
     }
 
     #[test]
     fn test_blake2b_512() {
-        let hash = ecaps2::hash_ecaps2("abc".as_bytes(), Algo::Blake2b_512).unwrap();
+        let hash = hash_ecaps2("abc".as_bytes(), Algo::Blake2b_512).unwrap();
         let known_hash: Vec<u8> = vec!(
             0xBA, 0x80, 0xA5, 0x3F, 0x98, 0x1C, 0x4D, 0x0D, 0x6A, 0x27, 0x97, 0xB6, 0x9F, 0x12, 0xF6, 0xE9,
             0x4C, 0x21, 0x2F, 0x14, 0x68, 0x5A, 0xC4, 0xB7, 0x4B, 0x12, 0xBB, 0x6F, 0xDB, 0xFF, 0xA2, 0xD1,

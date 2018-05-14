@@ -425,6 +425,9 @@ macro_rules! generate_element_with_text {
 }
 
 macro_rules! generate_element_with_children {
+    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident, children: [$($(#[$child_meta:meta])* $child_ident:ident: Vec<$child_type:ty> = ($child_name:tt, $child_ns:ident) => $child_constructor:ident),+]) => (
+        generate_element_with_children!($(#[$meta])* $elem, $name, $ns, attributes: [], children: [$($(#[$child_meta])* $child_ident: Vec<$child_type> = ($child_name, $child_ns) => $child_constructor),+]);
+    );
     ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident, attributes: [$($(#[$attr_meta:meta])* $attr:ident: $attr_type:ty = $attr_name:tt => $attr_action:tt),*,], children: [$($(#[$child_meta:meta])* $child_ident:ident: Vec<$child_type:ty> = ($child_name:tt, $child_ns:ident) => $child_constructor:ident),+]) => (
         generate_element_with_children!($(#[$meta])* $elem, $name, $ns, attributes: [$($(#[$attr_meta])* $attr: $attr_type = $attr_name => $attr_action),*], children: [$($(#[$child_meta])* $child_ident: Vec<$child_type> = ($child_name, $child_ns) => $child_constructor),+]);
     );
