@@ -7,7 +7,7 @@
 use try_from::TryFrom;
 use std::net::IpAddr;
 
-use minidom::{Element, IntoAttributeValue};
+use minidom::Element;
 use jid::Jid;
 
 use error::Error;

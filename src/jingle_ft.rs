@@ -13,7 +13,7 @@ use hashes::Hash;
 use jingle::{Creator, ContentId};
 use date::DateTime;
 
-use minidom::{Element, IntoAttributeValue};
+use minidom::Element;
 
 use error::Error;
 use ns;

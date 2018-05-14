@@ -7,7 +7,7 @@
 use try_from::TryFrom;
 use std::collections::BTreeMap;
 
-use minidom::{Element, IntoAttributeValue};
+use minidom::Element;
 
 use error::Error;
 use jid::Jid;

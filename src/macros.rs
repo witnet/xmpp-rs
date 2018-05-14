@@ -60,7 +60,7 @@ macro_rules! generate_attribute {
                 })
             }
         }
-        impl IntoAttributeValue for $elem {
+        impl ::minidom::IntoAttributeValue for $elem {
             fn into_attribute_value(self) -> Option<String> {
                 Some(String::from(match self {
                     $($elem::$a => $b),+
@@ -86,7 +86,7 @@ macro_rules! generate_attribute {
                 })
             }
         }
-        impl IntoAttributeValue for $elem {
+        impl ::minidom::IntoAttributeValue for $elem {
             #[allow(unreachable_patterns)]
             fn into_attribute_value(self) -> Option<String> {
                 Some(String::from(match self {
@@ -305,7 +305,7 @@ macro_rules! generate_id {
                 Ok($elem(String::from(s)))
             }
         }
-        impl IntoAttributeValue for $elem {
+        impl ::minidom::IntoAttributeValue for $elem {
             fn into_attribute_value(self) -> Option<String> {
                 Some(self.0)
             }

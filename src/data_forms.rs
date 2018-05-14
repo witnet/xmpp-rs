@@ -6,7 +6,7 @@
 
 use try_from::TryFrom;
 
-use minidom::{Element, IntoAttributeValue};
+use minidom::Element;
 
 use error::Error;
 use ns;

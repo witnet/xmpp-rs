@@ -7,7 +7,7 @@
 
 use try_from::{TryFrom, TryInto};
 
-use minidom::{Element, IntoAttributeValue};
+use minidom::Element;
 
 use jid::Jid;
 
