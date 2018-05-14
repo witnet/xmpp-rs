@@ -36,18 +36,18 @@ macro_rules! get_attr {
 }
 
 macro_rules! generate_attribute {
-    ($elem:ident, $name:tt, {$($a:ident => $b:tt),+,}) => (
-        generate_attribute!($elem, $name, {$($a => $b),+});
+    ($(#[$meta:meta])* $elem:ident, $name:tt, {$($(#[$a_meta:meta])* $a:ident => $b:tt),+,}) => (
+        generate_attribute!($(#[$meta])* $elem, $name, {$($(#[$a_meta])* $a => $b),+});
     );
-    ($elem:ident, $name:tt, {$($a:ident => $b:tt),+,}, Default = $default:ident) => (
-        generate_attribute!($elem, $name, {$($a => $b),+}, Default = $default);
+    ($(#[$meta:meta])* $elem:ident, $name:tt, {$($(#[$a_meta:meta])* $a:ident => $b:tt),+,}, Default = $default:ident) => (
+        generate_attribute!($(#[$meta])* $elem, $name, {$($(#[$a_meta])* $a => $b),+}, Default = $default);
     );
-    ($elem:ident, $name:tt, {$($a:ident => $b:tt),+}) => (
+    ($(#[$meta:meta])* $elem:ident, $name:tt, {$($(#[$a_meta:meta])* $a:ident => $b:tt),+}) => (
+        $(#[$meta])*
         #[derive(Debug, Clone, PartialEq)]
         pub enum $elem {
             $(
-                #[doc=$b]
-                #[doc="value for this attribute."]
+                $(#[$a_meta])*
                 $a
             ),+
         }
@@ -68,12 +68,12 @@ macro_rules! generate_attribute {
             }
         }
     );
-    ($elem:ident, $name:tt, {$($a:ident => $b:tt),+}, Default = $default:ident) => (
+    ($(#[$meta:meta])* $elem:ident, $name:tt, {$($(#[$a_meta:meta])* $a:ident => $b:tt),+}, Default = $default:ident) => (
+        $(#[$meta])*
         #[derive(Debug, Clone, PartialEq)]
         pub enum $elem {
             $(
-                #[doc=$b]
-                #[doc="value for this attribute."]
+                $(#[$a_meta])*
                 $a
             ),+
         }
@@ -101,7 +101,8 @@ macro_rules! generate_attribute {
             }
         }
     );
-    ($elem:ident, $name:tt, bool) => (
+    ($(#[$meta:meta])* $elem:ident, $name:tt, bool) => (
+        $(#[$meta])*
         #[derive(Debug, Clone, PartialEq)]
         pub enum $elem {
             /// True value, represented by either 'true' or '1'.

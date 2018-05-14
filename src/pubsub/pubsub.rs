@@ -4,6 +4,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#![deny(missing_docs)]
+
 use try_from::TryFrom;
 
 use minidom::Element;
@@ -20,71 +22,108 @@ use pubsub::{NodeName, ItemId, Subscription, SubscriptionId};
 // TODO: a better solution would be to split this into a query and a result elements, like for
 // XEP-0030.
 generate_element_with_children!(
+    /// A list of affiliations you have on a service, or on a node.
     Affiliations, "affiliations", PUBSUB,
     attributes: [
+        /// The optional node name this request pertains to.
         node: Option<NodeName> = "node" => optional,
     ],
     children: [
+        /// The actual list of affiliation elements.
         affiliations: Vec<Affiliation> = ("affiliation", PUBSUB) => Affiliation
     ]
 );
 
 generate_attribute!(
+    /// A list of possible affiliations to a node.
     AffiliationAttribute, "affiliation", {
+        /// You are a member of this node, you can subscribe and retrieve items.
         Member => "member",
+
+        /// You don’t have a specific affiliation with this node, you can only subscribe to it.
         None => "none",
+
+        /// You are banned from this node.
         Outcast => "outcast",
+
+        /// You are an owner of this node, and can do anything with it.
         Owner => "owner",
+
+        /// You are a publisher on this node, you can publish and retract items to it.
         Publisher => "publisher",
+
+        /// You can publish and retract items on this node, but not subscribe or retrive items.
         PublishOnly => "publish-only",
     }
 );
 
 generate_element_with_only_attributes!(
+    /// An affiliation element.
     Affiliation, "affiliation", PUBSUB, [
+        /// The node this affiliation pertains to.
         node: NodeName = "node" => required,
+
+        /// The affiliation you currently have on this node.
         affiliation: AffiliationAttribute = "affiliation" => required,
     ]
 );
 
 generate_element_with_children!(
+    /// Request to configure a new node.
     Configure, "configure", PUBSUB,
     child: (
+        /// The form to configure it.
         form: Option<DataForm> = ("x", DATA_FORMS) => DataForm
     )
 );
 
 generate_element_with_only_attributes!(
+    /// Request to create a new node.
     Create, "create", PUBSUB, [
+        /// The node name to create, if `None` the service will generate one.
         node: Option<NodeName> = "node" => optional,
     ]
 );
 
 generate_element_with_only_attributes!(
+    /// Request for a default node configuration.
     Default, "default", PUBSUB, [
+        /// The node targetted by this request, otherwise the entire service.
         node: Option<NodeName> = "node" => optional,
+
         // TODO: do we really want to support collection nodes?
         // type: String = "type" => optional,
     ]
 );
 
 generate_element_with_children!(
+    /// A request for a list of items.
     Items, "items", PUBSUB,
     attributes: [
         // TODO: should be an xs:positiveInteger, that is, an unbounded int ≥ 1.
+        /// Maximum number of items returned.
         max_items: Option<u32> = "max_items" => optional,
+
+        /// The node queried by this request.
         node: NodeName = "node" => required,
+
+        /// The subscription identifier related to this request.
         subid: Option<SubscriptionId> = "subid" => optional,
     ],
     children: [
+        /// The actual list of items returned.
         items: Vec<Item> = ("item", PUBSUB) => Item
     ]
 );
 
+/// An item from a PubSub node.
 #[derive(Debug, Clone)]
 pub struct Item {
-    payload: Option<Element>,
-    id: Option<ItemId>,
+    /// The payload of this item, in an arbitrary namespace.
+    pub payload: Option<Element>,
+
+    /// The 'id' attribute of this item.
+    pub id: Option<ItemId>,
 }
 
 impl TryFrom<Element> for Item {
@@ -116,49 +155,71 @@ impl From<Item> for Element {
 }
 
 generate_element_with_children!(
+    /// The options associated to a subscription request.
     Options, "options", PUBSUB,
     attributes: [
+        /// The JID affected by this request.
         jid: Jid = "jid" => required,
+
+        /// The node affected by this request.
         node: Option<NodeName> = "node" => optional,
+
+        /// The subscription identifier affected by this request.
         subid: Option<SubscriptionId> = "subid" => optional,
     ],
     child: (
+        /// The form describing the subscription.
         form: Option<DataForm> = ("x", DATA_FORMS) => DataForm
     )
 );
 
 generate_element_with_children!(
+    /// Request to publish items to a node.
     Publish, "publish", PUBSUB,
     attributes: [
+        /// The target node for this operation.
         node: NodeName = "node" => required,
     ],
     children: [
+        /// The items you want to publish.
         items: Vec<Item> = ("item", PUBSUB) => Item
     ]
 );
 
 generate_element_with_children!(
+    /// The options associated to a publish request.
     PublishOptions, "publish-options", PUBSUB,
     child: (
+        /// The form describing these options.
         form: Option<DataForm> = ("x", DATA_FORMS) => DataForm
     )
 );
 
-generate_attribute!(Notify, "notify", bool);
+generate_attribute!(
+    /// Whether a retract request should notify subscribers or not.
+    Notify, "notify", bool
+);
 
 generate_element_with_children!(
+    /// A request to retract some items from a node.
     Retract, "retract", PUBSUB,
     attributes: [
+        /// The node affected by this request.
         node: NodeName = "node" => required,
+
+        /// Whether a retract request should notify subscribers or not.
         notify: Notify = "notify" => default,
     ],
     children: [
+        /// The items affected by this request.
         items: Vec<Item> = ("item", PUBSUB) => Item
     ]
 );
 
+/// Indicate that the subscription can be configured.
 #[derive(Debug, Clone)]
 pub struct SubscribeOptions {
+    /// If `true`, the configuration is actually required.
     required: bool,
 }
 
@@ -199,59 +260,107 @@ impl From<SubscribeOptions> for Element {
 }
 
 generate_element_with_only_attributes!(
+    /// A request to subscribe a JID to a node.
     Subscribe, "subscribe", PUBSUB, [
+        /// The JID being subscribed.
         jid: Jid = "jid" => required,
+
+        /// The node to subscribe to.
         node: Option<NodeName> = "node" => optional,
     ]
 );
 
 generate_element_with_children!(
+    /// A request for current subscriptions.
     Subscriptions, "subscriptions", PUBSUB,
     attributes: [
+        /// The node to query.
         node: Option<NodeName> = "node" => optional,
     ],
     children: [
+        /// The list of subscription elements returned.
         subscription: Vec<SubscriptionElem> = ("subscription", PUBSUB) => SubscriptionElem
     ]
 );
 
 generate_element_with_children!(
+    /// A subscription element, describing the state of a subscription.
     SubscriptionElem, "subscription", PUBSUB,
     attributes: [
+        /// The JID affected by this subscription.
         jid: Jid = "jid" => required,
+
+        /// The node affected by this subscription.
         node: Option<NodeName> = "node" => optional,
+
+        /// The subscription identifier for this subscription.
         subid: Option<SubscriptionId> = "subid" => optional,
+
+        /// The state of the subscription.
         subscription: Option<Subscription> = "subscription" => optional,
     ],
     child: (
+        /// The options related to this subscription.
         subscribe_options: Option<SubscribeOptions> = ("subscribe-options", PUBSUB) => SubscribeOptions
     )
 );
 
 generate_element_with_only_attributes!(
+    /// An unsubscribe request.
     Unsubscribe, "unsubscribe", PUBSUB, [
+        /// The JID affected by this request.
         jid: Jid = "jid" => required,
+
+        /// The node affected by this request.
         node: Option<NodeName> = "node" => optional,
+
+        /// The subscription identifier for this subscription.
         subid: Option<SubscriptionId> = "subid" => optional,
     ]
 );
 
+/// Main payload used to communicate with a PubSub service.
+///
+/// `<pubsub xmlns="http://jabber.org/protocol/pubsub"/>`
 #[derive(Debug, Clone)]
 pub enum PubSub {
+    /// Request to create a new node, with optional suggested name and suggested configuration.
     Create {
+        /// The create request.
         create: Create,
+
+        /// The configure request for the new node.
         configure: Option<Configure>
     },
+
+    /// Request to publish items to a node, with optional options.
     Publish {
+        /// The publish request.
         publish: Publish,
+
+        /// The options related to this publish request.
         publish_options: Option<PublishOptions>
     },
+
+    /// A list of affiliations you have on a service, or on a node.
     Affiliations(Affiliations),
+
+    /// Request for a default node configuration.
     Default(Default),
+
+    /// A request for a list of items.
     Items(Items),
+
+    /// A request to retract some items from a node.
     Retract(Retract),
+
+    /// A request about a subscription.
     Subscription(SubscriptionElem),
+
+    /// A request for current subscriptions.
     Subscriptions(Subscriptions),
+
+    /// An unsubscribe request.
     Unsubscribe(Unsubscribe),
 }
 
