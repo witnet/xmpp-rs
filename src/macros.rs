@@ -314,7 +314,8 @@ macro_rules! generate_id {
 }
 
 macro_rules! generate_elem_id {
-    ($elem:ident, $name:tt, $ns:ident) => (
+    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident) => (
+        $(#[$meta])*
         #[derive(Debug, Clone, PartialEq, Eq, Hash)]
         pub struct $elem(pub String);
         impl ::std::str::FromStr for $elem {
@@ -391,7 +392,7 @@ macro_rules! generate_element_with_text {
 }
 
 macro_rules! generate_element_with_children {
-    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident, attributes: [$($(#[$attr_meta:meta])* $attr:ident: $attr_type:ty = $attr_name:tt => $attr_action:tt),+], children: [$($(#[$child_meta:meta])* $child_ident:ident: Vec<$child_type:ty> = ($child_name:tt, $child_ns:ident) => $child_constructor:ident),+]) => (
+    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident, attributes: [$($(#[$attr_meta:meta])* $attr:ident: $attr_type:ty = $attr_name:tt => $attr_action:tt),*], children: [$($(#[$child_meta:meta])* $child_ident:ident: Vec<$child_type:ty> = ($child_name:tt, $child_ns:ident) => $child_constructor:ident),+]) => (
         $(#[$meta])*
         #[derive(Debug, Clone)]
         pub struct $elem {
