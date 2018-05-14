@@ -16,9 +16,7 @@ use ns;
 
 use data_forms::DataForm;
 
-generate_id!(NodeName);
-generate_id!(ItemId);
-generate_id!(SubscriptionId);
+use pubsub::{NodeName, ItemId, SubscriptionId};
 
 #[derive(Debug, Clone)]
 pub struct Item {
