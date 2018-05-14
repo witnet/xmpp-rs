@@ -5,7 +5,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use jid::Jid;
-use error::Error;
 use ns;
 
 generate_element_with_only_attributes!(Stream, "stream", ns::STREAM, [

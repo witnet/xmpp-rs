@@ -6,8 +6,6 @@
 
 #![deny(missing_docs)]
 
-use error::Error;
-
 use ns;
 
 generate_element_enum!(

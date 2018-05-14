@@ -6,8 +6,6 @@
 
 use date::DateTime;
 
-use error::Error;
-
 use ns;
 
 generate_element_with_only_attributes!(Idle, "idle", ns::IDLE, [
@@ -19,6 +17,7 @@ mod tests {
     use super::*;
     use try_from::TryFrom;
     use minidom::Element;
+    use error::Error;
     use std::str::FromStr;
     use std::error::Error as StdError;
 

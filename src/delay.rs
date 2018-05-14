@@ -6,7 +6,6 @@
 
 use date::DateTime;
 
-use error::Error;
 use jid::Jid;
 
 use ns;
@@ -25,6 +24,7 @@ mod tests {
     use super::*;
     use try_from::TryFrom;
     use minidom::Element;
+    use error::Error;
     use std::str::FromStr;
 
     #[test]

@@ -6,8 +6,6 @@
 
 use jid::Jid;
 
-use error::Error;
-
 use ns;
 
 generate_element_with_only_attributes!(StanzaId, "stanza-id", ns::SID, [
@@ -24,6 +22,7 @@ mod tests {
     use super::*;
     use try_from::TryFrom;
     use minidom::Element;
+    use error::Error;
     use std::str::FromStr;
 
     #[test]

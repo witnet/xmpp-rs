@@ -6,7 +6,6 @@
 
 use jid::Jid;
 
-use error::Error;
 use ns;
 
 generate_elem_id!(Group, "group", ns::ROSTER);
@@ -62,6 +61,7 @@ mod tests {
     use super::*;
     use try_from::TryFrom;
     use minidom::Element;
+    use error::Error;
     use std::str::FromStr;
     use compare_elements::NamespaceAwareCompare;
 
