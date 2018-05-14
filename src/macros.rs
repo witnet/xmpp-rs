@@ -30,7 +30,7 @@ macro_rules! get_attr {
     ($elem:ident, $attr:tt, default, $value:ident, $func:expr) => (
         match $elem.attr($attr) {
             Some($value) => $func,
-            None => Default::default(),
+            None => ::std::default::Default::default(),
         }
     );
 }
@@ -95,7 +95,7 @@ macro_rules! generate_attribute {
                 }))
             }
         }
-        impl Default for $elem {
+        impl ::std::default::Default for $elem {
             fn default() -> $elem {
                 $elem::$default
             }
