@@ -140,7 +140,7 @@ generate_element_with_children!(
 generate_element_with_children!(
     PublishOptions, "publish-options", PUBSUB,
     child: (
-        form: DataForm = ("x", DATA_FORMS) => DataForm
+        form: Option<DataForm> = ("x", DATA_FORMS) => DataForm
     )
 );
 
@@ -266,10 +266,78 @@ impl TryFrom<Element> for PubSub {
         for child in elem.children() {
             if child.is("create", ns::PUBSUB) {
                 if payload.is_some() {
-                    return Err(Error::ParseError("…"));
+                    return Err(Error::ParseError("Payload is already defined in pubsub element."));
                 }
                 let create = Create::try_from(child.clone())?;
                 payload = Some(PubSub::Create { create, configure: None });
+            } else if child.is("configure", ns::PUBSUB) {
+                if let Some(PubSub::Create { create, configure }) = payload {
+                    if configure.is_some() {
+                        return Err(Error::ParseError("Configure is already defined in pubsub element."));
+                    }
+                    let configure = Some(Configure::try_from(child.clone())?);
+                    payload = Some(PubSub::Create { create, configure });
+                } else {
+                    return Err(Error::ParseError("Payload is already defined in pubsub element."));
+                }
+            } else if child.is("publish", ns::PUBSUB) {
+                if payload.is_some() {
+                    return Err(Error::ParseError("Payload is already defined in pubsub element."));
+                }
+                let publish = Publish::try_from(child.clone())?;
+                payload = Some(PubSub::Publish { publish, publish_options: None });
+            } else if child.is("publish-options", ns::PUBSUB) {
+                if let Some(PubSub::Publish { publish, publish_options }) = payload {
+                    if publish_options.is_some() {
+                        return Err(Error::ParseError("Publish-options are already defined in pubsub element."));
+                    }
+                    let publish_options = Some(PublishOptions::try_from(child.clone())?);
+                    payload = Some(PubSub::Publish { publish, publish_options });
+                } else {
+                    return Err(Error::ParseError("Payload is already defined in pubsub element."));
+                }
+            } else if child.is("affiliations", ns::PUBSUB) {
+                if payload.is_some() {
+                    return Err(Error::ParseError("Payload is already defined in pubsub element."));
+                }
+                let affiliations = Affiliations::try_from(child.clone())?;
+                payload = Some(PubSub::Affiliations(affiliations));
+            } else if child.is("default", ns::PUBSUB) {
+                if payload.is_some() {
+                    return Err(Error::ParseError("Payload is already defined in pubsub element."));
+                }
+                let default = Default::try_from(child.clone())?;
+                payload = Some(PubSub::Default(default));
+            } else if child.is("items", ns::PUBSUB) {
+                if payload.is_some() {
+                    return Err(Error::ParseError("Payload is already defined in pubsub element."));
+                }
+                let items = Items::try_from(child.clone())?;
+                payload = Some(PubSub::Items(items));
+            } else if child.is("retract", ns::PUBSUB) {
+                if payload.is_some() {
+                    return Err(Error::ParseError("Payload is already defined in pubsub element."));
+                }
+                let retract = Retract::try_from(child.clone())?;
+                payload = Some(PubSub::Retract(retract));
+            } else if child.is("subscription", ns::PUBSUB) {
+                if payload.is_some() {
+                    return Err(Error::ParseError("Payload is already defined in pubsub element."));
+                }
+                let subscription = SubscriptionElem::try_from(child.clone())?;
+                payload = Some(PubSub::Subscription(subscription));
+            } else if child.is("subscriptions", ns::PUBSUB) {
+                if payload.is_some() {
+                    return Err(Error::ParseError("Payload is already defined in pubsub element."));
+                }
+                let subscriptions = Subscriptions::try_from(child.clone())?;
+                payload = Some(PubSub::Subscriptions(subscriptions));
+            } else if child.is("unsubscribe", ns::PUBSUB) {
+                if payload.is_some() {
+                    return Err(Error::ParseError("Payload is already defined in pubsub element."));
+                }
+                let unsubscribe = Unsubscribe::try_from(child.clone())?;
+                payload = Some(PubSub::Unsubscribe(unsubscribe));
             } else {
                 return Err(Error::ParseError("Unknown child in pubsub element."));
             }
@@ -315,6 +383,88 @@ mod tests {
     use compare_elements::NamespaceAwareCompare;
 
     #[test]
+    fn create() {
+        let elem: Element = "<pubsub xmlns='http://jabber.org/protocol/pubsub'><create/></pubsub>".parse().unwrap();
+        let elem1 = elem.clone();
+        let pubsub = PubSub::try_from(elem).unwrap();
+        match pubsub.clone() {
+            PubSub::Create { create, configure } => {
+                assert!(create.node.is_none());
+                assert!(configure.is_none());
+            }
+            _ => panic!(),
+        }
+
+        let elem2 = Element::from(pubsub);
+        assert!(elem1.compare_to(&elem2));
+
+        let elem: Element = "<pubsub xmlns='http://jabber.org/protocol/pubsub'><create node='coucou'/></pubsub>".parse().unwrap();
+        let elem1 = elem.clone();
+        let pubsub = PubSub::try_from(elem).unwrap();
+        match pubsub.clone() {
+            PubSub::Create { create, configure } => {
+                assert_eq!(&create.node.unwrap().0, "coucou");
+                assert!(configure.is_none());
+            }
+            _ => panic!(),
+        }
+
+        let elem2 = Element::from(pubsub);
+        assert!(elem1.compare_to(&elem2));
+    }
+
+    #[test]
+    fn create_and_configure() {
+        let elem: Element = "<pubsub xmlns='http://jabber.org/protocol/pubsub'><create/><configure/></pubsub>".parse().unwrap();
+        let elem1 = elem.clone();
+        let pubsub = PubSub::try_from(elem).unwrap();
+        match pubsub.clone() {
+            PubSub::Create { create, configure } => {
+                assert!(create.node.is_none());
+                assert!(configure.unwrap().form.is_none());
+            }
+            _ => panic!(),
+        }
+
+        let elem2 = Element::from(pubsub);
+        assert!(elem1.compare_to(&elem2));
+    }
+
+    #[test]
+    fn publish() {
+        let elem: Element = "<pubsub xmlns='http://jabber.org/protocol/pubsub'><publish node='coucou'/></pubsub>".parse().unwrap();
+        let elem1 = elem.clone();
+        let pubsub = PubSub::try_from(elem).unwrap();
+        match pubsub.clone() {
+            PubSub::Publish { publish, publish_options } => {
+                assert_eq!(&publish.node.0, "coucou");
+                assert!(publish_options.is_none());
+            }
+            _ => panic!(),
+        }
+
+        let elem2 = Element::from(pubsub);
+        assert!(elem1.compare_to(&elem2));
+    }
+
+    #[test]
+    fn publish_with_publish_options() {
+        let elem: Element = "<pubsub xmlns='http://jabber.org/protocol/pubsub'><publish node='coucou'/><publish-options/></pubsub>".parse().unwrap();
+        let elem1 = elem.clone();
+        let pubsub = PubSub::try_from(elem).unwrap();
+        match pubsub.clone() {
+            PubSub::Publish { publish, publish_options } => {
+                assert_eq!(&publish.node.0, "coucou");
+                assert!(publish_options.unwrap().form.is_none());
+            }
+            _ => panic!(),
+        }
+
+        let elem2 = Element::from(pubsub);
+        assert!(elem1.compare_to(&elem2));
+    }
+
+    #[test]
     fn invalid_empty_pubsub() {
         let elem: Element = "<pubsub xmlns='http://jabber.org/protocol/pubsub'/>".parse().unwrap();
         let error = PubSub::try_from(elem).unwrap_err();
@@ -323,19 +473,13 @@ mod tests {
             _ => panic!(),
         };
         assert_eq!(message, "No payload in pubsub element.");
-        /*
-        match pubsub {
-            PubSub::EmptyItems { node } => assert_eq!(node, NodeName(String::from("coucou"))),
-            _ => panic!(),
-        }
-        */
     }
 
     #[test]
     fn publish_option() {
         let elem: Element = "<publish-options xmlns='http://jabber.org/protocol/pubsub'><x xmlns='jabber:x:data' type='submit'><field var='FORM_TYPE' type='hidden'><value>http://jabber.org/protocol/pubsub#publish-options</value></field></x></publish-options>".parse().unwrap();
         let publish_options = PublishOptions::try_from(elem).unwrap();
-        assert_eq!(&publish_options.form.form_type.unwrap(), "http://jabber.org/protocol/pubsub#publish-options");
+        assert_eq!(&publish_options.form.unwrap().form_type.unwrap(), "http://jabber.org/protocol/pubsub#publish-options");
     }
 
     #[test]
@@ -348,143 +492,4 @@ mod tests {
         let subscribe_options2 = SubscribeOptions::try_from(elem2).unwrap();
         assert_eq!(subscribe_options2.required, true);
     }
-
-    /*
-    #[test]
-    fn test_simple_items() {
-        let elem: Element = "<event xmlns='http://jabber.org/protocol/pubsub#event'><items node='coucou'><item id='test' node='huh?' publisher='test@coucou'/></items></event>".parse().unwrap();
-        let event = PubSub::try_from(elem).unwrap();
-        match event {
-            PubSub::PublishedItems { node, items } => {
-                assert_eq!(node, NodeName(String::from("coucou")));
-                assert_eq!(items[0].id, Some(ItemId(String::from("test"))));
-                assert_eq!(items[0].node, Some(NodeName(String::from("huh?"))));
-                assert_eq!(items[0].publisher, Some(Jid::from_str("test@coucou").unwrap()));
-                assert_eq!(items[0].payload, None);
-            },
-            _ => panic!(),
-        }
-    }
-
-    #[test]
-    fn test_simple_pep() {
-        let elem: Element = "<event xmlns='http://jabber.org/protocol/pubsub#event'><items node='something'><item><foreign xmlns='example:namespace'/></item></items></event>".parse().unwrap();
-        let event = PubSub::try_from(elem).unwrap();
-        match event {
-            PubSub::PublishedItems { node, items } => {
-                assert_eq!(node, NodeName(String::from("something")));
-                assert_eq!(items[0].id, None);
-                assert_eq!(items[0].node, None);
-                assert_eq!(items[0].publisher, None);
-                match items[0].payload {
-                    Some(ref elem) => assert!(elem.is("foreign", "example:namespace")),
-                    _ => panic!(),
-                }
-            },
-            _ => panic!(),
-        }
-    }
-
-    #[test]
-    fn test_simple_retract() {
-        let elem: Element = "<event xmlns='http://jabber.org/protocol/pubsub#event'><items node='something'><retract id='coucou'/><retract id='test'/></items></event>".parse().unwrap();
-        let event = PubSub::try_from(elem).unwrap();
-        match event {
-            PubSub::RetractedItems { node, items } => {
-                assert_eq!(node, NodeName(String::from("something")));
-                assert_eq!(items[0], ItemId(String::from("coucou")));
-                assert_eq!(items[1], ItemId(String::from("test")));
-            },
-            _ => panic!(),
-        }
-    }
-
-    #[test]
-    fn test_simple_delete() {
-        let elem: Element = "<event xmlns='http://jabber.org/protocol/pubsub#event'><delete node='coucou'><redirect uri='hello'/></delete></event>".parse().unwrap();
-        let event = PubSub::try_from(elem).unwrap();
-        match event {
-            PubSub::Delete { node, redirect } => {
-                assert_eq!(node, NodeName(String::from("coucou")));
-                assert_eq!(redirect, Some(String::from("hello")));
-            },
-            _ => panic!(),
-        }
-    }
-
-    #[test]
-    fn test_simple_purge() {
-        let elem: Element = "<event xmlns='http://jabber.org/protocol/pubsub#event'><purge node='coucou'/></event>".parse().unwrap();
-        let event = PubSub::try_from(elem).unwrap();
-        match event {
-            PubSub::Purge { node } => {
-                assert_eq!(node, NodeName(String::from("coucou")));
-            },
-            _ => panic!(),
-        }
-    }
-
-    #[test]
-    fn test_simple_configure() {
-        let elem: Element = "<event xmlns='http://jabber.org/protocol/pubsub#event'><configuration node='coucou'><x xmlns='jabber:x:data' type='result'><field var='FORM_TYPE' type='hidden'><value>http://jabber.org/protocol/pubsub#node_config</value></field></x></configuration></event>".parse().unwrap();
-        let event = PubSub::try_from(elem).unwrap();
-        match event {
-            PubSub::Configuration { node, form: _ } => {
-                assert_eq!(node, NodeName(String::from("coucou")));
-                //assert_eq!(form.type_, Result_);
-            },
-            _ => panic!(),
-        }
-    }
-
-    #[test]
-    fn test_invalid() {
-        let elem: Element = "<event xmlns='http://jabber.org/protocol/pubsub#event'><coucou node='test'/></event>".parse().unwrap();
-        let error = PubSub::try_from(elem).unwrap_err();
-        let message = match error {
-            Error::ParseError(string) => string,
-            _ => panic!(),
-        };
-        assert_eq!(message, "Unknown child in event element.");
-    }
-
-    #[test]
-    fn test_invalid_attribute() {
-        let elem: Element = "<event xmlns='http://jabber.org/protocol/pubsub#event' coucou=''/>".parse().unwrap();
-        let error = PubSub::try_from(elem).unwrap_err();
-        let message = match error {
-            Error::ParseError(string) => string,
-            _ => panic!(),
-        };
-        assert_eq!(message, "Unknown attribute in event element.");
-    }
-
-    #[test]
-    fn test_ex221_subscription() {
-        let elem: Element = r#"
-<event xmlns='http://jabber.org/protocol/pubsub#event'>
-  <subscription
-      expiry='2006-02-28T23:59:59+00:00'
-      jid='francisco@denmark.lit'
-      node='princely_musings'
-      subid='ba49252aaa4f5d320c24d3766f0bdcade78c78d3'
-      subscription='subscribed'/>
-</event>
-"#.parse().unwrap();
-        let event = PubSub::try_from(elem.clone()).unwrap();
-        match event.clone() {
-            PubSub::Subscription { node, expiry, jid, subid, subscription } => {
-                assert_eq!(node, NodeName(String::from("princely_musings")));
-                assert_eq!(subid, Some(SubscriptionId(String::from("ba49252aaa4f5d320c24d3766f0bdcade78c78d3"))));
-                assert_eq!(subscription, Some(Subscription::Subscribed));
-                assert_eq!(jid, Some(Jid::from_str("francisco@denmark.lit").unwrap()));
-                assert_eq!(expiry, Some("2006-02-28T23:59:59Z".parse().unwrap()));
-            },
-            _ => panic!(),
-        }
-
-        let elem2: Element = event.into();
-        assert!(elem.compare_to(&elem2));
-    }
-    */
 }
