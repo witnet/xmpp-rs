@@ -104,10 +104,10 @@ macro_rules! generate_attribute {
 }
 
 macro_rules! generate_element_enum {
-    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:expr, {$($(#[$enum_meta:meta])* $enum:ident => $enum_name:tt),+,}) => (
+    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident, {$($(#[$enum_meta:meta])* $enum:ident => $enum_name:tt),+,}) => (
         generate_element_enum!($(#[$meta])* $elem, $name, $ns, {$($(#[$enum_meta])* $enum => $enum_name),+});
     );
-    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:expr, {$($(#[$enum_meta:meta])* $enum:ident => $enum_name:tt),+}) => (
+    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident, {$($(#[$enum_meta:meta])* $enum:ident => $enum_name:tt),+}) => (
         $(#[$meta])*
         #[derive(Debug, Clone, PartialEq)]
         pub enum $elem {
@@ -132,7 +132,7 @@ macro_rules! generate_element_enum {
             fn from(elem: $elem) -> ::minidom::Element {
                 ::minidom::Element::builder(match elem {
                     $($elem::$enum => $enum_name,)+
-                }).ns($ns)
+                }).ns(::ns::$ns)
                   .build()
             }
         }
@@ -140,10 +140,10 @@ macro_rules! generate_element_enum {
 }
 
 macro_rules! generate_attribute_enum {
-    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:expr, $attr:tt, {$($(#[$enum_meta:meta])* $enum:ident => $enum_name:tt),+,}) => (
+    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident, $attr:tt, {$($(#[$enum_meta:meta])* $enum:ident => $enum_name:tt),+,}) => (
         generate_attribute_enum!($(#[$meta])* $elem, $name, $ns, $attr, {$($(#[$enum_meta])* $enum => $enum_name),+});
     );
-    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:expr, $attr:tt, {$($(#[$enum_meta:meta])* $enum:ident => $enum_name:tt),+}) => (
+    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident, $attr:tt, {$($(#[$enum_meta:meta])* $enum:ident => $enum_name:tt),+}) => (
         $(#[$meta])*
         #[derive(Debug, Clone, PartialEq)]
         pub enum $elem {
@@ -167,7 +167,7 @@ macro_rules! generate_attribute_enum {
         impl From<$elem> for ::minidom::Element {
             fn from(elem: $elem) -> ::minidom::Element {
                 ::minidom::Element::builder($name)
-                        .ns($ns)
+                        .ns(::ns::$ns)
                         .attr($attr, match elem {
                              $($elem::$enum => $enum_name,)+
                          })
@@ -178,19 +178,19 @@ macro_rules! generate_attribute_enum {
 }
 
 macro_rules! check_self {
-    ($elem:ident, $name:tt, $ns:expr) => (
+    ($elem:ident, $name:tt, $ns:ident) => (
         check_self!($elem, $name, $ns, $name);
     );
-    ($elem:ident, $name:tt, $ns:expr, $pretty_name:tt) => (
-        if !$elem.is($name, $ns) {
+    ($elem:ident, $name:tt, $ns:ident, $pretty_name:tt) => (
+        if !$elem.is($name, ::ns::$ns) {
             return Err(::error::Error::ParseError(concat!("This is not a ", $pretty_name, " element.")));
         }
     );
 }
 
 macro_rules! check_ns_only {
-    ($elem:ident, $name:tt, $ns:expr) => (
-        if !$elem.has_ns($ns) {
+    ($elem:ident, $name:tt, $ns:ident) => (
+        if !$elem.has_ns(::ns::$ns) {
             return Err(::error::Error::ParseError(concat!("This is not a ", $name, " element.")));
         }
     );
@@ -226,7 +226,7 @@ macro_rules! check_no_unknown_attributes {
 }
 
 macro_rules! generate_empty_element {
-    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:expr) => (
+    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident) => (
         $(#[$meta])*
         #[derive(Debug, Clone)]
         pub struct $elem;
@@ -245,7 +245,7 @@ macro_rules! generate_empty_element {
         impl From<$elem> for ::minidom::Element {
             fn from(_: $elem) -> ::minidom::Element {
                 ::minidom::Element::builder($name)
-                        .ns($ns)
+                        .ns(::ns::$ns)
                         .build()
             }
         }
@@ -253,10 +253,10 @@ macro_rules! generate_empty_element {
 }
 
 macro_rules! generate_element_with_only_attributes {
-    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:expr, [$($(#[$attr_meta:meta])* $attr:ident: $attr_type:ty = $attr_name:tt => $attr_action:tt),+,]) => (
+    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident, [$($(#[$attr_meta:meta])* $attr:ident: $attr_type:ty = $attr_name:tt => $attr_action:tt),+,]) => (
         generate_element_with_only_attributes!($(#[$meta])* $elem, $name, $ns, [$($(#[$attr_meta])* $attr: $attr_type = $attr_name => $attr_action),*]);
     );
-    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:expr, [$($(#[$attr_meta:meta])* $attr:ident: $attr_type:ty = $attr_name:tt => $attr_action:tt),+]) => (
+    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident, [$($(#[$attr_meta:meta])* $attr:ident: $attr_type:ty = $attr_name:tt => $attr_action:tt),+]) => (
         $(#[$meta])*
         #[derive(Debug, Clone)]
         pub struct $elem {
@@ -284,7 +284,7 @@ macro_rules! generate_element_with_only_attributes {
         impl From<$elem> for ::minidom::Element {
             fn from(elem: $elem) -> ::minidom::Element {
                 ::minidom::Element::builder($name)
-                        .ns($ns)
+                        .ns(::ns::$ns)
                         $(
                         .attr($attr_name, elem.$attr)
                         )*
@@ -314,7 +314,7 @@ macro_rules! generate_id {
 }
 
 macro_rules! generate_elem_id {
-    ($elem:ident, $name:tt, $ns:expr) => (
+    ($elem:ident, $name:tt, $ns:ident) => (
         #[derive(Debug, Clone, PartialEq, Eq, Hash)]
         pub struct $elem(pub String);
         impl ::std::str::FromStr for $elem {
@@ -337,7 +337,7 @@ macro_rules! generate_elem_id {
         impl From<$elem> for ::minidom::Element {
             fn from(elem: $elem) -> ::minidom::Element {
                 ::minidom::Element::builder($name)
-                        .ns($ns)
+                        .ns(::ns::$ns)
                         .append(elem.0)
                         .build()
             }
@@ -346,10 +346,10 @@ macro_rules! generate_elem_id {
 }
 
 macro_rules! generate_element_with_text {
-    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:expr, $text_ident:ident: $codec:ident < $text_type:ty >) => (
+    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident, $text_ident:ident: $codec:ident < $text_type:ty >) => (
         generate_element_with_text!($(#[$meta])* $elem, $name, $ns, [], $text_ident: $codec<$text_type>);
     );
-    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:expr, [$($(#[$attr_meta:meta])* $attr:ident: $attr_type:ty = $attr_name:tt => $attr_action:tt),*], $text_ident:ident: $codec:ident < $text_type:ty >) => (
+    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident, [$($(#[$attr_meta:meta])* $attr:ident: $attr_type:ty = $attr_name:tt => $attr_action:tt),*], $text_ident:ident: $codec:ident < $text_type:ty >) => (
         $(#[$meta])*
         #[derive(Debug, Clone)]
         pub struct $elem {
@@ -379,7 +379,7 @@ macro_rules! generate_element_with_text {
         impl From<$elem> for ::minidom::Element {
             fn from(elem: $elem) -> ::minidom::Element {
                 ::minidom::Element::builder($name)
-                        .ns($ns)
+                        .ns(::ns::$ns)
                         $(
                         .attr($attr_name, elem.$attr)
                         )*
@@ -391,7 +391,7 @@ macro_rules! generate_element_with_text {
 }
 
 macro_rules! generate_element_with_children {
-    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:expr, attributes: [$($(#[$attr_meta:meta])* $attr:ident: $attr_type:ty = $attr_name:tt => $attr_action:tt),+], children: [$($(#[$child_meta:meta])* $child_ident:ident: Vec<$child_type:ty> = ($child_name:tt, $child_ns:expr) => $child_constructor:ident),+]) => (
+    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident, attributes: [$($(#[$attr_meta:meta])* $attr:ident: $attr_type:ty = $attr_name:tt => $attr_action:tt),+], children: [$($(#[$child_meta:meta])* $child_ident:ident: Vec<$child_type:ty> = ($child_name:tt, $child_ns:ident) => $child_constructor:ident),+]) => (
         $(#[$meta])*
         #[derive(Debug, Clone)]
         pub struct $elem {
@@ -414,7 +414,7 @@ macro_rules! generate_element_with_children {
                 let mut parsed_children = vec!();
                 for child in elem.children() {
                     $(
-                    if child.is($child_name, $child_ns) {
+                    if child.is($child_name, ::ns::$child_ns) {
                         let parsed_child = $child_constructor::try_from(child.clone())?;
                         parsed_children.push(parsed_child);
                         continue;
@@ -436,7 +436,7 @@ macro_rules! generate_element_with_children {
         impl From<$elem> for ::minidom::Element {
             fn from(elem: $elem) -> ::minidom::Element {
                 ::minidom::Element::builder($name)
-                        .ns($ns)
+                        .ns(::ns::$ns)
                         $(
                         .attr($attr_name, elem.$attr)
                         )*

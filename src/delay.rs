@@ -8,10 +8,9 @@ use date::DateTime;
 
 use jid::Jid;
 
-use ns;
 use helpers::PlainText;
 
-generate_element_with_text!(Delay, "delay", ns::DELAY,
+generate_element_with_text!(Delay, "delay", DELAY,
     [
         from: Option<Jid> = "from" => optional,
         stamp: DateTime = "stamp" => required

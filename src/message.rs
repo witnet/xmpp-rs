@@ -115,9 +115,9 @@ generate_attribute!(MessageType, "type", {
 
 type Lang = String;
 
-generate_elem_id!(Body, "body", ns::DEFAULT_NS);
-generate_elem_id!(Subject, "subject", ns::DEFAULT_NS);
-generate_elem_id!(Thread, "thread", ns::DEFAULT_NS);
+generate_elem_id!(Body, "body", DEFAULT_NS);
+generate_elem_id!(Subject, "subject", DEFAULT_NS);
+generate_elem_id!(Thread, "thread", DEFAULT_NS);
 
 /// The main structure representing the `<message/>` stanza.
 #[derive(Debug, Clone)]
@@ -188,7 +188,7 @@ impl TryFrom<Element> for Message {
     type Err = Error;
 
     fn try_from(root: Element) -> Result<Message, Error> {
-        check_self!(root, "message", ns::DEFAULT_NS);
+        check_self!(root, "message", DEFAULT_NS);
         let from = get_attr!(root, "from", optional);
         let to = get_attr!(root, "to", optional);
         let id = get_attr!(root, "id", optional);

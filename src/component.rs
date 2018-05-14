@@ -5,12 +5,10 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use helpers::PlainText;
-use ns;
-
 use sha1::Sha1;
 use digest::Digest;
 
-generate_element_with_text!(Handshake, "handshake", ns::COMPONENT,
+generate_element_with_text!(Handshake, "handshake", COMPONENT,
     data: PlainText<Option<String>>
 );
 

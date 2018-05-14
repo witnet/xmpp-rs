@@ -32,7 +32,7 @@ impl TryFrom<Element> for Caps {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<Caps, Error> {
-        check_self!(elem, "c", ns::CAPS, "caps");
+        check_self!(elem, "c", CAPS, "caps");
         check_no_children!(elem, "caps");
         check_no_unknown_attributes!(elem, "caps", ["hash", "ver", "ext", "node"]);
         let ver: String = get_attr!(elem, "ver", required);

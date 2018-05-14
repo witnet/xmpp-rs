@@ -55,7 +55,7 @@ impl TryFrom<Element> for Query {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<Query, Error> {
-        check_self!(elem, "query", ns::MAM);
+        check_self!(elem, "query", MAM);
         check_no_unknown_attributes!(elem, "query", ["queryid", "node"]);
         let mut form = None;
         let mut set = None;
@@ -78,7 +78,7 @@ impl TryFrom<Element> for Result_ {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<Result_, Error> {
-        check_self!(elem, "result", ns::MAM);
+        check_self!(elem, "result", MAM);
         check_no_unknown_attributes!(elem, "result", ["queryid", "id"]);
         let mut forwarded = None;
         for child in elem.children() {
@@ -103,7 +103,7 @@ impl TryFrom<Element> for Fin {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<Fin, Error> {
-        check_self!(elem, "fin", ns::MAM);
+        check_self!(elem, "fin", MAM);
         check_no_unknown_attributes!(elem, "fin", ["complete"]);
         let mut set = None;
         for child in elem.children() {
@@ -128,7 +128,7 @@ impl TryFrom<Element> for Prefs {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<Prefs, Error> {
-        check_self!(elem, "prefs", ns::MAM);
+        check_self!(elem, "prefs", MAM);
         check_no_unknown_attributes!(elem, "prefs", ["default"]);
         let mut always = vec!();
         let mut never = vec!();

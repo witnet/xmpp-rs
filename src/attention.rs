@@ -4,9 +4,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use ns;
-
-generate_empty_element!(Attention, "attention", ns::ATTENTION);
+generate_empty_element!(Attention, "attention", ATTENTION);
 
 #[cfg(test)]
 mod tests {

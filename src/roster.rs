@@ -6,9 +6,7 @@
 
 use jid::Jid;
 
-use ns;
-
-generate_elem_id!(Group, "group", ns::ROSTER);
+generate_elem_id!(Group, "group", ROSTER);
 
 generate_attribute!(Subscription, "subscription", {
     None => "none",
@@ -21,7 +19,7 @@ generate_attribute!(Subscription, "subscription", {
 generate_element_with_children!(
     /// Contact from the user’s contact list.
     #[derive(PartialEq)]
-    Item, "item", ns::ROSTER,
+    Item, "item", ROSTER,
     attributes: [
         /// JID of this contact.
         jid: Jid = "jid" => required,
@@ -35,13 +33,13 @@ generate_element_with_children!(
 
     children: [
         /// Groups this contact is part of.
-        groups: Vec<Group> = ("group", ns::ROSTER) => Group
+        groups: Vec<Group> = ("group", ROSTER) => Group
     ]
 );
 
 generate_element_with_children!(
     /// The contact list of the user.
-    Roster, "query", ns::ROSTER,
+    Roster, "query", ROSTER,
     attributes: [
         /// Version of the contact list.
         ///
@@ -52,7 +50,7 @@ generate_element_with_children!(
     ],
     children: [
         /// List of the contacts of the user.
-        items: Vec<Item> = ("item", ns::ROSTER) => Item
+        items: Vec<Item> = ("item", ROSTER) => Item
     ]
 );
 

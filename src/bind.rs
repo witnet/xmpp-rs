@@ -33,7 +33,7 @@ impl TryFrom<Element> for Bind {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<Bind, Error> {
-        check_self!(elem, "bind", ns::BIND);
+        check_self!(elem, "bind", BIND);
         check_no_attributes!(elem, "bind");
 
         let mut bind = Bind::None;

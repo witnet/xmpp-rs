@@ -4,23 +4,22 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use ns;
 use helpers::TrimmedPlainText;
 
-generate_element_with_text!(URI, "uri", ns::MEDIA_ELEMENT,
+generate_element_with_text!(URI, "uri", MEDIA_ELEMENT,
     [
         type_: String = "type" => required
     ],
     uri: TrimmedPlainText<String>
 );
 
-generate_element_with_children!(MediaElement, "media", ns::MEDIA_ELEMENT,
+generate_element_with_children!(MediaElement, "media", MEDIA_ELEMENT,
     attributes: [
         width: Option<usize> = "width" => optional,
         height: Option<usize> = "height" => optional
     ],
     children: [
-        uris: Vec<URI> = ("uri", ns::MEDIA_ELEMENT) => URI
+        uris: Vec<URI> = ("uri", MEDIA_ELEMENT) => URI
     ]
 );
 

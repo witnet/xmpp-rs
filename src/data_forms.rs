@@ -23,7 +23,7 @@ impl TryFrom<Element> for Option_ {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<Option_, Error> {
-        check_self!(elem, "option", ns::DATA_FORMS);
+        check_self!(elem, "option", DATA_FORMS);
         check_no_unknown_attributes!(elem, "option", ["label"]);
         let mut value = None;
         for child in elem.children() {
@@ -90,7 +90,7 @@ impl TryFrom<Element> for Field {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<Field, Error> {
-        check_self!(elem, "field", ns::DATA_FORMS);
+        check_self!(elem, "field", DATA_FORMS);
         check_no_unknown_attributes!(elem, "field", ["label", "type", "var"]);
         let mut field = Field {
             var: get_attr!(elem, "var", required),
@@ -167,7 +167,7 @@ impl TryFrom<Element> for DataForm {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<DataForm, Error> {
-        check_self!(elem, "x", ns::DATA_FORMS);
+        check_self!(elem, "x", DATA_FORMS);
         check_no_unknown_attributes!(elem, "x", ["type"]);
         let type_ = get_attr!(elem, "type", required);
         let mut form = DataForm {

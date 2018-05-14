@@ -22,7 +22,7 @@ impl TryFrom<Element> for Muc {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<Muc, Error> {
-        check_self!(elem, "x", ns::MUC);
+        check_self!(elem, "x", MUC);
         check_no_attributes!(elem, "x");
 
         let mut password = None;

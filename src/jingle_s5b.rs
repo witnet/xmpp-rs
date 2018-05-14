@@ -30,7 +30,7 @@ generate_id!(CandidateId);
 
 generate_id!(StreamId);
 
-generate_element_with_only_attributes!(Candidate, "candidate", ns::JINGLE_S5B, [
+generate_element_with_only_attributes!(Candidate, "candidate", JINGLE_S5B, [
     cid: CandidateId = "cid" => required,
     host: IpAddr = "host" => required,
     jid: Jid = "jid" => required,
@@ -110,7 +110,7 @@ impl TryFrom<Element> for Transport {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<Transport, Error> {
-        check_self!(elem, "transport", ns::JINGLE_S5B);
+        check_self!(elem, "transport", JINGLE_S5B);
         let sid = get_attr!(elem, "sid", required);
         let dstaddr = get_attr!(elem, "dstaddr", optional);
         let mode = get_attr!(elem, "mode", default);

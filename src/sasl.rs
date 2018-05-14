@@ -4,7 +4,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use ns;
 use helpers::Base64;
 
 generate_attribute!(Mechanism, "mechanism", {
@@ -13,22 +12,22 @@ generate_attribute!(Mechanism, "mechanism", {
     Anonymous => "ANONYMOUS",
 });
 
-generate_element_with_text!(Auth, "auth", ns::SASL,
+generate_element_with_text!(Auth, "auth", SASL,
     [
         mechanism: Mechanism = "mechanism" => required
     ],
     data: Base64<Vec<u8>>
 );
 
-generate_element_with_text!(Challenge, "challenge", ns::SASL,
+generate_element_with_text!(Challenge, "challenge", SASL,
     data: Base64<Vec<u8>>
 );
 
-generate_element_with_text!(Response, "response", ns::SASL,
+generate_element_with_text!(Response, "response", SASL,
     data: Base64<Vec<u8>>
 );
 
-generate_element_with_text!(Success, "success", ns::SASL,
+generate_element_with_text!(Success, "success", SASL,
     data: Base64<Vec<u8>>
 );
 

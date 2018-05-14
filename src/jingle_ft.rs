@@ -20,13 +20,13 @@ use ns;
 
 generate_element_with_children!(
     #[derive(PartialEq, Default)]
-    Range, "range", ns::JINGLE_FT,
+    Range, "range", JINGLE_FT,
     attributes: [
         offset: u64 = "offset" => default,
         length: Option<u64> = "length" => optional
     ],
     children: [
-        hashes: Vec<Hash> = ("hash", ns::HASHES) => Hash
+        hashes: Vec<Hash> = ("hash", HASHES) => Hash
     ]
 );
 
@@ -109,7 +109,7 @@ impl TryFrom<Element> for File {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<File, Error> {
-        check_self!(elem, "file", ns::JINGLE_FT);
+        check_self!(elem, "file", JINGLE_FT);
         check_no_attributes!(elem, "file");
 
         let mut file = File {
@@ -218,7 +218,7 @@ impl TryFrom<Element> for Description {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<Description, Error> {
-        check_self!(elem, "description", ns::JINGLE_FT, "JingleFT description");
+        check_self!(elem, "description", JINGLE_FT, "JingleFT description");
         check_no_attributes!(elem, "JingleFT description");
         let mut file = None;
         for child in elem.children() {
@@ -256,7 +256,7 @@ impl TryFrom<Element> for Checksum {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<Checksum, Error> {
-        check_self!(elem, "checksum", ns::JINGLE_FT);
+        check_self!(elem, "checksum", JINGLE_FT);
         check_no_unknown_attributes!(elem, "checksum", ["name", "creator"]);
         let mut file = None;
         for child in elem.children() {
@@ -287,7 +287,7 @@ impl From<Checksum> for Element {
     }
 }
 
-generate_element_with_only_attributes!(Received, "received", ns::JINGLE_FT, [
+generate_element_with_only_attributes!(Received, "received", JINGLE_FT, [
     name: ContentId = "name" => required,
     creator: Creator = "creator" => required,
 ]);

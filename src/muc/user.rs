@@ -17,7 +17,7 @@ use ns;
 
 generate_attribute_enum!(
 /// Lists all of the possible status codes used in MUC presences.
-Status, "status", ns::MUC_USER, "code", {
+Status, "status", MUC_USER, "code", {
     /// Inform user that any occupant is allowed to see the user's full JID
     NonAnonymousRoom => 100,
 
@@ -92,7 +92,7 @@ impl TryFrom<Element> for Actor {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<Actor, Error> {
-        check_self!(elem, "actor", ns::MUC_USER);
+        check_self!(elem, "actor", MUC_USER);
         check_no_unknown_attributes!(elem, "actor", ["jid", "nick"]);
         for _ in elem.children() {
             return Err(Error::ParseError("Unknown child in actor element."));
@@ -121,11 +121,11 @@ impl From<Actor> for Element {
     }
 }
 
-generate_element_with_only_attributes!(Continue, "continue", ns::MUC_USER, [
+generate_element_with_only_attributes!(Continue, "continue", MUC_USER, [
     thread: Option<String> = "thread" => optional,
 ]);
 
-generate_elem_id!(Reason, "reason", ns::MUC_USER);
+generate_elem_id!(Reason, "reason", MUC_USER);
 
 generate_attribute!(Affiliation, "affiliation", {
     Owner => "owner",
@@ -157,7 +157,7 @@ impl TryFrom<Element> for Item {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<Item, Error> {
-        check_self!(elem, "item", ns::MUC_USER);
+        check_self!(elem, "item", MUC_USER);
         check_no_unknown_attributes!(elem, "item", ["affiliation", "jid", "nick", "role"]);
         let mut actor: Option<Actor> = None;
         let mut continue_: Option<Continue> = None;
@@ -216,7 +216,7 @@ impl TryFrom<Element> for MucUser {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<MucUser, Error> {
-        check_self!(elem, "x", ns::MUC_USER);
+        check_self!(elem, "x", MUC_USER);
         check_no_attributes!(elem, "x");
         let mut status = vec!();
         let mut items = vec!();

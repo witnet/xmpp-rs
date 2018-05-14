@@ -32,7 +32,7 @@ impl TryFrom<Element> for Item {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<Item, Error> {
-        check_self!(elem, "item", ns::PUBSUB_EVENT);
+        check_self!(elem, "item", PUBSUB_EVENT);
         check_no_unknown_attributes!(elem, "item", ["id", "node", "publisher"]);
         let mut payloads = elem.children().cloned().collect::<Vec<_>>();
         let payload = payloads.pop();
@@ -141,7 +141,7 @@ impl TryFrom<Element> for PubSubEvent {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<PubSubEvent, Error> {
-        check_self!(elem, "event", ns::PUBSUB_EVENT);
+        check_self!(elem, "event", PUBSUB_EVENT);
         check_no_attributes!(elem, "event");
 
         let mut payload = None;

@@ -29,7 +29,7 @@ impl TryFrom<Element> for Query {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<Query, Error> {
-        check_self!(elem, "query", ns::REGISTER, "IBR query");
+        check_self!(elem, "query", REGISTER, "IBR query");
         let mut query = Query {
             registered: false,
             fields: HashMap::new(),

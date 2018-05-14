@@ -207,7 +207,7 @@ impl TryFrom<Element> for Iq {
     type Err = Error;
 
     fn try_from(root: Element) -> Result<Iq, Error> {
-        check_self!(root, "iq", ns::DEFAULT_NS);
+        check_self!(root, "iq", DEFAULT_NS);
         let from = get_attr!(root, "from", optional);
         let to = get_attr!(root, "to", optional);
         let id = get_attr!(root, "id", optional);

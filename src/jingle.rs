@@ -119,7 +119,7 @@ impl TryFrom<Element> for Content {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<Content, Error> {
-        check_self!(elem, "content", ns::JINGLE);
+        check_self!(elem, "content", JINGLE);
 
         let mut content = Content {
             creator: get_attr!(elem, "creator", required),
@@ -250,7 +250,7 @@ impl TryFrom<Element> for ReasonElement {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<ReasonElement, Error> {
-        check_self!(elem, "reason", ns::JINGLE);
+        check_self!(elem, "reason", JINGLE);
         let mut reason = None;
         let mut text = None;
         for child in elem.children() {
@@ -340,7 +340,7 @@ impl TryFrom<Element> for Jingle {
     type Err = Error;
 
     fn try_from(root: Element) -> Result<Jingle, Error> {
-        check_self!(root, "jingle", ns::JINGLE, "Jingle");
+        check_self!(root, "jingle", JINGLE, "Jingle");
 
         let mut jingle = Jingle {
             action: get_attr!(root, "action", required),

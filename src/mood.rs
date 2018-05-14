@@ -6,11 +6,9 @@
 
 #![deny(missing_docs)]
 
-use ns;
-
 generate_element_enum!(
     /// Enum representing all of the possible values of the XEP-0107 moods.
-    MoodEnum, "mood", ns::MOOD, {
+    MoodEnum, "mood", MOOD, {
         /// Impressed with fear or apprehension; in fear; apprehensive.
         Afraid => "afraid",
 

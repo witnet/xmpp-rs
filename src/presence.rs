@@ -248,7 +248,7 @@ impl TryFrom<Element> for Presence {
     type Err = Error;
 
     fn try_from(root: Element) -> Result<Presence, Error> {
-        check_self!(root, "presence", ns::DEFAULT_NS);
+        check_self!(root, "presence", DEFAULT_NS);
         let mut show = None;
         let mut priority = None;
         let mut presence = Presence {

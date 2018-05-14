@@ -5,9 +5,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use jid::Jid;
-use ns;
 
-generate_element_with_only_attributes!(Stream, "stream", ns::STREAM, [
+generate_element_with_only_attributes!(Stream, "stream", STREAM, [
     from: Option<Jid> = "from" => optional,
     to: Option<Jid> = "to" => optional,
     id: Option<String> = "id" => optional,

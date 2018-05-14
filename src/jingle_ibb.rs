@@ -4,13 +4,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use ns;
-
 use ibb::Stanza;
 
 generate_id!(StreamId);
 
-generate_element_with_only_attributes!(Transport, "transport", ns::JINGLE_IBB, [
+generate_element_with_only_attributes!(Transport, "transport", JINGLE_IBB, [
     block_size: u16 = "block-size" => required,
     sid: StreamId = "sid" => required,
     stanza: Stanza = "stanza" => default,

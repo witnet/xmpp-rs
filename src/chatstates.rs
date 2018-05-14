@@ -6,12 +6,10 @@
 
 #![deny(missing_docs)]
 
-use ns;
-
 generate_element_enum!(
     /// Enum representing chatstate elements part of the
     /// `http://jabber.org/protocol/chatstates` namespace.
-    ChatState, "chatstate", ns::CHATSTATES, {
+    ChatState, "chatstate", CHATSTATES, {
         /// `<active xmlns='http://jabber.org/protocol/chatstates'/>`
         Active => "active",
 
@@ -35,6 +33,7 @@ mod tests {
     use try_from::TryFrom;
     use minidom::Element;
     use error::Error;
+    use ns;
 
     #[test]
     fn test_simple() {

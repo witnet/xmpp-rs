@@ -21,7 +21,7 @@ generate_element_with_only_attributes!(
 ///
 /// It should only be used in an `<iq type='get'/>`, as it can only represent
 /// the request, and not a result.
-DiscoInfoQuery, "query", ns::DISCO_INFO, [
+DiscoInfoQuery, "query", DISCO_INFO, [
     /// Node on which we are doing the discovery.
     node: Option<String> = "node" => optional,
 ]);
@@ -29,7 +29,7 @@ DiscoInfoQuery, "query", ns::DISCO_INFO, [
 generate_element_with_only_attributes!(
 /// Structure representing a `<feature xmlns='http://jabber.org/protocol/disco#info'/>` element.
 #[derive(PartialEq)]
-Feature, "feature", ns::DISCO_INFO, [
+Feature, "feature", DISCO_INFO, [
     /// Namespace of the feature we want to represent.
     var: String = "var" => required,
 ]);
@@ -54,7 +54,7 @@ impl TryFrom<Element> for Identity {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<Identity, Error> {
-        check_self!(elem, "identity", ns::DISCO_INFO, "disco#info identity");
+        check_self!(elem, "identity", DISCO_INFO, "disco#info identity");
         check_no_children!(elem, "disco#info identity");
         check_no_unknown_attributes!(elem, "disco#info identity", ["category", "type", "xml:lang", "name"]);
 
@@ -112,7 +112,7 @@ impl TryFrom<Element> for DiscoInfoResult {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<DiscoInfoResult, Error> {
-        check_self!(elem, "query", ns::DISCO_INFO, "disco#info result");
+        check_self!(elem, "query", DISCO_INFO, "disco#info result");
         check_no_unknown_attributes!(elem, "disco#info result", ["node"]);
 
         let mut result = DiscoInfoResult {
@@ -185,14 +185,14 @@ generate_element_with_only_attributes!(
 ///
 /// It should only be used in an `<iq type='get'/>`, as it can only represent
 /// the request, and not a result.
-DiscoItemsQuery, "query", ns::DISCO_ITEMS, [
+DiscoItemsQuery, "query", DISCO_ITEMS, [
     /// Node on which we are doing the discovery.
     node: Option<String> = "node" => optional,
 ]);
 
 generate_element_with_only_attributes!(
 /// Structure representing an `<item xmlns='http://jabber.org/protocol/disco#items'/>` element.
-Item, "item", ns::DISCO_ITEMS, [
+Item, "item", DISCO_ITEMS, [
     /// JID of the entity pointed by this item.
     jid: Jid = "jid" => required,
     /// Node of the entity pointed by this item.
@@ -207,14 +207,14 @@ generate_element_with_children!(
     ///
     /// It should only be used in an `<iq type='result'/>`, as it can only
     /// represent the result, and not a request.
-    DiscoItemsResult, "query", ns::DISCO_ITEMS,
+    DiscoItemsResult, "query", DISCO_ITEMS,
     attributes: [
         /// Node on which we have done this discovery.
         node: Option<String> = "node" => optional
     ],
     children: [
         /// List of items pointed by this entity.
-        items: Vec<Item> = ("item", ns::DISCO_ITEMS) => Item
+        items: Vec<Item> = ("item", DISCO_ITEMS) => Item
     ]
 );
 

@@ -26,7 +26,7 @@ impl TryFrom<Element> for Forwarded {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<Forwarded, Error> {
-        check_self!(elem, "forwarded", ns::FORWARD);
+        check_self!(elem, "forwarded", FORWARD);
         let mut delay = None;
         let mut stanza = None;
         for child in elem.children() {

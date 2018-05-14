@@ -4,7 +4,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use ns;
 use helpers::Base64;
 
 generate_attribute!(Stanza, "stanza", {
@@ -12,13 +11,13 @@ generate_attribute!(Stanza, "stanza", {
     Message => "message",
 }, Default = Iq);
 
-generate_element_with_only_attributes!(Open, "open", ns::IBB, [
+generate_element_with_only_attributes!(Open, "open", IBB, [
     block_size: u16 = "block-size" => required,
     sid: String = "sid" => required,
     stanza: Stanza = "stanza" => default,
 ]);
 
-generate_element_with_text!(Data, "data", ns::IBB,
+generate_element_with_text!(Data, "data", IBB,
     [
         seq: u16 = "seq" => required,
         sid: String = "sid" => required
@@ -26,7 +25,7 @@ generate_element_with_text!(Data, "data", ns::IBB,
     data: Base64<Vec<u8>>
 );
 
-generate_element_with_only_attributes!(Close, "close", ns::IBB, [
+generate_element_with_only_attributes!(Close, "close", IBB, [
     sid: String = "sid" => required,
 ]);
 

@@ -10,7 +10,6 @@ use minidom::IntoAttributeValue;
 
 use error::Error;
 
-use ns;
 use helpers::Base64;
 use base64;
 
@@ -69,7 +68,7 @@ impl IntoAttributeValue for Algo {
 
 generate_element_with_text!(
     #[derive(PartialEq)]
-    Hash, "hash", ns::HASHES,
+    Hash, "hash", HASHES,
     [
         algo: Algo = "algo" => required
     ],

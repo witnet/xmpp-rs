@@ -4,11 +4,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use ns;
+generate_empty_element!(Request, "request", RECEIPTS);
 
-generate_empty_element!(Request, "request", ns::RECEIPTS);
-
-generate_element_with_only_attributes!(Received, "received", ns::RECEIPTS, [
+generate_element_with_only_attributes!(Received, "received", RECEIPTS, [
     id: Option<String> = "id" => optional,
 ]);
 
@@ -17,6 +15,7 @@ mod tests {
     use super::*;
     use try_from::TryFrom;
     use minidom::Element;
+    use ns;
 
     #[test]
     fn test_simple() {

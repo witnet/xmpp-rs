@@ -6,9 +6,7 @@
 
 use date::DateTime;
 
-use ns;
-
-generate_element_with_only_attributes!(Idle, "idle", ns::IDLE, [
+generate_element_with_only_attributes!(Idle, "idle", IDLE, [
     since: DateTime = "since" => required,
 ]);
 

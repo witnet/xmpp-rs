@@ -29,7 +29,7 @@ impl TryFrom<Element> for ECaps2 {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<ECaps2, Error> {
-        check_self!(elem, "c", ns::ECAPS2, "ecaps2");
+        check_self!(elem, "c", ECAPS2, "ecaps2");
         check_no_attributes!(elem, "ecaps2");
         let mut hashes = vec!();
         for child in elem.children() {

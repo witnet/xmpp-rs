@@ -13,7 +13,7 @@ use error::Error;
 
 use ns;
 
-generate_empty_element!(BlocklistRequest, "blocklist", ns::BLOCKING);
+generate_empty_element!(BlocklistRequest, "blocklist", BLOCKING);
 
 macro_rules! generate_blocking_element {
     ($elem:ident, $name:tt) => (
@@ -26,11 +26,11 @@ macro_rules! generate_blocking_element {
             type Err = Error;
 
             fn try_from(elem: Element) -> Result<$elem, Error> {
-                check_self!(elem, $name, ns::BLOCKING);
+                check_self!(elem, $name, BLOCKING);
                 check_no_attributes!(elem, $name);
                 let mut items = vec!();
                 for child in elem.children() {
-                    check_self!(child, "item", ns::BLOCKING);
+                    check_self!(child, "item", BLOCKING);
                     check_no_unknown_attributes!(child, "item", ["jid"]);
                     check_no_children!(child, "item");
                     items.push(get_attr!(child, "jid", required));
@@ -59,7 +59,7 @@ generate_blocking_element!(BlocklistResult, "blocklist");
 generate_blocking_element!(Block, "block");
 generate_blocking_element!(Unblock, "unblock");
 
-generate_empty_element!(Blocked, "blocked", ns::BLOCKING_ERRORS);
+generate_empty_element!(Blocked, "blocked", BLOCKING_ERRORS);
 
 #[cfg(test)]
 mod tests {

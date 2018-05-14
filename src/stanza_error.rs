@@ -21,7 +21,7 @@ generate_attribute!(ErrorType, "type", {
     Wait => "wait",
 });
 
-generate_element_enum!(DefinedCondition, "condition", ns::XMPP_STANZAS, {
+generate_element_enum!(DefinedCondition, "condition", XMPP_STANZAS, {
     BadRequest => "bad-request",
     Conflict => "conflict",
     FeatureNotImplemented => "feature-not-implemented",
@@ -61,7 +61,7 @@ impl TryFrom<Element> for StanzaError {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<StanzaError, Error> {
-        check_self!(elem, "error", ns::DEFAULT_NS);
+        check_self!(elem, "error", DEFAULT_NS);
 
         let type_ = get_attr!(elem, "type", required);
         let by = get_attr!(elem, "by", optional);

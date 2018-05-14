@@ -28,7 +28,7 @@ impl TryFrom<Element> for Set {
     type Err = Error;
 
     fn try_from(elem: Element) -> Result<Set, Error> {
-        check_self!(elem, "set", ns::RSM, "RSM set");
+        check_self!(elem, "set", RSM, "RSM set");
         let mut set = Set {
             after: None,
             before: None,
