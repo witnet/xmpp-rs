@@ -25,12 +25,16 @@ pub struct Query {
     pub set: Option<Set>,
 }
 
-#[derive(Debug, Clone)]
-pub struct Result_ {
-    pub queryid: String,
-    pub id: String,
-    pub forwarded: Forwarded,
-}
+generate_element_with_children!(
+    Result_, "result", MAM,
+    attributes: [
+        id: String = "id" => required,
+        queryid: String = "queryid" => required,
+    ],
+    child: (
+        forwarded: Forwarded = ("forwarded", FORWARD) => Forwarded
+    )
+);
 
 #[derive(Debug, Clone)]
 pub struct Fin {
@@ -71,31 +75,6 @@ impl TryFrom<Element> for Query {
         let queryid = get_attr!(elem, "queryid", optional);
         let node = get_attr!(elem, "node", optional);
         Ok(Query { queryid, node, form, set })
-    }
-}
-
-impl TryFrom<Element> for Result_ {
-    type Err = Error;
-
-    fn try_from(elem: Element) -> Result<Result_, Error> {
-        check_self!(elem, "result", MAM);
-        check_no_unknown_attributes!(elem, "result", ["queryid", "id"]);
-        let mut forwarded = None;
-        for child in elem.children() {
-            if child.is("forwarded", ns::FORWARD) {
-                forwarded = Some(Forwarded::try_from(child.clone())?);
-            } else {
-                return Err(Error::ParseError("Unknown child in result element."));
-            }
-        }
-        let forwarded = forwarded.ok_or(Error::ParseError("Mandatory forwarded element missing in result."))?;
-        let queryid = get_attr!(elem, "queryid", required);
-        let id = get_attr!(elem, "id", required);
-        Ok(Result_ {
-            queryid,
-            id,
-            forwarded,
-        })
     }
 }
 
@@ -164,17 +143,6 @@ impl From<Query> for Element {
                 .attr("node", query.node)
                 //.append(query.form)
                 .append(query.set)
-                .build()
-    }
-}
-
-impl From<Result_> for Element {
-    fn from(result: Result_) -> Element {
-        Element::builder("result")
-                .ns(ns::MAM)
-                .attr("queryid", result.queryid)
-                .attr("id", result.id)
-                .append(result.forwarded)
                 .build()
     }
 }
