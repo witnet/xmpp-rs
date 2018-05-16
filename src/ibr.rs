@@ -11,6 +11,7 @@ use minidom::Element;
 
 use error::Error;
 
+use iq::{IqGetPayload, IqSetPayload, IqResultPayload};
 use data_forms::DataForm;
 
 use ns;
@@ -24,6 +25,10 @@ pub struct Query {
     // Not yet implemented.
     //pub oob: Option<Oob>,
 }
+
+impl IqGetPayload for Query;
+impl IqSetPayload for Query;
+impl IqResultPayload for Query;
 
 impl TryFrom<Element> for Query {
     type Err = Error;

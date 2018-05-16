@@ -12,6 +12,7 @@ use minidom::Element;
 use error::Error;
 use jid::Jid;
 use ns;
+use iq::{IqSetPayload, IqResultPayload};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Bind {
@@ -28,6 +29,9 @@ impl Bind {
         }
     }
 }
+
+impl IqSetPayload for Bind {}
+impl IqResultPayload for Bind {}
 
 impl TryFrom<Element> for Bind {
     type Err = Error;

@@ -11,6 +11,7 @@ use jid::Jid;
 
 use error::Error;
 
+use iq::{IqGetPayload, IqSetPayload, IqResultPayload};
 use data_forms::DataForm;
 use rsm::Set;
 use forwarding::Forwarded;
@@ -24,6 +25,10 @@ pub struct Query {
     pub form: Option<DataForm>,
     pub set: Option<Set>,
 }
+
+impl IqGetPayload for Query {}
+impl IqSetPayload for Query {}
+impl IqResultPayload for Query {}
 
 generate_element_with_children!(
     Result_, "result", MAM,
@@ -42,6 +47,8 @@ pub struct Fin {
     pub set: Set,
 }
 
+impl IqResultPayload for Fin {}
+
 generate_attribute!(DefaultPrefs, "default", {
     Always => "always",
     Never => "never",
@@ -54,6 +61,10 @@ pub struct Prefs {
     pub always: Vec<Jid>,
     pub never: Vec<Jid>,
 }
+
+impl IqGetPayload for Prefs {}
+impl IqSetPayload for Prefs {}
+impl IqResultPayload for Prefs {}
 
 impl TryFrom<Element> for Query {
     type Err = Error;

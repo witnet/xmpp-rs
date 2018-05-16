@@ -12,8 +12,11 @@ use minidom::Element;
 use error::Error;
 
 use ns;
+use iq::{IqGetPayload, IqSetPayload, IqResultPayload};
 
 generate_empty_element!(BlocklistRequest, "blocklist", BLOCKING);
+
+impl IqGetPayload for BlocklistRequest {}
 
 macro_rules! generate_blocking_element {
     ($elem:ident, $name:tt) => (
@@ -58,6 +61,10 @@ macro_rules! generate_blocking_element {
 generate_blocking_element!(BlocklistResult, "blocklist");
 generate_blocking_element!(Block, "block");
 generate_blocking_element!(Unblock, "unblock");
+
+impl IqResultPayload for BlocklistResult {}
+impl IqSetPayload for Block {}
+impl IqSetPayload for Unblock {}
 
 generate_empty_element!(Blocked, "blocked", BLOCKING_ERRORS);
 

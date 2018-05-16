@@ -5,6 +5,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use helpers::Base64;
+use iq::IqSetPayload;
 
 generate_attribute!(Stanza, "stanza", {
     Iq => "iq",
@@ -17,6 +18,8 @@ generate_element_with_only_attributes!(Open, "open", IBB, [
     stanza: Stanza = "stanza" => default,
 ]);
 
+impl IqSetPayload for Open {}
+
 generate_element_with_text!(Data, "data", IBB,
     [
         seq: u16 = "seq" => required,
@@ -25,9 +28,13 @@ generate_element_with_text!(Data, "data", IBB,
     data: Base64<Vec<u8>>
 );
 
+impl IqSetPayload for Data {}
+
 generate_element_with_only_attributes!(Close, "close", IBB, [
     sid: String = "sid" => required,
 ]);
+
+impl IqSetPayload for Close {}
 
 #[cfg(test)]
 mod tests {

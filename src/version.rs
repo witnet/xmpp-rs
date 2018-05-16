@@ -8,6 +8,7 @@ use try_from::TryFrom;
 use minidom::Element;
 use error::Error;
 use ns;
+use iq::{IqGetPayload, IqResultPayload};
 
 #[derive(Debug, Clone)]
 pub struct Version {
@@ -15,6 +16,9 @@ pub struct Version {
     pub version: String,
     pub os: Option<String>,
 }
+
+impl IqGetPayload for Version {}
+impl IqResultPayload for Version {}
 
 impl TryFrom<Element> for Version {
     type Err = Error;

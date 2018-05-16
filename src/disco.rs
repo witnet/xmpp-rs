@@ -14,6 +14,7 @@ use jid::Jid;
 use error::Error;
 use ns;
 
+use iq::{IqGetPayload, IqResultPayload};
 use data_forms::{DataForm, DataFormType};
 
 generate_element_with_only_attributes!(
@@ -25,6 +26,8 @@ DiscoInfoQuery, "query", DISCO_INFO, [
     /// Node on which we are doing the discovery.
     node: Option<String> = "node" => optional,
 ]);
+
+impl IqGetPayload for DiscoItemsQuery {}
 
 generate_element_with_only_attributes!(
 /// Structure representing a `<feature xmlns='http://jabber.org/protocol/disco#info'/>` element.
@@ -108,6 +111,8 @@ pub struct DiscoInfoResult {
     pub extensions: Vec<DataForm>,
 }
 
+impl IqResultPayload for DiscoInfoResult {}
+
 impl TryFrom<Element> for DiscoInfoResult {
     type Err = Error;
 
@@ -190,6 +195,8 @@ DiscoItemsQuery, "query", DISCO_ITEMS, [
     node: Option<String> = "node" => optional,
 ]);
 
+impl IqGetPayload for DiscoInfoResult {}
+
 generate_element_with_only_attributes!(
 /// Structure representing an `<item xmlns='http://jabber.org/protocol/disco#items'/>` element.
 Item, "item", DISCO_ITEMS, [
@@ -217,6 +224,8 @@ generate_element_with_children!(
         items: Vec<Item> = ("item", DISCO_ITEMS) => Item
     ]
 );
+
+impl IqResultPayload for DiscoItemsResult {}
 
 #[cfg(test)]
 mod tests {

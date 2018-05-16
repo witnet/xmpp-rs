@@ -5,6 +5,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use jid::Jid;
+use iq::{IqGetPayload, IqSetPayload, IqResultPayload};
 
 generate_elem_id!(Group, "group", ROSTER);
 
@@ -53,6 +54,10 @@ generate_element_with_children!(
         items: Vec<Item> = ("item", ROSTER) => Item
     ]
 );
+
+impl IqGetPayload for Roster {}
+impl IqSetPayload for Roster {}
+impl IqResultPayload for Roster {}
 
 #[cfg(test)]
 mod tests {

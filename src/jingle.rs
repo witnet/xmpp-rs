@@ -12,6 +12,7 @@ use jid::Jid;
 
 use error::Error;
 use ns;
+use iq::IqSetPayload;
 
 generate_attribute!(Action, "action", {
     ContentAccept => "content-accept",
@@ -304,6 +305,8 @@ pub struct Jingle {
     pub reason: Option<ReasonElement>,
     pub other: Vec<Element>,
 }
+
+impl IqSetPayload for Jingle {}
 
 impl Jingle {
     pub fn new(action: Action, sid: SessionId) -> Jingle {

@@ -15,6 +15,7 @@ use error::Error;
 
 use ns;
 
+use iq::{IqGetPayload, IqSetPayload, IqResultPayload};
 use data_forms::DataForm;
 
 use pubsub::{NodeName, ItemId, Subscription, SubscriptionId};
@@ -363,6 +364,10 @@ pub enum PubSub {
     /// An unsubscribe request.
     Unsubscribe(Unsubscribe),
 }
+
+impl IqGetPayload for PubSub {}
+impl IqSetPayload for PubSub {}
+impl IqResultPayload for PubSub {}
 
 impl TryFrom<Element> for PubSub {
     type Err = Error;
