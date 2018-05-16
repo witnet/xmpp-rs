@@ -26,9 +26,9 @@ pub struct Query {
     //pub oob: Option<Oob>,
 }
 
-impl IqGetPayload for Query;
-impl IqSetPayload for Query;
-impl IqResultPayload for Query;
+impl IqGetPayload for Query {}
+impl IqSetPayload for Query {}
+impl IqResultPayload for Query {}
 
 impl TryFrom<Element> for Query {
     type Err = Error;
