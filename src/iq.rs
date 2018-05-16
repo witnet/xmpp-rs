@@ -55,6 +55,59 @@ pub struct Iq {
     pub payload: IqType,
 }
 
+impl Iq {
+    pub fn from_get(payload: impl IqGetPayload) -> Iq {
+        Iq {
+            from: None,
+            to: None,
+            id: None,
+            payload: IqType::Get(payload.into()),
+        }
+    }
+
+    pub fn from_set(payload: impl IqSetPayload) -> Iq {
+        Iq {
+            from: None,
+            to: None,
+            id: None,
+            payload: IqType::Set(payload.into()),
+        }
+    }
+
+    pub fn from_result(payload: Option<impl IqResultPayload>) -> Iq {
+        Iq {
+            from: None,
+            to: None,
+            id: None,
+            payload: IqType::Result(payload.map(|payload| payload.into())),
+        }
+    }
+
+    pub fn from_error(payload: StanzaError) -> Iq {
+        Iq {
+            from: None,
+            to: None,
+            id: None,
+            payload: IqType::Error(payload),
+        }
+    }
+
+    pub fn with_to(mut self, to: Jid) -> Iq {
+        self.to = Some(to);
+        self
+    }
+
+    pub fn with_from(mut self, from: Jid) -> Iq {
+        self.from = Some(from);
+        self
+    }
+
+    pub fn with_id(mut self, id: String) -> Iq {
+        self.id = Some(id);
+        self
+    }
+}
+
 impl TryFrom<Element> for Iq {
     type Err = Error;
 
