@@ -27,7 +27,7 @@ DiscoInfoQuery, "query", DISCO_INFO, [
     node: Option<String> = "node" => optional,
 ]);
 
-impl IqGetPayload for DiscoItemsQuery {}
+impl IqGetPayload for DiscoInfoQuery {}
 
 generate_element_with_only_attributes!(
 /// Structure representing a `<feature xmlns='http://jabber.org/protocol/disco#info'/>` element.
@@ -195,7 +195,7 @@ DiscoItemsQuery, "query", DISCO_ITEMS, [
     node: Option<String> = "node" => optional,
 ]);
 
-impl IqGetPayload for DiscoInfoResult {}
+impl IqGetPayload for DiscoItemsQuery {}
 
 generate_element_with_only_attributes!(
 /// Structure representing an `<item xmlns='http://jabber.org/protocol/disco#items'/>` element.
