@@ -85,6 +85,9 @@ pub const BLOCKING: &str = "urn:xmpp:blocking";
 /// XEP-0191: Blocking Command
 pub const BLOCKING_ERRORS: &str = "urn:xmpp:blocking:errors";
 
+/// XEP-0198: Stream Management
+pub const SM: &str = "urn:xmpp:sm:3";
+
 /// XEP-0199: XMPP Ping
 pub const PING: &str = "urn:xmpp:ping";
 

@@ -119,6 +119,9 @@ pub mod receipts;
 /// XEP-0191: Blocking Command
 pub mod blocking;
 
+/// XEP-0198: Stream Management
+pub mod sm;
+
 /// XEP-0199: XMPP Ping
 pub mod ping;
 
