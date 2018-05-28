@@ -65,10 +65,10 @@ impl Candidate {
 
 #[derive(Debug, Clone)]
 pub enum TransportPayload {
-    Activated(String),
+    Activated(CandidateId),
     Candidates(Vec<Candidate>),
     CandidateError,
-    CandidateUsed(String),
+    CandidateUsed(CandidateId),
     ProxyError,
     None,
 }
@@ -230,7 +230,7 @@ mod tests {
             sid: StreamId(String::from("coucou")),
             dstaddr: None,
             mode: Mode::Tcp,
-            payload: TransportPayload::Activated(String::from("coucou")),
+            payload: TransportPayload::Activated(CandidateId(String::from("coucou"))),
         };
         let elem2: Element = transport.into();
         assert!(elem.compare_to(&elem2));
