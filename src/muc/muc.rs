@@ -5,53 +5,18 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use try_from::TryFrom;
-
-use minidom::Element;
-
-use error::Error;
-
-use ns;
-
-#[derive(Debug, Clone)]
-pub struct Muc {
-    pub password: Option<String>,
-}
-
-impl TryFrom<Element> for Muc {
-    type Err = Error;
-
-    fn try_from(elem: Element) -> Result<Muc, Error> {
-        check_self!(elem, "x", MUC);
-        check_no_attributes!(elem, "x");
-
-        let mut password = None;
-        for child in elem.children() {
-            if child.is("password", ns::MUC) {
-                password = Some(child.text());
-            } else {
-                return Err(Error::ParseError("Unknown child in x element."));
-            }
-        }
-
-        Ok(Muc {
-            password: password,
-        })
-    }
-}
-
-impl From<Muc> for Element {
-    fn from(muc: Muc) -> Element {
-        Element::builder("x")
-                .ns(ns::MUC)
-                .append(muc.password)
-                .build()
-    }
-}
+generate_element_with_children!(
+    Muc, "x", MUC, children: [
+        password: Option<String> = ("password", MUC) => String
+    ]
+);
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use try_from::TryFrom;
+    use minidom::Element;
+    use error::Error;
     use compare_elements::NamespaceAwareCompare;
 
     #[test]

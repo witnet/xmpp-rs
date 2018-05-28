@@ -66,16 +66,20 @@ generate_attribute!(Disposition, "disposition", {
 
 generate_id!(ContentId);
 
-#[derive(Debug, Clone)]
-pub struct Content {
-    pub creator: Creator,
-    pub disposition: Disposition,
-    pub name: ContentId,
-    pub senders: Senders,
-    pub description: Option<Element>,
-    pub transport: Option<Element>,
-    pub security: Option<Element>,
-}
+generate_element_with_children!(
+    Content, "content", JINGLE,
+    attributes: [
+        creator: Creator = "creator" => required,
+        disposition: Disposition = "disposition" => default,
+        name: ContentId = "name" => required,
+        senders: Senders = "senders" => default
+    ],
+    children: [
+        description: Option<Element> = ("description", JINGLE) => Element,
+        transport: Option<Element> = ("transport", JINGLE) => Element,
+        security: Option<Element> = ("security", JINGLE) => Element
+    ]
+);
 
 impl Content {
     pub fn new(creator: Creator, name: ContentId) -> Content {
@@ -113,61 +117,6 @@ impl Content {
     pub fn with_security(mut self, security: Element) -> Content {
         self.security = Some(security);
         self
-    }
-}
-
-impl TryFrom<Element> for Content {
-    type Err = Error;
-
-    fn try_from(elem: Element) -> Result<Content, Error> {
-        check_self!(elem, "content", JINGLE);
-        check_no_unknown_attributes!(elem, "content", ["creator", "disposition", "name", "senders"]);
-
-        let mut content = Content {
-            creator: get_attr!(elem, "creator", required),
-            disposition: get_attr!(elem, "disposition", default),
-            name: get_attr!(elem, "name", required),
-            senders: get_attr!(elem, "senders", default),
-            description: None,
-            transport: None,
-            security: None,
-        };
-        for child in elem.children() {
-            if child.name() == "description" {
-                if content.description.is_some() {
-                    return Err(Error::ParseError("Content must not have more than one description."));
-                }
-                content.description = Some(child.clone());
-            } else if child.name() == "transport" {
-                if content.transport.is_some() {
-                    return Err(Error::ParseError("Content must not have more than one transport."));
-                }
-                content.transport = Some(child.clone());
-            } else if child.name() == "security" {
-                if content.security.is_some() {
-                    return Err(Error::ParseError("Content must not have more than one security."));
-                }
-                content.security = Some(child.clone());
-            } else {
-                return Err(Error::ParseError("Unknown child in content element."));
-            }
-        }
-        Ok(content)
-    }
-}
-
-impl From<Content> for Element {
-    fn from(content: Content) -> Element {
-        Element::builder("content")
-                .ns(ns::JINGLE)
-                .attr("creator", content.creator)
-                .attr("disposition", content.disposition)
-                .attr("name", content.name)
-                .attr("senders", content.senders)
-                .append(content.description)
-                .append(content.transport)
-                .append(content.security)
-                .build()
     }
 }
 

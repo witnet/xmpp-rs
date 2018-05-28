@@ -62,10 +62,10 @@ generate_element_with_children!(
     attributes: [
         h: Option<u32> = "h" => optional,
     ],
-    child: (
+    children: [
         // XXX: implement the * handling.
         error: Option<DefinedCondition> = ("*", XMPP_STANZAS) => DefinedCondition
-    )
+    ]
 );
 
 generate_empty_element!(

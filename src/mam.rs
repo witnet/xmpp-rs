@@ -18,13 +18,17 @@ use forwarding::Forwarded;
 
 use ns;
 
-#[derive(Debug, Clone)]
-pub struct Query {
-    pub queryid: Option<String>,
-    pub node: Option<String>,
-    pub form: Option<DataForm>,
-    pub set: Option<Set>,
-}
+generate_element_with_children!(
+    Query, "query", MAM,
+    attributes: [
+        queryid: Option<String> = "queryid" => optional,
+        node: Option<String> = "node" => optional
+    ],
+    children: [
+        form: Option<DataForm> = ("x", DATA_FORMS) => DataForm,
+        set: Option<Set> = ("set", RSM) => Set
+    ]
+);
 
 impl IqGetPayload for Query {}
 impl IqSetPayload for Query {}
@@ -36,16 +40,24 @@ generate_element_with_children!(
         id: String = "id" => required,
         queryid: String = "queryid" => required,
     ],
-    child: (
-        forwarded: Forwarded = ("forwarded", FORWARD) => Forwarded
-    )
+    children: [
+        forwarded: Required<Forwarded> = ("forwarded", FORWARD) => Forwarded
+    ]
 );
 
-#[derive(Debug, Clone)]
-pub struct Fin {
-    pub complete: bool,
-    pub set: Set,
-}
+generate_attribute!(
+    Complete, "complete", bool
+);
+
+generate_element_with_children!(
+    Fin, "fin", MAM,
+    attributes: [
+        complete: Complete = "complete" => default
+    ],
+    children: [
+        set: Required<Set> = ("set", RSM) => Set
+    ]
+);
 
 impl IqResultPayload for Fin {}
 
@@ -65,54 +77,6 @@ pub struct Prefs {
 impl IqGetPayload for Prefs {}
 impl IqSetPayload for Prefs {}
 impl IqResultPayload for Prefs {}
-
-impl TryFrom<Element> for Query {
-    type Err = Error;
-
-    fn try_from(elem: Element) -> Result<Query, Error> {
-        check_self!(elem, "query", MAM);
-        check_no_unknown_attributes!(elem, "query", ["queryid", "node"]);
-        let mut form = None;
-        let mut set = None;
-        for child in elem.children() {
-            if child.is("x", ns::DATA_FORMS) {
-                form = Some(DataForm::try_from(child.clone())?);
-            } else if child.is("set", ns::RSM) {
-                set = Some(Set::try_from(child.clone())?);
-            } else {
-                return Err(Error::ParseError("Unknown child in query element."));
-            }
-        }
-        let queryid = get_attr!(elem, "queryid", optional);
-        let node = get_attr!(elem, "node", optional);
-        Ok(Query { queryid, node, form, set })
-    }
-}
-
-impl TryFrom<Element> for Fin {
-    type Err = Error;
-
-    fn try_from(elem: Element) -> Result<Fin, Error> {
-        check_self!(elem, "fin", MAM);
-        check_no_unknown_attributes!(elem, "fin", ["complete"]);
-        let mut set = None;
-        for child in elem.children() {
-            if child.is("set", ns::RSM) {
-                set = Some(Set::try_from(child.clone())?);
-            } else {
-                return Err(Error::ParseError("Unknown child in fin element."));
-            }
-        }
-        let set = set.ok_or(Error::ParseError("Mandatory set element missing in fin."))?;
-        let complete = match elem.attr("complete") {
-            Some(complete) if complete == "true" => true,
-            Some(complete) if complete == "false" => false,
-            None => false,
-            Some(_) => return Err(Error::ParseError("Invalid value for 'complete' attribute.")),
-        };
-        Ok(Fin { complete, set })
-    }
-}
 
 impl TryFrom<Element> for Prefs {
     type Err = Error;
@@ -143,28 +107,6 @@ impl TryFrom<Element> for Prefs {
         }
         let default_ = get_attr!(elem, "default", required);
         Ok(Prefs { default_, always, never })
-    }
-}
-
-impl From<Query> for Element {
-    fn from(query: Query) -> Element {
-        Element::builder("query")
-                .ns(ns::MAM)
-                .attr("queryid", query.queryid)
-                .attr("node", query.node)
-                //.append(query.form)
-                .append(query.set)
-                .build()
-    }
-}
-
-impl From<Fin> for Element {
-    fn from(fin: Fin) -> Element {
-        Element::builder("fin")
-                .ns(ns::MAM)
-                .attr("complete", if fin.complete { Some("true") } else { None })
-                .append(fin.set)
-                .build()
     }
 }
 

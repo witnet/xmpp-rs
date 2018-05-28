@@ -5,7 +5,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use try_from::{TryFrom, TryInto};
+use try_from::TryFrom;
 
 use minidom::Element;
 
@@ -80,6 +80,7 @@ Status, "status", MUC_USER, "code", {
 /// Optional <actor/> element used in <item/> elements inside presence stanzas of type
 /// "unavailable" that are sent to users who are kick or banned, as well as within IQs for tracking
 /// purposes. -- CHANGELOG  0.17 (2002-10-23)
+///
 /// Possesses a 'jid' and a 'nick' attribute, so that an action can be attributed either to a real
 /// JID or to a roomnick. -- CHANGELOG  1.25 (2012-02-08)
 #[derive(Debug, Clone, PartialEq)]
@@ -140,108 +141,25 @@ generate_attribute!(Role, "role", {
     None => "none",
 }, Default = None);
 
-#[derive(Debug, Clone)]
-pub struct Item {
-    pub affiliation: Affiliation,
-    pub jid: Option<Jid>,
-    pub nick: Option<String>,
-    pub role: Role,
-    pub actor: Option<Actor>,
-    pub continue_: Option<Continue>,
-    pub reason: Option<Reason>,
-}
+generate_element_with_children!(
+    Item, "item", MUC_USER, attributes: [
+        affiliation: Affiliation = "affiliation" => required,
+        jid: Option<Jid> = "jid" => optional,
+        nick: Option<String> = "nick" => optional,
+        role: Role = "role" => required
+    ], children: [
+        actor: Option<Actor> = ("actor", MUC_USER) => Actor,
+        continue_: Option<Continue> = ("continue", MUC_USER) => Continue,
+        reason: Option<Reason> = ("reason", MUC_USER) => Reason
+    ]
+);
 
-impl TryFrom<Element> for Item {
-    type Err = Error;
-
-    fn try_from(elem: Element) -> Result<Item, Error> {
-        check_self!(elem, "item", MUC_USER);
-        check_no_unknown_attributes!(elem, "item", ["affiliation", "jid", "nick", "role"]);
-        let mut actor: Option<Actor> = None;
-        let mut continue_: Option<Continue> = None;
-        let mut reason: Option<Reason> = None;
-        for child in elem.children() {
-            if child.is("actor", ns::MUC_USER) {
-                actor = Some(child.clone().try_into()?);
-            } else if child.is("continue", ns::MUC_USER) {
-                continue_ = Some(child.clone().try_into()?);
-            } else if child.is("reason", ns::MUC_USER) {
-                reason = Some(child.clone().try_into()?);
-            } else {
-                return Err(Error::ParseError("Unknown child in item element."));
-            }
-        }
-
-        let affiliation: Affiliation = get_attr!(elem, "affiliation", required);
-        let jid: Option<Jid> = get_attr!(elem, "jid", optional);
-        let nick: Option<String> = get_attr!(elem, "nick", optional);
-        let role: Role = get_attr!(elem, "role", required);
-
-        Ok(Item{
-            affiliation: affiliation,
-            jid: jid,
-            nick: nick,
-            role: role,
-            actor: actor,
-            continue_: continue_,
-            reason: reason,
-        })
-    }
-}
-
-impl From<Item> for Element {
-    fn from(item: Item) -> Element {
-        Element::builder("item")
-                .ns(ns::MUC_USER)
-                .attr("affiliation", item.affiliation)
-                .attr("jid", item.jid)
-                .attr("nick", item.nick)
-                .attr("role", item.role)
-                .append(item.actor)
-                .append(item.continue_)
-                .append(item.reason)
-                .build()
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct MucUser {
-    pub status: Vec<Status>,
-    pub items: Vec<Item>,
-}
-
-impl TryFrom<Element> for MucUser {
-    type Err = Error;
-
-    fn try_from(elem: Element) -> Result<MucUser, Error> {
-        check_self!(elem, "x", MUC_USER);
-        check_no_attributes!(elem, "x");
-        let mut status = vec!();
-        let mut items = vec!();
-        for child in elem.children() {
-            if child.is("status", ns::MUC_USER) {
-                status.push(Status::try_from(child.clone())?);
-            } else if child.is("item", ns::MUC_USER) {
-                items.push(Item::try_from(child.clone())?);
-            } else {
-                return Err(Error::ParseError("Unknown child in x element."));
-            }
-        }
-        Ok(MucUser {
-            status,
-            items,
-        })
-    }
-}
-
-impl From<MucUser> for Element {
-    fn from(muc_user: MucUser) -> Element {
-        Element::builder("x")
-                .ns(ns::MUC_USER)
-                .append(muc_user.status)
-                .build()
-    }
-}
+generate_element_with_children!(
+    MucUser, "x", MUC_USER, children: [
+        status: Vec<Status> = ("status", MUC_USER) => Status,
+        items: Vec<Item> = ("item", MUC_USER) => Item
+    ]
+);
 
 #[cfg(test)]
 mod tests {
@@ -255,6 +173,24 @@ mod tests {
             <x xmlns='http://jabber.org/protocol/muc#user'/>
         ".parse().unwrap();
         MucUser::try_from(elem).unwrap();
+    }
+
+    #[test]
+    fn statuses_and_items() {
+        let elem: Element = "
+            <x xmlns='http://jabber.org/protocol/muc#user'>
+                <status code='101'/>
+                <status code='102'/>
+                <item affiliation='member' role='moderator'/>
+            </x>
+        ".parse().unwrap();
+        let muc_user = MucUser::try_from(elem).unwrap();
+        assert_eq!(muc_user.status.len(), 2);
+        assert_eq!(muc_user.status[0], Status::AffiliationChange);
+        assert_eq!(muc_user.status[1], Status::ConfigShowsUnavailableMembers);
+        assert_eq!(muc_user.items.len(), 1);
+        assert_eq!(muc_user.items[0].affiliation, Affiliation::Member);
+        assert_eq!(muc_user.items[0].role, Role::Moderator);
     }
 
     #[test]

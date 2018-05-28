@@ -72,10 +72,10 @@ generate_element_with_only_attributes!(
 generate_element_with_children!(
     /// Request to configure a new node.
     Configure, "configure", PUBSUB,
-    child: (
+    children: [
         /// The form to configure it.
         form: Option<DataForm> = ("x", DATA_FORMS) => DataForm
-    )
+    ]
 );
 
 generate_element_with_only_attributes!(
@@ -168,10 +168,10 @@ generate_element_with_children!(
         /// The subscription identifier affected by this request.
         subid: Option<SubscriptionId> = "subid" => optional,
     ],
-    child: (
+    children: [
         /// The form describing the subscription.
         form: Option<DataForm> = ("x", DATA_FORMS) => DataForm
-    )
+    ]
 );
 
 generate_element_with_children!(
@@ -190,10 +190,10 @@ generate_element_with_children!(
 generate_element_with_children!(
     /// The options associated to a publish request.
     PublishOptions, "publish-options", PUBSUB,
-    child: (
+    children: [
         /// The form describing these options.
         form: Option<DataForm> = ("x", DATA_FORMS) => DataForm
-    )
+    ]
 );
 
 generate_attribute!(
@@ -300,10 +300,10 @@ generate_element_with_children!(
         /// The state of the subscription.
         subscription: Option<Subscription> = "subscription" => optional,
     ],
-    child: (
+    children: [
         /// The options related to this subscription.
         subscribe_options: Option<SubscribeOptions> = ("subscribe-options", PUBSUB) => SubscribeOptions
-    )
+    ]
 );
 
 generate_element_with_only_attributes!(
