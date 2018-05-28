@@ -39,11 +39,12 @@ pub use minidom::Element;
 pub mod error;
 /// XML namespace definitions used through XMPP.
 pub mod ns;
+
 /// Various helpers.
-pub mod helpers;
+mod helpers;
 /// Helper macros to parse and serialise more easily.
 #[macro_use]
-pub mod macros;
+mod macros;
 
 #[cfg(test)]
 /// Namespace-aware comparison for tests
