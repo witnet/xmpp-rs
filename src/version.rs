@@ -82,6 +82,7 @@ impl From<Version> for Element {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use compare_elements::NamespaceAwareCompare;
 
     #[test]
     fn test_simple() {
@@ -90,5 +91,18 @@ mod tests {
         assert_eq!(version.name, String::from("xmpp-rs"));
         assert_eq!(version.version, String::from("0.3.0"));
         assert_eq!(version.os, None);
+    }
+
+    #[test]
+    fn serialisation() {
+        let version = Version {
+            name: String::from("xmpp-rs"),
+            version: String::from("0.3.0"),
+            os: None,
+        };
+        let elem1 = Element::from(version);
+        let elem2: Element = "<query xmlns='jabber:iq:version'><name>xmpp-rs</name><version>0.3.0</version></query>".parse().unwrap();
+        println!("{:?}", elem1);
+        assert!(elem1.compare_to(&elem2));
     }
 }
