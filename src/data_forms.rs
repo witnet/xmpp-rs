@@ -13,47 +13,15 @@ use ns;
 
 use media_element::MediaElement;
 
-#[derive(Debug, Clone)]
-pub struct Option_ {
-    pub label: Option<String>,
-    pub value: String,
-}
-
-impl TryFrom<Element> for Option_ {
-    type Err = Error;
-
-    fn try_from(elem: Element) -> Result<Option_, Error> {
-        check_self!(elem, "option", DATA_FORMS);
-        check_no_unknown_attributes!(elem, "option", ["label"]);
-        let mut value = None;
-        for child in elem.children() {
-            if !child.is("value", ns::DATA_FORMS) {
-                return Err(Error::ParseError("Non-value element in option element"));
-            }
-            if value.is_some() {
-                return Err(Error::ParseError("More than one value element in option element"));
-            }
-            value = Some(child.text());
-        }
-        Ok(Option_ {
-            label: get_attr!(elem, "label", optional),
-            value: value.ok_or(Error::ParseError("No value element in option element"))?,
-        })
-    }
-}
-
-impl From<Option_> for Element {
-    fn from(option: Option_) -> Element {
-        Element::builder("option")
-                .ns(ns::DATA_FORMS)
-                .attr("label", option.label)
-                .append(Element::builder("value")
-                                .ns(ns::DATA_FORMS)
-                                .append(option.value)
-                                .build())
-                .build()
-    }
-}
+generate_element!(
+    Option_, "option", DATA_FORMS,
+    attributes: [
+        label: Option<String> = "label" => optional
+    ],
+    children: [
+        value: Required<String> = ("value", DATA_FORMS) => String
+    ]
+);
 
 generate_attribute!(FieldType, "type", {
     Boolean => "boolean",
@@ -265,5 +233,29 @@ mod tests {
             _ => panic!(),
         };
         assert_eq!(message, "Unknown child in data form element.");
+    }
+
+    #[test]
+    fn option() {
+        let elem: Element = "<option xmlns='jabber:x:data' label='Coucou !'><value>coucou</value></option>".parse().unwrap();
+        let option = Option_::try_from(elem).unwrap();
+        assert_eq!(&option.label.unwrap(), "Coucou !");
+        assert_eq!(&option.value, "coucou");
+
+        let elem: Element = "<option xmlns='jabber:x:data' label='Coucou !'/>".parse().unwrap();
+        let error = Option_::try_from(elem).unwrap_err();
+        let message = match error {
+            Error::ParseError(string) => string,
+            _ => panic!(),
+        };
+        assert_eq!(message, "Missing child value in option element.");
+
+        let elem: Element = "<option xmlns='jabber:x:data' label='Coucou !'><value>coucou</value><value>error</value></option>".parse().unwrap();
+        let error = Option_::try_from(elem).unwrap_err();
+        let message = match error {
+            Error::ParseError(string) => string,
+            _ => panic!(),
+        };
+        assert_eq!(message, "Element option must not have more than one value child.");
     }
 }
