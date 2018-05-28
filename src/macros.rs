@@ -287,43 +287,10 @@ macro_rules! generate_empty_element {
 
 macro_rules! generate_element_with_only_attributes {
     ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident, [$($(#[$attr_meta:meta])* $attr:ident: $attr_type:ty = $attr_name:tt => $attr_action:tt),+,]) => (
-        generate_element_with_only_attributes!($(#[$meta])* $elem, $name, $ns, [$($(#[$attr_meta])* $attr: $attr_type = $attr_name => $attr_action),*]);
+        generate_element_with_children!($(#[$meta])* $elem, $name, $ns, attributes: [$($(#[$attr_meta])* $attr: $attr_type = $attr_name => $attr_action),*], children: []);
     );
     ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident, [$($(#[$attr_meta:meta])* $attr:ident: $attr_type:ty = $attr_name:tt => $attr_action:tt),+]) => (
-        $(#[$meta])*
-        #[derive(Debug, Clone)]
-        pub struct $elem {
-            $(
-            $(#[$attr_meta])*
-            pub $attr: $attr_type,
-            )*
-        }
-
-        impl ::try_from::TryFrom<::minidom::Element> for $elem {
-            type Err = ::error::Error;
-
-            fn try_from(elem: ::minidom::Element) -> Result<$elem, ::error::Error> {
-                check_self!(elem, $name, $ns);
-                check_no_children!(elem, $name);
-                check_no_unknown_attributes!(elem, $name, [$($attr_name),*]);
-                Ok($elem {
-                    $(
-                    $attr: get_attr!(elem, $attr_name, $attr_action),
-                    )*
-                })
-            }
-        }
-
-        impl From<$elem> for ::minidom::Element {
-            fn from(elem: $elem) -> ::minidom::Element {
-                ::minidom::Element::builder($name)
-                        .ns(::ns::$ns)
-                        $(
-                        .attr($attr_name, elem.$attr)
-                        )*
-                        .build()
-            }
-        }
+        generate_element_with_children!($(#[$meta])* $elem, $name, $ns, attributes: [$($(#[$attr_meta])* $attr: $attr_type = $attr_name => $attr_action),*], children: []);
     );
 }
 
@@ -507,13 +474,13 @@ macro_rules! generate_serialiser {
 }
 
 macro_rules! generate_element_with_children {
-    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident, children: [$($(#[$child_meta:meta])* $child_ident:ident: $coucou:tt<$child_type:ty> = ($child_name:tt, $child_ns:ident) => $child_constructor:ident),+]) => (
-        generate_element_with_children!($(#[$meta])* $elem, $name, $ns, attributes: [], children: [$($(#[$child_meta])* $child_ident: $coucou<$child_type> = ($child_name, $child_ns) => $child_constructor),+]);
+    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident, children: [$($(#[$child_meta:meta])* $child_ident:ident: $coucou:tt<$child_type:ty> = ($child_name:tt, $child_ns:ident) => $child_constructor:ident),*]) => (
+        generate_element_with_children!($(#[$meta])* $elem, $name, $ns, attributes: [], children: [$($(#[$child_meta])* $child_ident: $coucou<$child_type> = ($child_name, $child_ns) => $child_constructor),*]);
     );
-    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident, attributes: [$($(#[$attr_meta:meta])* $attr:ident: $attr_type:ty = $attr_name:tt => $attr_action:tt),*,], children: [$($(#[$child_meta:meta])* $child_ident:ident: $coucou:tt<$child_type:ty> = ($child_name:tt, $child_ns:ident) => $child_constructor:ident),+]) => (
-        generate_element_with_children!($(#[$meta])* $elem, $name, $ns, attributes: [$($(#[$attr_meta])* $attr: $attr_type = $attr_name => $attr_action),*], children: [$($(#[$child_meta])* $child_ident: $coucou<$child_type> = ($child_name, $child_ns) => $child_constructor),+]);
+    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident, attributes: [$($(#[$attr_meta:meta])* $attr:ident: $attr_type:ty = $attr_name:tt => $attr_action:tt),*,], children: [$($(#[$child_meta:meta])* $child_ident:ident: $coucou:tt<$child_type:ty> = ($child_name:tt, $child_ns:ident) => $child_constructor:ident),*]) => (
+        generate_element_with_children!($(#[$meta])* $elem, $name, $ns, attributes: [$($(#[$attr_meta])* $attr: $attr_type = $attr_name => $attr_action),*], children: [$($(#[$child_meta])* $child_ident: $coucou<$child_type> = ($child_name, $child_ns) => $child_constructor),*]);
     );
-    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident, attributes: [$($(#[$attr_meta:meta])* $attr:ident: $attr_type:ty = $attr_name:tt => $attr_action:tt),*], children: [$($(#[$child_meta:meta])* $child_ident:ident: $coucou:tt<$child_type:ty> = ($child_name:tt, $child_ns:ident) => $child_constructor:ident),+]) => (
+    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident, attributes: [$($(#[$attr_meta:meta])* $attr:ident: $attr_type:ty = $attr_name:tt => $attr_action:tt),*], children: [$($(#[$child_meta:meta])* $child_ident:ident: $coucou:tt<$child_type:ty> = ($child_name:tt, $child_ns:ident) => $child_constructor:ident),*]) => (
         $(#[$meta])*
         #[derive(Debug, Clone)]
         pub struct $elem {
@@ -536,10 +503,10 @@ macro_rules! generate_element_with_children {
                 $(
                 start_parse_elem!($child_ident: $coucou);
                 )*
-                for child in elem.children() {
+                for _child in elem.children() {
                     $(
-                    if child.is($child_name, ::ns::$child_ns) {
-                        do_parse_elem!($child_ident: $coucou = $child_constructor => child);
+                    if _child.is($child_name, ::ns::$child_ns) {
+                        do_parse_elem!($child_ident: $coucou = $child_constructor => _child);
                         continue;
                     }
                     )*
