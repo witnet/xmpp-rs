@@ -419,29 +419,32 @@ macro_rules! do_parse {
 }
 
 macro_rules! do_parse_elem {
-    ($temp:ident: Vec = $constructor:ident => $elem:ident) => (
+    ($temp:ident: Vec = $constructor:ident => $elem:ident, $name:tt, $parent_name:tt) => (
         $temp.push(do_parse!($elem, $constructor));
     );
-    ($temp:ident: Option = $constructor:ident => $elem:ident) => (
+    ($temp:ident: Option = $constructor:ident => $elem:ident, $name:tt, $parent_name:tt) => (
         if $temp.is_some() {
-            return Err(::error::Error::ParseError(concat!("coucou", " must not have more than one ", "coucou", ".")));
+            return Err(::error::Error::ParseError(concat!("Element ", $parent_name, " must not have more than one ", $name, " child.")));
         }
         $temp = Some(do_parse!($elem, $constructor));
     );
-    ($temp:ident: Required = $constructor:ident => $elem:ident) => (
+    ($temp:ident: Required = $constructor:ident => $elem:ident, $name:tt, $parent_name:tt) => (
+        if $temp.is_some() {
+            return Err(::error::Error::ParseError(concat!("Element ", $parent_name, " must not have more than one ", $name, " child.")));
+        }
         $temp = Some(do_parse!($elem, $constructor));
     );
 }
 
 macro_rules! finish_parse_elem {
-    ($temp:ident: Vec = $name:tt) => (
+    ($temp:ident: Vec = $name:tt, $parent_name:tt) => (
         $temp
     );
-    ($temp:ident: Option = $name:tt) => (
+    ($temp:ident: Option = $name:tt, $parent_name:tt) => (
         $temp
     );
-    ($temp:ident: Required = $name:tt) => (
-        $temp.ok_or(::error::Error::ParseError(concat!("Missing child coucou in ", $name, " element.")))?
+    ($temp:ident: Required = $name:tt, $parent_name:tt) => (
+        $temp.ok_or(::error::Error::ParseError(concat!("Missing child ", $name, " in ", $parent_name, " element.")))?
     );
 }
 
@@ -503,7 +506,7 @@ macro_rules! generate_element {
                 for _child in elem.children() {
                     $(
                     if _child.is($child_name, ::ns::$child_ns) {
-                        do_parse_elem!($child_ident: $coucou = $child_constructor => _child);
+                        do_parse_elem!($child_ident: $coucou = $child_constructor => _child, $child_name, $name);
                         continue;
                     }
                     )*
@@ -514,7 +517,7 @@ macro_rules! generate_element {
                     $attr: get_attr!(elem, $attr_name, $attr_action),
                     )*
                     $(
-                    $child_ident: finish_parse_elem!($child_ident: $coucou = $child_name),
+                    $child_ident: finish_parse_elem!($child_ident: $coucou = $child_name, $name),
                     )*
                 })
             }
