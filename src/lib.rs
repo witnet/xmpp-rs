@@ -33,6 +33,8 @@ extern crate blake2;
 extern crate chrono;
 extern crate try_from;
 
+pub use minidom::Element;
+
 /// Error type returned by every parser on failure.
 pub mod error;
 /// XML namespace definitions used through XMPP.
