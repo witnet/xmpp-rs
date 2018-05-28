@@ -5,9 +5,22 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+use date::DateTime;
+
+generate_element!(
+    History, "history", MUC,
+    attributes: [
+        maxchars: Option<u32> = "maxchars" => optional,
+        maxstanzas: Option<u32> = "maxstanzas" => optional,
+        seconds: Option<u32> = "seconds" => optional,
+        since: Option<DateTime> = "since" => optional,
+    ]
+);
+
 generate_element!(
     Muc, "x", MUC, children: [
-        password: Option<String> = ("password", MUC) => String
+        password: Option<String> = ("password", MUC) => String,
+        history: Option<History> = ("history", MUC) => History
     ]
 );
 
@@ -17,6 +30,7 @@ mod tests {
     use try_from::TryFrom;
     use minidom::Element;
     use error::Error;
+    use std::str::FromStr;
     use compare_elements::NamespaceAwareCompare;
 
     #[test]
@@ -41,6 +55,7 @@ mod tests {
         let elem: Element = "<x xmlns='http://jabber.org/protocol/muc'/>".parse().unwrap();
         let muc = Muc {
             password: None,
+            history: None,
         };
         let elem2 = muc.into();
         assert_eq!(elem, elem2);
@@ -70,5 +85,28 @@ mod tests {
 
         let elem2 = Element::from(muc);
         assert!(elem1.compare_to(&elem2));
+    }
+
+    #[test]
+    fn history() {
+        let elem: Element = "
+            <x xmlns='http://jabber.org/protocol/muc'>
+                <history maxstanzas='0'/>
+            </x>"
+        .parse().unwrap();
+        let muc = Muc::try_from(elem).unwrap();
+        let history = muc.history.unwrap();
+        assert_eq!(history.maxstanzas, Some(0));
+        assert_eq!(history.maxchars, None);
+        assert_eq!(history.seconds, None);
+        assert_eq!(history.since, None);
+
+        let elem: Element = "
+            <x xmlns='http://jabber.org/protocol/muc'>
+                <history since='1970-01-01T00:00:00Z'/>
+            </x>"
+        .parse().unwrap();
+        let muc = Muc::try_from(elem).unwrap();
+        assert_eq!(muc.history.unwrap().since.unwrap(), DateTime::from_str("1970-01-01T00:00:00+00:00").unwrap());
     }
 }
