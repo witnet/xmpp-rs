@@ -287,7 +287,8 @@ impl From<Checksum> for Element {
     }
 }
 
-generate_element_with_only_attributes!(Received, "received", JINGLE_FT, [
+generate_element!(Received, "received", JINGLE_FT,
+attributes: [
     name: ContentId = "name" => required,
     creator: Creator = "creator" => required,
 ]);

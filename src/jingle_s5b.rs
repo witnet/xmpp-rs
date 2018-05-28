@@ -30,7 +30,8 @@ generate_id!(CandidateId);
 
 generate_id!(StreamId);
 
-generate_element_with_only_attributes!(Candidate, "candidate", JINGLE_S5B, [
+generate_element!(Candidate, "candidate", JINGLE_S5B,
+attributes: [
     cid: CandidateId = "cid" => required,
     host: IpAddr = "host" => required,
     jid: Jid = "jid" => required,

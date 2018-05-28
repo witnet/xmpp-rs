@@ -17,22 +17,24 @@ use ns;
 use iq::{IqGetPayload, IqResultPayload};
 use data_forms::{DataForm, DataFormType};
 
-generate_element_with_only_attributes!(
+generate_element!(
 /// Structure representing a `<query xmlns='http://jabber.org/protocol/disco#info'/>` element.
 ///
 /// It should only be used in an `<iq type='get'/>`, as it can only represent
 /// the request, and not a result.
-DiscoInfoQuery, "query", DISCO_INFO, [
+DiscoInfoQuery, "query", DISCO_INFO,
+attributes: [
     /// Node on which we are doing the discovery.
     node: Option<String> = "node" => optional,
 ]);
 
 impl IqGetPayload for DiscoInfoQuery {}
 
-generate_element_with_only_attributes!(
+generate_element!(
 /// Structure representing a `<feature xmlns='http://jabber.org/protocol/disco#info'/>` element.
 #[derive(PartialEq)]
-Feature, "feature", DISCO_INFO, [
+Feature, "feature", DISCO_INFO,
+attributes: [
     /// Namespace of the feature we want to represent.
     var: String = "var" => required,
 ]);
@@ -185,21 +187,23 @@ impl From<DiscoInfoResult> for Element {
     }
 }
 
-generate_element_with_only_attributes!(
+generate_element!(
 /// Structure representing a `<query xmlns='http://jabber.org/protocol/disco#items'/>` element.
 ///
 /// It should only be used in an `<iq type='get'/>`, as it can only represent
 /// the request, and not a result.
-DiscoItemsQuery, "query", DISCO_ITEMS, [
+DiscoItemsQuery, "query", DISCO_ITEMS,
+attributes: [
     /// Node on which we are doing the discovery.
     node: Option<String> = "node" => optional,
 ]);
 
 impl IqGetPayload for DiscoItemsQuery {}
 
-generate_element_with_only_attributes!(
+generate_element!(
 /// Structure representing an `<item xmlns='http://jabber.org/protocol/disco#items'/>` element.
-Item, "item", DISCO_ITEMS, [
+Item, "item", DISCO_ITEMS,
+attributes: [
     /// JID of the entity pointed by this item.
     jid: Jid = "jid" => required,
     /// Node of the entity pointed by this item.

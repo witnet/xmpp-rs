@@ -6,7 +6,8 @@
 
 generate_empty_element!(Request, "request", RECEIPTS);
 
-generate_element_with_only_attributes!(Received, "received", RECEIPTS, [
+generate_element!(Received, "received", RECEIPTS,
+attributes: [
     id: Option<String> = "id" => optional,
 ]);
 

@@ -58,9 +58,10 @@ generate_attribute!(
     }
 );
 
-generate_element_with_only_attributes!(
+generate_element!(
     /// An affiliation element.
-    Affiliation, "affiliation", PUBSUB, [
+    Affiliation, "affiliation", PUBSUB,
+    attributes: [
         /// The node this affiliation pertains to.
         node: NodeName = "node" => required,
 
@@ -78,17 +79,19 @@ generate_element_with_children!(
     ]
 );
 
-generate_element_with_only_attributes!(
+generate_element!(
     /// Request to create a new node.
-    Create, "create", PUBSUB, [
+    Create, "create", PUBSUB,
+    attributes: [
         /// The node name to create, if `None` the service will generate one.
         node: Option<NodeName> = "node" => optional,
     ]
 );
 
-generate_element_with_only_attributes!(
+generate_element!(
     /// Request for a default node configuration.
-    Default, "default", PUBSUB, [
+    Default, "default", PUBSUB,
+    attributes: [
         /// The node targetted by this request, otherwise the entire service.
         node: Option<NodeName> = "node" => optional,
 
@@ -260,9 +263,10 @@ impl From<SubscribeOptions> for Element {
     }
 }
 
-generate_element_with_only_attributes!(
+generate_element!(
     /// A request to subscribe a JID to a node.
-    Subscribe, "subscribe", PUBSUB, [
+    Subscribe, "subscribe", PUBSUB,
+    attributes: [
         /// The JID being subscribed.
         jid: Jid = "jid" => required,
 
@@ -306,9 +310,10 @@ generate_element_with_children!(
     ]
 );
 
-generate_element_with_only_attributes!(
+generate_element!(
     /// An unsubscribe request.
-    Unsubscribe, "unsubscribe", PUBSUB, [
+    Unsubscribe, "unsubscribe", PUBSUB,
+    attributes: [
         /// The JID affected by this request.
         jid: Jid = "jid" => required,
 

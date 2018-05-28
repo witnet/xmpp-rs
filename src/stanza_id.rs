@@ -6,12 +6,14 @@
 
 use jid::Jid;
 
-generate_element_with_only_attributes!(StanzaId, "stanza-id", SID, [
+generate_element!(StanzaId, "stanza-id", SID,
+attributes: [
     id: String = "id" => required,
     by: Jid = "by" => required,
 ]);
 
-generate_element_with_only_attributes!(OriginId, "origin-id", SID, [
+generate_element!(OriginId, "origin-id", SID,
+attributes: [
     id: String = "id" => required,
 ]);
 

@@ -285,15 +285,6 @@ macro_rules! generate_empty_element {
     );
 }
 
-macro_rules! generate_element_with_only_attributes {
-    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident, [$($(#[$attr_meta:meta])* $attr:ident: $attr_type:ty = $attr_name:tt => $attr_action:tt),+,]) => (
-        generate_element_with_children!($(#[$meta])* $elem, $name, $ns, attributes: [$($(#[$attr_meta])* $attr: $attr_type = $attr_name => $attr_action),*], children: []);
-    );
-    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident, [$($(#[$attr_meta:meta])* $attr:ident: $attr_type:ty = $attr_name:tt => $attr_action:tt),+]) => (
-        generate_element_with_children!($(#[$meta])* $elem, $name, $ns, attributes: [$($(#[$attr_meta])* $attr: $attr_type = $attr_name => $attr_action),*], children: []);
-    );
-}
-
 macro_rules! generate_id {
     ($elem:ident) => (
         #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -470,6 +461,15 @@ macro_rules! generate_serialiser {
     );
     ($parent:ident, $elem:ident, $_:ident, $constructor:ident, ($name:tt, $ns:ident)) => (
         $parent.$elem
+    );
+}
+
+macro_rules! generate_element {
+    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident, attributes: [$($(#[$attr_meta:meta])* $attr:ident: $attr_type:ty = $attr_name:tt => $attr_action:tt),+,]) => (
+        generate_element_with_children!($(#[$meta])* $elem, $name, $ns, attributes: [$($(#[$attr_meta])* $attr: $attr_type = $attr_name => $attr_action),*], children: []);
+    );
+    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident, attributes: [$($(#[$attr_meta:meta])* $attr:ident: $attr_type:ty = $attr_name:tt => $attr_action:tt),+]) => (
+        generate_element_with_children!($(#[$meta])* $elem, $name, $ns, attributes: [$($(#[$attr_meta])* $attr: $attr_type = $attr_name => $attr_action),*], children: []);
     );
 }
 

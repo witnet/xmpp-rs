@@ -120,7 +120,8 @@ impl From<Actor> for Element {
     }
 }
 
-generate_element_with_only_attributes!(Continue, "continue", MUC_USER, [
+generate_element!(Continue, "continue", MUC_USER,
+attributes: [
     thread: Option<String> = "thread" => optional,
 ]);
 

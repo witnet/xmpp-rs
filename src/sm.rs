@@ -6,8 +6,9 @@
 
 use stanza_error::DefinedCondition;
 
-generate_element_with_only_attributes!(
-    A, "a", SM, [
+generate_element!(
+    A, "a", SM,
+    attributes: [
         h: u32 = "h" => required,
     ]
 );
@@ -20,8 +21,9 @@ impl A {
 
 generate_attribute!(ResumeAttr, "resume", bool);
 
-generate_element_with_only_attributes!(
-    Enable, "enable", SM, [
+generate_element!(
+    Enable, "enable", SM,
+    attributes: [
         // TODO: should be the infinite integer set ≥ 1.
         max: Option<u32> = "max" => optional,
         resume: ResumeAttr = "resume" => default,
@@ -47,8 +49,9 @@ impl Enable {
     }
 }
 
-generate_element_with_only_attributes!(
-    Enabled, "enabled", SM, [
+generate_element!(
+    Enabled, "enabled", SM,
+    attributes: [
         id: Option<String> = "id" => optional,
         location: Option<String> = "location" => optional,
         // TODO: should be the infinite integer set ≥ 1.
@@ -72,15 +75,17 @@ generate_empty_element!(
     R, "r", SM
 );
 
-generate_element_with_only_attributes!(
-    Resume, "resume", SM, [
+generate_element!(
+    Resume, "resume", SM,
+    attributes: [
         h: u32 = "h" => required,
         previd: String = "previd" => required,
     ]
 );
 
-generate_element_with_only_attributes!(
-    Resumed, "resumed", SM, [
+generate_element!(
+    Resumed, "resumed", SM,
+    attributes: [
         h: u32 = "h" => required,
         previd: String = "previd" => required,
     ]

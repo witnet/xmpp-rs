@@ -4,7 +4,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-generate_element_with_only_attributes!(Replace, "replace", MESSAGE_CORRECT, [
+generate_element!(Replace, "replace", MESSAGE_CORRECT,
+attributes: [
     id: String = "id" => required,
 ]);
 

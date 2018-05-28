@@ -8,7 +8,8 @@ use ibb::Stanza;
 
 generate_id!(StreamId);
 
-generate_element_with_only_attributes!(Transport, "transport", JINGLE_IBB, [
+generate_element!(Transport, "transport", JINGLE_IBB,
+attributes: [
     block_size: u16 = "block-size" => required,
     sid: StreamId = "sid" => required,
     stanza: Stanza = "stanza" => default,

@@ -6,7 +6,8 @@
 
 use jid::Jid;
 
-generate_element_with_only_attributes!(Open, "open", WEBSOCKET, [
+generate_element!(Open, "open", WEBSOCKET,
+attributes: [
     from: Option<Jid> = "from" => optional,
     to: Option<Jid> = "to" => optional,
     id: Option<String> = "id" => optional,

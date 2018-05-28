@@ -6,7 +6,8 @@
 
 use jid::Jid;
 
-generate_element_with_only_attributes!(Stream, "stream", STREAM, [
+generate_element!(Stream, "stream", STREAM,
+attributes: [
     from: Option<Jid> = "from" => optional,
     to: Option<Jid> = "to" => optional,
     id: Option<String> = "id" => optional,

@@ -12,7 +12,8 @@ generate_attribute!(Stanza, "stanza", {
     Message => "message",
 }, Default = Iq);
 
-generate_element_with_only_attributes!(Open, "open", IBB, [
+generate_element!(Open, "open", IBB,
+attributes: [
     block_size: u16 = "block-size" => required,
     sid: String = "sid" => required,
     stanza: Stanza = "stanza" => default,
@@ -30,7 +31,8 @@ generate_element_with_text!(Data, "data", IBB,
 
 impl IqSetPayload for Data {}
 
-generate_element_with_only_attributes!(Close, "close", IBB, [
+generate_element!(Close, "close", IBB,
+attributes: [
     sid: String = "sid" => required,
 ]);
 
