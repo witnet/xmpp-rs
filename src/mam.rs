@@ -18,7 +18,7 @@ use forwarding::Forwarded;
 
 use ns;
 
-generate_element_with_children!(
+generate_element!(
     Query, "query", MAM,
     attributes: [
         queryid: Option<String> = "queryid" => optional,
@@ -34,7 +34,7 @@ impl IqGetPayload for Query {}
 impl IqSetPayload for Query {}
 impl IqResultPayload for Query {}
 
-generate_element_with_children!(
+generate_element!(
     Result_, "result", MAM,
     attributes: [
         id: String = "id" => required,
@@ -49,7 +49,7 @@ generate_attribute!(
     Complete, "complete", bool
 );
 
-generate_element_with_children!(
+generate_element!(
     Fin, "fin", MAM,
     attributes: [
         complete: Complete = "complete" => default

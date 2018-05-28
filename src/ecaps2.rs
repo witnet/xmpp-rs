@@ -16,7 +16,7 @@ use sha3::{Sha3_256, Sha3_512};
 use blake2::Blake2b;
 use digest::{Digest, VariableOutput};
 
-generate_element_with_children!(
+generate_element!(
     ECaps2, "c", ECAPS2,
     children: [
         hashes: Vec<Hash> = ("hash", HASHES) => Hash

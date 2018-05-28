@@ -66,7 +66,7 @@ generate_attribute!(Disposition, "disposition", {
 
 generate_id!(ContentId);
 
-generate_element_with_children!(
+generate_element!(
     Content, "content", JINGLE,
     attributes: [
         creator: Creator = "creator" => required,

@@ -60,7 +60,7 @@ generate_element!(
     ]
 );
 
-generate_element_with_children!(
+generate_element!(
     Failed, "failed", SM,
     attributes: [
         h: Option<u32> = "h" => optional,

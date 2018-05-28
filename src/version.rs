@@ -6,7 +6,7 @@
 
 use iq::{IqGetPayload, IqResultPayload};
 
-generate_element_with_children!(
+generate_element!(
     Version, "query", VERSION,
     children: [
         name: Required<String> = ("name", VERSION) => String,

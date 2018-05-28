@@ -17,7 +17,7 @@ generate_attribute!(Subscription, "subscription", {
     Remove => "remove",
 }, Default = None);
 
-generate_element_with_children!(
+generate_element!(
     /// Contact from the user’s contact list.
     #[derive(PartialEq)]
     Item, "item", ROSTER,
@@ -38,7 +38,7 @@ generate_element_with_children!(
     ]
 );
 
-generate_element_with_children!(
+generate_element!(
     /// The contact list of the user.
     Roster, "query", ROSTER,
     attributes: [

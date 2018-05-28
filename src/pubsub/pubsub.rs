@@ -22,7 +22,7 @@ use pubsub::{NodeName, ItemId, Subscription, SubscriptionId};
 
 // TODO: a better solution would be to split this into a query and a result elements, like for
 // XEP-0030.
-generate_element_with_children!(
+generate_element!(
     /// A list of affiliations you have on a service, or on a node.
     Affiliations, "affiliations", PUBSUB,
     attributes: [
@@ -70,7 +70,7 @@ generate_element!(
     ]
 );
 
-generate_element_with_children!(
+generate_element!(
     /// Request to configure a new node.
     Configure, "configure", PUBSUB,
     children: [
@@ -100,7 +100,7 @@ generate_element!(
     ]
 );
 
-generate_element_with_children!(
+generate_element!(
     /// A request for a list of items.
     Items, "items", PUBSUB,
     attributes: [
@@ -158,7 +158,7 @@ impl From<Item> for Element {
     }
 }
 
-generate_element_with_children!(
+generate_element!(
     /// The options associated to a subscription request.
     Options, "options", PUBSUB,
     attributes: [
@@ -177,7 +177,7 @@ generate_element_with_children!(
     ]
 );
 
-generate_element_with_children!(
+generate_element!(
     /// Request to publish items to a node.
     Publish, "publish", PUBSUB,
     attributes: [
@@ -190,7 +190,7 @@ generate_element_with_children!(
     ]
 );
 
-generate_element_with_children!(
+generate_element!(
     /// The options associated to a publish request.
     PublishOptions, "publish-options", PUBSUB,
     children: [
@@ -204,7 +204,7 @@ generate_attribute!(
     Notify, "notify", bool
 );
 
-generate_element_with_children!(
+generate_element!(
     /// A request to retract some items from a node.
     Retract, "retract", PUBSUB,
     attributes: [
@@ -275,7 +275,7 @@ generate_element!(
     ]
 );
 
-generate_element_with_children!(
+generate_element!(
     /// A request for current subscriptions.
     Subscriptions, "subscriptions", PUBSUB,
     attributes: [
@@ -288,7 +288,7 @@ generate_element_with_children!(
     ]
 );
 
-generate_element_with_children!(
+generate_element!(
     /// A subscription element, describing the state of a subscription.
     SubscriptionElem, "subscription", PUBSUB,
     attributes: [

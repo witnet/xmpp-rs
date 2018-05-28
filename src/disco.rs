@@ -212,7 +212,7 @@ attributes: [
     name: Option<String> = "name" => optional,
 ]);
 
-generate_element_with_children!(
+generate_element!(
     /// Structure representing a `<query
     /// xmlns='http://jabber.org/protocol/disco#items'/>` element.
     ///

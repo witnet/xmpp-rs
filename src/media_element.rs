@@ -13,7 +13,7 @@ generate_element_with_text!(URI, "uri", MEDIA_ELEMENT,
     uri: TrimmedPlainText<String>
 );
 
-generate_element_with_children!(MediaElement, "media", MEDIA_ELEMENT,
+generate_element!(MediaElement, "media", MEDIA_ELEMENT,
     attributes: [
         width: Option<usize> = "width" => optional,
         height: Option<usize> = "height" => optional

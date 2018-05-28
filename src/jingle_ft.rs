@@ -18,7 +18,7 @@ use minidom::Element;
 use error::Error;
 use ns;
 
-generate_element_with_children!(
+generate_element!(
     #[derive(PartialEq, Default)]
     Range, "range", JINGLE_FT,
     attributes: [

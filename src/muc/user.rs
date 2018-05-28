@@ -142,7 +142,7 @@ generate_attribute!(Role, "role", {
     None => "none",
 }, Default = None);
 
-generate_element_with_children!(
+generate_element!(
     Item, "item", MUC_USER, attributes: [
         affiliation: Affiliation = "affiliation" => required,
         jid: Option<Jid> = "jid" => optional,
@@ -155,7 +155,7 @@ generate_element_with_children!(
     ]
 );
 
-generate_element_with_children!(
+generate_element!(
     MucUser, "x", MUC_USER, children: [
         status: Vec<Status> = ("status", MUC_USER) => Status,
         items: Vec<Item> = ("item", MUC_USER) => Item
