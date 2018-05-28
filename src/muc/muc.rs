@@ -52,6 +52,7 @@ impl From<Muc> for Element {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use compare_elements::NamespaceAwareCompare;
 
     #[test]
     fn test_muc_simple() {
@@ -98,7 +99,11 @@ mod tests {
                 <password>coucou</password>
             </x>"
         .parse().unwrap();
+        let elem1 = elem.clone();
         let muc = Muc::try_from(elem).unwrap();
         assert_eq!(muc.password, Some("coucou".to_owned()));
+
+        let elem2 = Element::from(muc);
+        assert!(elem1.compare_to(&elem2));
     }
 }
