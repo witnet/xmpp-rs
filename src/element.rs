@@ -414,8 +414,15 @@ impl Element {
                         to.append_child(elem);
                     }
                 },
-                Event::Text(s) | Event::CData(s) => {
+                Event::Text(s) => {
                     let text = s.unescape_and_decode(reader)?;
+                    if text != "" {
+                        let mut current_elem = stack.last_mut().unwrap();
+                        current_elem.append_text_node(text);
+                    }
+                },
+                Event::CData(s) => {
+                    let text = reader.decode(&s).into_owned();
                     if text != "" {
                         let mut current_elem = stack.last_mut().unwrap();
                         current_elem.append_text_node(text);
@@ -987,4 +994,12 @@ fn parses_spectest_xml() { // From: https://gitlab.com/lumi/minidom-rs/issues/8
     "#;
     let mut reader = EventReader::from_str(xml);
     let _ = Element::from_reader(&mut reader).unwrap();
+}
+
+#[test]
+fn does_not_unescape_cdata() {
+    let xml = "<test><![CDATA[&apos;&gt;blah<blah>]]></test>";
+    let mut reader = EventReader::from_str(xml);
+    let elem = Element::from_reader(&mut reader).unwrap();
+    assert_eq!(elem.text(), "&apos;&gt;blah<blah>");
 }
