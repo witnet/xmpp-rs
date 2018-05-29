@@ -83,6 +83,9 @@ pub mod muc;
 /// XEP-0047: In-Band Bytestreams
 pub mod ibb;
 
+/// XEP-0048: Bookmarks
+pub mod bookmarks;
+
 /// XEP-0059: Result Set Management
 pub mod rsm;
 

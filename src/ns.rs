@@ -38,6 +38,9 @@ pub const MUC_USER: &str = "http://jabber.org/protocol/muc#user";
 /// XEP-0047: In-Band Bytestreams
 pub const IBB: &str = "http://jabber.org/protocol/ibb";
 
+/// XEP-0048: Bookmarks
+pub const BOOKMARKS: &str = "storage:bookmarks";
+
 /// XEP-0059: Result Set Management
 pub const RSM: &str = "http://jabber.org/protocol/rsm";
 
