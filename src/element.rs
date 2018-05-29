@@ -926,80 +926,84 @@ impl ElementBuilder {
 }
 
 #[cfg(test)]
-#[test]
-fn test_element_new() {
-    use std::iter::FromIterator;
+mod tests {
+    use super::*;
 
-    let elem = Element::new( "name".to_owned()
-                           , None
-                           , Some("namespace".to_owned())
-                           , BTreeMap::from_iter(vec![ ("name".to_string(), "value".to_string()) ].into_iter() )
-                           , Vec::new() );
+    #[test]
+    fn test_element_new() {
+        use std::iter::FromIterator;
 
-    assert_eq!(elem.name(), "name");
-    assert_eq!(elem.ns(), Some("namespace".to_owned()));
-    assert_eq!(elem.attr("name"), Some("value"));
-    assert_eq!(elem.attr("inexistent"), None);
-}
+        let elem = Element::new( "name".to_owned()
+                               , None
+                               , Some("namespace".to_owned())
+                               , BTreeMap::from_iter(vec![ ("name".to_string(), "value".to_string()) ].into_iter() )
+                               , Vec::new() );
 
-#[test]
-fn test_from_reader_simple() {
-    let xml = "<foo></foo>";
-    let mut reader = EventReader::from_str(xml);
-    let elem = Element::from_reader(&mut reader);
+        assert_eq!(elem.name(), "name");
+        assert_eq!(elem.ns(), Some("namespace".to_owned()));
+        assert_eq!(elem.attr("name"), Some("value"));
+        assert_eq!(elem.attr("inexistent"), None);
+    }
 
-    let elem2 = Element::builder("foo").build();
+    #[test]
+    fn test_from_reader_simple() {
+        let xml = "<foo></foo>";
+        let mut reader = EventReader::from_str(xml);
+        let elem = Element::from_reader(&mut reader);
 
-    assert_eq!(elem.unwrap(), elem2);
-}
+        let elem2 = Element::builder("foo").build();
 
-#[test]
-fn test_from_reader_nested() {
-    let xml = "<foo><bar baz='qxx' /></foo>";
-    let mut reader = EventReader::from_str(xml);
-    let elem = Element::from_reader(&mut reader);
+        assert_eq!(elem.unwrap(), elem2);
+    }
 
-    let nested = Element::builder("bar")
-                         .attr("baz", "qxx")
-                         .build();
-    let elem2 = Element::builder("foo")
-                        .append(nested)
-                        .build();
+    #[test]
+    fn test_from_reader_nested() {
+        let xml = "<foo><bar baz='qxx' /></foo>";
+        let mut reader = EventReader::from_str(xml);
+        let elem = Element::from_reader(&mut reader);
 
-    assert_eq!(elem.unwrap(), elem2);
-}
+        let nested = Element::builder("bar")
+                             .attr("baz", "qxx")
+                             .build();
+        let elem2 = Element::builder("foo")
+                            .append(nested)
+                            .build();
 
-#[test]
-fn test_from_reader_with_prefix() {
-    let xml = "<foo><prefix:bar baz='qxx' /></foo>";
-    let mut reader = EventReader::from_str(xml);
-    let elem = Element::from_reader(&mut reader);
+        assert_eq!(elem.unwrap(), elem2);
+    }
 
-    let nested = Element::builder("prefix:bar")
-                         .attr("baz", "qxx")
-                         .build();
-    let elem2 = Element::builder("foo")
-                        .append(nested)
-                        .build();
+    #[test]
+    fn test_from_reader_with_prefix() {
+        let xml = "<foo><prefix:bar baz='qxx' /></foo>";
+        let mut reader = EventReader::from_str(xml);
+        let elem = Element::from_reader(&mut reader);
 
-    assert_eq!(elem.unwrap(), elem2);
-}
+        let nested = Element::builder("prefix:bar")
+                             .attr("baz", "qxx")
+                             .build();
+        let elem2 = Element::builder("foo")
+                            .append(nested)
+                            .build();
 
-#[test]
-fn parses_spectest_xml() { // From: https://gitlab.com/lumi/minidom-rs/issues/8
-    let xml = r#"
-        <rng:grammar xmlns:rng="http://relaxng.org/ns/structure/1.0">
-            <rng:name xmlns:rng="http://relaxng.org/ns/structure/1.0"></rng:name>
-        </rng:grammar>
-    "#;
-    let mut reader = EventReader::from_str(xml);
-    let _ = Element::from_reader(&mut reader).unwrap();
-}
+        assert_eq!(elem.unwrap(), elem2);
+    }
 
-#[test]
-fn does_not_unescape_cdata() {
-    let xml = "<test><![CDATA[&apos;&gt;blah<blah>]]></test>";
-    let mut reader = EventReader::from_str(xml);
-    let elem = Element::from_reader(&mut reader).unwrap();
-    assert_eq!(elem.text(), "&apos;&gt;blah<blah>");
+    #[test]
+    fn parses_spectest_xml() { // From: https://gitlab.com/lumi/minidom-rs/issues/8
+        let xml = r#"
+            <rng:grammar xmlns:rng="http://relaxng.org/ns/structure/1.0">
+                <rng:name xmlns:rng="http://relaxng.org/ns/structure/1.0"></rng:name>
+            </rng:grammar>
+        "#;
+        let mut reader = EventReader::from_str(xml);
+        let _ = Element::from_reader(&mut reader).unwrap();
+    }
+
+    #[test]
+    fn does_not_unescape_cdata() {
+        let xml = "<test><![CDATA[&apos;&gt;blah<blah>]]></test>";
+        let mut reader = EventReader::from_str(xml);
+        let elem = Element::from_reader(&mut reader).unwrap();
+        assert_eq!(elem.text(), "&apos;&gt;blah<blah>");
+    }
 }
