@@ -20,10 +20,10 @@ use pubsub::{NodeName, ItemId, Subscription, SubscriptionId};
 
 #[derive(Debug, Clone)]
 pub struct Item {
-    payload: Option<Element>,
-    node: Option<NodeName>,
-    id: Option<ItemId>,
-    publisher: Option<Jid>,
+    pub payload: Option<Element>,
+    pub node: Option<NodeName>,
+    pub id: Option<ItemId>,
+    pub publisher: Option<Jid>,
 }
 
 impl TryFrom<Element> for Item {
