@@ -1,6 +1,6 @@
 #![deny(missing_docs)]
 
-//! A minimal DOM crate built on top of xml-rs.
+//! A minimal DOM crate built on top of quick-xml.
 //!
 //! This library exports an `Element` struct which represents a DOM tree.
 //!
