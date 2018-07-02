@@ -4,12 +4,22 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#![deny(missing_docs)]
+
 use ibb::{Stanza, StreamId};
 
-generate_element!(Transport, "transport", JINGLE_IBB,
+generate_element!(
+/// Describes an [In-Band Bytestream](https://xmpp.org/extensions/xep-0047.html)
+/// Jingle transport, see also the [IBB module](../ibb.rs).
+Transport, "transport", JINGLE_IBB,
 attributes: [
+    /// Maximum size in bytes for each chunk.
     block_size: u16 = "block-size" => required,
+
+    /// The identifier to be used to create a stream.
     sid: StreamId = "sid" => required,
+
+    /// Which stanza type to use to exchange data.
     stanza: Stanza = "stanza" => default,
 ]);
 
