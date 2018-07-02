@@ -4,37 +4,65 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#![deny(missing_docs)]
+
 use helpers::Base64;
 use iq::IqSetPayload;
 
-generate_id!(StreamId);
+generate_id!(
+/// An identifier matching a stream.
+StreamId);
 
-generate_attribute!(Stanza, "stanza", {
+generate_attribute!(
+/// Which stanza type to use to exchange data.
+Stanza, "stanza", {
+    /// `<iq/>` gives a feedback on whether the chunk has been received or not,
+    /// which is useful in the case the recipient might not receive them in a
+    /// timely manner, or to do your own throttling based on the results.
     Iq => "iq",
+
+    /// `<message/>` can be faster, since it doesn’t require any feedback, but in
+    /// practice it will be throttled by the servers on the way.
     Message => "message",
 }, Default = Iq);
 
-generate_element!(Open, "open", IBB,
+generate_element!(
+/// Starts an In-Band Bytestream session with the given parameters.
+Open, "open", IBB,
 attributes: [
+    /// Maximum size in bytes for each chunk.
     block_size: u16 = "block-size" => required,
+
+    /// The identifier to be used to create a stream.
     sid: StreamId = "sid" => required,
+
+    /// Which stanza type to use to exchange data.
     stanza: Stanza = "stanza" => default,
 ]);
 
 impl IqSetPayload for Open {}
 
-generate_element_with_text!(Data, "data", IBB,
+generate_element_with_text!(
+/// Exchange a chunk of data in an open stream.
+Data, "data", IBB,
     [
+        /// Sequence number of this chunk, must wraparound after 65535.
         seq: u16 = "seq" => required,
+
+        /// The identifier of the stream on which data is being exchanged.
         sid: StreamId = "sid" => required
     ],
+    /// Vector of bytes to be exchanged.
     data: Base64<Vec<u8>>
 );
 
 impl IqSetPayload for Data {}
 
-generate_element!(Close, "close", IBB,
+generate_element!(
+/// Close an open stream.
+Close, "close", IBB,
 attributes: [
+    /// The identifier of the stream to be closed.
     sid: StreamId = "sid" => required,
 ]);
 
