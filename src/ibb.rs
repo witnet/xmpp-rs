@@ -7,6 +7,8 @@
 use helpers::Base64;
 use iq::IqSetPayload;
 
+generate_id!(StreamId);
+
 generate_attribute!(Stanza, "stanza", {
     Iq => "iq",
     Message => "message",
@@ -15,7 +17,7 @@ generate_attribute!(Stanza, "stanza", {
 generate_element!(Open, "open", IBB,
 attributes: [
     block_size: u16 = "block-size" => required,
-    sid: String = "sid" => required,
+    sid: StreamId = "sid" => required,
     stanza: Stanza = "stanza" => default,
 ]);
 
@@ -24,7 +26,7 @@ impl IqSetPayload for Open {}
 generate_element_with_text!(Data, "data", IBB,
     [
         seq: u16 = "seq" => required,
-        sid: String = "sid" => required
+        sid: StreamId = "sid" => required
     ],
     data: Base64<Vec<u8>>
 );
@@ -33,7 +35,7 @@ impl IqSetPayload for Data {}
 
 generate_element!(Close, "close", IBB,
 attributes: [
-    sid: String = "sid" => required,
+    sid: StreamId = "sid" => required,
 ]);
 
 impl IqSetPayload for Close {}
@@ -48,21 +50,23 @@ mod tests {
 
     #[test]
     fn test_simple() {
+        let sid = StreamId(String::from("coucou"));
+
         let elem: Element = "<open xmlns='http://jabber.org/protocol/ibb' block-size='3' sid='coucou'/>".parse().unwrap();
         let open = Open::try_from(elem).unwrap();
         assert_eq!(open.block_size, 3);
-        assert_eq!(open.sid, "coucou");
+        assert_eq!(open.sid, sid);
         assert_eq!(open.stanza, Stanza::Iq);
 
         let elem: Element = "<data xmlns='http://jabber.org/protocol/ibb' seq='0' sid='coucou'>AAAA</data>".parse().unwrap();
         let data = Data::try_from(elem).unwrap();
         assert_eq!(data.seq, 0);
-        assert_eq!(data.sid, "coucou");
+        assert_eq!(data.sid, sid);
         assert_eq!(data.data, vec!(0, 0, 0));
 
         let elem: Element = "<close xmlns='http://jabber.org/protocol/ibb' sid='coucou'/>".parse().unwrap();
         let close = Close::try_from(elem).unwrap();
-        assert_eq!(close.sid, "coucou");
+        assert_eq!(close.sid, sid);
     }
 
     #[test]
