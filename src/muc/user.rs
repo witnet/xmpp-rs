@@ -155,6 +155,20 @@ generate_element!(
     ]
 );
 
+impl Item {
+    pub fn new(affiliation: Affiliation, role: Role) -> Item {
+        Item {
+            affiliation,
+            role,
+            jid: None,
+            nick: None,
+            actor: None,
+            continue_: None,
+            reason: None,
+        }
+    }
+}
+
 generate_element!(
     MucUser, "x", MUC_USER, children: [
         status: Vec<Status> = ("status", MUC_USER) => Status,
