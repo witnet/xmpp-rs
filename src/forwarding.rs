@@ -4,61 +4,33 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use try_from::TryFrom;
-
-use minidom::Element;
-
-use error::Error;
+#[deny(missing_docs)]
 
 use delay::Delay;
 use message::Message;
 
-use ns;
+generate_element!(
+    /// Contains a forwarded stanza, either standalone or part of another
+    /// extension (such as carbons).
+    Forwarded, "forwarded", FORWARD,
+    children: [
+        /// When the stanza originally got sent.
+        delay: Option<Delay> = ("delay", DELAY) => Delay,
 
-#[derive(Debug, Clone)]
-pub struct Forwarded {
-    pub delay: Option<Delay>,
-    // XXX: really?  Option?
-    pub stanza: Option<Message>,
-}
+        // XXX: really?  Option?
+        /// The stanza being forwarded.
+        stanza: Option<Message> = ("message", DEFAULT_NS) => Message
 
-impl TryFrom<Element> for Forwarded {
-    type Err = Error;
-
-    fn try_from(elem: Element) -> Result<Forwarded, Error> {
-        check_self!(elem, "forwarded", FORWARD);
-        let mut delay = None;
-        let mut stanza = None;
-        for child in elem.children() {
-            if child.is("delay", ns::DELAY) {
-                delay = Some(Delay::try_from(child.clone())?);
-            } else if child.is("message", ns::DEFAULT_NS) {
-                stanza = Some(Message::try_from(child.clone())?);
-            // TODO: also handle the two other possibilities.
-            } else {
-                return Err(Error::ParseError("Unknown child in forwarded element."));
-            }
-        }
-        Ok(Forwarded {
-            delay: delay,
-            stanza: stanza,
-        })
-    }
-}
-
-impl From<Forwarded> for Element {
-    fn from(forwarded: Forwarded) -> Element {
-        Element::builder("forwarded")
-                .ns(ns::FORWARD)
-                .append(forwarded.delay.map(Element::from))
-                .append(forwarded.stanza.map(Element::from))
-                .build()
-    }
-}
+        // TODO: also handle the two other stanza possibilities.
+    ]
+);
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use try_from::TryFrom;
+    use minidom::Element;
+    use error::Error;
 
     #[test]
     fn test_simple() {
