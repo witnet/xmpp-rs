@@ -1,4 +1,9 @@
-Version 0.5.1, released 2018-03-01:
+Version 0.5.2, released 2018-07-31:
+  * Updates
+    - Astro bumped the minidom dependency version.
+    - Updated the changelog to reflect that 0.5.1 was never actually released.
+
+Version 0.5.1, "released" 2018-03-01:
   * Updates
     - Link Mauve implemented failure::Fail on JidParseError.
     - Link Mauve simplified the code a bit.
