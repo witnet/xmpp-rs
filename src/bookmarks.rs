@@ -88,4 +88,19 @@ mod tests {
         let elem2 = Element::from(Storage::new());
         assert!(elem1.compare_to(&elem2));
     }
+
+    #[test]
+    fn complete() {
+        let elem: Element = "<storage xmlns='storage:bookmarks'><url name='Example' url='https://example.org/'/><conference autojoin='true' jid='test-muc@muc.localhost' name='Test MUC'><nick>Coucou</nick><password>secret</password></conference></storage>".parse().unwrap();
+        let storage = Storage::try_from(elem).unwrap();
+        assert_eq!(storage.urls.len(), 1);
+        assert_eq!(storage.urls[0].name, "Example");
+        assert_eq!(storage.urls[0].url, "https://example.org/");
+        assert_eq!(storage.conferences.len(), 1);
+        assert_eq!(storage.conferences[0].autojoin, Autojoin::True);
+        assert_eq!(storage.conferences[0].jid, Jid::bare("test-muc", "muc.localhost"));
+        assert_eq!(storage.conferences[0].name, "Test MUC");
+        assert_eq!(storage.conferences[0].clone().nick.unwrap(), "Coucou");
+        assert_eq!(storage.conferences[0].clone().password.unwrap(), "secret");
+    }
 }
