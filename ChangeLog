@@ -1,3 +1,28 @@
+Version 0.10.0:
+2018-03-01  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
+    * New parsers/serialisers:
+        - Added <stream:stream>, SASL and bind (RFC6120) parsers.
+        - Added a WebSocket <open/> (RFC7395) implementation.
+        - Added a Jabber Component <handshake/> (XEP-0114).
+        - Added support for User Nickname (XEP-0172).
+        - Added support for Stream Management (XEP-0198).
+        - Added support for Bookmarks (XEP-0048).
+        - Publish-Subscribe (XEP-0060) now supports requests in
+          addition to events.
+    * Breaking changes:
+        - Switch from std::error to failure to report better errors.
+        - Bump to minidom 0.9.1, and reexport minidom::Element.
+    * Improvements:
+        - Add getters for the best body and subject in message, to make
+          it easier to determine which one the user wants based on
+          their language preferences.
+        - Add constructors and setters for most Jingle elements, to
+          ease their creation.
+        - Add constructors for hash, MUC item, iq and more.
+        - Use more macros to simplify and factorise the code.
+        - Use traits to define iq payloads.
+        - Document more modules.
+
 Version 0.9.0:
 2017-10-31  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
     * New parsers/serialisers:
