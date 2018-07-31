@@ -4,18 +4,32 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#![deny(missing_docs)]
+
 use jid::Jid;
 
-generate_element!(StanzaId, "stanza-id", SID,
-attributes: [
-    id: String = "id" => required,
-    by: Jid = "by" => required,
-]);
+generate_element!(
+    /// Gives the identifier a service has stamped on this stanza, often in
+    /// order to identify it inside of [an archive](../mam/index.html).
+    StanzaId, "stanza-id", SID,
+    attributes: [
+        /// The id associated to this stanza by another entity.
+        id: String = "id" => required,
 
-generate_element!(OriginId, "origin-id", SID,
-attributes: [
-    id: String = "id" => required,
-]);
+        /// The entity who stamped this stanza-id.
+        by: Jid = "by" => required,
+    ]
+);
+
+generate_element!(
+    /// A hack for MUC before version 1.31 to track a message which may have
+    /// its 'id' attribute changed.
+    OriginId, "origin-id", SID,
+    attributes: [
+        /// The id this client set for this stanza.
+        id: String = "id" => required,
+    ]
+);
 
 #[cfg(test)]
 mod tests {
