@@ -46,9 +46,9 @@ mod tests {
     use compare_elements::NamespaceAwareCompare;
 
     #[test]
-    fn test_simple() {
+    fn simple() {
         let elem: Element = "<query xmlns='jabber:iq:version'><name>xmpp-rs</name><version>0.3.0</version></query>".parse().unwrap();
-        let version = Version::try_from(elem).unwrap();
+        let version = VersionResult::try_from(elem).unwrap();
         assert_eq!(version.name, String::from("xmpp-rs"));
         assert_eq!(version.version, String::from("0.3.0"));
         assert_eq!(version.os, None);
@@ -56,7 +56,7 @@ mod tests {
 
     #[test]
     fn serialisation() {
-        let version = Version {
+        let version = VersionResult {
             name: String::from("xmpp-rs"),
             version: String::from("0.3.0"),
             os: None,
