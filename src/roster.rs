@@ -4,18 +4,37 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#![deny(missing_docs)]
+
 use jid::Jid;
 use iq::{IqGetPayload, IqSetPayload, IqResultPayload};
 
-generate_elem_id!(Group, "group", ROSTER);
+generate_elem_id!(
+    /// Represents a group a contact is part of.
+    Group, "group", ROSTER
+);
 
-generate_attribute!(Subscription, "subscription", {
-    None => "none",
-    From => "from",
-    To => "to",
-    Both => "both",
-    Remove => "remove",
-}, Default = None);
+generate_attribute!(
+    /// The state of your mutual subscription with a contact.
+    Subscription, "subscription", {
+        /// The user doesn’t have any subscription to this contact’s presence,
+        /// and neither does this contact.
+        None => "none",
+
+        /// Only this contact has a subscription with you, not the opposite.
+        From => "from",
+
+        /// Only you have a subscription with this contact, not the opposite.
+        To => "to",
+
+        /// Both you and your contact are subscribed to each other’s presence.
+        Both => "both",
+
+        /// In a roster set, this asks the server to remove this contact item
+        /// from your roster.
+        Remove => "remove",
+    }, Default = None
+);
 
 generate_element!(
     /// Contact from the user’s contact list.
