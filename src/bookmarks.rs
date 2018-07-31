@@ -74,7 +74,6 @@ mod tests {
     use super::*;
     use try_from::TryFrom;
     use minidom::Element;
-    use error::Error;
     use compare_elements::NamespaceAwareCompare;
 
     #[test]
