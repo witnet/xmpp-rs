@@ -4,19 +4,39 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#![deny(missing_docs)]
+
 use iq::{IqGetPayload, IqResultPayload};
 
+generate_empty_element!(
+    /// Represents a query for the software version a remote entity is using.
+    ///
+    /// It should only be used in an `<iq type='get'/>`, as it can only
+    /// represent the request, and not a result.
+    VersionQuery, "query", VERSION
+);
+
+impl IqGetPayload for VersionQuery {}
+
 generate_element!(
-    Version, "query", VERSION,
+    /// Represents the answer about the software version we are using.
+    ///
+    /// It should only be used in an `<iq type='result'/>`, as it can only
+    /// represent the result, and not a request.
+    VersionResult, "query", VERSION,
     children: [
+        /// The name of this client.
         name: Required<String> = ("name", VERSION) => String,
+
+        /// The version of this client.
         version: Required<String> = ("version", VERSION) => String,
+
+        /// The OS this client is running on.
         os: Option<String> = ("os", VERSION) => String
     ]
 );
 
-impl IqGetPayload for Version {}
-impl IqResultPayload for Version {}
+impl IqResultPayload for VersionResult {}
 
 #[cfg(test)]
 mod tests {
