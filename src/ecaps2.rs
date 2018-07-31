@@ -4,6 +4,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#![deny(missing_docs)]
+
 use disco::{Feature, Identity, DiscoInfoResult, DiscoInfoQuery};
 use data_forms::DataForm;
 use hashes::{Hash, Algo};
@@ -17,8 +19,12 @@ use blake2::Blake2b;
 use digest::{Digest, VariableOutput};
 
 generate_element!(
+    /// Represents a set of capability hashes, all of them must correspond to
+    /// the same input [disco#info](../disco/struct.DiscoInfoResult.html),
+    /// using different [algorithms](../hashes/enum.Algo.html).
     ECaps2, "c", ECAPS2,
     children: [
+        /// Hashes of the [disco#info](../disco/struct.DiscoInfoResult.html).
         hashes: Vec<Hash> = ("hash", HASHES) => Hash
     ]
 );
@@ -71,6 +77,9 @@ fn compute_extensions(extensions: &[DataForm]) -> Vec<u8> {
     })
 }
 
+/// Applies the [algorithm from
+/// XEP-0390](https://xmpp.org/extensions/xep-0390.html#algorithm-input) on a
+/// [disco#info query element](../disco/struct.DiscoInfoResult.html).
 pub fn compute_disco(disco: &DiscoInfoResult) -> Vec<u8> {
     let features_string = compute_features(&disco.features);
     let identities_string = compute_identities(&disco.identities);
@@ -89,6 +98,8 @@ fn get_hash_vec(hash: &[u8]) -> Vec<u8> {
     vec
 }
 
+/// Hashes the result of [compute_disco()] with one of the supported [hash
+/// algorithms](../hashes/enum.Algo.html).
 pub fn hash_ecaps2(data: &[u8], algo: Algo) -> Result<Hash, String> {
     Ok(Hash {
         hash: match algo {
@@ -129,6 +140,8 @@ pub fn hash_ecaps2(data: &[u8], algo: Algo) -> Result<Hash, String> {
     })
 }
 
+/// Helper function to create the query for the disco#info corresponding to an
+/// ecaps2 hash.
 pub fn query_ecaps2(hash: Hash) -> DiscoInfoQuery {
     DiscoInfoQuery {
         node: Some(format!("{}#{}.{}", ns::ECAPS2, String::from(hash.algo), base64::encode(&hash.hash))),
