@@ -14,7 +14,8 @@ use error::Error;
 
 use ns;
 
-/// Represents paging through a list of items, represented by an UID.
+/// Requests paging through a potentially big set of items (represented by an
+/// UID).
 #[derive(Debug, Clone)]
 pub struct SetQuery {
     /// Limit the number of items, or use the recipient’s defaults if None.
@@ -84,7 +85,7 @@ impl From<SetQuery> for Element {
     }
 }
 
-/// Represents paging through a list of items, represented by an UID.
+/// Describes the paging result of a [query](struct.SetQuery.html).
 #[derive(Debug, Clone)]
 pub struct SetResult {
     /// The UID of the first item of the page.
