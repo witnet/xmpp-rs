@@ -1,5 +1,19 @@
+Version 0.11.0:
+2018-08-03  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
+    * Breaking changes:
+        - Split Software Version (XEP-0092) into a query and response
+          elements.
+        - Split RSM (XEP-0059) into a query and response elements.
+        - Fix type safety and spec issues in RSM and MAM (XEP-0313).
+        - Remove item@node and EmptyItems from PubSub events
+          (XEP-0060).
+    * Improvements:
+        - Document many additional modules.
+        - Add the <failure/> SASL nonza, as well as the SCRAM-SHA-256
+          and the two -PLUS mechanisms.
+
 Version 0.10.0:
-2018-03-01  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
+2018-07-31  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
     * New parsers/serialisers:
         - Added <stream:stream>, SASL and bind (RFC6120) parsers.
         - Added a WebSocket <open/> (RFC7395) implementation.
