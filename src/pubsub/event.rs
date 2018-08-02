@@ -69,9 +69,6 @@ pub enum PubSubEvent {
         node: NodeName,
         redirect: Option<String>,
     },
-    EmptyItems {
-        node: NodeName,
-    },
     PublishedItems {
         node: NodeName,
         items: Vec<Item>,
@@ -119,9 +116,9 @@ fn parse_items(elem: Element, node: NodeName) -> Result<PubSubEvent, Error> {
         }
     }
     Ok(match is_retract {
-        None => PubSubEvent::EmptyItems { node },
         Some(false) => PubSubEvent::PublishedItems { node, items },
         Some(true) => PubSubEvent::RetractedItems { node, items: retracts },
+        None => return Err(Error::ParseError("Missing children in items element.")),
     })
 }
 
@@ -204,12 +201,6 @@ impl From<PubSubEvent> for Element {
                          }))
                         .build()
             },
-            PubSubEvent::EmptyItems { node } => {
-                Element::builder("items")
-                        .ns(ns::PUBSUB_EVENT)
-                        .attr("node", node)
-                        .build()
-            },
             PubSubEvent::PublishedItems { node, items } => {
                 Element::builder("items")
                         .ns(ns::PUBSUB_EVENT)
@@ -260,13 +251,14 @@ mod tests {
     use compare_elements::NamespaceAwareCompare;
 
     #[test]
-    fn test_simple() {
+    fn missing_items() {
         let elem: Element = "<event xmlns='http://jabber.org/protocol/pubsub#event'><items node='coucou'/></event>".parse().unwrap();
-        let event = PubSubEvent::try_from(elem).unwrap();
-        match event {
-            PubSubEvent::EmptyItems { node } => assert_eq!(node, NodeName(String::from("coucou"))),
+        let error = PubSubEvent::try_from(elem).unwrap_err();
+        let message = match error {
+            Error::ParseError(string) => string,
             _ => panic!(),
-        }
+        };
+        assert_eq!(message, "Missing children in items element.");
     }
 
     #[test]
