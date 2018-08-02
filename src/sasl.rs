@@ -9,7 +9,9 @@ use helpers::{Base64, TrimmedPlainText};
 generate_attribute!(Mechanism, "mechanism", {
     Plain => "PLAIN",
     ScramSha1 => "SCRAM-SHA-1",
+    ScramSha1Plus => "SCRAM-SHA-1-PLUS",
     ScramSha256 => "SCRAM-SHA-256",
+    ScramSha256Plus => "SCRAM-SHA-256-PLUS",
     Anonymous => "ANONYMOUS",
 });
 
