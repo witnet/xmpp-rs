@@ -15,7 +15,7 @@ use error::Error;
 
 use iq::{IqGetPayload, IqSetPayload, IqResultPayload};
 use data_forms::DataForm;
-use rsm::Set;
+use rsm::{SetQuery, SetResult};
 use forwarding::Forwarded;
 use pubsub::NodeName;
 
@@ -42,7 +42,7 @@ generate_element!(
         form: Option<DataForm> = ("x", DATA_FORMS) => DataForm,
 
         /// Used for paging through results.
-        set: Option<Set> = ("set", RSM) => Set
+        set: Option<SetQuery> = ("set", RSM) => SetQuery
     ]
 );
 
@@ -83,11 +83,11 @@ generate_element!(
         /// Describes the current page, it should contain at least [first]
         /// (with an [index]) and [last], and generally [count].
         ///
-        /// [first]: ../rsm/struct.Set.html#structfield.first
-        /// [index]: ../rsm/struct.Set.html#structfield.first_index
-        /// [last]: ../rsm/struct.Set.html#structfield.last
-        /// [count]: ../rsm/struct.Set.html#structfield.count
-        set: Required<Set> = ("set", RSM) => Set
+        /// [first]: ../rsm/struct.SetResult.html#structfield.first
+        /// [index]: ../rsm/struct.SetResult.html#structfield.first_index
+        /// [last]: ../rsm/struct.SetResult.html#structfield.last
+        /// [count]: ../rsm/struct.SetResult.html#structfield.count
+        set: Required<SetResult> = ("set", RSM) => SetResult
     ]
 );
 
