@@ -4,17 +4,25 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#![deny(missing_docs)]
+
 use date::DateTime;
 
 use jid::Jid;
 
 use helpers::PlainText;
 
-generate_element_with_text!(Delay, "delay", DELAY,
+generate_element_with_text!(
+    /// Notes when and by whom a message got stored for later delivery.
+    Delay, "delay", DELAY,
     [
+        /// The entity which delayed this message.
         from: Option<Jid> = "from" => optional,
+
+        /// The time at which this message got stored.
         stamp: DateTime = "stamp" => required
     ],
+    /// The optional reason this message got delayed.
     data: PlainText<Option<String>>
 );
 
