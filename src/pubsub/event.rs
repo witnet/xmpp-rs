@@ -18,11 +18,17 @@ use data_forms::DataForm;
 
 use pubsub::{NodeName, ItemId, Subscription, SubscriptionId};
 
+/// One PubSub item from a node.
 #[derive(Debug, Clone)]
 pub struct Item {
-    pub payload: Option<Element>,
+    /// The identifier for this item, unique per node.
     pub id: Option<ItemId>,
+
+    /// The JID of the entity who published this item.
     pub publisher: Option<Jid>,
+
+    /// The actual content of this item.
+    pub payload: Option<Element>,
 }
 
 impl TryFrom<Element> for Item {
@@ -55,36 +61,70 @@ impl From<Item> for Element {
     }
 }
 
+/// Represents an event happening to a PubSub node.
 #[derive(Debug, Clone)]
 pub enum PubSubEvent {
     /*
     Collection {
     },
     */
+    /// This node’s configuration changed.
     Configuration {
+        /// The node affected.
         node: NodeName,
+
+        /// The new configuration of this node.
         form: Option<DataForm>,
     },
+
+    /// This node has been deleted, with an optional redirect to another node.
     Delete {
+        /// The node affected.
         node: NodeName,
+
+        /// The xmpp: URI of another node replacing this one.
         redirect: Option<String>,
     },
+
+    /// Some items have been published on this node.
     PublishedItems {
+        /// The node affected.
         node: NodeName,
+
+        /// The list of published items.
         items: Vec<Item>,
     },
+
+    /// Some items have been removed from this node.
     RetractedItems {
+        /// The node affected.
         node: NodeName,
+
+        /// The list of retracted items.
         items: Vec<ItemId>,
     },
+
+    /// All items of this node just got removed at once.
     Purge {
+        /// The node affected.
         node: NodeName,
     },
+
+    /// The user’s subscription to this node has changed.
     Subscription {
+        /// The node affected.
         node: NodeName,
+
+        /// The time at which this subscription will expire.
         expiry: Option<DateTime>,
+
+        /// The JID of the user affected.
         jid: Option<Jid>,
+
+        /// An identifier for this subscription.
         subid: Option<SubscriptionId>,
+
+        /// The state of this subscription.
         subscription: Option<Subscription>,
     },
 }

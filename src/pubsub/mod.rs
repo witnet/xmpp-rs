@@ -4,6 +4,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+//#![deny(missing_docs)]
+
 /// The `http://jabber.org/protocol/pubsub#event` protocol.
 pub mod event;
 
@@ -13,13 +15,35 @@ pub mod pubsub;
 pub use self::event::PubSubEvent;
 pub use self::pubsub::PubSub;
 
-generate_id!(NodeName);
-generate_id!(ItemId);
-generate_id!(SubscriptionId);
+generate_id!(
+    /// The name of a PubSub node, used to identify it on a JID.
+    NodeName
+);
 
-generate_attribute!(Subscription, "subscription", {
-    None => "none",
-    Pending => "pending",
-    Subscribed => "subscribed",
-    Unconfigured => "unconfigured",
-}, Default = None);
+generate_id!(
+    /// The identifier of an item, which is unique per node.
+    ItemId
+);
+
+generate_id!(
+    /// The identifier of a subscription to a PubSub node.
+    SubscriptionId
+);
+
+generate_attribute!(
+    /// The state of a subscription to a node.
+    Subscription, "subscription", {
+        /// The user is not subscribed to this node.
+        None => "none",
+
+        /// The user’s subscription to this node is still pending.
+        Pending => "pending",
+
+        /// The user is subscribed to this node.
+        Subscribed => "subscribed",
+
+        /// The user’s subscription to this node will only be valid once
+        /// configured.
+        Unconfigured => "unconfigured",
+    }, Default = None
+);
