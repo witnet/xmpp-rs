@@ -4,12 +4,23 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-generate_empty_element!(Request, "request", RECEIPTS);
+#![deny(missing_docs)]
 
-generate_element!(Received, "received", RECEIPTS,
-attributes: [
-    id: Option<String> = "id" => optional,
-]);
+generate_empty_element!(
+    /// Requests that this message is acked by the final recipient once
+    /// received.
+    Request, "request", RECEIPTS
+);
+
+generate_element!(
+    /// Notes that a previous message has correctly been received, it is
+    /// referenced by its 'id' attribute.
+    Received, "received", RECEIPTS,
+    attributes: [
+        /// The 'id' attribute of the received message.
+        id: Option<String> = "id" => optional,
+    ]
+);
 
 #[cfg(test)]
 mod tests {
