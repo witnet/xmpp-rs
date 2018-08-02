@@ -4,6 +4,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#![deny(missing_docs)]
+
 use try_from::TryFrom;
 
 use minidom::Element;
@@ -25,13 +27,21 @@ generate_id!(
 );
 
 generate_element!(
+    /// Starts a query to the archive.
     Query, "query", MAM,
     attributes: [
+        /// An optional identifier for matching forwarded messages to this
+        /// query.
         queryid: Option<QueryId> = "queryid" => optional,
+
+        /// Must be set to Some when querying a PubSub node’s archive.
         node: Option<NodeName> = "node" => optional
     ],
     children: [
+        /// Used for filtering the results.
         form: Option<DataForm> = ("x", DATA_FORMS) => DataForm,
+
+        /// Used for paging through results.
         set: Option<Set> = ("set", RSM) => Set
     ]
 );
@@ -41,42 +51,74 @@ impl IqSetPayload for Query {}
 impl IqResultPayload for Query {}
 
 generate_element!(
+    /// The wrapper around forwarded stanzas.
     Result_, "result", MAM,
     attributes: [
+        /// The stanza-id under which the archive stored this stanza.
         id: String = "id" => required,
+
+        /// The same queryid as the one requested in the
+        /// [query](struct.Query.html).
         queryid: Option<QueryId> = "queryid" => optional,
     ],
     children: [
+        /// The actual stanza being forwarded.
         forwarded: Required<Forwarded> = ("forwarded", FORWARD) => Forwarded
     ]
 );
 
 generate_attribute!(
+    /// True when the end of a MAM query has been reached.
     Complete, "complete", bool
 );
 
 generate_element!(
+    /// Notes the end of a page in a query.
     Fin, "fin", MAM,
     attributes: [
+        /// True when the end of a MAM query has been reached.
         complete: Complete = "complete" => default
     ],
     children: [
+        /// Describes the current page, it should contain at least [first]
+        /// (with an [index]) and [last], and generally [count].
+        ///
+        /// [first]: ../rsm/struct.Set.html#structfield.first
+        /// [index]: ../rsm/struct.Set.html#structfield.first_index
+        /// [last]: ../rsm/struct.Set.html#structfield.last
+        /// [count]: ../rsm/struct.Set.html#structfield.count
         set: Required<Set> = ("set", RSM) => Set
     ]
 );
 
 impl IqResultPayload for Fin {}
 
-generate_attribute!(DefaultPrefs, "default", {
-    Always => "always",
-    Never => "never",
-    Roster => "roster",
-});
+generate_attribute!(
+    /// Notes the default archiving preference for the user.
+    DefaultPrefs, "default", {
+        /// The default is to always log messages in the archive.
+        Always => "always",
 
+        /// The default is to never log messages in the archive.
+        Never => "never",
+
+        /// The default is to log messages in the archive only for contacts
+        /// present in the user’s [roster](../roster/index.html).
+        Roster => "roster",
+    }
+);
+
+/// Controls the archiving preferences of the user.
 #[derive(Debug, Clone)]
 pub struct Prefs {
+    /// The default preference for JIDs in neither
+    /// [always](#structfield.always) or [never](#structfield.never) lists.
     pub default_: DefaultPrefs,
+
+    /// The set of JIDs for which to always store messages in the archive.
     pub always: Vec<Jid>,
+
+    /// The set of JIDs for which to never store messages in the archive.
     pub never: Vec<Jid>,
 }
 
