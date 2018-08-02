@@ -4,21 +4,34 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#![deny(missing_docs)]
+
 use helpers::PlainText;
 use sha1::Sha1;
 use digest::Digest;
 
-generate_element_with_text!(Handshake, "handshake", COMPONENT,
+generate_element_with_text!(
+    /// The main authentication mechanism for components.
+    Handshake, "handshake", COMPONENT,
+
+    /// If Some, contains the hex-encoded SHA-1 of the concatenation of the
+    /// stream id and the password, and is used to authenticate against the
+    /// server.
+    ///
+    /// If None, it is the successful reply from the server, the stream is now
+    /// fully established and both sides can now exchange stanzas.
     data: PlainText<Option<String>>
 );
 
 impl Handshake {
+    /// Creates a successful reply from a server.
     pub fn new() -> Handshake {
         Handshake {
             data: None,
         }
     }
 
+    /// Creates an authentication request from the component.
     pub fn from_password_and_stream_id(password: &str, stream_id: &str) -> Handshake {
         let input = String::from(stream_id) + password;
         let hash = Sha1::digest(input.as_bytes());
