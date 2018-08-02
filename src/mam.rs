@@ -15,14 +15,20 @@ use iq::{IqGetPayload, IqSetPayload, IqResultPayload};
 use data_forms::DataForm;
 use rsm::Set;
 use forwarding::Forwarded;
+use pubsub::NodeName;
 
 use ns;
+
+generate_id!(
+    /// An identifier matching a result message to the query requesting it.
+    QueryId
+);
 
 generate_element!(
     Query, "query", MAM,
     attributes: [
-        queryid: Option<String> = "queryid" => optional,
-        node: Option<String> = "node" => optional
+        queryid: Option<QueryId> = "queryid" => optional,
+        node: Option<NodeName> = "node" => optional
     ],
     children: [
         form: Option<DataForm> = ("x", DATA_FORMS) => DataForm,
@@ -38,7 +44,7 @@ generate_element!(
     Result_, "result", MAM,
     attributes: [
         id: String = "id" => required,
-        queryid: String = "queryid" => required,
+        queryid: Option<QueryId> = "queryid" => optional,
     ],
     children: [
         forwarded: Required<Forwarded> = ("forwarded", FORWARD) => Forwarded
