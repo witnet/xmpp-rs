@@ -4,21 +4,41 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#![deny(missing_docs)]
+
 use helpers::TrimmedPlainText;
 
-generate_element_with_text!(URI, "uri", MEDIA_ELEMENT,
+generate_element_with_text!(
+    /// Represents an URI used in a media element.
+    URI, "uri", MEDIA_ELEMENT,
     [
+        /// The MIME type of the URI referenced.
+        ///
+        /// See the [IANA MIME Media Types Registry][1] for a list of
+        /// registered types, but unregistered or yet-to-be-registered are
+        /// accepted too.
+        ///
+        /// [1]: https://www.iana.org/assignments/media-types/media-types.xhtml
         type_: String = "type" => required
     ],
+
+    /// The actual URI contained.
     uri: TrimmedPlainText<String>
 );
 
-generate_element!(MediaElement, "media", MEDIA_ELEMENT,
+generate_element!(
+    /// References a media element, to be used in [data
+    /// forms](../data_forms/index.html).
+    MediaElement, "media", MEDIA_ELEMENT,
     attributes: [
+        /// The recommended display width in pixels.
         width: Option<usize> = "width" => optional,
+
+        /// The recommended display height in pixels.
         height: Option<usize> = "height" => optional
     ],
     children: [
+        /// A list of URIs referencing this media.
         uris: Vec<URI> = ("uri", MEDIA_ELEMENT) => URI
     ]
 );
