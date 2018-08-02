@@ -4,6 +4,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#![deny(missing_docs)]
+
 use try_from::TryFrom;
 
 use jid::Jid;
@@ -14,14 +16,20 @@ use error::Error;
 use ns;
 use iq::{IqGetPayload, IqSetPayload, IqResultPayload};
 
-generate_empty_element!(BlocklistRequest, "blocklist", BLOCKING);
+generate_empty_element!(
+    /// The element requesting the blocklist, the result iq will contain a
+    /// [BlocklistResult].
+    BlocklistRequest, "blocklist", BLOCKING
+);
 
 impl IqGetPayload for BlocklistRequest {}
 
 macro_rules! generate_blocking_element {
-    ($elem:ident, $name:tt) => (
+    ($(#[$meta:meta])* $elem:ident, $name:tt) => (
+        $(#[$meta])*
         #[derive(Debug, Clone)]
         pub struct $elem {
+            /// List of JIDs affected by this command.
             pub items: Vec<Jid>,
         }
 
@@ -58,15 +66,35 @@ macro_rules! generate_blocking_element {
     );
 }
 
-generate_blocking_element!(BlocklistResult, "blocklist");
-generate_blocking_element!(Block, "block");
-generate_blocking_element!(Unblock, "unblock");
+generate_blocking_element!(
+    /// The element containing the current blocklist, as a reply from
+    /// [BlocklistRequest].
+    BlocklistResult, "blocklist"
+);
 
 impl IqResultPayload for BlocklistResult {}
+
+// TODO: Prevent zero elements from being allowed.
+generate_blocking_element!(
+    /// A query to block one or more JIDs.
+    Block, "block"
+);
+
 impl IqSetPayload for Block {}
+
+generate_blocking_element!(
+    /// A query to unblock one or more JIDs, or all of them.
+    ///
+    /// Warning: not putting any JID there means clearing out the blocklist.
+    Unblock, "unblock"
+);
+
 impl IqSetPayload for Unblock {}
 
-generate_empty_element!(Blocked, "blocked", BLOCKING_ERRORS);
+generate_empty_element!(
+    /// The application-specific error condition when a message is blocked.
+    Blocked, "blocked", BLOCKING_ERRORS
+);
 
 #[cfg(test)]
 mod tests {
