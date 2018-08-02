@@ -21,7 +21,6 @@ use pubsub::{NodeName, ItemId, Subscription, SubscriptionId};
 #[derive(Debug, Clone)]
 pub struct Item {
     pub payload: Option<Element>,
-    pub node: Option<NodeName>,
     pub id: Option<ItemId>,
     pub publisher: Option<Jid>,
 }
@@ -31,7 +30,7 @@ impl TryFrom<Element> for Item {
 
     fn try_from(elem: Element) -> Result<Item, Error> {
         check_self!(elem, "item", PUBSUB_EVENT);
-        check_no_unknown_attributes!(elem, "item", ["id", "node", "publisher"]);
+        check_no_unknown_attributes!(elem, "item", ["id", "publisher"]);
         let mut payloads = elem.children().cloned().collect::<Vec<_>>();
         let payload = payloads.pop();
         if !payloads.is_empty() {
@@ -40,7 +39,6 @@ impl TryFrom<Element> for Item {
         Ok(Item {
             payload,
             id: get_attr!(elem, "id", optional),
-            node: get_attr!(elem, "node", optional),
             publisher: get_attr!(elem, "publisher", optional),
         })
     }
@@ -51,7 +49,6 @@ impl From<Item> for Element {
         Element::builder("item")
                 .ns(ns::PUBSUB_EVENT)
                 .attr("id", item.id)
-                .attr("node", item.node)
                 .attr("publisher", item.publisher)
                 .append(item.payload)
                 .build()
@@ -274,13 +271,12 @@ mod tests {
 
     #[test]
     fn test_simple_items() {
-        let elem: Element = "<event xmlns='http://jabber.org/protocol/pubsub#event'><items node='coucou'><item id='test' node='huh?' publisher='test@coucou'/></items></event>".parse().unwrap();
+        let elem: Element = "<event xmlns='http://jabber.org/protocol/pubsub#event'><items node='coucou'><item id='test' publisher='test@coucou'/></items></event>".parse().unwrap();
         let event = PubSubEvent::try_from(elem).unwrap();
         match event {
             PubSubEvent::PublishedItems { node, items } => {
                 assert_eq!(node, NodeName(String::from("coucou")));
                 assert_eq!(items[0].id, Some(ItemId(String::from("test"))));
-                assert_eq!(items[0].node, Some(NodeName(String::from("huh?"))));
                 assert_eq!(items[0].publisher, Some(Jid::from_str("test@coucou").unwrap()));
                 assert_eq!(items[0].payload, None);
             },
@@ -296,7 +292,6 @@ mod tests {
             PubSubEvent::PublishedItems { node, items } => {
                 assert_eq!(node, NodeName(String::from("something")));
                 assert_eq!(items[0].id, None);
-                assert_eq!(items[0].node, None);
                 assert_eq!(items[0].publisher, None);
                 match items[0].payload {
                     Some(ref elem) => assert!(elem.is("foreign", "example:namespace")),
