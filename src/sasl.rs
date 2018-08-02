@@ -4,7 +4,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use helpers::Base64;
+use helpers::{Base64, TrimmedPlainText};
 
 generate_attribute!(Mechanism, "mechanism", {
     Plain => "PLAIN",
@@ -30,6 +30,10 @@ generate_element_with_text!(Response, "response", SASL,
 
 generate_element_with_text!(Success, "success", SASL,
     data: Base64<Vec<u8>>
+);
+
+generate_element_with_text!(Failure, "failure", SASL,
+    data: TrimmedPlainText<String>
 );
 
 #[cfg(test)]
