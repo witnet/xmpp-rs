@@ -10,17 +10,18 @@ use helpers::PlainText;
 use sha1::Sha1;
 use digest::Digest;
 
-generate_element_with_text!(
+generate_element!(
     /// The main authentication mechanism for components.
     Handshake, "handshake", COMPONENT,
-
-    /// If Some, contains the hex-encoded SHA-1 of the concatenation of the
-    /// stream id and the password, and is used to authenticate against the
-    /// server.
-    ///
-    /// If None, it is the successful reply from the server, the stream is now
-    /// fully established and both sides can now exchange stanzas.
-    data: PlainText<Option<String>>
+    text: (
+        /// If Some, contains the hex-encoded SHA-1 of the concatenation of the
+        /// stream id and the password, and is used to authenticate against the
+        /// server.
+        ///
+        /// If None, it is the successful reply from the server, the stream is now
+        /// fully established and both sides can now exchange stanzas.
+        data: PlainText<Option<String>>
+    )
 );
 
 impl Handshake {

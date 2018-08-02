@@ -13,27 +13,37 @@ generate_attribute!(Mechanism, "mechanism", {
     Anonymous => "ANONYMOUS",
 });
 
-generate_element_with_text!(Auth, "auth", SASL,
-    [
+generate_element!(Auth, "auth", SASL,
+    attributes: [
         mechanism: Mechanism = "mechanism" => required
     ],
-    data: Base64<Vec<u8>>
+    text: (
+        data: Base64<Vec<u8>>
+    )
 );
 
-generate_element_with_text!(Challenge, "challenge", SASL,
-    data: Base64<Vec<u8>>
+generate_element!(Challenge, "challenge", SASL,
+    text: (
+        data: Base64<Vec<u8>>
+    )
 );
 
-generate_element_with_text!(Response, "response", SASL,
-    data: Base64<Vec<u8>>
+generate_element!(Response, "response", SASL,
+    text: (
+        data: Base64<Vec<u8>>
+    )
 );
 
-generate_element_with_text!(Success, "success", SASL,
-    data: Base64<Vec<u8>>
+generate_element!(Success, "success", SASL,
+    text: (
+        data: Base64<Vec<u8>>
+    )
 );
 
-generate_element_with_text!(Failure, "failure", SASL,
-    data: TrimmedPlainText<String>
+generate_element!(Failure, "failure", SASL,
+    text: (
+        data: TrimmedPlainText<String>
+    )
 );
 
 #[cfg(test)]

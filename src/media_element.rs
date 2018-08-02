@@ -8,10 +8,10 @@
 
 use helpers::TrimmedPlainText;
 
-generate_element_with_text!(
+generate_element!(
     /// Represents an URI used in a media element.
     URI, "uri", MEDIA_ELEMENT,
-    [
+    attributes: [
         /// The MIME type of the URI referenced.
         ///
         /// See the [IANA MIME Media Types Registry][1] for a list of
@@ -21,9 +21,10 @@ generate_element_with_text!(
         /// [1]: https://www.iana.org/assignments/media-types/media-types.xhtml
         type_: String = "type" => required
     ],
-
-    /// The actual URI contained.
-    uri: TrimmedPlainText<String>
+    text: (
+        /// The actual URI contained.
+        uri: TrimmedPlainText<String>
+    )
 );
 
 generate_element!(

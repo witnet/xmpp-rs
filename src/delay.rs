@@ -12,18 +12,20 @@ use jid::Jid;
 
 use helpers::PlainText;
 
-generate_element_with_text!(
+generate_element!(
     /// Notes when and by whom a message got stored for later delivery.
     Delay, "delay", DELAY,
-    [
+    attributes: [
         /// The entity which delayed this message.
         from: Option<Jid> = "from" => optional,
 
         /// The time at which this message got stored.
         stamp: DateTime = "stamp" => required
     ],
-    /// The optional reason this message got delayed.
-    data: PlainText<Option<String>>
+    text: (
+        /// The optional reason this message got delayed.
+        data: PlainText<Option<String>>
+    )
 );
 
 #[cfg(test)]

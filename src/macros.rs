@@ -338,52 +338,6 @@ macro_rules! generate_elem_id {
     );
 }
 
-macro_rules! generate_element_with_text {
-    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident, $(#[$text_meta:meta])* $text_ident:ident: $codec:ident < $text_type:ty >) => (
-        generate_element_with_text!($(#[$meta])* $elem, $name, $ns, [], $(#[$text_meta])* $text_ident: $codec<$text_type>);
-    );
-    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident, [$($(#[$attr_meta:meta])* $attr:ident: $attr_type:ty = $attr_name:tt => $attr_action:tt),*], $(#[$text_meta:meta])* $text_ident:ident: $codec:ident < $text_type:ty >) => (
-        $(#[$meta])*
-        #[derive(Debug, Clone)]
-        pub struct $elem {
-            $(
-            $(#[$attr_meta])*
-            pub $attr: $attr_type,
-            )*
-            $(#[$text_meta])*
-            pub $text_ident: $text_type,
-        }
-
-        impl ::try_from::TryFrom<::minidom::Element> for $elem {
-            type Err = ::error::Error;
-
-            fn try_from(elem: ::minidom::Element) -> Result<$elem, ::error::Error> {
-                check_self!(elem, $name, $ns);
-                check_no_children!(elem, $name);
-                check_no_unknown_attributes!(elem, $name, [$($attr_name),*]);
-                Ok($elem {
-                    $(
-                    $attr: get_attr!(elem, $attr_name, $attr_action),
-                    )*
-                    $text_ident: $codec::decode(&elem.text())?,
-                })
-            }
-        }
-
-        impl From<$elem> for ::minidom::Element {
-            fn from(elem: $elem) -> ::minidom::Element {
-                ::minidom::Element::builder($name)
-                        .ns(::ns::$ns)
-                        $(
-                        .attr($attr_name, elem.$attr)
-                        )*
-                        .append($codec::encode(&elem.$text_ident))
-                        .build()
-            }
-        }
-    );
-}
-
 macro_rules! start_decl {
     (Vec, $type:ty) => (
         Vec<$type>
@@ -482,7 +436,13 @@ macro_rules! generate_element {
     ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident, attributes: [$($(#[$attr_meta:meta])* $attr:ident: $attr_type:ty = $attr_name:tt => $attr_action:tt),*,], children: [$($(#[$child_meta:meta])* $child_ident:ident: $coucou:tt<$child_type:ty> = ($child_name:tt, $child_ns:ident) => $child_constructor:ident),*]) => (
         generate_element!($(#[$meta])* $elem, $name, $ns, attributes: [$($(#[$attr_meta])* $attr: $attr_type = $attr_name => $attr_action),*], children: [$($(#[$child_meta])* $child_ident: $coucou<$child_type> = ($child_name, $child_ns) => $child_constructor),*]);
     );
-    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident, attributes: [$($(#[$attr_meta:meta])* $attr:ident: $attr_type:ty = $attr_name:tt => $attr_action:tt),*], children: [$($(#[$child_meta:meta])* $child_ident:ident: $coucou:tt<$child_type:ty> = ($child_name:tt, $child_ns:ident) => $child_constructor:ident),*]) => (
+    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident, text: ($(#[$text_meta:meta])* $text_ident:ident: $codec:ident < $text_type:ty >)) => (
+        generate_element!($(#[$meta])* $elem, $name, $ns, attributes: [], children: [], text: ($(#[$text_meta])* $text_ident: $codec<$text_type>));
+    );
+    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident, attributes: [$($(#[$attr_meta:meta])* $attr:ident: $attr_type:ty = $attr_name:tt => $attr_action:tt),+], text: ($(#[$text_meta:meta])* $text_ident:ident: $codec:ident < $text_type:ty >)) => (
+        generate_element!($(#[$meta])* $elem, $name, $ns, attributes: [$($(#[$attr_meta])* $attr: $attr_type = $attr_name => $attr_action),*], children: [], text: ($(#[$text_meta])* $text_ident: $codec<$text_type>));
+    );
+    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident, attributes: [$($(#[$attr_meta:meta])* $attr:ident: $attr_type:ty = $attr_name:tt => $attr_action:tt),*], children: [$($(#[$child_meta:meta])* $child_ident:ident: $coucou:tt<$child_type:ty> = ($child_name:tt, $child_ns:ident) => $child_constructor:ident),*] $(, text: ($(#[$text_meta:meta])* $text_ident:ident: $codec:ident < $text_type:ty >))*) => (
         $(#[$meta])*
         #[derive(Debug, Clone)]
         pub struct $elem {
@@ -493,6 +453,10 @@ macro_rules! generate_element {
             $(
             $(#[$child_meta])*
             pub $child_ident: start_decl!($coucou, $child_type),
+            )*
+            $(
+            $(#[$text_meta])*
+            pub $text_ident: $text_type,
             )*
         }
 
@@ -521,6 +485,9 @@ macro_rules! generate_element {
                     $(
                     $child_ident: finish_parse_elem!($child_ident: $coucou = $child_name, $name),
                     )*
+                    $(
+                    $text_ident: $codec::decode(&elem.text())?,
+                    )*
                 })
             }
         }
@@ -534,6 +501,9 @@ macro_rules! generate_element {
                         )*
                         $(
                         .append(generate_serialiser!(elem, $child_ident, $coucou, $child_constructor, ($child_name, $child_ns)))
+                        )*
+                        $(
+                        .append($codec::encode(&elem.$text_ident))
                         )*
                         .build()
             }

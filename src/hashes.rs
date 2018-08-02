@@ -66,13 +66,15 @@ impl IntoAttributeValue for Algo {
     }
 }
 
-generate_element_with_text!(
+generate_element!(
     #[derive(PartialEq)]
     Hash, "hash", HASHES,
-    [
+    attributes: [
         algo: Algo = "algo" => required
     ],
-    hash: Base64<Vec<u8>>
+    text: (
+        hash: Base64<Vec<u8>>
+    )
 );
 
 impl Hash {

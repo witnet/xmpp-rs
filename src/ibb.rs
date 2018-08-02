@@ -42,18 +42,20 @@ attributes: [
 
 impl IqSetPayload for Open {}
 
-generate_element_with_text!(
+generate_element!(
 /// Exchange a chunk of data in an open stream.
 Data, "data", IBB,
-    [
+    attributes: [
         /// Sequence number of this chunk, must wraparound after 65535.
         seq: u16 = "seq" => required,
 
         /// The identifier of the stream on which data is being exchanged.
         sid: StreamId = "sid" => required
     ],
-    /// Vector of bytes to be exchanged.
-    data: Base64<Vec<u8>>
+    text: (
+        /// Vector of bytes to be exchanged.
+        data: Base64<Vec<u8>>
+    )
 );
 
 impl IqSetPayload for Data {}
