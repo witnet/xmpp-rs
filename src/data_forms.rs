@@ -4,8 +4,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#![allow(missing_docs)]
-
 use try_from::TryFrom;
 
 use minidom::Element;
@@ -16,36 +14,85 @@ use ns;
 use media_element::MediaElement;
 
 generate_element!(
+    /// Represents one of the possible values for a list- field.
     Option_, "option", DATA_FORMS,
     attributes: [
+        /// The optional label to be displayed to the user for this option.
         label: Option<String> = "label" => optional
     ],
     children: [
+        /// The value returned to the server when selecting this option.
         value: Required<String> = ("value", DATA_FORMS) => String
     ]
 );
 
-generate_attribute!(FieldType, "type", {
-    Boolean => "boolean",
-    Fixed => "fixed",
-    Hidden => "hidden",
-    JidMulti => "jid-multi",
-    JidSingle => "jid-single",
-    ListMulti => "list-multi",
-    ListSingle => "list-single",
-    TextMulti => "text-multi",
-    TextPrivate => "text-private",
-    TextSingle => "text-single",
-}, Default = TextSingle);
+generate_attribute!(
+    /// The type of a [field](struct.Field.html) element.
+    FieldType, "type", {
+        /// This field can only take the values "0" or "false" for a false
+        /// value, and "1" or "true" for a true value.
+        Boolean => "boolean",
 
+        /// This field describes data, it must not be sent back to the
+        /// requester.
+        Fixed => "fixed",
+
+        /// This field is hidden, it should not be displayed to the user but
+        /// should be sent back to the requester.
+        Hidden => "hidden",
+
+        /// This field accepts one or more [JIDs](../../jid/struct.Jid.html).
+        /// A client may want to let the user autocomplete them based on their
+        /// contacts list for instance.
+        JidMulti => "jid-multi",
+
+        /// This field accepts one [JID](../../jid/struct.Jid.html).  A client
+        /// may want to let the user autocomplete it based on their contacts
+        /// list for instance.
+        JidSingle => "jid-single",
+
+        /// This field accepts one or more values from the list provided as
+        /// [options](struct.Option_.html).
+        ListMulti => "list-multi",
+
+        /// This field accepts one value from the list provided as
+        /// [options](struct.Option_.html).
+        ListSingle => "list-single",
+
+        /// This field accepts one or more free form text lines.
+        TextMulti => "text-multi",
+
+        /// This field accepts one free form password, a client should hide it
+        /// in its user interface.
+        TextPrivate => "text-private",
+
+        /// This field accepts one free form text line.
+        TextSingle => "text-single",
+    }, Default = TextSingle
+);
+
+/// Represents a field in a [data form](struct.DataForm.html).
 #[derive(Debug, Clone)]
 pub struct Field {
+    /// The unique identifier for this field, in the form.
     pub var: String,
+
+    /// The type of this field.
     pub type_: FieldType,
+
+    /// The label to be possibly displayed to the user for this field.
     pub label: Option<String>,
+
+    /// The form will be rejected if this field isn’t present.
     pub required: bool,
+
+    /// A list of allowed values.
     pub options: Vec<Option_>,
+
+    /// The values provided for this field.
     pub values: Vec<String>,
+
+    /// A list of media related to this field.
     pub media: Vec<MediaElement>,
 }
 
@@ -117,19 +164,42 @@ impl From<Field> for Element {
     }
 }
 
-generate_attribute!(DataFormType, "type", {
-    Cancel => "cancel",
-    Form => "form",
-    Result_ => "result",
-    Submit => "submit",
-});
+generate_attribute!(
+    /// Represents the type of a [data form](struct.DataForm.html).
+    DataFormType, "type", {
+        /// This is a cancel request for a prior type="form" data form.
+        Cancel => "cancel",
 
+        /// This is a request for the recipient to fill this form and send it
+        /// back as type="submit".
+        Form => "form",
+
+        /// This is a result form, which contains what the requester asked for.
+        Result_ => "result",
+
+        /// This is a complete response to a form received before.
+        Submit => "submit",
+    }
+);
+
+/// This is a form to be sent to another entity for filling.
 #[derive(Debug, Clone)]
 pub struct DataForm {
+    /// The type of this form, telling the other party which action to execute.
     pub type_: DataFormType,
+
+    /// An easy accessor for the FORM_TYPE of this form, see
+    /// [XEP-0068](https://xmpp.org/extensions/xep-0068.html) for more
+    /// information.
     pub form_type: Option<String>,
+
+    /// The title of this form.
     pub title: Option<String>,
+
+    /// The instructions given with this form.
     pub instructions: Option<String>,
+
+    /// A list of fields comprising this form.
     pub fields: Vec<Field>,
 }
 
