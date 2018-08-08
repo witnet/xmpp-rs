@@ -4,8 +4,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#![allow(missing_docs)]
-
 use try_from::TryFrom;
 use std::net::IpAddr;
 
@@ -16,33 +14,72 @@ use error::Error;
 
 use ns;
 
-generate_attribute!(Type, "type", {
-    Assisted => "assisted",
-    Direct => "direct",
-    Proxy => "proxy",
-    Tunnel => "tunnel",
-}, Default = Direct);
+generate_attribute!(
+    /// The type of the connection being proposed by this candidate.
+    Type, "type", {
+        /// Direct connection using NAT assisting technologies like NAT-PMP or
+        /// UPnP-IGD.
+        Assisted => "assisted",
 
-generate_attribute!(Mode, "mode", {
-    Tcp => "tcp",
-    Udp => "udp",
-}, Default = Tcp);
+        /// Direct connection using the given interface.
+        Direct => "direct",
 
-generate_id!(CandidateId);
+        /// SOCKS5 relay.
+        Proxy => "proxy",
 
-generate_id!(StreamId);
+        /// Tunnel protocol such as Teredo.
+        Tunnel => "tunnel",
+    }, Default = Direct
+);
 
-generate_element!(Candidate, "candidate", JINGLE_S5B,
-attributes: [
-    cid: CandidateId = "cid" => required,
-    host: IpAddr = "host" => required,
-    jid: Jid = "jid" => required,
-    port: Option<u16> = "port" => optional,
-    priority: u32 = "priority" => required,
-    type_: Type = "type" => default,
-]);
+generate_attribute!(
+    /// Which mode to use for the connection.
+    Mode, "mode", {
+        /// Use TCP, which is the default.
+        Tcp => "tcp",
+
+        /// Use UDP.
+        Udp => "udp",
+    }, Default = Tcp
+);
+
+generate_id!(
+    /// An identifier for a candidate.
+    CandidateId
+);
+
+generate_id!(
+    /// An identifier for a stream.
+    StreamId
+);
+
+generate_element!(
+    /// A candidate for a connection.
+    Candidate, "candidate", JINGLE_S5B,
+    attributes: [
+        /// The identifier for this candidate.
+        cid: CandidateId = "cid" => required,
+
+        /// The host to connect to.
+        host: IpAddr = "host" => required,
+
+        /// The JID to request at the given end.
+        jid: Jid = "jid" => required,
+
+        /// The port to connect to.
+        port: Option<u16> = "port" => optional,
+
+        /// The priority of this candidate, computed using this formula:
+        /// priority = (2^16)*(type preference) + (local preference)
+        priority: u32 = "priority" => required,
+
+        /// The type of the connection being proposed by this candidate.
+        type_: Type = "type" => default,
+    ]
+);
 
 impl Candidate {
+    /// Creates a new candidate with the given parameters.
     pub fn new(cid: CandidateId, host: IpAddr, jid: Jid, priority: u32) -> Candidate {
         Candidate {
             cid,
@@ -54,36 +91,61 @@ impl Candidate {
         }
     }
 
+    /// Sets the port of this candidate.
     pub fn with_port(mut self, port: u16) -> Candidate {
         self.port = Some(port);
         self
     }
 
+    /// Sets the type of this candidate.
     pub fn with_type(mut self, type_: Type) -> Candidate {
         self.type_ = type_;
         self
     }
 }
 
+/// The payload of a transport.
 #[derive(Debug, Clone)]
 pub enum TransportPayload {
+    /// The responder informs the initiator that the bytestream pointed by this
+    /// candidate has been activated.
     Activated(CandidateId),
+
+    /// A list of suggested candidates.
     Candidates(Vec<Candidate>),
+
+    /// Both parties failed to use a candidate, they should fallback to another
+    /// transport.
     CandidateError,
+
+    /// The candidate pointed here should be used by both parties.
     CandidateUsed(CandidateId),
+
+    /// This entity can’t connect to the SOCKS5 proxy.
     ProxyError,
+
+    /// XXX: Invalid, should not be found in the wild.
     None,
 }
 
+/// Describes a Jingle transport using a direct or proxied connection.
 #[derive(Debug, Clone)]
 pub struct Transport {
+    /// The stream identifier for this transport.
     pub sid: StreamId,
+
+    /// The destination address.
     pub dstaddr: Option<String>,
+
+    /// The mode to be used for the transfer.
     pub mode: Mode,
+
+    /// The payload of this transport.
     pub payload: TransportPayload,
 }
 
 impl Transport {
+    /// Creates a new transport element.
     pub fn new(sid: StreamId) -> Transport {
         Transport {
             sid,
@@ -93,16 +155,19 @@ impl Transport {
         }
     }
 
+    /// Sets the destination address of this transport.
     pub fn with_dstaddr(mut self, dstaddr: String) -> Transport {
         self.dstaddr = Some(dstaddr);
         self
     }
 
+    /// Sets the mode of this transport.
     pub fn with_mode(mut self, mode: Mode) -> Transport {
         self.mode = mode;
         self
     }
 
+    /// Sets the payload of this transport.
     pub fn with_payload(mut self, payload: TransportPayload) -> Transport {
         self.payload = payload;
         self
