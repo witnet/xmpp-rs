@@ -4,20 +4,32 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#![allow(missing_docs)]
-
 use jid::Jid;
 
-generate_element!(Stream, "stream", STREAM,
-attributes: [
-    from: Option<Jid> = "from" => optional,
-    to: Option<Jid> = "to" => optional,
-    id: Option<String> = "id" => optional,
-    version: Option<String> = "version" => optional,
-    xml_lang: Option<String> = "xml:lang" => optional,
-]);
+generate_element!(
+    /// The stream opening for client-server communications.
+    Stream, "stream", STREAM,
+    attributes: [
+        /// The JID of the entity opening this stream.
+        from: Option<Jid> = "from" => optional,
+
+        /// The JID of the entity receiving this stream opening.
+        to: Option<Jid> = "to" => optional,
+
+        /// The id of the stream, used for authentication challenges.
+        id: Option<String> = "id" => optional,
+
+        /// The XMPP version used during this stream.
+        version: Option<String> = "version" => optional,
+
+        /// The default human language for all subsequent stanzas, which will
+        /// be transmitted to other entities for better localisation.
+        xml_lang: Option<String> = "xml:lang" => optional,
+    ]
+);
 
 impl Stream {
+    /// Creates a simple client→server `<stream:stream>` element.
     pub fn new(to: Jid) -> Stream {
         Stream {
             from: None,
@@ -28,21 +40,28 @@ impl Stream {
         }
     }
 
+    /// Sets the [@from](#structfield.from) attribute on this `<stream:stream>`
+    /// element.
     pub fn with_from(mut self, from: Jid) -> Stream {
         self.from = Some(from);
         self
     }
 
+    /// Sets the [@id](#structfield.id) attribute on this `<stream:stream>`
+    /// element.
     pub fn with_id(mut self, id: String) -> Stream {
         self.id = Some(id);
         self
     }
 
+    /// Sets the [@xml:lang](#structfield.xml_lang) attribute on this
+    /// `<stream:stream>` element.
     pub fn with_lang(mut self, xml_lang: String) -> Stream {
         self.xml_lang = Some(xml_lang);
         self
     }
 
+    /// Checks whether the version matches the expected one.
     pub fn is_version(&self, version: &str) -> bool {
         match self.version {
             None => false,
