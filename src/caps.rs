@@ -4,8 +4,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#![allow(missing_docs)]
-
 use try_from::TryFrom;
 
 use disco::{Feature, Identity, DiscoInfoResult, DiscoInfoQuery};
@@ -23,10 +21,21 @@ use sha3::{Sha3_256, Sha3_512};
 use blake2::Blake2b;
 use digest::{Digest, VariableOutput};
 
+/// Represents a capability hash for a given client.
 #[derive(Debug, Clone)]
 pub struct Caps {
+    /// Deprecated list of additional feature bundles.
     pub ext: Option<String>,
+
+    /// A URI identifying an XMPP application.
     pub node: String,
+
+    /// The hash of that application’s
+    /// [disco#info](../disco/struct.DiscoInfoResult.html).
+    ///
+    /// Warning: This protocol is insecure, you may want to switch to
+    /// [ecaps2](../ecaps2/index.html) instead, see [this
+    /// email](https://mail.jabber.org/pipermail/security/2009-July/000812.html).
     pub hash: Hash,
 }
 
@@ -120,6 +129,12 @@ fn compute_extensions(extensions: &[DataForm]) -> Vec<u8> {
     })
 }
 
+/// Applies the caps algorithm on the provided disco#info result, to generate
+/// the hash input.
+///
+/// Warning: This protocol is insecure, you may want to switch to
+/// [ecaps2](../ecaps2/index.html) instead, see [this
+/// email](https://mail.jabber.org/pipermail/security/2009-July/000812.html).
 pub fn compute_disco(disco: &DiscoInfoResult) -> Vec<u8> {
     let identities_string = compute_identities(&disco.identities);
     let features_string = compute_features(&disco.features);
@@ -138,6 +153,8 @@ fn get_hash_vec(hash: &[u8]) -> Vec<u8> {
     vec
 }
 
+/// Hashes the result of [compute_disco()] with one of the supported [hash
+/// algorithms](../hashes/enum.Algo.html).
 pub fn hash_caps(data: &[u8], algo: Algo) -> Result<Hash, String> {
     Ok(Hash {
         hash: match algo {
@@ -181,6 +198,8 @@ pub fn hash_caps(data: &[u8], algo: Algo) -> Result<Hash, String> {
     })
 }
 
+/// Helper function to create the query for the disco#info corresponding to a
+/// caps hash.
 pub fn query_caps(caps: Caps) -> DiscoInfoQuery {
     DiscoInfoQuery {
         node: Some(format!("{}#{}", caps.node, base64::encode(&caps.hash.hash))),
