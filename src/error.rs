@@ -11,14 +11,12 @@ use std::fmt;
 use std::net;
 
 use base64;
-use minidom;
 use jid;
 use chrono;
 
 #[derive(Debug)]
 pub enum Error {
     ParseError(&'static str),
-    XMLError(minidom::Error),
     Base64Error(base64::DecodeError),
     ParseIntError(num::ParseIntError),
     ParseStringError(string::ParseError),
@@ -31,7 +29,6 @@ impl fmt::Display for Error {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             Error::ParseError(s) => write!(fmt, "{}", s),
-            Error::XMLError(ref e) => write!(fmt, "{}", e),
             Error::Base64Error(ref e) => write!(fmt, "{}", e),
             Error::ParseIntError(ref e) => write!(fmt, "{}", e),
             Error::ParseStringError(ref e) => write!(fmt, "{}", e),
@@ -39,12 +36,6 @@ impl fmt::Display for Error {
             Error::JidParseError(_) => write!(fmt, "JID parse error"),
             Error::ChronoParseError(ref e) => write!(fmt, "{}", e),
         }
-    }
-}
-
-impl From<minidom::Error> for Error {
-    fn from(err: minidom::Error) -> Error {
-        Error::XMLError(err)
     }
 }
 
