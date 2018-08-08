@@ -5,7 +5,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use std::convert::From;
-use std::io;
 use std::num;
 use std::string;
 use std::fmt;
@@ -19,7 +18,6 @@ use chrono;
 #[derive(Debug)]
 pub enum Error {
     ParseError(&'static str),
-    IoError(io::Error),
     XMLError(minidom::Error),
     Base64Error(base64::DecodeError),
     ParseIntError(num::ParseIntError),
@@ -33,7 +31,6 @@ impl fmt::Display for Error {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             Error::ParseError(s) => write!(fmt, "{}", s),
-            Error::IoError(ref e) => write!(fmt, "{}", e),
             Error::XMLError(ref e) => write!(fmt, "{}", e),
             Error::Base64Error(ref e) => write!(fmt, "{}", e),
             Error::ParseIntError(ref e) => write!(fmt, "{}", e),
@@ -42,12 +39,6 @@ impl fmt::Display for Error {
             Error::JidParseError(_) => write!(fmt, "JID parse error"),
             Error::ChronoParseError(ref e) => write!(fmt, "{}", e),
         }
-    }
-}
-
-impl From<io::Error> for Error {
-    fn from(err: io::Error) -> Error {
-        Error::IoError(err)
     }
 }
 
