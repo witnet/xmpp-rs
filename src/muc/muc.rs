@@ -8,18 +8,30 @@
 use date::DateTime;
 
 generate_element!(
+    /// Represents the query for messages before our join.
     History, "history", MUC,
     attributes: [
+        /// How many characters of history to send, in XML characters.
         maxchars: Option<u32> = "maxchars" => optional,
+
+        /// How many messages to send.
         maxstanzas: Option<u32> = "maxstanzas" => optional,
+
+        /// Only send messages received in these last seconds.
         seconds: Option<u32> = "seconds" => optional,
+
+        /// Only send messages after this date.
         since: Option<DateTime> = "since" => optional,
     ]
 );
 
 generate_element!(
+    /// Represents a room join request.
     Muc, "x", MUC, children: [
+        /// Password to use when the room is protected by a password.
         password: Option<String> = ("password", MUC) => String,
+
+        /// Controls how much and how old we want to receive history on join.
         history: Option<History> = ("history", MUC) => History
     ]
 );

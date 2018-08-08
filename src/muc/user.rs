@@ -85,7 +85,10 @@ Status, "status", MUC_USER, "code", {
 /// JID or to a roomnick. -- CHANGELOG  1.25 (2012-02-08)
 #[derive(Debug, Clone, PartialEq)]
 pub enum Actor {
+    /// The full JID associated with this user.
     Jid(Jid),
+
+    /// The nickname of this user.
     Nick(String),
 }
 
@@ -120,42 +123,93 @@ impl From<Actor> for Element {
     }
 }
 
-generate_element!(Continue, "continue", MUC_USER,
-attributes: [
-    thread: Option<String> = "thread" => optional,
-]);
+generate_element!(
+    /// Used to continue a one-to-one discussion in a room, with more than one
+    /// participant.
+    Continue, "continue", MUC_USER,
+    attributes: [
+        /// The thread to continue in this room.
+        thread: Option<String> = "thread" => optional,
+    ]
+);
 
-generate_elem_id!(Reason, "reason", MUC_USER);
+generate_elem_id!(
+    /// A reason for inviting, declining, etc. a request.
+    Reason, "reason", MUC_USER
+);
 
-generate_attribute!(Affiliation, "affiliation", {
-    Owner => "owner",
-    Admin => "admin",
-    Member => "member",
-    Outcast => "outcast",
-    None => "none",
-}, Default = None);
+generate_attribute!(
+    /// The affiliation of an entity with a room, which isn’t tied to its
+    /// presence in it.
+    Affiliation, "affiliation", {
+        /// The user who created the room, or who got appointed by its creator
+        /// to be their equal.
+        Owner => "owner",
 
-generate_attribute!(Role, "role", {
-    Moderator => "moderator",
-    Participant => "participant",
-    Visitor => "visitor",
-    None => "none",
-}, Default = None);
+        /// A user who has been empowered by an owner to do administrative
+        /// operations.
+        Admin => "admin",
+
+        /// A user who is whitelisted to speak in moderated rooms, or to join a
+        /// member-only room.
+        Member => "member",
+
+        /// A user who has been banned from this room.
+        Outcast => "outcast",
+
+        /// A normal participant.
+        None => "none",
+    }, Default = None
+);
+
+generate_attribute!(
+    /// The current role of an entity in a room, it can be changed by an owner
+    /// or an administrator but will be lost once they leave the room.
+    Role, "role", {
+        /// This user can kick other participants, as well as grant and revoke
+        /// them voice.
+        Moderator => "moderator",
+
+        /// A user who can speak in this room.
+        Participant => "participant",
+
+        /// A user who cannot speak in this room, and must request voice before
+        /// doing so.
+        Visitor => "visitor",
+
+        /// A user who is absent from the room.
+        None => "none",
+    }, Default = None
+);
 
 generate_element!(
+    /// An item representing a user in a room.
     Item, "item", MUC_USER, attributes: [
+        /// The affiliation of this user with the room.
         affiliation: Affiliation = "affiliation" => required,
+
+        /// The real JID of this user, if you are allowed to see it.
         jid: Option<Jid> = "jid" => optional,
+
+        /// The current nickname of this user.
         nick: Option<String> = "nick" => optional,
+
+        /// The current role of this user.
         role: Role = "role" => required
     ], children: [
+        /// The actor affected by this item.
         actor: Option<Actor> = ("actor", MUC_USER) => Actor,
+
+        /// Whether this continues a one-to-one discussion.
         continue_: Option<Continue> = ("continue", MUC_USER) => Continue,
+
+        /// A reason for this item.
         reason: Option<Reason> = ("reason", MUC_USER) => Reason
     ]
 );
 
 impl Item {
+    /// Creates a new item with the given affiliation and role.
     pub fn new(affiliation: Affiliation, role: Role) -> Item {
         Item {
             affiliation,
@@ -170,8 +224,12 @@ impl Item {
 }
 
 generate_element!(
+    /// The main muc#user element.
     MucUser, "x", MUC_USER, children: [
+        /// List of statuses applying to this item.
         status: Vec<Status> = ("status", MUC_USER) => Status,
+
+        /// List of items.
         items: Vec<Item> = ("item", MUC_USER) => Item
     ]
 );
