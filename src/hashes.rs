@@ -4,8 +4,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#![allow(missing_docs)]
-
 use std::str::FromStr;
 
 use minidom::IntoAttributeValue;
@@ -15,16 +13,46 @@ use error::Error;
 use helpers::Base64;
 use base64;
 
+/// List of the algorithms we support, or Unknown.
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Algo {
+    /// The Secure Hash Algorithm 1, with known vulnerabilities, do not use it.
+    ///
+    /// See https://tools.ietf.org/html/rfc3174
     Sha_1,
+
+    /// The Secure Hash Algorithm 2, in its 256-bit version.
+    ///
+    /// See https://tools.ietf.org/html/rfc6234
     Sha_256,
+
+    /// The Secure Hash Algorithm 2, in its 512-bit version.
+    ///
+    /// See https://tools.ietf.org/html/rfc6234
     Sha_512,
+
+    /// The Secure Hash Algorithm 3, based on Keccak, in its 256-bit version.
+    ///
+    /// See https://keccak.team/files/Keccak-submission-3.pdf
     Sha3_256,
+
+    /// The Secure Hash Algorithm 3, based on Keccak, in its 512-bit version.
+    ///
+    /// See https://keccak.team/files/Keccak-submission-3.pdf
     Sha3_512,
+
+    /// The BLAKE2 hash algorithm, for a 256-bit output.
+    ///
+    /// See https://tools.ietf.org/html/rfc7693
     Blake2b_256,
+
+    /// The BLAKE2 hash algorithm, for a 512-bit output.
+    ///
+    /// See https://tools.ietf.org/html/rfc7693
     Blake2b_512,
+
+    /// An unknown hash not in this list, you can probably reject it.
     Unknown(String),
 }
 
@@ -69,17 +97,22 @@ impl IntoAttributeValue for Algo {
 }
 
 generate_element!(
+    /// This element represents a hash of some data, defined by the hash
+    /// algorithm used and the computed value.
     #[derive(PartialEq)]
     Hash, "hash", HASHES,
     attributes: [
+        /// The algorithm used to create this hash.
         algo: Algo = "algo" => required
     ],
     text: (
+        /// The hash value, as a vector of bytes.
         hash: Base64<Vec<u8>>
     )
 );
 
 impl Hash {
+    /// Creates a [Hash] element with the given algo and data.
     pub fn new(algo: Algo, hash: Vec<u8>) -> Hash {
         Hash {
             algo,
@@ -87,6 +120,8 @@ impl Hash {
         }
     }
 
+    /// Like [new](#method.new) but takes base64-encoded data before decoding
+    /// it.
     pub fn from_base64(algo: Algo, hash: &str) -> Result<Hash, Error> {
         Ok(Hash::new(algo, base64::decode(hash)?))
     }
