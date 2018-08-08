@@ -4,8 +4,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#![allow(missing_docs)]
-
 use std::str::FromStr;
 use try_from::TryFrom;
 
@@ -16,14 +14,25 @@ use jid::Jid;
 use ns;
 use iq::{IqSetPayload, IqResultPayload};
 
+/// The request for resource binding, which is the process by which a client
+/// can obtain a full JID and start exchanging on the XMPP network.
+///
+/// See https://xmpp.org/rfcs/rfc6120.html#bind
 #[derive(Debug, Clone, PartialEq)]
 pub enum Bind {
+    /// Requests no particular resource, a random one will be affected by the
+    /// server.
     None,
+
+    /// Requests this resource, the server may associate another one though.
     Resource(String),
+
+    /// The full JID returned by the server for this client.
     Jid(Jid),
 }
 
 impl Bind {
+    /// Creates a resource binding request.
     pub fn new(resource: Option<String>) -> Bind {
         match resource {
             None => Bind::None,
