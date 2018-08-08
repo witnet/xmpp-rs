@@ -4,8 +4,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#![allow(missing_docs)]
-
 use try_from::TryFrom;
 use std::str::FromStr;
 
@@ -21,18 +19,25 @@ use error::Error;
 use ns;
 
 generate_element!(
+    /// Represents a range in a file.
     #[derive(PartialEq, Default)]
     Range, "range", JINGLE_FT,
     attributes: [
+        /// The offset in bytes from the beginning of the file.
         offset: u64 = "offset" => default,
+
+        /// The length in bytes of the range, or None to be the entire
+        /// remaining of the file.
         length: Option<u64> = "length" => optional
     ],
     children: [
+        /// List of hashes for this range.
         hashes: Vec<Hash> = ("hash", HASHES) => Hash
     ]
 );
 
 impl Range {
+    /// Creates a new range.
     pub fn new() -> Range {
         Default::default()
     }
@@ -40,20 +45,38 @@ impl Range {
 
 type Lang = String;
 
-generate_id!(Desc);
+generate_id!(
+    /// Wrapper for a file description.
+    Desc
+);
 
+/// Represents a file to be transferred.
 #[derive(Debug, Clone)]
 pub struct File {
+    /// The date of last modification of this file.
     pub date: Option<DateTime>,
+
+    /// The MIME type of this file.
     pub media_type: Option<String>,
+
+    /// The name of this file.
     pub name: Option<String>,
+
+    /// The description of this file, possibly localised.
     pub descs: BTreeMap<Lang, Desc>,
+
+    /// The size of this file, in bytes.
     pub size: Option<u64>,
+
+    /// Used to request only a part of this file.
     pub range: Option<Range>,
+
+    /// A list of hashes matching this entire file.
     pub hashes: Vec<Hash>,
 }
 
 impl File {
+    /// Creates a new file descriptor.
     pub fn new() -> File {
         File {
             date: None,
@@ -66,41 +89,50 @@ impl File {
         }
     }
 
+    /// Sets the date of last modification on this file.
     pub fn with_date(mut self, date: DateTime) -> File {
         self.date = Some(date);
         self
     }
 
+    /// Sets the date of last modification on this file from an ISO-8601
+    /// string.
     pub fn with_date_str(mut self, date: &str) -> Result<File, Error> {
         self.date = Some(DateTime::from_str(date)?);
         Ok(self)
     }
 
+    /// Sets the MIME type of this file.
     pub fn with_media_type(mut self, media_type: String) -> File {
         self.media_type = Some(media_type);
         self
     }
 
+    /// Sets the name of this file.
     pub fn with_name(mut self, name: String) -> File {
         self.name = Some(name);
         self
     }
 
+    /// Sets a description for this file.
     pub fn add_desc(mut self, lang: &str, desc: Desc) -> File {
         self.descs.insert(Lang::from(lang), desc);
         self
     }
 
+    /// Sets the file size of this file, in bytes.
     pub fn with_size(mut self, size: u64) -> File {
         self.size = Some(size);
         self
     }
 
+    /// Request only a range of this file.
     pub fn with_range(mut self, range: Range) -> File {
         self.range = Some(range);
         self
     }
 
+    /// Add a hash on this file.
     pub fn add_hash(mut self, hash: Hash) -> File {
         self.hashes.push(hash);
         self
@@ -211,8 +243,11 @@ impl From<File> for Element {
         root.build()
     }
 }
+
+/// A wrapper element for a file.
 #[derive(Debug, Clone)]
 pub struct Description {
+    /// The actual file descriptor.
     pub file: File,
 }
 
@@ -247,10 +282,16 @@ impl From<Description> for Element {
     }
 }
 
+/// A checksum for checking that the file has been transferred correctly.
 #[derive(Debug, Clone)]
 pub struct Checksum {
+    /// The identifier of the file transfer content.
     pub name: ContentId,
+
+    /// The creator of this file transfer.
     pub creator: Creator,
+
+    /// The file being checksummed.
     pub file: File,
 }
 
@@ -289,11 +330,17 @@ impl From<Checksum> for Element {
     }
 }
 
-generate_element!(Received, "received", JINGLE_FT,
-attributes: [
-    name: ContentId = "name" => required,
-    creator: Creator = "creator" => required,
-]);
+generate_element!(
+    /// A notice that the file transfer has been completed.
+    Received, "received", JINGLE_FT,
+    attributes: [
+        /// The content identifier of this Jingle session.
+        name: ContentId = "name" => required,
+
+        /// The creator of this file transfer.
+        creator: Creator = "creator" => required,
+    ]
+);
 
 #[cfg(test)]
 mod tests {
