@@ -5,8 +5,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#![allow(missing_docs)]
-
 use try_from::TryFrom;
 
 use minidom::Element;
@@ -29,11 +27,19 @@ pub trait IqSetPayload: TryFrom<Element> + Into<Element> {}
 /// Should be implemented on every known payload of an `<iq type='result'/>`.
 pub trait IqResultPayload: TryFrom<Element> + Into<Element> {}
 
+/// Represents one of the four possible iq types.
 #[derive(Debug, Clone)]
 pub enum IqType {
+    /// This is a request for accessing some data.
     Get(Element),
+
+    /// This is a request for modifying some data.
     Set(Element),
+
+    /// This is a result containing some data.
     Result(Option<Element>),
+
+    /// A get or set request failed.
     Error(StanzaError),
 }
 
@@ -51,13 +57,22 @@ impl<'a> IntoAttributeValue for &'a IqType {
 /// The main structure representing the `<iq/>` stanza.
 #[derive(Debug, Clone)]
 pub struct Iq {
+    /// The JID emitting this stanza.
     pub from: Option<Jid>,
+
+    /// The recipient of this stanza.
     pub to: Option<Jid>,
+
+    /// The @id attribute of this stanza, which is required in order to match a
+    /// request with its result/error.
     pub id: Option<String>,
+
+    /// The payload content of this stanza.
     pub payload: IqType,
 }
 
 impl Iq {
+    /// Creates an `<iq/>` stanza containing a get request.
     pub fn from_get(payload: impl IqGetPayload) -> Iq {
         Iq {
             from: None,
@@ -67,6 +82,7 @@ impl Iq {
         }
     }
 
+    /// Creates an `<iq/>` stanza containing a set request.
     pub fn from_set(payload: impl IqSetPayload) -> Iq {
         Iq {
             from: None,
@@ -76,6 +92,7 @@ impl Iq {
         }
     }
 
+    /// Creates an `<iq/>` stanza containing a result.
     pub fn from_result(payload: Option<impl IqResultPayload>) -> Iq {
         Iq {
             from: None,
@@ -85,6 +102,7 @@ impl Iq {
         }
     }
 
+    /// Creates an `<iq/>` stanza containing an error.
     pub fn from_error(payload: StanzaError) -> Iq {
         Iq {
             from: None,
@@ -94,16 +112,19 @@ impl Iq {
         }
     }
 
+    /// Sets the recipient of this stanza.
     pub fn with_to(mut self, to: Jid) -> Iq {
         self.to = Some(to);
         self
     }
 
+    /// Sets the emitter of this stanza.
     pub fn with_from(mut self, from: Jid) -> Iq {
         self.from = Some(from);
         self
     }
 
+    /// Sets the id of this stanza, in order to later match its response.
     pub fn with_id(mut self, id: String) -> Iq {
         self.id = Some(id);
         self
