@@ -4,8 +4,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#![allow(missing_docs)]
-
 use try_from::TryFrom;
 
 use minidom::Element;
@@ -16,16 +14,30 @@ use jingle::SessionId;
 
 use ns;
 
+/// Defines a protocol for broadcasting Jingle requests to all of the clients
+/// of a user.
 #[derive(Debug, Clone)]
 pub enum JingleMI {
+    /// Indicates we want to start a Jingle session.
     Propose {
+        /// The generated session identifier, must be unique between two users.
         sid: SessionId,
+
+        /// The application description of the proposed session.
         // TODO: Use a more specialised type here.
         description: Element,
     },
+
+    /// Cancels a previously proposed session.
     Retract(SessionId),
+
+    /// Accepts a session proposed by the other party.
     Accept(SessionId),
+
+    /// Proceed with a previously proposed session.
     Proceed(SessionId),
+
+    /// Rejects a session proposed by the other party.
     Reject(SessionId),
 }
 
