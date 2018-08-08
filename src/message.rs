@@ -107,34 +107,81 @@ impl From<MessagePayload> for Element {
     }
 }
 
-generate_attribute!(MessageType, "type", {
-    Chat => "chat",
-    Error => "error",
-    Groupchat => "groupchat",
-    Headline => "headline",
-    Normal => "normal",
-}, Default = Normal);
+generate_attribute!(
+    /// The type of a message.
+    MessageType, "type", {
+        /// Standard instant messaging message.
+        Chat => "chat",
+
+        /// Notifies that an error happened.
+        Error => "error",
+
+        /// Standard group instant messaging message.
+        Groupchat => "groupchat",
+
+        /// Used by servers to notify users when things happen.
+        Headline => "headline",
+
+        /// This is an email-like message, it usually contains a
+        /// [subject](struct.Subject.html).
+        Normal => "normal",
+    }, Default = Normal
+);
 
 type Lang = String;
 
-generate_elem_id!(Body, "body", DEFAULT_NS);
-generate_elem_id!(Subject, "subject", DEFAULT_NS);
-generate_elem_id!(Thread, "thread", DEFAULT_NS);
+generate_elem_id!(
+    /// Represents one `<body/>` element, that is the free form text content of
+    /// a message.
+    Body, "body", DEFAULT_NS
+);
+
+generate_elem_id!(
+    /// Defines the subject of a room, or of an email-like normal message.
+    Subject, "subject", DEFAULT_NS
+);
+
+generate_elem_id!(
+    /// A thread identifier, so that other people can specify to which message
+    /// they are replying.
+    Thread, "thread", DEFAULT_NS
+);
 
 /// The main structure representing the `<message/>` stanza.
 #[derive(Debug, Clone)]
 pub struct Message {
+    /// The JID emitting this stanza.
     pub from: Option<Jid>,
+
+    /// The recipient of this stanza.
     pub to: Option<Jid>,
+
+    /// The @id attribute of this stanza, which is required in order to match a
+    /// request with its response.
     pub id: Option<String>,
+
+    /// The type of this message.
     pub type_: MessageType,
+
+    /// A list of bodies, sorted per language.  Use
+    /// [get_best_body()](#method.get_best_body) to access them on reception.
     pub bodies: BTreeMap<Lang, Body>,
+
+    /// A list of subjects, sorted per language.  Use
+    /// [get_best_subject()](#method.get_best_subject) to access them on
+    /// reception.
     pub subjects: BTreeMap<Lang, Subject>,
+
+    /// An optional thread identifier, so that other people can reply directly
+    /// to this message.
     pub thread: Option<Thread>,
+
+    /// A list of the extension payloads contained in this stanza.
     pub payloads: Vec<Element>,
 }
 
 impl Message {
+    /// Creates a new `<message/>` stanza for the given recipient.
     pub fn new(to: Option<Jid>) -> Message {
         Message {
             from: None,
