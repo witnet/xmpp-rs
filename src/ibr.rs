@@ -4,8 +4,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#![allow(missing_docs)]
-
 use std::collections::HashMap;
 use try_from::TryFrom;
 
@@ -18,12 +16,22 @@ use data_forms::DataForm;
 
 use ns;
 
+/// Query for registering against a service.
 #[derive(Debug, Clone)]
 pub struct Query {
+    /// Deprecated fixed list of possible fields to fill before the user can
+    /// register.
     pub fields: HashMap<String, String>,
+
+    /// Whether this account is already registered.
     pub registered: bool,
+
+    /// Whether to remove this account.
     pub remove: bool,
+
+    /// A data form the user must fill before being allowed to register.
     pub form: Option<DataForm>,
+
     // Not yet implemented.
     //pub oob: Option<Oob>,
 }
