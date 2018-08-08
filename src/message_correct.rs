@@ -4,8 +4,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#![deny(missing_docs)]
-
 generate_element!(
     /// Defines that the message containing this payload should replace a
     /// previous message, identified by the id.
