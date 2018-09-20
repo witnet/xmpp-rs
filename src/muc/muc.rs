@@ -5,6 +5,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+use presence::PresencePayload;
 use date::DateTime;
 
 generate_element!(
@@ -35,6 +36,8 @@ generate_element!(
         history: Option<History> = ("history", MUC) => History
     ]
 );
+
+impl PresencePayload for Muc {}
 
 #[cfg(test)]
 mod tests {

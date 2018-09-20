@@ -6,6 +6,7 @@
 
 use try_from::TryFrom;
 
+use presence::PresencePayload;
 use disco::{Feature, Identity, DiscoInfoResult, DiscoInfoQuery};
 use data_forms::DataForm;
 use hashes::{Hash, Algo};
@@ -38,6 +39,8 @@ pub struct Caps {
     /// email](https://mail.jabber.org/pipermail/security/2009-July/000812.html).
     pub hash: Hash,
 }
+
+impl PresencePayload for Caps {}
 
 impl TryFrom<Element> for Caps {
     type Err = Error;

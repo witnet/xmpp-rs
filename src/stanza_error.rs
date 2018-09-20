@@ -9,6 +9,7 @@ use std::collections::BTreeMap;
 
 use minidom::Element;
 
+use presence::PresencePayload;
 use error::Error;
 use jid::Jid;
 use ns;
@@ -211,6 +212,8 @@ pub struct StanzaError {
     /// A protocol-specific extension for this error.
     pub other: Option<Element>,
 }
+
+impl PresencePayload for StanzaError {}
 
 impl TryFrom<Element> for StanzaError {
     type Err = Error;

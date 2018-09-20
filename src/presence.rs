@@ -19,12 +19,8 @@ use error::Error;
 
 use ns;
 
-use stanza_error::StanzaError;
-use muc::Muc;
-use caps::Caps;
-use delay::Delay;
-use idle::Idle;
-use ecaps2::ECaps2;
+/// Should be implemented on every known payload of a `<presence/>`.
+pub trait PresencePayload: TryFrom<Element> + Into<Element> {}
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Show {
@@ -78,61 +74,6 @@ pub type Lang = String;
 pub type Status = String;
 
 pub type Priority = i8;
-
-/// Lists every known payload of a `<presence/>`.
-#[derive(Debug, Clone)]
-pub enum PresencePayload {
-    StanzaError(StanzaError),
-    Muc(Muc),
-    Caps(Caps),
-    Delay(Delay),
-    Idle(Idle),
-    ECaps2(ECaps2),
-
-    Unknown(Element),
-}
-
-impl TryFrom<Element> for PresencePayload {
-    type Err = Error;
-
-    fn try_from(elem: Element) -> Result<PresencePayload, Error> {
-        Ok(match (elem.name().as_ref(), elem.ns().unwrap().as_ref()) {
-            ("error", ns::DEFAULT_NS) => PresencePayload::StanzaError(StanzaError::try_from(elem)?),
-
-            // XEP-0045
-            ("x", ns::MUC) => PresencePayload::Muc(Muc::try_from(elem)?),
-
-            // XEP-0115
-            ("c", ns::CAPS) => PresencePayload::Caps(Caps::try_from(elem)?),
-
-            // XEP-0203
-            ("delay", ns::DELAY) => PresencePayload::Delay(Delay::try_from(elem)?),
-
-            // XEP-0319
-            ("idle", ns::IDLE) => PresencePayload::Idle(Idle::try_from(elem)?),
-
-            // XEP-0390
-            ("c", ns::ECAPS2) => PresencePayload::ECaps2(ECaps2::try_from(elem)?),
-
-            _ => PresencePayload::Unknown(elem),
-        })
-    }
-}
-
-impl From<PresencePayload> for Element {
-    fn from(payload: PresencePayload) -> Element {
-        match payload {
-            PresencePayload::StanzaError(stanza_error) => stanza_error.into(),
-            PresencePayload::Muc(muc) => muc.into(),
-            PresencePayload::Caps(caps) => caps.into(),
-            PresencePayload::Delay(delay) => delay.into(),
-            PresencePayload::Idle(idle) => idle.into(),
-            PresencePayload::ECaps2(ecaps2) => ecaps2.into(),
-
-            PresencePayload::Unknown(elem) => elem,
-        }
-    }
-}
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Type {

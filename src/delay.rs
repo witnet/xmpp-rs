@@ -4,6 +4,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+use presence::PresencePayload;
 use date::DateTime;
 
 use jid::Jid;
@@ -25,6 +26,8 @@ generate_element!(
         data: PlainText<Option<String>>
     )
 );
+
+impl PresencePayload for Delay {}
 
 #[cfg(test)]
 mod tests {
