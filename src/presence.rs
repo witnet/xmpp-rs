@@ -5,8 +5,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#![allow(missing_docs)]
-
 use try_from::TryFrom;
 use std::str::FromStr;
 use std::collections::BTreeMap;
@@ -22,12 +20,23 @@ use ns;
 /// Should be implemented on every known payload of a `<presence/>`.
 pub trait PresencePayload: TryFrom<Element> + Into<Element> {}
 
+/// Specifies the availability of an entity or resource.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Show {
+    /// Not an actual show value, but an indication there is no show set.
     None,
+
+    /// The entity or resource is temporarily away.
     Away,
+
+    /// The entity or resource is actively interested in chatting.
     Chat,
+
+    /// The entity or resource is busy (dnd = "Do Not Disturb").
     Dnd,
+
+    /// The entity or resource is away for an extended period (xa = "eXtended
+    /// Away").
     Xa,
 }
 
@@ -70,22 +79,41 @@ impl IntoElements for Show {
     }
 }
 
-pub type Lang = String;
-pub type Status = String;
+type Lang = String;
+type Status = String;
 
-pub type Priority = i8;
+type Priority = i8;
 
+/// 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Type {
     /// This value is not an acceptable 'type' attribute, it is only used
     /// internally to signal the absence of 'type'.
     None,
+
+    /// An error has occurred regarding processing of a previously sent
+    /// presence stanza; if the presence stanza is of type "error", it MUST
+    /// include an <error/> child element (refer to [XMPP‑CORE]).
     Error,
+
+    /// A request for an entity's current presence; SHOULD be generated only by
+    /// a server on behalf of a user.
     Probe,
+
+    /// The sender wishes to subscribe to the recipient's presence.
     Subscribe,
+
+    /// The sender has allowed the recipient to receive their presence.
     Subscribed,
+
+    /// The sender is no longer available for communication.
     Unavailable,
+
+    /// The sender is unsubscribing from the receiver's presence.
     Unsubscribe,
+
+    /// The subscription request has been denied or a previously granted
+    /// subscription has been canceled.
     Unsubscribed,
 }
 
@@ -132,17 +160,34 @@ impl IntoAttributeValue for Type {
 /// The main structure representing the `<presence/>` stanza.
 #[derive(Debug, Clone)]
 pub struct Presence {
+    /// The sender of this presence.
     pub from: Option<Jid>,
+
+    /// The recipient of this presence.
     pub to: Option<Jid>,
+
+    /// The identifier, unique on this stream, of this stanza.
     pub id: Option<String>,
+
+    /// The type of this presence stanza.
     pub type_: Type,
+
+    /// The availability of the sender of this presence.
     pub show: Show,
+
+    /// A localised list of statuses defined in this presence.
     pub statuses: BTreeMap<Lang, Status>,
+
+    /// The sender’s resource priority, if negative it won’t receive messages
+    /// that haven’t been directed to it.
     pub priority: Priority,
+
+    /// A list of payloads contained in this presence.
     pub payloads: Vec<Element>,
 }
 
 impl Presence {
+    /// Create a new presence of this type.
     pub fn new(type_: Type) -> Presence {
         Presence {
             from: None,
@@ -156,31 +201,40 @@ impl Presence {
         }
     }
 
+    /// Set the emitter of this presence, this should only be useful for
+    /// servers and components, as clients can only send presences from their
+    /// own resource (which is implicit).
     pub fn with_from(mut self, from: Option<Jid>) -> Presence {
         self.from = from;
         self
     }
 
+    /// Set the recipient of this presence, this is only useful for directed
+    /// presences.
     pub fn with_to(mut self, to: Option<Jid>) -> Presence {
         self.to = to;
         self
     }
 
+    /// Set the identifier for this presence.
     pub fn with_id(mut self, id: Option<String>) -> Presence {
         self.id = id;
         self
     }
 
+    /// Set the availability information of this presence.
     pub fn with_show(mut self, show: Show) -> Presence {
         self.show = show;
         self
     }
 
+    /// Set the priority of this presence.
     pub fn with_priority(mut self, priority: i8) -> Presence {
         self.priority = priority;
         self
     }
 
+    /// Set the payloads of this presence.
     pub fn with_payloads(mut self, payloads: Vec<Element>) -> Presence {
         self.payloads = payloads;
         self
