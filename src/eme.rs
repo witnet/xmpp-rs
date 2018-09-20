@@ -7,16 +7,17 @@
 use message::MessagePayload;
 
 generate_element!(
-/// Structure representing an `<encryption xmlns='urn:xmpp:eme:0'/>` element.
-ExplicitMessageEncryption, "encryption", EME,
-attributes: [
-    /// Namespace of the encryption scheme used.
-    namespace: String = "namespace" => required,
+    /// Structure representing an `<encryption xmlns='urn:xmpp:eme:0'/>` element.
+    ExplicitMessageEncryption, "encryption", EME,
+    attributes: [
+        /// Namespace of the encryption scheme used.
+        namespace: String = "namespace" => required,
 
-    /// User-friendly name for the encryption scheme, should be `None` for OTR,
-    /// legacy OpenPGP and OX.
-    name: Option<String> = "name" => optional,
-]);
+        /// User-friendly name for the encryption scheme, should be `None` for OTR,
+        /// legacy OpenPGP and OX.
+        name: Option<String> = "name" => optional,
+    ]
+);
 
 impl MessagePayload for ExplicitMessageEncryption {}
 
