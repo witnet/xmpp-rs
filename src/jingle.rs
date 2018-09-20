@@ -16,64 +16,170 @@ use error::Error;
 use ns;
 use iq::IqSetPayload;
 
-generate_attribute!(Action, "action", {
-    ContentAccept => "content-accept",
-    ContentAdd => "content-add",
-    ContentModify => "content-modify",
-    ContentReject => "content-reject",
-    ContentRemove => "content-remove",
-    DescriptionInfo => "description-info",
-    SecurityInfo => "security-info",
-    SessionAccept => "session-accept",
-    SessionInfo => "session-info",
-    SessionInitiate => "session-initiate",
-    SessionTerminate => "session-terminate",
-    TransportAccept => "transport-accept",
-    TransportInfo => "transport-info",
-    TransportReject => "transport-reject",
-    TransportReplace => "transport-replace",
-});
+generate_attribute!(
+    /// The action attribute.
+    Action, "action", {
+        /// Accept a content-add action received from another party.
+        ContentAccept => "content-accept",
 
-generate_attribute!(Creator, "creator", {
-    Initiator => "initiator",
-    Responder => "responder",
-});
+        /// Add one or more new content definitions to the session.
+        ContentAdd => "content-add",
 
-generate_attribute!(Senders, "senders", {
-    Both => "both",
-    Initiator => "initiator",
-    None => "none",
-    Responder => "responder",
-}, Default = Both);
+        /// Change the directionality of media sending.
+        ContentModify => "content-modify",
 
-// From https://www.iana.org/assignments/cont-disp/cont-disp.xhtml
-generate_attribute!(Disposition, "disposition", {
-    Inline => "inline",
-    Attachment => "attachment",
-    FormData => "form-data",
-    Signal => "signal",
-    Alert => "alert",
-    Icon => "icon",
-    Render => "render",
-    RecipientListHistory => "recipient-list-history",
-    Session => "session",
-    Aib => "aib",
-    EarlySession => "early-session",
-    RecipientList => "recipient-list",
-    Notification => "notification",
-    ByReference => "by-reference",
-    InfoPackage => "info-package",
-    RecordingSession => "recording-session",
-}, Default = Session);
+        /// Reject a content-add action received from another party.
+        ContentReject => "content-reject",
 
-generate_id!(ContentId);
+        /// Remove one or more content definitions from the session.
+        ContentRemove => "content-remove",
+
+        /// Exchange information about parameters for an application type.
+        DescriptionInfo => "description-info",
+
+        /// Exchange information about security preconditions.
+        SecurityInfo => "security-info",
+
+        /// Definitively accept a session negotiation.
+        SessionAccept => "session-accept",
+
+        /// Send session-level information, such as a ping or a ringing message.
+        SessionInfo => "session-info",
+
+        /// Request negotiation of a new Jingle session.
+        SessionInitiate => "session-initiate",
+
+        /// End an existing session.
+        SessionTerminate => "session-terminate",
+
+        /// Accept a transport-replace action received from another party.
+        TransportAccept => "transport-accept",
+
+        /// Exchange transport candidates.
+        TransportInfo => "transport-info",
+
+        /// Reject a transport-replace action received from another party.
+        TransportReject => "transport-reject",
+
+        /// Redefine a transport method or replace it with a different method.
+        TransportReplace => "transport-replace",
+    }
+);
+
+generate_attribute!(
+    /// Which party originally generated the content type.
+    Creator, "creator", {
+        /// This content was created by the initiator of this session.
+        Initiator => "initiator",
+
+        /// This content was created by the responder of this session.
+        Responder => "responder",
+    }
+);
+
+generate_attribute!(
+    /// Which parties in the session will be generating content.
+    Senders, "senders", {
+        /// Both parties can send for this content.
+        Both => "both",
+
+        /// Only the initiator can send for this content.
+        Initiator => "initiator",
+
+        /// No one can send for this content.
+        None => "none",
+
+        /// Only the responder can send for this content.
+        Responder => "responder",
+    }, Default = Both
+);
+
+generate_attribute!(
+    /// How the content definition is to be interpreted by the recipient. The
+    /// meaning of this attribute matches the "Content-Disposition" header as
+    /// defined in RFC 2183 and applied to SIP by RFC 3261.
+    ///
+    /// Possible values are defined here:
+    /// https://www.iana.org/assignments/cont-disp/cont-disp.xhtml
+    Disposition, "disposition", {
+        /// Displayed automatically.
+        Inline => "inline",
+
+        /// User controlled display.
+        Attachment => "attachment",
+
+        /// Process as form response.
+        FormData => "form-data",
+
+        /// Tunneled content to be processed silently.
+        Signal => "signal",
+
+        /// The body is a custom ring tone to alert the user.
+        Alert => "alert",
+
+        /// The body is displayed as an icon to the user.
+        Icon => "icon",
+
+        /// The body should be displayed to the user.
+        Render => "render",
+
+        /// The body contains a list of URIs that indicates the recipients of
+        /// the request.
+        RecipientListHistory => "recipient-list-history",
+
+        /// The body describes a communications session, for example, an
+        /// RFC2327 SDP body.
+        Session => "session",
+
+        /// Authenticated Identity Body.
+        Aib => "aib",
+
+        /// The body describes an early communications session, for example,
+        /// and [RFC2327] SDP body.
+        EarlySession => "early-session",
+
+        /// The body includes a list of URIs to which URI-list services are to
+        /// be applied.
+        RecipientList => "recipient-list",
+
+        /// The payload of the message carrying this Content-Disposition header
+        /// field value is an Instant Message Disposition Notification as
+        /// requested in the corresponding Instant Message.
+        Notification => "notification",
+
+        /// The body needs to be handled according to a reference to the body
+        /// that is located in the same SIP message as the body.
+        ByReference => "by-reference",
+
+        /// The body contains information associated with an Info Package.
+        InfoPackage => "info-package",
+
+        /// The body describes either metadata about the RS or the reason for
+        /// the metadata snapshot request as determined by the MIME value
+        /// indicated in the Content-Type.
+        RecordingSession => "recording-session",
+    }, Default = Session
+);
+
+generate_id!(
+    /// An unique identifier in a session, referencing a
+    /// [struct.Content.html](Content element).
+    ContentId
+);
 
 generate_element!(
     Content, "content", JINGLE,
     attributes: [
+        /// Who created this content.
         creator: Creator = "creator" => required,
+
+        /// How the content definition is to be interpreted by the recipient.
         disposition: Disposition = "disposition" => default,
+
+        /// A per-session unique identifier for this content.
         name: ContentId = "name" => required,
+
+        /// Who can send data for this content.
         senders: Senders = "senders" => default
     ],
     children: [
@@ -124,22 +230,64 @@ impl Content {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Reason {
+    /// The party prefers to use an existing session with the peer rather than
+    /// initiate a new session; the Jingle session ID of the alternative
+    /// session SHOULD be provided as the XML character data of the <sid/>
+    /// child.
     AlternativeSession, //(String),
+
+    /// The party is busy and cannot accept a session.
     Busy,
+
+    /// The initiator wishes to formally cancel the session initiation request.
     Cancel,
+
+    /// The action is related to connectivity problems.
     ConnectivityError,
+
+    /// The party wishes to formally decline the session.
     Decline,
+
+    /// The session length has exceeded a pre-defined time limit (e.g., a
+    /// meeting hosted at a conference service).
     Expired,
+
+    /// The party has been unable to initialize processing related to the
+    /// application type.
     FailedApplication,
+
+    /// The party has been unable to establish connectivity for the transport
+    /// method.
     FailedTransport,
+
+    /// The action is related to a non-specific application error.
     GeneralError,
+
+    /// The entity is going offline or is no longer available.
     Gone,
+
+    /// The party supports the offered application type but does not support
+    /// the offered or negotiated parameters.
     IncompatibleParameters,
+
+    /// The action is related to media processing problems.
     MediaError,
+
+    /// The action is related to a violation of local security policies.
     SecurityError,
+
+    /// The action is generated during the normal course of state management
+    /// and does not reflect any error.
     Success,
+
+    /// A request has not been answered so the sender is timing out the
+    /// request.
     Timeout,
+
+    /// The party supports none of the offered application types.
     UnsupportedApplications,
+
+    /// The party supports none of the offered transport methods.
     UnsupportedTransports,
 }
 
@@ -244,7 +392,10 @@ impl From<ReasonElement> for Element {
     }
 }
 
-generate_id!(SessionId);
+generate_id!(
+    /// Unique identifier for a session between two JIDs.
+    SessionId
+);
 
 #[derive(Debug, Clone)]
 pub struct Jingle {
