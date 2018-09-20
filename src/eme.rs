@@ -4,6 +4,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+use message::MessagePayload;
+
 generate_element!(
 /// Structure representing an `<encryption xmlns='urn:xmpp:eme:0'/>` element.
 ExplicitMessageEncryption, "encryption", EME,
@@ -15,6 +17,8 @@ attributes: [
     /// legacy OpenPGP and OX.
     name: Option<String> = "name" => optional,
 ]);
+
+impl MessagePayload for ExplicitMessageEncryption {}
 
 #[cfg(test)]
 mod tests {

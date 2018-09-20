@@ -4,6 +4,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+use message::MessagePayload;
+
 generate_element_enum!(
     /// Enum representing chatstate elements part of the
     /// `http://jabber.org/protocol/chatstates` namespace.
@@ -24,6 +26,8 @@ generate_element_enum!(
         Paused => "paused",
     }
 );
+
+impl MessagePayload for ChatState {}
 
 #[cfg(test)]
 mod tests {

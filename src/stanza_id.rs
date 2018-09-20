@@ -4,6 +4,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+use message::MessagePayload;
 use jid::Jid;
 
 generate_element!(
@@ -19,6 +20,8 @@ generate_element!(
     ]
 );
 
+impl MessagePayload for StanzaId {}
+
 generate_element!(
     /// A hack for MUC before version 1.31 to track a message which may have
     /// its 'id' attribute changed.
@@ -28,6 +31,8 @@ generate_element!(
         id: String = "id" => required,
     ]
 );
+
+impl MessagePayload for OriginId {}
 
 #[cfg(test)]
 mod tests {

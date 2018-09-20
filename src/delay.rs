@@ -4,6 +4,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+use message::MessagePayload;
 use presence::PresencePayload;
 use date::DateTime;
 
@@ -27,6 +28,7 @@ generate_element!(
     )
 );
 
+impl MessagePayload for Delay {}
 impl PresencePayload for Delay {}
 
 #[cfg(test)]

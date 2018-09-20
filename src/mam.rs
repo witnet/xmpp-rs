@@ -11,6 +11,7 @@ use jid::Jid;
 
 use error::Error;
 
+use message::MessagePayload;
 use iq::{IqGetPayload, IqSetPayload, IqResultPayload};
 use data_forms::DataForm;
 use rsm::{SetQuery, SetResult};
@@ -64,6 +65,8 @@ generate_element!(
         forwarded: Required<Forwarded> = ("forwarded", FORWARD) => Forwarded
     ]
 );
+
+impl MessagePayload for Result_ {}
 
 generate_attribute!(
     /// True when the end of a MAM query has been reached.

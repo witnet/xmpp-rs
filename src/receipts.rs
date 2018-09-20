@@ -4,11 +4,15 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+use message::MessagePayload;
+
 generate_empty_element!(
     /// Requests that this message is acked by the final recipient once
     /// received.
     Request, "request", RECEIPTS
 );
+
+impl MessagePayload for Request {}
 
 generate_element!(
     /// Notes that a previous message has correctly been received, it is
@@ -19,6 +23,8 @@ generate_element!(
         id: Option<String> = "id" => optional,
     ]
 );
+
+impl MessagePayload for Received {}
 
 #[cfg(test)]
 mod tests {
