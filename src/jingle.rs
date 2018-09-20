@@ -4,8 +4,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#![allow(missing_docs)]
-
 use try_from::TryFrom;
 use std::str::FromStr;
 
@@ -168,6 +166,8 @@ generate_id!(
 );
 
 generate_element!(
+    /// Describes a session’s content, there can be multiple content in one
+    /// session.
     Content, "content", JINGLE,
     attributes: [
         /// Who created this content.
@@ -183,13 +183,19 @@ generate_element!(
         senders: Senders = "senders" => default
     ],
     children: [
+        /// What to send.
         description: Option<Element> = ("description", JINGLE) => Element,
+
+        /// How to send it.
         transport: Option<Element> = ("transport", JINGLE) => Element,
+
+        /// With which security.
         security: Option<Element> = ("security", JINGLE) => Element
     ]
 );
 
 impl Content {
+    /// Create a new content.
     pub fn new(creator: Creator, name: ContentId) -> Content {
         Content {
             creator,
@@ -202,32 +208,38 @@ impl Content {
         }
     }
 
+    /// Set how the content is to be interpreted by the recipient.
     pub fn with_disposition(mut self, disposition: Disposition) -> Content {
         self.disposition = disposition;
         self
     }
 
+    /// Specify who can send data for this content.
     pub fn with_senders(mut self, senders: Senders) -> Content {
         self.senders = senders;
         self
     }
 
+    /// Set the description of this content.
     pub fn with_description(mut self, description: Element) -> Content {
         self.description = Some(description);
         self
     }
 
+    /// Set the transport of this content.
     pub fn with_transport(mut self, transport: Element) -> Content {
         self.transport = Some(transport);
         self
     }
 
+    /// Set the security of this content.
     pub fn with_security(mut self, security: Element) -> Content {
         self.security = Some(security);
         self
     }
 }
 
+/// Lists the possible reasons to be included in a Jingle iq.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Reason {
     /// The party prefers to use an existing session with the peer rather than
@@ -343,9 +355,13 @@ impl From<Reason> for Element {
     }
 }
 
+/// Informs the recipient of something.
 #[derive(Debug, Clone)]
 pub struct ReasonElement {
+    /// The list of possible reasons to be included in a Jingle iq.
     pub reason: Reason,
+
+    /// A human-readable description of this reason.
     pub text: Option<String>,
 }
 
@@ -397,20 +413,35 @@ generate_id!(
     SessionId
 );
 
+/// The main Jingle container, to be included in an iq stanza.
 #[derive(Debug, Clone)]
 pub struct Jingle {
+    /// The action to execute on both ends.
     pub action: Action,
+
+    /// Who the initiator is.
     pub initiator: Option<Jid>,
+
+    /// Who the responder is.
     pub responder: Option<Jid>,
+
+    /// Unique session identifier between two entities.
     pub sid: SessionId,
+
+    /// A list of contents to be negociated in this session.
     pub contents: Vec<Content>,
+
+    /// An optional reason.
     pub reason: Option<ReasonElement>,
+
+    /// Payloads to be included.
     pub other: Vec<Element>,
 }
 
 impl IqSetPayload for Jingle {}
 
 impl Jingle {
+    /// Create a new Jingle element.
     pub fn new(action: Action, sid: SessionId) -> Jingle {
         Jingle {
             action: action,
@@ -423,21 +454,25 @@ impl Jingle {
         }
     }
 
+    /// Set the initiator’s JID.
     pub fn with_initiator(mut self, initiator: Jid) -> Jingle {
         self.initiator = Some(initiator);
         self
     }
 
+    /// Set the responder’s JID.
     pub fn with_responder(mut self, responder: Jid) -> Jingle {
         self.responder = Some(responder);
         self
     }
 
+    /// Add a content to this Jingle container.
     pub fn add_content(mut self, content: Content) -> Jingle {
         self.contents.push(content);
         self
     }
 
+    /// Set the reason in this Jingle container.
     pub fn set_reason(mut self, content: Content) -> Jingle {
         self.contents.push(content);
         self
