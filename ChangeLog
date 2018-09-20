@@ -1,3 +1,8 @@
+Version 0.11.1:
+2018-09-20  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
+    * Improvements:
+        - Document all of the modules.
+
 Version 0.11.0:
 2018-08-03  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
     * Breaking changes:
