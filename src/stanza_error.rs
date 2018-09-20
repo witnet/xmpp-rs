@@ -191,7 +191,7 @@ generate_element_enum!(
     }
 );
 
-pub type Lang = String;
+type Lang = String;
 
 /// The representation of a stanza error.
 #[derive(Debug, Clone)]
