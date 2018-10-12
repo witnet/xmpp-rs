@@ -19,8 +19,8 @@ use base64;
 use sha1::Sha1;
 use sha2::{Sha256, Sha512};
 use sha3::{Sha3_256, Sha3_512};
-use blake2::Blake2b;
-use digest::{Digest, VariableOutput};
+use blake2::VarBlake2b;
+use digest::{Digest, VariableOutput, Input};
 
 /// Represents a capability hash for a given client.
 #[derive(Debug, Clone)]
@@ -182,18 +182,14 @@ pub fn hash_caps(data: &[u8], algo: Algo) -> Result<Hash, String> {
                 get_hash_vec(hash.as_slice())
             },
             Algo::Blake2b_256 => {
-                let mut hasher = Blake2b::default();
+                let mut hasher = VarBlake2b::new(32).unwrap();
                 hasher.input(data);
-                let mut buf: [u8; 32] = [0; 32];
-                let hash = hasher.variable_result(&mut buf).unwrap();
-                get_hash_vec(hash)
+                hasher.vec_result()
             },
             Algo::Blake2b_512 => {
-                let mut hasher = Blake2b::default();
+                let mut hasher = VarBlake2b::new(64).unwrap();
                 hasher.input(data);
-                let mut buf: [u8; 64] = [0; 64];
-                let hash = hasher.variable_result(&mut buf).unwrap();
-                get_hash_vec(hash)
+                hasher.vec_result()
             },
             Algo::Unknown(algo) => return Err(format!("Unknown algorithm: {}.", algo)),
         },
