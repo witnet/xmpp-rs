@@ -38,6 +38,11 @@ mod tests {
     use ns;
 
     #[test]
+    fn test_size() {
+        assert_size!(ChatState, 1);
+    }
+
+    #[test]
     fn test_simple() {
         let elem: Element = "<active xmlns='http://jabber.org/protocol/chatstates'/>".parse().unwrap();
         ChatState::try_from(elem).unwrap();

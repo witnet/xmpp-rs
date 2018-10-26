@@ -44,6 +44,12 @@ mod tests {
     use compare_elements::NamespaceAwareCompare;
 
     #[test]
+    fn test_size() {
+        assert_size!(VersionQuery, 0);
+        assert_size!(VersionResult, 72);
+    }
+
+    #[test]
     fn simple() {
         let elem: Element = "<query xmlns='jabber:iq:version'><name>xmpp-rs</name><version>0.3.0</version></query>".parse().unwrap();
         let version = VersionResult::try_from(elem).unwrap();

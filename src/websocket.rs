@@ -76,6 +76,11 @@ mod tests {
     use minidom::Element;
 
     #[test]
+    fn test_size() {
+        assert_size!(Open, 216);
+    }
+
+    #[test]
     fn test_simple() {
         let elem: Element = "<open xmlns='urn:ietf:params:xml:ns:xmpp-framing'/>".parse().unwrap();
         let open = Open::try_from(elem).unwrap();

@@ -212,6 +212,11 @@ mod tests {
     use base64;
 
     #[test]
+    fn test_size() {
+        assert_size!(Caps, 104);
+    }
+
+    #[test]
     fn test_parse() {
         let elem: Element = "<c xmlns='http://jabber.org/protocol/caps' hash='sha-256' node='coucou' ver='K1Njy3HZBThlo4moOD5gBGhn0U0oK7/CbfLlIUDi6o4='/>".parse().unwrap();
         let caps = Caps::try_from(elem).unwrap();

@@ -97,6 +97,11 @@ mod tests {
     use compare_elements::NamespaceAwareCompare;
 
     #[test]
+    fn test_size() {
+        assert_size!(Query, 152);
+    }
+
+    #[test]
     fn test_simple() {
         let elem: Element = "<query xmlns='jabber:iq:register'/>".parse().unwrap();
         Query::try_from(elem).unwrap();

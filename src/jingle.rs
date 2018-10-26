@@ -534,6 +534,20 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_size() {
+        assert_size!(Action, 1);
+        assert_size!(Creator, 1);
+        assert_size!(Senders, 1);
+        assert_size!(Disposition, 1);
+        assert_size!(ContentId, 24);
+        assert_size!(Content, 344);
+        assert_size!(Reason, 1);
+        assert_size!(ReasonElement, 32);
+        assert_size!(SessionId, 24);
+        assert_size!(Jingle, 256);
+    }
+
+    #[test]
     fn test_simple() {
         let elem: Element = "<jingle xmlns='urn:xmpp:jingle:1' action='session-initiate' sid='coucou'/>".parse().unwrap();
         let jingle = Jingle::try_from(elem).unwrap();

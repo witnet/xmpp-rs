@@ -77,6 +77,14 @@ mod tests {
     use std::error::Error as StdError;
 
     #[test]
+    fn test_size() {
+        assert_size!(Stanza, 1);
+        assert_size!(Open, 32);
+        assert_size!(Data, 56);
+        assert_size!(Close, 24);
+    }
+
+    #[test]
     fn test_simple() {
         let sid = StreamId(String::from("coucou"));
 

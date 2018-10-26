@@ -269,6 +269,15 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_size() {
+        assert_size!(Option_, 48);
+        assert_size!(FieldType, 1);
+        assert_size!(Field, 128);
+        assert_size!(DataFormType, 1);
+        assert_size!(DataForm, 104);
+    }
+
+    #[test]
     fn test_simple() {
         let elem: Element = "<x xmlns='jabber:x:data' type='result'/>".parse().unwrap();
         let form = DataForm::try_from(elem).unwrap();

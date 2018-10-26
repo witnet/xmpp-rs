@@ -216,6 +216,18 @@ mod tests {
     use minidom::Element;
 
     #[test]
+    fn test_size() {
+        assert_size!(Mechanism, 1);
+        assert_size!(Auth, 32);
+        assert_size!(Challenge, 24);
+        assert_size!(Response, 24);
+        assert_size!(Abort, 0);
+        assert_size!(Success, 24);
+        assert_size!(DefinedCondition, 1);
+        assert_size!(Failure, 32);
+    }
+
+    #[test]
     fn test_simple() {
         let elem: Element = "<auth xmlns='urn:ietf:params:xml:ns:xmpp-sasl' mechanism='PLAIN'/>".parse().unwrap();
         let auth = Auth::try_from(elem).unwrap();

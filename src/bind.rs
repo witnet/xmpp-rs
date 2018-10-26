@@ -99,6 +99,11 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_size() {
+        assert_size!(Bind, 80);
+    }
+
+    #[test]
     fn test_simple() {
         let elem: Element = "<bind xmlns='urn:ietf:params:xml:ns:xmpp-bind'/>".parse().unwrap();
         let bind = Bind::try_from(elem).unwrap();

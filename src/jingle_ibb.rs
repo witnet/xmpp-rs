@@ -30,6 +30,11 @@ mod tests {
     use std::error::Error as StdError;
 
     #[test]
+    fn test_size() {
+        assert_size!(Transport, 32);
+    }
+
+    #[test]
     fn test_simple() {
         let elem: Element = "<transport xmlns='urn:xmpp:jingle:transports:ibb:1' block-size='3' sid='coucou'/>".parse().unwrap();
         let transport = Transport::try_from(elem).unwrap();

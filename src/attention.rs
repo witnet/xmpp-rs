@@ -21,6 +21,11 @@ mod tests {
     use error::Error;
 
     #[test]
+    fn test_size() {
+        assert_size!(Attention, 0);
+    }
+
+    #[test]
     fn test_simple() {
         let elem: Element = "<attention xmlns='urn:xmpp:attention:0'/>".parse().unwrap();
         Attention::try_from(elem).unwrap();

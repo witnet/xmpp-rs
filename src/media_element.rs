@@ -52,6 +52,12 @@ mod tests {
     use std::error::Error as StdError;
 
     #[test]
+    fn test_size() {
+        assert_size!(URI, 48);
+        assert_size!(MediaElement, 56);
+    }
+
+    #[test]
     fn test_simple() {
         let elem: Element = "<media xmlns='urn:xmpp:media-element'/>".parse().unwrap();
         let media = MediaElement::try_from(elem).unwrap();

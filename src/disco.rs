@@ -236,6 +236,18 @@ mod tests {
     use std::str::FromStr;
 
     #[test]
+    fn test_size() {
+        assert_size!(Identity, 96);
+        assert_size!(Feature, 24);
+        assert_size!(DiscoInfoQuery, 24);
+        assert_size!(DiscoInfoResult, 96);
+
+        assert_size!(Item, 120);
+        assert_size!(DiscoItemsQuery, 24);
+        assert_size!(DiscoItemsResult, 48);
+    }
+
+    #[test]
     fn test_simple() {
         let elem: Element = "<query xmlns='http://jabber.org/protocol/disco#info'><identity category='client' type='pc'/><feature var='http://jabber.org/protocol/disco#info'/></query>".parse().unwrap();
         let query = DiscoInfoResult::try_from(elem).unwrap();

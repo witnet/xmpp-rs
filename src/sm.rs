@@ -145,6 +145,20 @@ mod tests {
     use minidom::Element;
 
     #[test]
+    fn test_size() {
+        assert_size!(A, 4);
+        assert_size!(ResumeAttr, 1);
+        assert_size!(Enable, 12);
+        assert_size!(StreamId, 24);
+        assert_size!(Enabled, 64);
+        assert_size!(Failed, 12);
+        assert_size!(R, 0);
+        assert_size!(Resume, 32);
+        assert_size!(Resumed, 32);
+        assert_size!(StreamManagement, 0);
+    }
+
+    #[test]
     fn a() {
         let elem: Element = "<a xmlns='urn:xmpp:sm:3' h='5'".parse().unwrap();
         let a = A::try_from(elem).unwrap();

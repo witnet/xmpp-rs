@@ -349,6 +349,15 @@ mod tests {
     use base64;
 
     #[test]
+    fn test_size() {
+        assert_size!(Range, 48);
+        assert_size!(File, 184);
+        assert_size!(Description, 184);
+        assert_size!(Checksum, 216);
+        assert_size!(Received, 32);
+    }
+
+    #[test]
     fn test_description() {
         let elem: Element = r#"
 <description xmlns='urn:xmpp:jingle:apps:file-transfer:5'>

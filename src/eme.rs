@@ -29,6 +29,11 @@ mod tests {
     use error::Error;
 
     #[test]
+    fn test_size() {
+        assert_size!(ExplicitMessageEncryption, 48);
+    }
+
+    #[test]
     fn test_simple() {
         let elem: Element = "<encryption xmlns='urn:xmpp:eme:0' namespace='urn:xmpp:otr:0'/>".parse().unwrap();
         let encryption = ExplicitMessageEncryption::try_from(elem).unwrap();

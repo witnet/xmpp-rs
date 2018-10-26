@@ -26,6 +26,11 @@ mod tests {
     use error::Error;
 
     #[test]
+    fn test_size() {
+        assert_size!(Replace, 24);
+    }
+
+    #[test]
     fn test_simple() {
         let elem: Element = "<replace xmlns='urn:xmpp:message-correct:0' id='coucou'/>".parse().unwrap();
         Replace::try_from(elem).unwrap();

@@ -44,6 +44,11 @@ mod tests {
     use std::error::Error as StdError;
 
     #[test]
+    fn test_size() {
+        assert_size!(DateTime, 16);
+    }
+
+    #[test]
     fn test_simple() {
         let date: DateTime = "2002-09-10T23:08:25Z".parse().unwrap();
         assert_eq!(date.0.year(), 2002);

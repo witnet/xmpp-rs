@@ -510,3 +510,9 @@ macro_rules! generate_element {
         }
     );
 }
+
+macro_rules! assert_size (
+    ($t:ty, $sz:expr) => (
+        assert_eq!(::std::mem::size_of::<$t>(), $sz);
+    );
+);

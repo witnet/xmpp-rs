@@ -77,6 +77,11 @@ mod tests {
     use minidom::Element;
 
     #[test]
+    fn test_size() {
+        assert_size!(Stream, 216);
+    }
+
+    #[test]
     fn test_simple() {
         let elem: Element = "<stream:stream xmlns='jabber:client' xmlns:stream='http://etherx.jabber.org/streams' xml:lang='en' version='1.0' id='abc' from='some-server.example'/>".parse().unwrap();
         let stream = Stream::try_from(elem).unwrap();

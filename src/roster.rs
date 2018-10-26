@@ -86,6 +86,14 @@ mod tests {
     use compare_elements::NamespaceAwareCompare;
 
     #[test]
+    fn test_size() {
+        assert_size!(Group, 24);
+        assert_size!(Subscription, 1);
+        assert_size!(Item, 128);
+        assert_size!(Roster, 48);
+    }
+
+    #[test]
     fn test_get() {
         let elem: Element = "<query xmlns='jabber:iq:roster'/>".parse().unwrap();
         let roster = Roster::try_from(elem).unwrap();

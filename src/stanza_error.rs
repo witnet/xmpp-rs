@@ -290,6 +290,13 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_size() {
+        assert_size!(ErrorType, 1);
+        assert_size!(DefinedCondition, 1);
+        assert_size!(StanzaError, 208);
+    }
+
+    #[test]
     fn test_simple() {
         #[cfg(not(feature = "component"))]
         let elem: Element = "<error xmlns='jabber:client' type='cancel'><undefined-condition xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/></error>".parse().unwrap();

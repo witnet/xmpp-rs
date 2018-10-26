@@ -134,6 +134,12 @@ mod tests {
     use minidom::Element;
 
     #[test]
+    fn test_size() {
+        assert_size!(Algo, 32);
+        assert_size!(Hash, 56);
+    }
+
+    #[test]
     fn test_simple() {
         let elem: Element = "<hash xmlns='urn:xmpp:hashes:2' algo='sha-256'>2XarmwTlNxDAMkvymloX3S5+VbylNrJt/l5QyPa+YoU=</hash>".parse().unwrap();
         let hash = Hash::try_from(elem).unwrap();

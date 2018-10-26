@@ -43,6 +43,12 @@ mod tests {
     use std::str::FromStr;
 
     #[test]
+    fn test_size() {
+        assert_size!(StanzaId, 96);
+        assert_size!(OriginId, 24);
+    }
+
+    #[test]
     fn test_simple() {
         let elem: Element = "<stanza-id xmlns='urn:xmpp:sid:0' id='coucou' by='coucou@coucou'/>".parse().unwrap();
         let stanza_id = StanzaId::try_from(elem).unwrap();

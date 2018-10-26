@@ -192,6 +192,17 @@ mod tests {
     use std::str::FromStr;
 
     #[test]
+    fn test_size() {
+        assert_size!(QueryId, 24);
+        assert_size!(Query, 232);
+        assert_size!(Result_, 440);
+        assert_size!(Complete, 1);
+        assert_size!(Fin, 88);
+        assert_size!(DefaultPrefs, 1);
+        assert_size!(Prefs, 56);
+    }
+
+    #[test]
     fn test_query() {
         let elem: Element = "<query xmlns='urn:xmpp:mam:2'/>".parse().unwrap();
         Query::try_from(elem).unwrap();

@@ -324,6 +324,13 @@ mod tests {
     use compare_elements::NamespaceAwareCompare;
 
     #[test]
+    fn test_size() {
+        assert_size!(Show, 1);
+        assert_size!(Type, 1);
+        assert_size!(Presence, 224);
+    }
+
+    #[test]
     fn test_simple() {
         #[cfg(not(feature = "component"))]
         let elem: Element = "<presence xmlns='jabber:client'/>".parse().unwrap();

@@ -28,6 +28,11 @@ mod tests {
     use std::error::Error as StdError;
 
     #[test]
+    fn test_size() {
+        assert_size!(Idle, 16);
+    }
+
+    #[test]
     fn test_simple() {
         let elem: Element = "<idle xmlns='urn:xmpp:idle:1' since='2017-05-21T20:19:55+01:00'/>".parse().unwrap();
         Idle::try_from(elem).unwrap();

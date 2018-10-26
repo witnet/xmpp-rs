@@ -273,6 +273,12 @@ mod tests {
     use minidom::Element;
 
     #[test]
+    fn test_size() {
+        assert_size!(MoodEnum, 1);
+        assert_size!(Text, 24);
+    }
+
+    #[test]
     fn test_simple() {
         let elem: Element = "<happy xmlns='http://jabber.org/protocol/mood'/>".parse().unwrap();
         let mood = MoodEnum::try_from(elem).unwrap();

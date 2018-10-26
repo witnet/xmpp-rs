@@ -99,6 +99,14 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_size() {
+        assert_size!(BlocklistRequest, 0);
+        assert_size!(BlocklistResult, 24);
+        assert_size!(Block, 24);
+        assert_size!(Unblock, 24);
+    }
+
+    #[test]
     fn test_simple() {
         let elem: Element = "<blocklist xmlns='urn:xmpp:blocking'/>".parse().unwrap();
         let request_elem = elem.clone();

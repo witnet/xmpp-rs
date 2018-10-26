@@ -227,6 +227,12 @@ mod tests {
     use disco::DiscoInfoQuery;
 
     #[test]
+    fn test_size() {
+        assert_size!(IqType, 216);
+        assert_size!(Iq, 384);
+    }
+
+    #[test]
     fn test_require_type() {
         #[cfg(not(feature = "component"))]
         let elem: Element = "<iq xmlns='jabber:client'/>".parse().unwrap();

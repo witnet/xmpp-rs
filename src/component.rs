@@ -48,6 +48,11 @@ mod tests {
     use minidom::Element;
 
     #[test]
+    fn test_size() {
+        assert_size!(Handshake, 24);
+    }
+
+    #[test]
     fn test_simple() {
         let elem: Element = "<handshake xmlns='jabber:component:accept'/>".parse().unwrap();
         let handshake = Handshake::try_from(elem).unwrap();

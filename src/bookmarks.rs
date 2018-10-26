@@ -75,6 +75,13 @@ mod tests {
     use compare_elements::NamespaceAwareCompare;
 
     #[test]
+    fn test_size() {
+        assert_size!(Conference, 152);
+        assert_size!(Url, 48);
+        assert_size!(Storage, 48);
+    }
+
+    #[test]
     fn empty() {
         let elem: Element = "<storage xmlns='storage:bookmarks'/>".parse().unwrap();
         let elem1 = elem.clone();

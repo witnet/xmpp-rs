@@ -278,6 +278,17 @@ mod tests {
     use compare_elements::NamespaceAwareCompare;
 
     #[test]
+    fn test_size() {
+        assert_size!(Type, 1);
+        assert_size!(Mode, 1);
+        assert_size!(CandidateId, 24);
+        assert_size!(StreamId, 24);
+        assert_size!(Candidate, 128);
+        assert_size!(TransportPayload, 32);
+        assert_size!(Transport, 88);
+    }
+
+    #[test]
     fn test_simple() {
         let elem: Element = "<transport xmlns='urn:xmpp:jingle:transports:s5b:1' sid='coucou'/>".parse().unwrap();
         let transport = Transport::try_from(elem).unwrap();

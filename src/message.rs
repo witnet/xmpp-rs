@@ -235,6 +235,15 @@ mod tests {
     use compare_elements::NamespaceAwareCompare;
 
     #[test]
+    fn test_size() {
+        assert_size!(MessageType, 1);
+        assert_size!(Body, 24);
+        assert_size!(Subject, 24);
+        assert_size!(Thread, 24);
+        assert_size!(Message, 272);
+    }
+
+    #[test]
     fn test_simple() {
         #[cfg(not(feature = "component"))]
         let elem: Element = "<message xmlns='jabber:client'/>".parse().unwrap();

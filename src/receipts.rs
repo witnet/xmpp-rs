@@ -34,6 +34,12 @@ mod tests {
     use ns;
 
     #[test]
+    fn test_size() {
+        assert_size!(Request, 0);
+        assert_size!(Received, 24);
+    }
+
+    #[test]
     fn test_simple() {
         let elem: Element = "<request xmlns='urn:xmpp:receipts'/>".parse().unwrap();
         Request::try_from(elem).unwrap();

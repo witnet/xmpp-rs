@@ -159,6 +159,12 @@ mod tests {
     use compare_elements::NamespaceAwareCompare;
 
     #[test]
+    fn test_size() {
+        assert_size!(SetQuery, 80);
+        assert_size!(SetResult, 80);
+    }
+
+    #[test]
     fn test_simple() {
         let elem: Element = "<set xmlns='http://jabber.org/protocol/rsm'/>".parse().unwrap();
         let set = SetQuery::try_from(elem).unwrap();

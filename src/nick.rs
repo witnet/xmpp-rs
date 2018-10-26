@@ -17,6 +17,11 @@ mod tests {
     use error::Error;
 
     #[test]
+    fn test_size() {
+        assert_size!(Nick, 24);
+    }
+
+    #[test]
     fn test_simple() {
         let elem: Element = "<nick xmlns='http://jabber.org/protocol/nick'>Link Mauve</nick>".parse().unwrap();
         let nick = Nick::try_from(elem).unwrap();

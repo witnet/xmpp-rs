@@ -122,6 +122,11 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_size() {
+        assert_size!(JingleMI, 136);
+    }
+
+    #[test]
     fn test_simple() {
         let elem: Element = "<accept xmlns='urn:xmpp:jingle-message:0' id='coucou'/>".parse().unwrap();
         JingleMI::try_from(elem).unwrap();

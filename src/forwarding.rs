@@ -31,6 +31,11 @@ mod tests {
     use error::Error;
 
     #[test]
+    fn test_size() {
+        assert_size!(Forwarded, 392);
+    }
+
+    #[test]
     fn test_simple() {
         let elem: Element = "<forwarded xmlns='urn:xmpp:forward:0'/>".parse().unwrap();
         Forwarded::try_from(elem).unwrap();

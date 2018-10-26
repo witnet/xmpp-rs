@@ -40,6 +40,11 @@ mod tests {
     use std::str::FromStr;
 
     #[test]
+    fn test_size() {
+        assert_size!(Delay, 112);
+    }
+
+    #[test]
     fn test_simple() {
         let elem: Element = "<delay xmlns='urn:xmpp:delay' from='capulet.com' stamp='2002-09-10T23:08:25Z'/>".parse().unwrap();
         let delay = Delay::try_from(elem).unwrap();

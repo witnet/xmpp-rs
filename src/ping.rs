@@ -23,6 +23,11 @@ mod tests {
     use error::Error;
 
     #[test]
+    fn test_size() {
+        assert_size!(Ping, 0);
+    }
+
+    #[test]
     fn test_simple() {
         let elem: Element = "<ping xmlns='urn:xmpp:ping'/>".parse().unwrap();
         Ping::try_from(elem).unwrap();
