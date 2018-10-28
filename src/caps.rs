@@ -211,6 +211,13 @@ mod tests {
     use caps;
     use base64;
 
+    #[cfg(target_pointer_width = "32")]
+    #[test]
+    fn test_size() {
+        assert_size!(Caps, 52);
+    }
+
+    #[cfg(target_pointer_width = "64")]
     #[test]
     fn test_size() {
         assert_size!(Caps, 104);

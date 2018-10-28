@@ -98,6 +98,16 @@ generate_empty_element!(
 mod tests {
     use super::*;
 
+    #[cfg(target_pointer_width = "32")]
+    #[test]
+    fn test_size() {
+        assert_size!(BlocklistRequest, 0);
+        assert_size!(BlocklistResult, 12);
+        assert_size!(Block, 12);
+        assert_size!(Unblock, 12);
+    }
+
+    #[cfg(target_pointer_width = "64")]
     #[test]
     fn test_size() {
         assert_size!(BlocklistRequest, 0);

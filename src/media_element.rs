@@ -51,6 +51,14 @@ mod tests {
     use data_forms::DataForm;
     use std::error::Error as StdError;
 
+    #[cfg(target_pointer_width = "32")]
+    #[test]
+    fn test_size() {
+        assert_size!(URI, 24);
+        assert_size!(MediaElement, 28);
+    }
+
+    #[cfg(target_pointer_width = "64")]
     #[test]
     fn test_size() {
         assert_size!(URI, 48);

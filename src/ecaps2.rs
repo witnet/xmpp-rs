@@ -152,6 +152,13 @@ mod tests {
     use minidom::Element;
     use error::Error;
 
+    #[cfg(target_pointer_width = "32")]
+    #[test]
+    fn test_size() {
+        assert_size!(ECaps2, 12);
+    }
+
+    #[cfg(target_pointer_width = "64")]
     #[test]
     fn test_size() {
         assert_size!(ECaps2, 24);

@@ -533,6 +533,22 @@ impl From<Jingle> for Element {
 mod tests {
     use super::*;
 
+    #[cfg(target_pointer_width = "32")]
+    #[test]
+    fn test_size() {
+        assert_size!(Action, 1);
+        assert_size!(Creator, 1);
+        assert_size!(Senders, 1);
+        assert_size!(Disposition, 1);
+        assert_size!(ContentId, 12);
+        assert_size!(Content, 172);
+        assert_size!(Reason, 1);
+        assert_size!(ReasonElement, 16);
+        assert_size!(SessionId, 12);
+        assert_size!(Jingle, 128);
+    }
+
+    #[cfg(target_pointer_width = "64")]
     #[test]
     fn test_size() {
         assert_size!(Action, 1);

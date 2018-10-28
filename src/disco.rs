@@ -235,6 +235,20 @@ mod tests {
     use compare_elements::NamespaceAwareCompare;
     use std::str::FromStr;
 
+    #[cfg(target_pointer_width = "32")]
+    #[test]
+    fn test_size() {
+        assert_size!(Identity, 48);
+        assert_size!(Feature, 12);
+        assert_size!(DiscoInfoQuery, 12);
+        assert_size!(DiscoInfoResult, 48);
+
+        assert_size!(Item, 60);
+        assert_size!(DiscoItemsQuery, 12);
+        assert_size!(DiscoItemsResult, 24);
+    }
+
+    #[cfg(target_pointer_width = "64")]
     #[test]
     fn test_size() {
         assert_size!(Identity, 96);

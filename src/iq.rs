@@ -226,6 +226,14 @@ mod tests {
     use compare_elements::NamespaceAwareCompare;
     use disco::DiscoInfoQuery;
 
+    #[cfg(target_pointer_width = "32")]
+    #[test]
+    fn test_size() {
+        assert_size!(IqType, 108);
+        assert_size!(Iq, 192);
+    }
+
+    #[cfg(target_pointer_width = "64")]
     #[test]
     fn test_size() {
         assert_size!(IqType, 216);

@@ -268,6 +268,17 @@ impl From<DataForm> for Element {
 mod tests {
     use super::*;
 
+    #[cfg(target_pointer_width = "32")]
+    #[test]
+    fn test_size() {
+        assert_size!(Option_, 24);
+        assert_size!(FieldType, 1);
+        assert_size!(Field, 64);
+        assert_size!(DataFormType, 1);
+        assert_size!(DataForm, 52);
+    }
+
+    #[cfg(target_pointer_width = "64")]
     #[test]
     fn test_size() {
         assert_size!(Option_, 48);

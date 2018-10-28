@@ -191,6 +191,19 @@ mod tests {
     use super::*;
     use std::str::FromStr;
 
+    #[cfg(target_pointer_width = "32")]
+    #[test]
+    fn test_size() {
+        assert_size!(QueryId, 12);
+        assert_size!(Query, 116);
+        assert_size!(Result_, 228);
+        assert_size!(Complete, 1);
+        assert_size!(Fin, 44);
+        assert_size!(DefaultPrefs, 1);
+        assert_size!(Prefs, 28);
+    }
+
+    #[cfg(target_pointer_width = "64")]
     #[test]
     fn test_size() {
         assert_size!(QueryId, 24);

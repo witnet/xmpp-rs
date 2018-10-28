@@ -33,6 +33,14 @@ mod tests {
     use minidom::Element;
     use ns;
 
+    #[cfg(target_pointer_width = "32")]
+    #[test]
+    fn test_size() {
+        assert_size!(Request, 0);
+        assert_size!(Received, 12);
+    }
+
+    #[cfg(target_pointer_width = "64")]
     #[test]
     fn test_size() {
         assert_size!(Request, 0);

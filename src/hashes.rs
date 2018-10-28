@@ -133,6 +133,14 @@ mod tests {
     use try_from::TryFrom;
     use minidom::Element;
 
+    #[cfg(target_pointer_width = "32")]
+    #[test]
+    fn test_size() {
+        assert_size!(Algo, 16);
+        assert_size!(Hash, 28);
+    }
+
+    #[cfg(target_pointer_width = "64")]
     #[test]
     fn test_size() {
         assert_size!(Algo, 32);

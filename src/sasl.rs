@@ -215,6 +215,20 @@ mod tests {
     use try_from::TryFrom;
     use minidom::Element;
 
+    #[cfg(target_pointer_width = "32")]
+    #[test]
+    fn test_size() {
+        assert_size!(Mechanism, 1);
+        assert_size!(Auth, 16);
+        assert_size!(Challenge, 12);
+        assert_size!(Response, 12);
+        assert_size!(Abort, 0);
+        assert_size!(Success, 12);
+        assert_size!(DefinedCondition, 1);
+        assert_size!(Failure, 16);
+    }
+
+    #[cfg(target_pointer_width = "64")]
     #[test]
     fn test_size() {
         assert_size!(Mechanism, 1);

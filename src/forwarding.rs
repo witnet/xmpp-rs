@@ -30,6 +30,13 @@ mod tests {
     use minidom::Element;
     use error::Error;
 
+    #[cfg(target_pointer_width = "32")]
+    #[test]
+    fn test_size() {
+        assert_size!(Forwarded, 204);
+    }
+
+    #[cfg(target_pointer_width = "64")]
     #[test]
     fn test_size() {
         assert_size!(Forwarded, 392);

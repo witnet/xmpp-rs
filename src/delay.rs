@@ -39,6 +39,13 @@ mod tests {
     use error::Error;
     use std::str::FromStr;
 
+    #[cfg(target_pointer_width = "32")]
+    #[test]
+    fn test_size() {
+        assert_size!(Delay, 64);
+    }
+
+    #[cfg(target_pointer_width = "64")]
     #[test]
     fn test_size() {
         assert_size!(Delay, 112);

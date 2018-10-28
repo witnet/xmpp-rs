@@ -29,6 +29,13 @@ mod tests {
     use error::Error;
     use std::error::Error as StdError;
 
+    #[cfg(target_pointer_width = "32")]
+    #[test]
+    fn test_size() {
+        assert_size!(Transport, 16);
+    }
+
+    #[cfg(target_pointer_width = "64")]
     #[test]
     fn test_size() {
         assert_size!(Transport, 32);

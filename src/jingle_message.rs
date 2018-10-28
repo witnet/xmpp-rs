@@ -121,6 +121,13 @@ impl From<JingleMI> for Element {
 mod tests {
     use super::*;
 
+    #[cfg(target_pointer_width = "32")]
+    #[test]
+    fn test_size() {
+        assert_size!(JingleMI, 68);
+    }
+
+    #[cfg(target_pointer_width = "64")]
     #[test]
     fn test_size() {
         assert_size!(JingleMI, 136);

@@ -144,6 +144,22 @@ mod tests {
     use try_from::TryFrom;
     use minidom::Element;
 
+    #[cfg(target_pointer_width = "32")]
+    #[test]
+    fn test_size() {
+        assert_size!(A, 4);
+        assert_size!(ResumeAttr, 1);
+        assert_size!(Enable, 12);
+        assert_size!(StreamId, 12);
+        assert_size!(Enabled, 36);
+        assert_size!(Failed, 12);
+        assert_size!(R, 0);
+        assert_size!(Resume, 16);
+        assert_size!(Resumed, 16);
+        assert_size!(StreamManagement, 0);
+    }
+
+    #[cfg(target_pointer_width = "64")]
     #[test]
     fn test_size() {
         assert_size!(A, 4);
