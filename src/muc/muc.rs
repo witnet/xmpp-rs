@@ -10,6 +10,7 @@ use date::DateTime;
 
 generate_element!(
     /// Represents the query for messages before our join.
+    #[derive(PartialEq)]
     History, "history", MUC,
     attributes: [
         /// How many characters of history to send, in XML characters.
@@ -26,8 +27,40 @@ generate_element!(
     ]
 );
 
+impl History {
+    pub fn new() -> Self {
+        History {
+            maxchars: None,
+            maxstanzas: None,
+            seconds: None,
+            since: None,
+        }
+    }
+
+    pub fn with_maxchars(mut self, maxchars: u32) -> Self {
+        self.maxchars = Some(maxchars);
+        self
+    }
+
+    pub fn with_maxstanzas(mut self, maxstanzas: u32) -> Self {
+        self.maxstanzas = Some(maxstanzas);
+        self
+    }
+
+    pub fn with_seconds(mut self, seconds: u32) -> Self {
+        self.seconds = Some(seconds);
+        self
+    }
+
+    pub fn with_since(mut self, since: DateTime) -> Self {
+        self.since = Some(since);
+        self
+    }
+}
+
 generate_element!(
     /// Represents a room join request.
+    #[derive(PartialEq)]
     Muc, "x", MUC, children: [
         /// Password to use when the room is protected by a password.
         password: Option<String> = ("password", MUC) => String,
@@ -38,6 +71,25 @@ generate_element!(
 );
 
 impl PresencePayload for Muc {}
+
+impl Muc {
+    pub fn new() -> Self {
+        Muc {
+            password: None,
+            history: None,
+        }
+    }
+
+    pub fn with_password(mut self, password: String) -> Self {
+        self.password = Some(password);
+        self
+    }
+
+    pub fn with_history(mut self, history: History) -> Self {
+        self.history = Some(history);
+        self
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -110,6 +162,9 @@ mod tests {
             </x>"
         .parse().unwrap();
         let muc = Muc::try_from(elem).unwrap();
+        let muc2 = Muc::new().with_history(History::new().with_maxstanzas(0));
+        assert_eq!(muc, muc2);
+
         let history = muc.history.unwrap();
         assert_eq!(history.maxstanzas, Some(0));
         assert_eq!(history.maxchars, None);
