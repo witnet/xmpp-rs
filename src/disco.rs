@@ -126,26 +126,15 @@ impl TryFrom<Element> for DiscoInfoResult {
             features: vec!(),
             extensions: vec!(),
         };
-        let mut parsing_identities_done = false;
-        let mut parsing_features_done = false;
 
         for child in elem.children() {
             if child.is("identity", ns::DISCO_INFO) {
-                if parsing_identities_done {
-                    return Err(Error::ParseError("Identity found after features or data forms in disco#info."));
-                }
                 let identity = Identity::try_from(child.clone())?;
                 result.identities.push(identity);
             } else if child.is("feature", ns::DISCO_INFO) {
-                parsing_identities_done = true;
-                if parsing_features_done {
-                    return Err(Error::ParseError("Feature found after data forms in disco#info."));
-                }
                 let feature = Feature::try_from(child.clone())?;
                 result.features.push(feature);
             } else if child.is("x", ns::DATA_FORMS) {
-                parsing_identities_done = true;
-                parsing_features_done = true;
                 let data_form = DataForm::try_from(child.clone())?;
                 if data_form.type_ != DataFormType::Result_ {
                     return Err(Error::ParseError("Data form must have a 'result' type in disco#info."));
@@ -272,6 +261,24 @@ mod tests {
     }
 
     #[test]
+    fn test_identity_after_feature() {
+        let elem: Element = "<query xmlns='http://jabber.org/protocol/disco#info'><feature var='http://jabber.org/protocol/disco#info'/><identity category='client' type='pc'/></query>".parse().unwrap();
+        let query = DiscoInfoResult::try_from(elem).unwrap();
+        assert_eq!(query.identities.len(), 1);
+        assert_eq!(query.features.len(), 1);
+        assert!(query.extensions.is_empty());
+    }
+
+    #[test]
+    fn test_feature_after_dataform() {
+        let elem: Element = "<query xmlns='http://jabber.org/protocol/disco#info'><identity category='client' type='pc'/><x xmlns='jabber:x:data' type='result'><field var='FORM_TYPE' type='hidden'><value>coucou</value></field></x><feature var='http://jabber.org/protocol/disco#info'/></query>".parse().unwrap();
+        let query = DiscoInfoResult::try_from(elem).unwrap();
+        assert_eq!(query.identities.len(), 1);
+        assert_eq!(query.features.len(), 1);
+        assert_eq!(query.extensions.len(), 1);
+    }
+
+    #[test]
     fn test_extension() {
         let elem: Element = "<query xmlns='http://jabber.org/protocol/disco#info'><identity category='client' type='pc'/><feature var='http://jabber.org/protocol/disco#info'/><x xmlns='jabber:x:data' type='result'><field var='FORM_TYPE' type='hidden'><value>example</value></field></x></query>".parse().unwrap();
         let elem1 = elem.clone();
@@ -368,22 +375,6 @@ mod tests {
             _ => panic!(),
         };
         assert_eq!(message, "disco#info feature not present in disco#info.");
-
-        let elem: Element = "<query xmlns='http://jabber.org/protocol/disco#info'><feature var='http://jabber.org/protocol/disco#info'/><identity category='client' type='pc'/></query>".parse().unwrap();
-        let error = DiscoInfoResult::try_from(elem).unwrap_err();
-        let message = match error {
-            Error::ParseError(string) => string,
-            _ => panic!(),
-        };
-        assert_eq!(message, "Identity found after features or data forms in disco#info.");
-
-        let elem: Element = "<query xmlns='http://jabber.org/protocol/disco#info'><identity category='client' type='pc'/><x xmlns='jabber:x:data' type='result'><field var='FORM_TYPE' type='hidden'><value>coucou</value></field></x><feature var='http://jabber.org/protocol/disco#info'/></query>".parse().unwrap();
-        let error = DiscoInfoResult::try_from(elem).unwrap_err();
-        let message = match error {
-            Error::ParseError(string) => string,
-            _ => panic!(),
-        };
-        assert_eq!(message, "Feature found after data forms in disco#info.");
     }
 
     #[test]
