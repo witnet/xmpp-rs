@@ -28,6 +28,7 @@ generate_element!(
 );
 
 impl History {
+    /// Create a new empty history element.
     pub fn new() -> Self {
         History {
             maxchars: None,
@@ -37,21 +38,25 @@ impl History {
         }
     }
 
+    /// Set how many characters of history to send.
     pub fn with_maxchars(mut self, maxchars: u32) -> Self {
         self.maxchars = Some(maxchars);
         self
     }
 
+    /// Set how many messages to send.
     pub fn with_maxstanzas(mut self, maxstanzas: u32) -> Self {
         self.maxstanzas = Some(maxstanzas);
         self
     }
 
+    /// Only send messages received in these last seconds.
     pub fn with_seconds(mut self, seconds: u32) -> Self {
         self.seconds = Some(seconds);
         self
     }
 
+    /// Only send messages received since this date.
     pub fn with_since(mut self, since: DateTime) -> Self {
         self.since = Some(since);
         self
@@ -73,6 +78,7 @@ generate_element!(
 impl PresencePayload for Muc {}
 
 impl Muc {
+    /// Create a new MUC join element.
     pub fn new() -> Self {
         Muc {
             password: None,
@@ -80,11 +86,13 @@ impl Muc {
         }
     }
 
+    /// Join a room with this password.
     pub fn with_password(mut self, password: String) -> Self {
         self.password = Some(password);
         self
     }
 
+    /// Join a room with only that much history.
     pub fn with_history(mut self, history: History) -> Self {
         self.history = Some(history);
         self
