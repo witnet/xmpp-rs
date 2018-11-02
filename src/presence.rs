@@ -239,6 +239,16 @@ impl Presence {
         self.payloads = payloads;
         self
     }
+
+    /// Set the availability information of this presence.
+    pub fn set_status(&mut self, lang: Lang, status: Status) {
+        self.statuses.insert(lang, status);
+    }
+
+    /// Add a payload to this presence.
+    pub fn add_payload<P: PresencePayload>(&mut self, payload: P) {
+        self.payloads.push(payload.into());
+    }
 }
 
 impl TryFrom<Element> for Presence {
