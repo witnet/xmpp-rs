@@ -4,12 +4,11 @@
 //!
 //! For usage, check the documentation on the `Jid` struct.
 
-#[macro_use] extern crate failure_derive;
-
-use std::fmt;
+#[macro_use]
+extern crate failure_derive;
 
 use std::convert::Into;
-
+use std::fmt;
 use std::str::FromStr;
 
 /// An error that signifies that a `Jid` cannot be parsed from a string.
@@ -77,7 +76,7 @@ impl fmt::Display for Jid {
 enum ParserState {
     Node,
     Domain,
-    Resource
+    Resource,
 }
 
 impl FromStr for Jid {
@@ -102,7 +101,7 @@ impl FromStr for Jid {
                             state = ParserState::Domain;
                             node = Some(buf.clone()); // TODO: performance tweaks, do not need to copy it
                             buf.clear();
-                        },
+                        }
                         '/' => {
                             if buf == "" {
                                 return Err(JidParseError::NoDomain);
@@ -110,12 +109,12 @@ impl FromStr for Jid {
                             state = ParserState::Resource;
                             domain = Some(buf.clone()); // TODO: performance tweaks
                             buf.clear();
-                        },
+                        }
                         c => {
                             buf.push(c);
-                        },
+                        }
                     }
-                },
+                }
                 ParserState::Domain => {
                     match c {
                         '/' => {
@@ -125,28 +124,28 @@ impl FromStr for Jid {
                             state = ParserState::Resource;
                             domain = Some(buf.clone()); // TODO: performance tweaks
                             buf.clear();
-                        },
+                        }
                         c => {
                             buf.push(c);
-                        },
+                        }
                     }
-                },
+                }
                 ParserState::Resource => {
                     buf.push(c);
-                },
+                }
             }
         }
         if !buf.is_empty() {
             match state {
                 ParserState::Node => {
                     domain = Some(buf);
-                },
+                }
                 ParserState::Domain => {
                     domain = Some(buf);
-                },
+                }
                 ParserState::Resource => {
                     resource = Some(buf);
-                },
+                }
             }
         } else if let ParserState::Resource = state {
             return Err(JidParseError::EmptyResource);
@@ -176,9 +175,11 @@ impl Jid {
     /// assert_eq!(jid.resource, Some("resource".to_owned()));
     /// ```
     pub fn full<NS, DS, RS>(node: NS, domain: DS, resource: RS) -> Jid
-        where NS: Into<String>
-            , DS: Into<String>
-            , RS: Into<String> {
+    where
+        NS: Into<String>,
+        DS: Into<String>,
+        RS: Into<String>,
+    {
         Jid {
             node: Some(node.into()),
             domain: domain.into(),
@@ -202,8 +203,10 @@ impl Jid {
     /// assert_eq!(jid.resource, None);
     /// ```
     pub fn bare<NS, DS>(node: NS, domain: DS) -> Jid
-        where NS: Into<String>
-            , DS: Into<String> {
+    where
+        NS: Into<String>,
+        DS: Into<String>,
+    {
         Jid {
             node: Some(node.into()),
             domain: domain.into(),
@@ -250,7 +253,9 @@ impl Jid {
     /// assert_eq!(jid.resource, None);
     /// ```
     pub fn domain<DS>(domain: DS) -> Jid
-        where DS: Into<String> {
+    where
+        DS: Into<String>,
+    {
         Jid {
             node: None,
             domain: domain.into(),
@@ -297,8 +302,10 @@ impl Jid {
     /// assert_eq!(jid.resource, Some("resource".to_owned()));
     /// ```
     pub fn domain_with_resource<DS, RS>(domain: DS, resource: RS) -> Jid
-        where DS: Into<String>
-            , RS: Into<String> {
+    where
+        DS: Into<String>,
+        RS: Into<String>,
+    {
         Jid {
             node: None,
             domain: domain.into(),
@@ -322,7 +329,9 @@ impl Jid {
     /// assert_eq!(new_jid.node, Some("node".to_owned()));
     /// ```
     pub fn with_node<S>(&self, node: S) -> Jid
-        where S: Into<String> {
+    where
+        S: Into<String>,
+    {
         Jid {
             node: Some(node.into()),
             domain: self.domain.clone(),
@@ -346,7 +355,9 @@ impl Jid {
     /// assert_eq!(new_jid.domain, "new_domain");
     /// ```
     pub fn with_domain<S>(&self, domain: S) -> Jid
-        where S: Into<String> {
+    where
+        S: Into<String>,
+    {
         Jid {
             node: self.node.clone(),
             domain: domain.into(),
@@ -370,18 +381,19 @@ impl Jid {
     /// assert_eq!(new_jid.resource, Some("resource".to_owned()));
     /// ```
     pub fn with_resource<S>(&self, resource: S) -> Jid
-        where S: Into<String> {
+    where
+        S: Into<String>,
+    {
         Jid {
             node: self.node.clone(),
             domain: self.domain.clone(),
             resource: Some(resource.into()),
         }
     }
-
 }
 
 #[cfg(feature = "minidom")]
-use minidom::{IntoAttributeValue, IntoElements, ElementEmitter};
+use minidom::{ElementEmitter, IntoAttributeValue, IntoElements};
 
 #[cfg(feature = "minidom")]
 impl IntoAttributeValue for Jid {
@@ -408,12 +420,18 @@ mod tests {
         assert_eq!(Jid::from_str("a@b.c/d"), Ok(Jid::full("a", "b.c", "d")));
         assert_eq!(Jid::from_str("a@b.c"), Ok(Jid::bare("a", "b.c")));
         assert_eq!(Jid::from_str("b.c"), Ok(Jid::domain("b.c")));
-        assert_eq!(Jid::from_str("a/b@c"), Ok(Jid::domain_with_resource("a", "b@c")));
+        assert_eq!(
+            Jid::from_str("a/b@c"),
+            Ok(Jid::domain_with_resource("a", "b@c"))
+        );
     }
 
     #[test]
     fn serialise() {
-        assert_eq!(String::from(Jid::full("a", "b", "c")), String::from("a@b/c"));
+        assert_eq!(
+            String::from(Jid::full("a", "b", "c")),
+            String::from("a@b/c")
+        );
     }
 
     #[test]
