@@ -55,9 +55,11 @@ impl TryFrom<Element> for Bind {
                 return Err(Error::ParseError("Bind can only have one child."));
             }
             if child.is("resource", ns::BIND) {
+                check_no_attributes!(child, "resource");
                 check_no_children!(child, "resource");
                 bind = Bind::Resource(child.text());
             } else if child.is("jid", ns::BIND) {
+                check_no_attributes!(child, "jid");
                 check_no_children!(child, "jid");
                 bind = Bind::Jid(Jid::from_str(&child.text())?);
             } else {
@@ -108,5 +110,28 @@ mod tests {
             .unwrap();
         let bind = Bind::try_from(elem).unwrap();
         assert_eq!(bind, Bind::None);
+    }
+
+    #[test]
+    fn test_invalid_resource() {
+        let elem: Element = "<bind xmlns='urn:ietf:params:xml:ns:xmpp-bind'><resource attr='coucou'>resource</resource></bind>"
+            .parse()
+            .unwrap();
+        let error = Bind::try_from(elem).unwrap_err();
+        let message = match error {
+            Error::ParseError(string) => string,
+            _ => panic!(),
+        };
+        assert_eq!(message, "Unknown attribute in resource element.");
+
+        let elem: Element = "<bind xmlns='urn:ietf:params:xml:ns:xmpp-bind'><resource><hello-world/>resource</resource></bind>"
+            .parse()
+            .unwrap();
+        let error = Bind::try_from(elem).unwrap_err();
+        let message = match error {
+            Error::ParseError(string) => string,
+            _ => panic!(),
+        };
+        assert_eq!(message, "Unknown child in resource element.");
     }
 }
