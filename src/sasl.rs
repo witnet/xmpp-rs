@@ -4,14 +4,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use std::collections::BTreeMap;
-
 use crate::error::Error;
+use crate::helpers::Base64;
 use crate::ns;
 use minidom::Element;
+use std::collections::BTreeMap;
 use try_from::TryFrom;
-
-use crate::helpers::Base64;
 
 generate_attribute!(
     /// The list of available SASL mechanisms.

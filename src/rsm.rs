@@ -4,13 +4,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use try_from::TryFrom;
-
-use minidom::Element;
-
 use crate::error::Error;
-
 use crate::ns;
+use minidom::Element;
+use try_from::TryFrom;
 
 /// Requests paging through a potentially big set of items (represented by an
 /// UID).

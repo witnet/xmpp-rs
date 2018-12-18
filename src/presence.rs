@@ -5,17 +5,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+use crate::error::Error;
+use crate::ns;
+use jid::Jid;
+use minidom::{Element, ElementEmitter, IntoAttributeValue, IntoElements};
 use std::collections::BTreeMap;
 use std::str::FromStr;
 use try_from::TryFrom;
-
-use minidom::{Element, ElementEmitter, IntoAttributeValue, IntoElements};
-
-use jid::Jid;
-
-use crate::error::Error;
-
-use crate::ns;
 
 /// Should be implemented on every known payload of a `<presence/>`.
 pub trait PresencePayload: TryFrom<Element> + Into<Element> {}
