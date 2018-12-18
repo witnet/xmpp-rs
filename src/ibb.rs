@@ -80,6 +80,7 @@ mod tests {
     #[cfg(target_pointer_width = "32")]
     #[test]
     fn test_size() {
+        assert_size!(StreamId, 12);
         assert_size!(Stanza, 1);
         assert_size!(Open, 16);
         assert_size!(Data, 28);
@@ -89,6 +90,7 @@ mod tests {
     #[cfg(target_pointer_width = "64")]
     #[test]
     fn test_size() {
+        assert_size!(StreamId, 24);
         assert_size!(Stanza, 1);
         assert_size!(Open, 32);
         assert_size!(Data, 56);
