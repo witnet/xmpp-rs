@@ -8,7 +8,9 @@ use jid::Jid;
 
 generate_attribute!(
     /// Whether a conference bookmark should be joined automatically.
-    Autojoin, "autojoin", bool
+    Autojoin,
+    "autojoin",
+    bool
 );
 
 generate_element!(
@@ -70,9 +72,9 @@ impl Storage {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use try_from::TryFrom;
-    use minidom::Element;
     use crate::compare_elements::NamespaceAwareCompare;
+    use minidom::Element;
+    use try_from::TryFrom;
 
     #[cfg(target_pointer_width = "32")]
     #[test]
@@ -111,7 +113,10 @@ mod tests {
         assert_eq!(storage.urls[0].url, "https://example.org/");
         assert_eq!(storage.conferences.len(), 1);
         assert_eq!(storage.conferences[0].autojoin, Autojoin::True);
-        assert_eq!(storage.conferences[0].jid, Jid::bare("test-muc", "muc.localhost"));
+        assert_eq!(
+            storage.conferences[0].jid,
+            Jid::bare("test-muc", "muc.localhost")
+        );
         assert_eq!(storage.conferences[0].name, "Test MUC");
         assert_eq!(storage.conferences[0].clone().nick.unwrap(), "Coucou");
         assert_eq!(storage.conferences[0].clone().password.unwrap(), "secret");

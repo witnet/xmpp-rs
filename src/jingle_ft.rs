@@ -4,19 +4,15 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use try_from::TryFrom;
-use std::str::FromStr;
-
-use std::collections::BTreeMap;
-
-use crate::hashes::Hash;
-use crate::jingle::{Creator, ContentId};
 use crate::date::DateTime;
-
-use minidom::Element;
-
 use crate::error::Error;
+use crate::hashes::Hash;
+use crate::jingle::{ContentId, Creator};
 use crate::ns;
+use minidom::Element;
+use std::collections::BTreeMap;
+use std::str::FromStr;
+use try_from::TryFrom;
 
 generate_element!(
     /// Represents a range in a file.
@@ -153,7 +149,7 @@ impl TryFrom<Element> for File {
             descs: BTreeMap::new(),
             size: None,
             range: None,
-            hashes: vec!(),
+            hashes: vec![],
         };
 
         for child in elem.children() {
@@ -164,7 +160,9 @@ impl TryFrom<Element> for File {
                 file.date = Some(child.text().parse()?);
             } else if child.is("media-type", ns::JINGLE_FT) {
                 if file.media_type.is_some() {
-                    return Err(Error::ParseError("File must not have more than one media-type."));
+                    return Err(Error::ParseError(
+                        "File must not have more than one media-type.",
+                    ));
                 }
                 file.media_type = Some(child.text());
             } else if child.is("name", ns::JINGLE_FT) {
@@ -176,7 +174,9 @@ impl TryFrom<Element> for File {
                 let lang = get_attr!(child, "xml:lang", default);
                 let desc = Desc(child.text());
                 if file.descs.insert(lang, desc).is_some() {
-                    return Err(Error::ParseError("Desc element present twice for the same xml:lang."));
+                    return Err(Error::ParseError(
+                        "Desc element present twice for the same xml:lang.",
+                    ));
                 }
             } else if child.is("size", ns::JINGLE_FT) {
                 if file.size.is_some() {
@@ -201,38 +201,47 @@ impl TryFrom<Element> for File {
 
 impl From<File> for Element {
     fn from(file: File) -> Element {
-        let mut root = Element::builder("file")
-                               .ns(ns::JINGLE_FT);
+        let mut root = Element::builder("file").ns(ns::JINGLE_FT);
         if let Some(date) = file.date {
-            root = root.append(Element::builder("date")
-                                       .ns(ns::JINGLE_FT)
-                                       .append(date)
-                                       .build());
+            root = root.append(
+                Element::builder("date")
+                    .ns(ns::JINGLE_FT)
+                    .append(date)
+                    .build(),
+            );
         }
         if let Some(media_type) = file.media_type {
-            root = root.append(Element::builder("media-type")
-                                       .ns(ns::JINGLE_FT)
-                                       .append(media_type)
-                                       .build());
+            root = root.append(
+                Element::builder("media-type")
+                    .ns(ns::JINGLE_FT)
+                    .append(media_type)
+                    .build(),
+            );
         }
         if let Some(name) = file.name {
-            root = root.append(Element::builder("name")
-                                       .ns(ns::JINGLE_FT)
-                                       .append(name)
-                                       .build());
+            root = root.append(
+                Element::builder("name")
+                    .ns(ns::JINGLE_FT)
+                    .append(name)
+                    .build(),
+            );
         }
         for (lang, desc) in file.descs.into_iter() {
-            root = root.append(Element::builder("desc")
-                                       .ns(ns::JINGLE_FT)
-                                       .attr("xml:lang", lang)
-                                       .append(desc.0)
-                                       .build());
+            root = root.append(
+                Element::builder("desc")
+                    .ns(ns::JINGLE_FT)
+                    .attr("xml:lang", lang)
+                    .append(desc.0)
+                    .build(),
+            );
         }
         if let Some(size) = file.size {
-            root = root.append(Element::builder("size")
-                                       .ns(ns::JINGLE_FT)
-                                       .append(format!("{}", size))
-                                       .build());
+            root = root.append(
+                Element::builder("size")
+                    .ns(ns::JINGLE_FT)
+                    .append(format!("{}", size))
+                    .build(),
+            );
         }
         if let Some(range) = file.range {
             root = root.append(range);
@@ -260,12 +269,16 @@ impl TryFrom<Element> for Description {
         let mut file = None;
         for child in elem.children() {
             if file.is_some() {
-                return Err(Error::ParseError("JingleFT description element must have exactly one child."));
+                return Err(Error::ParseError(
+                    "JingleFT description element must have exactly one child.",
+                ));
             }
             file = Some(File::try_from(child.clone())?);
         }
         if file.is_none() {
-            return Err(Error::ParseError("JingleFT description element must have exactly one child."));
+            return Err(Error::ParseError(
+                "JingleFT description element must have exactly one child.",
+            ));
         }
         Ok(Description {
             file: file.unwrap(),
@@ -276,9 +289,9 @@ impl TryFrom<Element> for Description {
 impl From<Description> for Element {
     fn from(description: Description) -> Element {
         Element::builder("description")
-                .ns(ns::JINGLE_FT)
-                .append(description.file)
-                .build()
+            .ns(ns::JINGLE_FT)
+            .append(description.file)
+            .build()
     }
 }
 
@@ -304,12 +317,16 @@ impl TryFrom<Element> for Checksum {
         let mut file = None;
         for child in elem.children() {
             if file.is_some() {
-                return Err(Error::ParseError("JingleFT checksum element must have exactly one child."));
+                return Err(Error::ParseError(
+                    "JingleFT checksum element must have exactly one child.",
+                ));
             }
             file = Some(File::try_from(child.clone())?);
         }
         if file.is_none() {
-            return Err(Error::ParseError("JingleFT checksum element must have exactly one child."));
+            return Err(Error::ParseError(
+                "JingleFT checksum element must have exactly one child.",
+            ));
         }
         Ok(Checksum {
             name: get_attr!(elem, "name", required),
@@ -322,11 +339,11 @@ impl TryFrom<Element> for Checksum {
 impl From<Checksum> for Element {
     fn from(checksum: Checksum) -> Element {
         Element::builder("checksum")
-                .ns(ns::JINGLE_FT)
-                .attr("name", checksum.name)
-                .attr("creator", checksum.creator)
-                .append(checksum.file)
-                .build()
+            .ns(ns::JINGLE_FT)
+            .attr("name", checksum.name)
+            .attr("creator", checksum.creator)
+            .append(checksum.file)
+            .build()
     }
 }
 
@@ -381,16 +398,24 @@ mod tests {
           algo='sha-1'>w0mcJylzCn+AfvuGdqkty2+KP48=</hash>
   </file>
 </description>
-"#.parse().unwrap();
+"#
+        .parse()
+        .unwrap();
         let desc = Description::try_from(elem).unwrap();
         assert_eq!(desc.file.media_type, Some(String::from("text/plain")));
         assert_eq!(desc.file.name, Some(String::from("test.txt")));
         assert_eq!(desc.file.descs, BTreeMap::new());
-        assert_eq!(desc.file.date, DateTime::from_str("2015-07-26T21:46:00+01:00").ok());
+        assert_eq!(
+            desc.file.date,
+            DateTime::from_str("2015-07-26T21:46:00+01:00").ok()
+        );
         assert_eq!(desc.file.size, Some(6144u64));
         assert_eq!(desc.file.range, None);
         assert_eq!(desc.file.hashes[0].algo, Algo::Sha_1);
-        assert_eq!(desc.file.hashes[0].hash, base64::decode("w0mcJylzCn+AfvuGdqkty2+KP48=").unwrap());
+        assert_eq!(
+            desc.file.hashes[0].hash,
+            base64::decode("w0mcJylzCn+AfvuGdqkty2+KP48=").unwrap()
+        );
     }
 
     #[test]
@@ -402,7 +427,9 @@ mod tests {
           algo='sha-1'>w0mcJylzCn+AfvuGdqkty2+KP48=</hash>
   </file>
 </description>
-"#.parse().unwrap();
+"#
+        .parse()
+        .unwrap();
         let desc = Description::try_from(elem).unwrap();
         assert_eq!(desc.file.media_type, None);
         assert_eq!(desc.file.name, None);
@@ -411,7 +438,10 @@ mod tests {
         assert_eq!(desc.file.size, None);
         assert_eq!(desc.file.range, None);
         assert_eq!(desc.file.hashes[0].algo, Algo::Sha_1);
-        assert_eq!(desc.file.hashes[0].hash, base64::decode("w0mcJylzCn+AfvuGdqkty2+KP48=").unwrap());
+        assert_eq!(
+            desc.file.hashes[0].hash,
+            base64::decode("w0mcJylzCn+AfvuGdqkty2+KP48=").unwrap()
+        );
     }
 
     #[test]
@@ -426,11 +456,19 @@ mod tests {
           algo='sha-1'>w0mcJylzCn+AfvuGdqkty2+KP48=</hash>
   </file>
 </description>
-"#.parse().unwrap();
+"#
+        .parse()
+        .unwrap();
         let desc = Description::try_from(elem).unwrap();
-        assert_eq!(desc.file.descs.keys().cloned().collect::<Vec<_>>(), ["en", "fr"]);
+        assert_eq!(
+            desc.file.descs.keys().cloned().collect::<Vec<_>>(),
+            ["en", "fr"]
+        );
         assert_eq!(desc.file.descs["en"], Desc(String::from("Secret file!")));
-        assert_eq!(desc.file.descs["fr"], Desc(String::from("Fichier secret !")));
+        assert_eq!(
+            desc.file.descs["fr"],
+            Desc(String::from("Fichier secret !"))
+        );
 
         let elem: Element = r#"
 <description xmlns='urn:xmpp:jingle:apps:file-transfer:5'>
@@ -442,7 +480,9 @@ mod tests {
           algo='sha-1'>w0mcJylzCn+AfvuGdqkty2+KP48=</hash>
   </file>
 </description>
-"#.parse().unwrap();
+"#
+        .parse()
+        .unwrap();
         let error = Description::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
@@ -478,7 +518,10 @@ mod tests {
         };
         assert_eq!(message, "Unknown attribute in received element.");
 
-        let elem: Element = "<received xmlns='urn:xmpp:jingle:apps:file-transfer:5' creator='initiator'/>".parse().unwrap();
+        let elem: Element =
+            "<received xmlns='urn:xmpp:jingle:apps:file-transfer:5' creator='initiator'/>"
+                .parse()
+                .unwrap();
         let error = Received::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
@@ -498,16 +541,31 @@ mod tests {
     #[test]
     fn test_checksum() {
         let elem: Element = "<checksum xmlns='urn:xmpp:jingle:apps:file-transfer:5' name='coucou' creator='initiator'><file><hash xmlns='urn:xmpp:hashes:2' algo='sha-1'>w0mcJylzCn+AfvuGdqkty2+KP48=</hash></file></checksum>".parse().unwrap();
-        let hash = vec!(195, 73, 156, 39, 41, 115, 10, 127, 128, 126, 251, 134, 118, 169, 45, 203, 111, 138, 63, 143);
+        let hash = vec![
+            195, 73, 156, 39, 41, 115, 10, 127, 128, 126, 251, 134, 118, 169, 45, 203, 111, 138,
+            63, 143,
+        ];
         let checksum = Checksum::try_from(elem).unwrap();
         assert_eq!(checksum.name, ContentId(String::from("coucou")));
         assert_eq!(checksum.creator, Creator::Initiator);
-        assert_eq!(checksum.file.hashes, vec!(Hash { algo: Algo::Sha_1, hash: hash.clone() }));
+        assert_eq!(
+            checksum.file.hashes,
+            vec!(Hash {
+                algo: Algo::Sha_1,
+                hash: hash.clone()
+            })
+        );
         let elem2 = Element::from(checksum);
         let checksum2 = Checksum::try_from(elem2).unwrap();
         assert_eq!(checksum2.name, ContentId(String::from("coucou")));
         assert_eq!(checksum2.creator, Creator::Initiator);
-        assert_eq!(checksum2.file.hashes, vec!(Hash { algo: Algo::Sha_1, hash: hash.clone() }));
+        assert_eq!(
+            checksum2.file.hashes,
+            vec!(Hash {
+                algo: Algo::Sha_1,
+                hash: hash.clone()
+            })
+        );
 
         let elem: Element = "<checksum xmlns='urn:xmpp:jingle:apps:file-transfer:5' name='coucou' creator='initiator'><coucou/></checksum>".parse().unwrap();
         let error = Checksum::try_from(elem).unwrap_err();
@@ -544,14 +602,22 @@ mod tests {
 
     #[test]
     fn test_range() {
-        let elem: Element = "<range xmlns='urn:xmpp:jingle:apps:file-transfer:5'/>".parse().unwrap();
+        let elem: Element = "<range xmlns='urn:xmpp:jingle:apps:file-transfer:5'/>"
+            .parse()
+            .unwrap();
         let range = Range::try_from(elem).unwrap();
         assert_eq!(range.offset, 0);
         assert_eq!(range.length, None);
         assert_eq!(range.hashes, vec!());
 
         let elem: Element = "<range xmlns='urn:xmpp:jingle:apps:file-transfer:5' offset='2048' length='1024'><hash xmlns='urn:xmpp:hashes:2' algo='sha-1'>kHp5RSzW/h7Gm1etSf90Mr5PC/k=</hash></range>".parse().unwrap();
-        let hashes = vec!(Hash { algo: Algo::Sha_1, hash: vec!(144, 122, 121, 69, 44, 214, 254, 30, 198, 155, 87, 173, 73, 255, 116, 50, 190, 79, 11, 249) });
+        let hashes = vec![Hash {
+            algo: Algo::Sha_1,
+            hash: vec![
+                144, 122, 121, 69, 44, 214, 254, 30, 198, 155, 87, 173, 73, 255, 116, 50, 190, 79,
+                11, 249,
+            ],
+        }];
         let range = Range::try_from(elem).unwrap();
         assert_eq!(range.offset, 2048);
         assert_eq!(range.length, Some(1024));
@@ -562,7 +628,9 @@ mod tests {
         assert_eq!(range2.length, Some(1024));
         assert_eq!(range2.hashes, hashes);
 
-        let elem: Element = "<range xmlns='urn:xmpp:jingle:apps:file-transfer:5' coucou=''/>".parse().unwrap();
+        let elem: Element = "<range xmlns='urn:xmpp:jingle:apps:file-transfer:5' coucou=''/>"
+            .parse()
+            .unwrap();
         let error = Range::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,

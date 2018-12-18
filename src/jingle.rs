@@ -4,15 +4,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use try_from::TryFrom;
-use std::str::FromStr;
-
-use minidom::Element;
-use jid::Jid;
-
 use crate::error::Error;
-use crate::ns;
 use crate::iq::IqSetPayload;
+use crate::ns;
+use jid::Jid;
+use minidom::Element;
+use std::str::FromStr;
+use try_from::TryFrom;
 
 generate_attribute!(
     /// The action attribute.
@@ -351,7 +349,8 @@ impl From<Reason> for Element {
             Reason::Timeout => "timeout",
             Reason::UnsupportedApplications => "unsupported-applications",
             Reason::UnsupportedTransports => "unsupported-transports",
-        }).build()
+        })
+        .build()
     }
 }
 
@@ -379,19 +378,25 @@ impl TryFrom<Element> for ReasonElement {
             match child.name() {
                 "text" => {
                     if text.is_some() {
-                        return Err(Error::ParseError("Reason must not have more than one text."));
+                        return Err(Error::ParseError(
+                            "Reason must not have more than one text.",
+                        ));
                     }
                     text = Some(child.text());
-                },
+                }
                 name => {
                     if reason.is_some() {
-                        return Err(Error::ParseError("Reason must not have more than one reason."));
+                        return Err(Error::ParseError(
+                            "Reason must not have more than one reason.",
+                        ));
                     }
                     reason = Some(name.parse()?);
-                },
+                }
             }
         }
-        let reason = reason.ok_or(Error::ParseError("Reason doesn’t contain a valid reason."))?;
+        let reason = reason.ok_or(Error::ParseError(
+            "Reason doesn’t contain a valid reason.",
+        ))?;
         Ok(ReasonElement {
             reason: reason,
             text: text,
@@ -402,9 +407,9 @@ impl TryFrom<Element> for ReasonElement {
 impl From<ReasonElement> for Element {
     fn from(reason: ReasonElement) -> Element {
         Element::builder("reason")
-                .append(Element::from(reason.reason))
-                .append(reason.text)
-                .build()
+            .append(Element::from(reason.reason))
+            .append(reason.text)
+            .build()
     }
 }
 
@@ -491,9 +496,9 @@ impl TryFrom<Element> for Jingle {
             initiator: get_attr!(root, "initiator", optional),
             responder: get_attr!(root, "responder", optional),
             sid: get_attr!(root, "sid", required),
-            contents: vec!(),
+            contents: vec![],
             reason: None,
-            other: vec!(),
+            other: vec![],
         };
 
         for child in root.children().cloned() {
@@ -502,7 +507,9 @@ impl TryFrom<Element> for Jingle {
                 jingle.contents.push(content);
             } else if child.is("reason", ns::JINGLE) {
                 if jingle.reason.is_some() {
-                    return Err(Error::ParseError("Jingle must not have more than one reason."));
+                    return Err(Error::ParseError(
+                        "Jingle must not have more than one reason.",
+                    ));
                 }
                 let reason = ReasonElement::try_from(child)?;
                 jingle.reason = Some(reason);
@@ -518,14 +525,14 @@ impl TryFrom<Element> for Jingle {
 impl From<Jingle> for Element {
     fn from(jingle: Jingle) -> Element {
         Element::builder("jingle")
-                .ns(ns::JINGLE)
-                .attr("action", jingle.action)
-                .attr("initiator", jingle.initiator)
-                .attr("responder", jingle.responder)
-                .attr("sid", jingle.sid)
-                .append(jingle.contents)
-                .append(jingle.reason)
-                .build()
+            .ns(ns::JINGLE)
+            .attr("action", jingle.action)
+            .attr("initiator", jingle.initiator)
+            .attr("responder", jingle.responder)
+            .attr("sid", jingle.sid)
+            .append(jingle.contents)
+            .append(jingle.reason)
+            .build()
     }
 }
 
@@ -565,7 +572,10 @@ mod tests {
 
     #[test]
     fn test_simple() {
-        let elem: Element = "<jingle xmlns='urn:xmpp:jingle:1' action='session-initiate' sid='coucou'/>".parse().unwrap();
+        let elem: Element =
+            "<jingle xmlns='urn:xmpp:jingle:1' action='session-initiate' sid='coucou'/>"
+                .parse()
+                .unwrap();
         let jingle = Jingle::try_from(elem).unwrap();
         assert_eq!(jingle.action, Action::SessionInitiate);
         assert_eq!(jingle.sid, SessionId(String::from("coucou")));
@@ -581,7 +591,9 @@ mod tests {
         };
         assert_eq!(message, "Required attribute 'action' missing.");
 
-        let elem: Element = "<jingle xmlns='urn:xmpp:jingle:1' action='session-info'/>".parse().unwrap();
+        let elem: Element = "<jingle xmlns='urn:xmpp:jingle:1' action='session-info'/>"
+            .parse()
+            .unwrap();
         let error = Jingle::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
@@ -589,7 +601,9 @@ mod tests {
         };
         assert_eq!(message, "Required attribute 'sid' missing.");
 
-        let elem: Element = "<jingle xmlns='urn:xmpp:jingle:1' action='coucou' sid='coucou'/>".parse().unwrap();
+        let elem: Element = "<jingle xmlns='urn:xmpp:jingle:1' action='coucou' sid='coucou'/>"
+            .parse()
+            .unwrap();
         let error = Jingle::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,

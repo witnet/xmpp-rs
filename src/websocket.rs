@@ -72,8 +72,8 @@ impl Open {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use try_from::TryFrom;
     use minidom::Element;
+    use try_from::TryFrom;
 
     #[cfg(target_pointer_width = "32")]
     #[test]
@@ -89,7 +89,9 @@ mod tests {
 
     #[test]
     fn test_simple() {
-        let elem: Element = "<open xmlns='urn:ietf:params:xml:ns:xmpp-framing'/>".parse().unwrap();
+        let elem: Element = "<open xmlns='urn:ietf:params:xml:ns:xmpp-framing'/>"
+            .parse()
+            .unwrap();
         let open = Open::try_from(elem).unwrap();
         assert_eq!(open.from, None);
         assert_eq!(open.to, None);

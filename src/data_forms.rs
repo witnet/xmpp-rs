@@ -4,14 +4,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use try_from::TryFrom;
-
-use minidom::Element;
-
 use crate::error::Error;
-use crate::ns;
-
 use crate::media_element::MediaElement;
+use crate::ns;
+use minidom::Element;
+use try_from::TryFrom;
 
 generate_element!(
     /// Represents one of the possible values for a list- field.
@@ -98,8 +95,7 @@ pub struct Field {
 
 impl Field {
     fn is_list(&self) -> bool {
-        self.type_ == FieldType::ListSingle ||
-        self.type_ == FieldType::ListMulti
+        self.type_ == FieldType::ListSingle || self.type_ == FieldType::ListMulti
     }
 }
 
@@ -114,9 +110,9 @@ impl TryFrom<Element> for Field {
             type_: get_attr!(elem, "type", default),
             label: get_attr!(elem, "label", optional),
             required: false,
-            options: vec!(),
-            values: vec!(),
-            media: vec!(),
+            options: vec![],
+            values: vec![],
+            media: vec![],
         };
         for element in elem.children() {
             if element.is("value", ns::DATA_FORMS) {
@@ -140,7 +136,9 @@ impl TryFrom<Element> for Field {
                 let media_element = MediaElement::try_from(element.clone())?;
                 field.media.push(media_element);
             } else {
-                return Err(Error::ParseError("Field child isn’t a value, option or media element."));
+                return Err(Error::ParseError(
+                    "Field child isn’t a value, option or media element.",
+                ));
             }
         }
         Ok(field)
@@ -150,17 +148,30 @@ impl TryFrom<Element> for Field {
 impl From<Field> for Element {
     fn from(field: Field) -> Element {
         Element::builder("field")
-                .ns(ns::DATA_FORMS)
-                .attr("var", field.var)
-                .attr("type", field.type_)
-                .attr("label", field.label)
-                .append(if field.required { Some(Element::builder("required").ns(ns::DATA_FORMS).build()) } else { None })
-                .append(field.options)
-                .append(field.values.into_iter().map(|value| {
-                     Element::builder("value").ns(ns::DATA_FORMS).append(value).build()
-                 }).collect::<Vec<_>>())
-                .append(field.media)
-                .build()
+            .ns(ns::DATA_FORMS)
+            .attr("var", field.var)
+            .attr("type", field.type_)
+            .attr("label", field.label)
+            .append(if field.required {
+                Some(Element::builder("required").ns(ns::DATA_FORMS).build())
+            } else {
+                None
+            })
+            .append(field.options)
+            .append(
+                field
+                    .values
+                    .into_iter()
+                    .map(|value| {
+                        Element::builder("value")
+                            .ns(ns::DATA_FORMS)
+                            .append(value)
+                            .build()
+                    })
+                    .collect::<Vec<_>>(),
+            )
+            .append(field.media)
+            .build()
     }
 }
 
@@ -215,7 +226,7 @@ impl TryFrom<Element> for DataForm {
             form_type: None,
             title: None,
             instructions: None,
-            fields: vec!(),
+            fields: vec![],
         };
         for child in elem.children() {
             if child.is("title", ns::DATA_FORMS) {
@@ -227,7 +238,9 @@ impl TryFrom<Element> for DataForm {
                 form.title = Some(child.text());
             } else if child.is("instructions", ns::DATA_FORMS) {
                 if form.instructions.is_some() {
-                    return Err(Error::ParseError("More than one instructions in form element."));
+                    return Err(Error::ParseError(
+                        "More than one instructions in form element.",
+                    ));
                 }
                 check_no_children!(child, "instructions");
                 check_no_attributes!(child, "instructions");
@@ -255,12 +268,19 @@ impl TryFrom<Element> for DataForm {
 impl From<DataForm> for Element {
     fn from(form: DataForm) -> Element {
         Element::builder("x")
-                .ns(ns::DATA_FORMS)
-                .attr("type", form.type_)
-                .append(form.title.map(|title| Element::builder("title").ns(ns::DATA_FORMS).append(title)))
-                .append(form.instructions.map(|text| Element::builder("instructions").ns(ns::DATA_FORMS).append(text)))
-                .append(form.fields)
-                .build()
+            .ns(ns::DATA_FORMS)
+            .attr("type", form.type_)
+            .append(
+                form.title
+                    .map(|title| Element::builder("title").ns(ns::DATA_FORMS).append(title)),
+            )
+            .append(form.instructions.map(|text| {
+                Element::builder("instructions")
+                    .ns(ns::DATA_FORMS)
+                    .append(text)
+            }))
+            .append(form.fields)
+            .build()
     }
 }
 
@@ -318,7 +338,9 @@ mod tests {
 
     #[test]
     fn test_wrong_child() {
-        let elem: Element = "<x xmlns='jabber:x:data' type='cancel'><coucou/></x>".parse().unwrap();
+        let elem: Element = "<x xmlns='jabber:x:data' type='cancel'><coucou/></x>"
+            .parse()
+            .unwrap();
         let error = DataForm::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
@@ -329,12 +351,17 @@ mod tests {
 
     #[test]
     fn option() {
-        let elem: Element = "<option xmlns='jabber:x:data' label='Coucou !'><value>coucou</value></option>".parse().unwrap();
+        let elem: Element =
+            "<option xmlns='jabber:x:data' label='Coucou !'><value>coucou</value></option>"
+                .parse()
+                .unwrap();
         let option = Option_::try_from(elem).unwrap();
         assert_eq!(&option.label.unwrap(), "Coucou !");
         assert_eq!(&option.value, "coucou");
 
-        let elem: Element = "<option xmlns='jabber:x:data' label='Coucou !'/>".parse().unwrap();
+        let elem: Element = "<option xmlns='jabber:x:data' label='Coucou !'/>"
+            .parse()
+            .unwrap();
         let error = Option_::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
@@ -348,6 +375,9 @@ mod tests {
             Error::ParseError(string) => string,
             _ => panic!(),
         };
-        assert_eq!(message, "Element option must not have more than one value child.");
+        assert_eq!(
+            message,
+            "Element option must not have more than one value child."
+        );
     }
 }

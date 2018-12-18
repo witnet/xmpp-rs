@@ -6,15 +6,17 @@
 
 generate_elem_id!(
     /// Represents a global, memorable, friendly or informal name chosen by a user.
-    Nick, "nick", NICK
+    Nick,
+    "nick",
+    NICK
 );
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use try_from::TryFrom;
-    use minidom::Element;
     use crate::error::Error;
+    use minidom::Element;
+    use try_from::TryFrom;
 
     #[cfg(target_pointer_width = "32")]
     #[test]
@@ -30,7 +32,9 @@ mod tests {
 
     #[test]
     fn test_simple() {
-        let elem: Element = "<nick xmlns='http://jabber.org/protocol/nick'>Link Mauve</nick>".parse().unwrap();
+        let elem: Element = "<nick xmlns='http://jabber.org/protocol/nick'>Link Mauve</nick>"
+            .parse()
+            .unwrap();
         let nick = Nick::try_from(elem).unwrap();
         assert_eq!(&nick.0, "Link Mauve");
     }
@@ -38,13 +42,17 @@ mod tests {
     #[test]
     fn test_serialise() {
         let elem1 = Element::from(Nick(String::from("Link Mauve")));
-        let elem2: Element = "<nick xmlns='http://jabber.org/protocol/nick'>Link Mauve</nick>".parse().unwrap();
+        let elem2: Element = "<nick xmlns='http://jabber.org/protocol/nick'>Link Mauve</nick>"
+            .parse()
+            .unwrap();
         assert_eq!(elem1, elem2);
     }
 
     #[test]
     fn test_invalid() {
-        let elem: Element = "<nick xmlns='http://jabber.org/protocol/nick'><coucou/></nick>".parse().unwrap();
+        let elem: Element = "<nick xmlns='http://jabber.org/protocol/nick'><coucou/></nick>"
+            .parse()
+            .unwrap();
         let error = Nick::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
@@ -55,7 +63,9 @@ mod tests {
 
     #[test]
     fn test_invalid_attribute() {
-        let elem: Element = "<nick xmlns='http://jabber.org/protocol/nick' coucou=''/>".parse().unwrap();
+        let elem: Element = "<nick xmlns='http://jabber.org/protocol/nick' coucou=''/>"
+            .parse()
+            .unwrap();
         let error = Nick::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,

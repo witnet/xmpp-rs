@@ -4,12 +4,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+use crate::iq::{IqGetPayload, IqResultPayload, IqSetPayload};
 use jid::Jid;
-use crate::iq::{IqGetPayload, IqSetPayload, IqResultPayload};
 
 generate_elem_id!(
     /// Represents a group a contact is part of.
-    Group, "group", ROSTER
+    Group,
+    "group",
+    ROSTER
 );
 
 generate_attribute!(
@@ -79,11 +81,11 @@ impl IqResultPayload for Roster {}
 #[cfg(test)]
 mod tests {
     use super::*;
-    use try_from::TryFrom;
-    use minidom::Element;
-    use crate::error::Error;
-    use std::str::FromStr;
     use crate::compare_elements::NamespaceAwareCompare;
+    use crate::error::Error;
+    use minidom::Element;
+    use std::str::FromStr;
+    use try_from::TryFrom;
 
     #[cfg(target_pointer_width = "32")]
     #[test]
@@ -122,7 +124,9 @@ mod tests {
         let roster2 = Roster::try_from(elem2).unwrap();
         assert_eq!(roster.items, roster2.items);
 
-        let elem: Element = "<query xmlns='jabber:iq:roster' ver='ver9'/>".parse().unwrap();
+        let elem: Element = "<query xmlns='jabber:iq:roster' ver='ver9'/>"
+            .parse()
+            .unwrap();
         let roster = Roster::try_from(elem).unwrap();
         assert_eq!(roster.ver, Some(String::from("ver9")));
         assert!(roster.items.is_empty());
@@ -141,14 +145,22 @@ mod tests {
         name='Benvolio'
         subscription='both'/>
 </query>
-"#.parse().unwrap();
+"#
+        .parse()
+        .unwrap();
         let roster = Roster::try_from(elem).unwrap();
         assert_eq!(roster.ver, Some(String::from("ver11")));
         assert_eq!(roster.items.len(), 3);
-        assert_eq!(roster.items[0].jid, Jid::from_str("romeo@example.net").unwrap());
+        assert_eq!(
+            roster.items[0].jid,
+            Jid::from_str("romeo@example.net").unwrap()
+        );
         assert_eq!(roster.items[0].name, Some(String::from("Romeo")));
         assert_eq!(roster.items[0].subscription, Subscription::Both);
-        assert_eq!(roster.items[0].groups, vec!(Group::from_str("Friends").unwrap()));
+        assert_eq!(
+            roster.items[0].groups,
+            vec!(Group::from_str("Friends").unwrap())
+        );
     }
 
     #[test]
@@ -160,12 +172,17 @@ mod tests {
     <group>B</group>
   </item>
 </query>
-"#.parse().unwrap();
+"#
+        .parse()
+        .unwrap();
         let elem1 = elem.clone();
         let roster = Roster::try_from(elem).unwrap();
         assert!(roster.ver.is_none());
         assert_eq!(roster.items.len(), 1);
-        assert_eq!(roster.items[0].jid, Jid::from_str("test@example.org").unwrap());
+        assert_eq!(
+            roster.items[0].jid,
+            Jid::from_str("test@example.org").unwrap()
+        );
         assert_eq!(roster.items[0].name, None);
         assert_eq!(roster.items[0].groups.len(), 2);
         assert_eq!(roster.items[0].groups[0], Group::from_str("A").unwrap());
@@ -176,7 +193,10 @@ mod tests {
 
     #[test]
     fn test_set() {
-        let elem: Element = "<query xmlns='jabber:iq:roster'><item jid='nurse@example.com'/></query>".parse().unwrap();
+        let elem: Element =
+            "<query xmlns='jabber:iq:roster'><item jid='nurse@example.com'/></query>"
+                .parse()
+                .unwrap();
         let roster = Roster::try_from(elem).unwrap();
         assert!(roster.ver.is_none());
         assert_eq!(roster.items.len(), 1);
@@ -188,25 +208,38 @@ mod tests {
     <group>Servants</group>
   </item>
 </query>
-"#.parse().unwrap();
+"#
+        .parse()
+        .unwrap();
         let roster = Roster::try_from(elem).unwrap();
         assert!(roster.ver.is_none());
         assert_eq!(roster.items.len(), 1);
-        assert_eq!(roster.items[0].jid, Jid::from_str("nurse@example.com").unwrap());
+        assert_eq!(
+            roster.items[0].jid,
+            Jid::from_str("nurse@example.com").unwrap()
+        );
         assert_eq!(roster.items[0].name, Some(String::from("Nurse")));
         assert_eq!(roster.items[0].groups.len(), 1);
-        assert_eq!(roster.items[0].groups[0], Group::from_str("Servants").unwrap());
+        assert_eq!(
+            roster.items[0].groups[0],
+            Group::from_str("Servants").unwrap()
+        );
 
         let elem: Element = r#"
 <query xmlns='jabber:iq:roster'>
   <item jid='nurse@example.com'
         subscription='remove'/>
 </query>
-"#.parse().unwrap();
+"#
+        .parse()
+        .unwrap();
         let roster = Roster::try_from(elem).unwrap();
         assert!(roster.ver.is_none());
         assert_eq!(roster.items.len(), 1);
-        assert_eq!(roster.items[0].jid, Jid::from_str("nurse@example.com").unwrap());
+        assert_eq!(
+            roster.items[0].jid,
+            Jid::from_str("nurse@example.com").unwrap()
+        );
         assert!(roster.items[0].name.is_none());
         assert!(roster.items[0].groups.is_empty());
         assert_eq!(roster.items[0].subscription, Subscription::Remove);
@@ -214,7 +247,9 @@ mod tests {
 
     #[test]
     fn test_invalid() {
-        let elem: Element = "<query xmlns='jabber:iq:roster'><coucou/></query>".parse().unwrap();
+        let elem: Element = "<query xmlns='jabber:iq:roster'><coucou/></query>"
+            .parse()
+            .unwrap();
         let error = Roster::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
@@ -222,7 +257,9 @@ mod tests {
         };
         assert_eq!(message, "Unknown child in query element.");
 
-        let elem: Element = "<query xmlns='jabber:iq:roster' coucou=''/>".parse().unwrap();
+        let elem: Element = "<query xmlns='jabber:iq:roster' coucou=''/>"
+            .parse()
+            .unwrap();
         let error = Roster::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
@@ -233,7 +270,9 @@ mod tests {
 
     #[test]
     fn test_invalid_item() {
-        let elem: Element = "<query xmlns='jabber:iq:roster'><item/></query>".parse().unwrap();
+        let elem: Element = "<query xmlns='jabber:iq:roster'><item/></query>"
+            .parse()
+            .unwrap();
         let error = Roster::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
@@ -251,7 +290,10 @@ mod tests {
         assert_eq!(error.description(), "Invalid JID, I guess?");
         */
 
-        let elem: Element = "<query xmlns='jabber:iq:roster'><item jid='coucou'><coucou/></item></query>".parse().unwrap();
+        let elem: Element =
+            "<query xmlns='jabber:iq:roster'><item jid='coucou'><coucou/></item></query>"
+                .parse()
+                .unwrap();
         let error = Roster::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,

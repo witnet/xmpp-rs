@@ -4,15 +4,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+use crate::error::Error;
+use crate::iq::{IqResultPayload, IqSetPayload};
+use crate::ns;
+use jid::Jid;
+use minidom::Element;
 use std::str::FromStr;
 use try_from::TryFrom;
-
-use minidom::Element;
-
-use crate::error::Error;
-use jid::Jid;
-use crate::ns;
-use crate::iq::{IqSetPayload, IqResultPayload};
 
 /// The request for resource binding, which is the process by which a client
 /// can obtain a full JID and start exchanging on the XMPP network.
@@ -74,23 +72,16 @@ impl TryFrom<Element> for Bind {
 impl From<Bind> for Element {
     fn from(bind: Bind) -> Element {
         Element::builder("bind")
-                .ns(ns::BIND)
-                .append(match bind {
-                     Bind::None => vec!(),
-                     Bind::Resource(resource) => vec!(
-                         Element::builder("resource")
-                                 .ns(ns::BIND)
-                                 .append(resource)
-                                 .build()
-                     ),
-                     Bind::Jid(jid) => vec!(
-                         Element::builder("jid")
-                                 .ns(ns::BIND)
-                                 .append(jid)
-                                 .build()
-                     ),
-                 })
-                .build()
+            .ns(ns::BIND)
+            .append(match bind {
+                Bind::None => vec![],
+                Bind::Resource(resource) => vec![Element::builder("resource")
+                    .ns(ns::BIND)
+                    .append(resource)
+                    .build()],
+                Bind::Jid(jid) => vec![Element::builder("jid").ns(ns::BIND).append(jid).build()],
+            })
+            .build()
     }
 }
 
@@ -112,7 +103,9 @@ mod tests {
 
     #[test]
     fn test_simple() {
-        let elem: Element = "<bind xmlns='urn:ietf:params:xml:ns:xmpp-bind'/>".parse().unwrap();
+        let elem: Element = "<bind xmlns='urn:ietf:params:xml:ns:xmpp-bind'/>"
+            .parse()
+            .unwrap();
         let bind = Bind::try_from(elem).unwrap();
         assert_eq!(bind, Bind::None);
     }

@@ -4,19 +4,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use try_from::TryFrom;
-
-use minidom::Element;
-use jid::Jid;
-use crate::date::DateTime;
-
-use crate::error::Error;
-
-use crate::ns;
-
 use crate::data_forms::DataForm;
-
-use crate::pubsub::{NodeName, ItemId, Subscription, SubscriptionId};
+use crate::date::DateTime;
+use crate::error::Error;
+use crate::ns;
+use crate::pubsub::{ItemId, NodeName, Subscription, SubscriptionId};
+use jid::Jid;
+use minidom::Element;
+use try_from::TryFrom;
 
 /// One PubSub item from a node.
 #[derive(Debug, Clone)]
@@ -40,7 +35,9 @@ impl TryFrom<Element> for Item {
         let mut payloads = elem.children().cloned().collect::<Vec<_>>();
         let payload = payloads.pop();
         if !payloads.is_empty() {
-            return Err(Error::ParseError("More than a single payload in item element."));
+            return Err(Error::ParseError(
+                "More than a single payload in item element.",
+            ));
         }
         Ok(Item {
             payload,
@@ -53,11 +50,11 @@ impl TryFrom<Element> for Item {
 impl From<Item> for Element {
     fn from(item: Item) -> Element {
         Element::builder("item")
-                .ns(ns::PUBSUB_EVENT)
-                .attr("id", item.id)
-                .attr("publisher", item.publisher)
-                .append(item.payload)
-                .build()
+            .ns(ns::PUBSUB_EVENT)
+            .attr("id", item.id)
+            .attr("publisher", item.publisher)
+            .append(item.payload)
+            .build()
     }
 }
 
@@ -131,21 +128,29 @@ pub enum PubSubEvent {
 
 fn parse_items(elem: Element, node: NodeName) -> Result<PubSubEvent, Error> {
     let mut is_retract = None;
-    let mut items = vec!();
-    let mut retracts = vec!();
+    let mut items = vec![];
+    let mut retracts = vec![];
     for child in elem.children() {
         if child.is("item", ns::PUBSUB_EVENT) {
             match is_retract {
                 None => is_retract = Some(false),
                 Some(false) => (),
-                Some(true) => return Err(Error::ParseError("Mix of item and retract in items element.")),
+                Some(true) => {
+                    return Err(Error::ParseError(
+                        "Mix of item and retract in items element.",
+                    ))
+                }
             }
             items.push(Item::try_from(child.clone())?);
         } else if child.is("retract", ns::PUBSUB_EVENT) {
             match is_retract {
                 None => is_retract = Some(true),
                 Some(true) => (),
-                Some(false) => return Err(Error::ParseError("Mix of item and retract in items element.")),
+                Some(false) => {
+                    return Err(Error::ParseError(
+                        "Mix of item and retract in items element.",
+                    ))
+                }
             }
             check_no_children!(child, "retract");
             check_no_unknown_attributes!(child, "retract", ["id"]);
@@ -157,7 +162,10 @@ fn parse_items(elem: Element, node: NodeName) -> Result<PubSubEvent, Error> {
     }
     Ok(match is_retract {
         Some(false) => PubSubEvent::PublishedItems { node, items },
-        Some(true) => PubSubEvent::RetractedItems { node, items: retracts },
+        Some(true) => PubSubEvent::RetractedItems {
+            node,
+            items: retracts,
+        },
         None => return Err(Error::ParseError("Missing children in items element.")),
     })
 }
@@ -176,7 +184,9 @@ impl TryFrom<Element> for PubSubEvent {
                 let mut payloads = child.children().cloned().collect::<Vec<_>>();
                 let item = payloads.pop();
                 if !payloads.is_empty() {
-                    return Err(Error::ParseError("More than a single payload in configuration element."));
+                    return Err(Error::ParseError(
+                        "More than a single payload in configuration element.",
+                    ));
                 }
                 let form = match item {
                     None => None,
@@ -188,7 +198,9 @@ impl TryFrom<Element> for PubSubEvent {
                 for item in child.children() {
                     if item.is("redirect", ns::PUBSUB_EVENT) {
                         if redirect.is_some() {
-                            return Err(Error::ParseError("More than one redirect in delete element."));
+                            return Err(Error::ParseError(
+                                "More than one redirect in delete element.",
+                            ));
                         }
                         let uri = get_attr!(item, "uri", required);
                         redirect = Some(uri);
@@ -222,77 +234,79 @@ impl TryFrom<Element> for PubSubEvent {
 impl From<PubSubEvent> for Element {
     fn from(event: PubSubEvent) -> Element {
         let payload = match event {
-            PubSubEvent::Configuration { node, form } => {
-                Element::builder("configuration")
+            PubSubEvent::Configuration { node, form } => Element::builder("configuration")
+                .ns(ns::PUBSUB_EVENT)
+                .attr("node", node)
+                .append(form)
+                .build(),
+            PubSubEvent::Delete { node, redirect } => Element::builder("purge")
+                .ns(ns::PUBSUB_EVENT)
+                .attr("node", node)
+                .append(redirect.map(|redirect| {
+                    Element::builder("redirect")
                         .ns(ns::PUBSUB_EVENT)
-                        .attr("node", node)
-                        .append(form)
+                        .attr("uri", redirect)
                         .build()
-            },
-            PubSubEvent::Delete { node, redirect } => {
-                Element::builder("purge")
-                        .ns(ns::PUBSUB_EVENT)
-                        .attr("node", node)
-                        .append(redirect.map(|redirect| {
-                             Element::builder("redirect")
-                                     .ns(ns::PUBSUB_EVENT)
-                                     .attr("uri", redirect)
-                                     .build()
-                         }))
-                        .build()
-            },
-            PubSubEvent::PublishedItems { node, items } => {
-                Element::builder("items")
-                        .ns(ns::PUBSUB_EVENT)
-                        .attr("node", node)
-                        .append(items)
-                        .build()
-            },
-            PubSubEvent::RetractedItems { node, items } => {
-                Element::builder("items")
-                        .ns(ns::PUBSUB_EVENT)
-                        .attr("node", node)
-                        .append(items.into_iter().map(|id| {
-                             Element::builder("retract")
-                                     .ns(ns::PUBSUB_EVENT)
-                                     .attr("id", id)
-                                     .build()
-                         }).collect::<Vec<_>>())
-                        .build()
-            },
-            PubSubEvent::Purge { node } => {
-                Element::builder("purge")
-                        .ns(ns::PUBSUB_EVENT)
-                        .attr("node", node)
-                        .build()
-            },
-            PubSubEvent::Subscription { node, expiry, jid, subid, subscription } => {
-                Element::builder("subscription")
-                        .ns(ns::PUBSUB_EVENT)
-                        .attr("node", node)
-                        .attr("expiry", expiry)
-                        .attr("jid", jid)
-                        .attr("subid", subid)
-                        .attr("subscription", subscription)
-                        .build()
-            },
+                }))
+                .build(),
+            PubSubEvent::PublishedItems { node, items } => Element::builder("items")
+                .ns(ns::PUBSUB_EVENT)
+                .attr("node", node)
+                .append(items)
+                .build(),
+            PubSubEvent::RetractedItems { node, items } => Element::builder("items")
+                .ns(ns::PUBSUB_EVENT)
+                .attr("node", node)
+                .append(
+                    items
+                        .into_iter()
+                        .map(|id| {
+                            Element::builder("retract")
+                                .ns(ns::PUBSUB_EVENT)
+                                .attr("id", id)
+                                .build()
+                        })
+                        .collect::<Vec<_>>(),
+                )
+                .build(),
+            PubSubEvent::Purge { node } => Element::builder("purge")
+                .ns(ns::PUBSUB_EVENT)
+                .attr("node", node)
+                .build(),
+            PubSubEvent::Subscription {
+                node,
+                expiry,
+                jid,
+                subid,
+                subscription,
+            } => Element::builder("subscription")
+                .ns(ns::PUBSUB_EVENT)
+                .attr("node", node)
+                .attr("expiry", expiry)
+                .attr("jid", jid)
+                .attr("subid", subid)
+                .attr("subscription", subscription)
+                .build(),
         };
         Element::builder("event")
-                .ns(ns::PUBSUB_EVENT)
-                .append(payload)
-                .build()
+            .ns(ns::PUBSUB_EVENT)
+            .append(payload)
+            .build()
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::str::FromStr;
     use crate::compare_elements::NamespaceAwareCompare;
+    use std::str::FromStr;
 
     #[test]
     fn missing_items() {
-        let elem: Element = "<event xmlns='http://jabber.org/protocol/pubsub#event'><items node='coucou'/></event>".parse().unwrap();
+        let elem: Element =
+            "<event xmlns='http://jabber.org/protocol/pubsub#event'><items node='coucou'/></event>"
+                .parse()
+                .unwrap();
         let error = PubSubEvent::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
@@ -309,9 +323,12 @@ mod tests {
             PubSubEvent::PublishedItems { node, items } => {
                 assert_eq!(node, NodeName(String::from("coucou")));
                 assert_eq!(items[0].id, Some(ItemId(String::from("test"))));
-                assert_eq!(items[0].publisher, Some(Jid::from_str("test@coucou").unwrap()));
+                assert_eq!(
+                    items[0].publisher,
+                    Some(Jid::from_str("test@coucou").unwrap())
+                );
                 assert_eq!(items[0].payload, None);
-            },
+            }
             _ => panic!(),
         }
     }
@@ -329,7 +346,7 @@ mod tests {
                     Some(ref elem) => assert!(elem.is("foreign", "example:namespace")),
                     _ => panic!(),
                 }
-            },
+            }
             _ => panic!(),
         }
     }
@@ -343,7 +360,7 @@ mod tests {
                 assert_eq!(node, NodeName(String::from("something")));
                 assert_eq!(items[0], ItemId(String::from("coucou")));
                 assert_eq!(items[1], ItemId(String::from("test")));
-            },
+            }
             _ => panic!(),
         }
     }
@@ -356,19 +373,22 @@ mod tests {
             PubSubEvent::Delete { node, redirect } => {
                 assert_eq!(node, NodeName(String::from("coucou")));
                 assert_eq!(redirect, Some(String::from("hello")));
-            },
+            }
             _ => panic!(),
         }
     }
 
     #[test]
     fn test_simple_purge() {
-        let elem: Element = "<event xmlns='http://jabber.org/protocol/pubsub#event'><purge node='coucou'/></event>".parse().unwrap();
+        let elem: Element =
+            "<event xmlns='http://jabber.org/protocol/pubsub#event'><purge node='coucou'/></event>"
+                .parse()
+                .unwrap();
         let event = PubSubEvent::try_from(elem).unwrap();
         match event {
             PubSubEvent::Purge { node } => {
                 assert_eq!(node, NodeName(String::from("coucou")));
-            },
+            }
             _ => panic!(),
         }
     }
@@ -381,14 +401,17 @@ mod tests {
             PubSubEvent::Configuration { node, form: _ } => {
                 assert_eq!(node, NodeName(String::from("coucou")));
                 //assert_eq!(form.type_, Result_);
-            },
+            }
             _ => panic!(),
         }
     }
 
     #[test]
     fn test_invalid() {
-        let elem: Element = "<event xmlns='http://jabber.org/protocol/pubsub#event'><coucou node='test'/></event>".parse().unwrap();
+        let elem: Element =
+            "<event xmlns='http://jabber.org/protocol/pubsub#event'><coucou node='test'/></event>"
+                .parse()
+                .unwrap();
         let error = PubSubEvent::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
@@ -399,7 +422,9 @@ mod tests {
 
     #[test]
     fn test_invalid_attribute() {
-        let elem: Element = "<event xmlns='http://jabber.org/protocol/pubsub#event' coucou=''/>".parse().unwrap();
+        let elem: Element = "<event xmlns='http://jabber.org/protocol/pubsub#event' coucou=''/>"
+            .parse()
+            .unwrap();
         let error = PubSubEvent::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
@@ -419,16 +444,29 @@ mod tests {
       subid='ba49252aaa4f5d320c24d3766f0bdcade78c78d3'
       subscription='subscribed'/>
 </event>
-"#.parse().unwrap();
+"#
+        .parse()
+        .unwrap();
         let event = PubSubEvent::try_from(elem.clone()).unwrap();
         match event.clone() {
-            PubSubEvent::Subscription { node, expiry, jid, subid, subscription } => {
+            PubSubEvent::Subscription {
+                node,
+                expiry,
+                jid,
+                subid,
+                subscription,
+            } => {
                 assert_eq!(node, NodeName(String::from("princely_musings")));
-                assert_eq!(subid, Some(SubscriptionId(String::from("ba49252aaa4f5d320c24d3766f0bdcade78c78d3"))));
+                assert_eq!(
+                    subid,
+                    Some(SubscriptionId(String::from(
+                        "ba49252aaa4f5d320c24d3766f0bdcade78c78d3"
+                    )))
+                );
                 assert_eq!(subscription, Some(Subscription::Subscribed));
                 assert_eq!(jid, Some(Jid::from_str("francisco@denmark.lit").unwrap()));
                 assert_eq!(expiry, Some("2006-02-28T23:59:59Z".parse().unwrap()));
-            },
+            }
             _ => panic!(),
         }
 

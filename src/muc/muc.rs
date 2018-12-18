@@ -5,8 +5,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use crate::presence::PresencePayload;
 use crate::date::DateTime;
+use crate::presence::PresencePayload;
 
 generate_element!(
     /// Represents the query for messages before our join.
@@ -102,21 +102,25 @@ impl Muc {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use try_from::TryFrom;
-    use minidom::Element;
-    use crate::error::Error;
-    use std::str::FromStr;
     use crate::compare_elements::NamespaceAwareCompare;
+    use crate::error::Error;
+    use minidom::Element;
+    use std::str::FromStr;
+    use try_from::TryFrom;
 
     #[test]
     fn test_muc_simple() {
-        let elem: Element = "<x xmlns='http://jabber.org/protocol/muc'/>".parse().unwrap();
+        let elem: Element = "<x xmlns='http://jabber.org/protocol/muc'/>"
+            .parse()
+            .unwrap();
         Muc::try_from(elem).unwrap();
     }
 
     #[test]
     fn test_muc_invalid_child() {
-        let elem: Element = "<x xmlns='http://jabber.org/protocol/muc'><coucou/></x>".parse().unwrap();
+        let elem: Element = "<x xmlns='http://jabber.org/protocol/muc'><coucou/></x>"
+            .parse()
+            .unwrap();
         let error = Muc::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
@@ -127,7 +131,9 @@ mod tests {
 
     #[test]
     fn test_muc_serialise() {
-        let elem: Element = "<x xmlns='http://jabber.org/protocol/muc'/>".parse().unwrap();
+        let elem: Element = "<x xmlns='http://jabber.org/protocol/muc'/>"
+            .parse()
+            .unwrap();
         let muc = Muc {
             password: None,
             history: None,
@@ -138,7 +144,9 @@ mod tests {
 
     #[test]
     fn test_muc_invalid_attribute() {
-        let elem: Element = "<x xmlns='http://jabber.org/protocol/muc' coucou=''/>".parse().unwrap();
+        let elem: Element = "<x xmlns='http://jabber.org/protocol/muc' coucou=''/>"
+            .parse()
+            .unwrap();
         let error = Muc::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
@@ -153,7 +161,8 @@ mod tests {
             <x xmlns='http://jabber.org/protocol/muc'>
                 <password>coucou</password>
             </x>"
-        .parse().unwrap();
+            .parse()
+            .unwrap();
         let elem1 = elem.clone();
         let muc = Muc::try_from(elem).unwrap();
         assert_eq!(muc.password, Some("coucou".to_owned()));
@@ -168,7 +177,8 @@ mod tests {
             <x xmlns='http://jabber.org/protocol/muc'>
                 <history maxstanzas='0'/>
             </x>"
-        .parse().unwrap();
+            .parse()
+            .unwrap();
         let muc = Muc::try_from(elem).unwrap();
         let muc2 = Muc::new().with_history(History::new().with_maxstanzas(0));
         assert_eq!(muc, muc2);
@@ -183,8 +193,12 @@ mod tests {
             <x xmlns='http://jabber.org/protocol/muc'>
                 <history since='1970-01-01T00:00:00Z'/>
             </x>"
-        .parse().unwrap();
+            .parse()
+            .unwrap();
         let muc = Muc::try_from(elem).unwrap();
-        assert_eq!(muc.history.unwrap().since.unwrap(), DateTime::from_str("1970-01-01T00:00:00+00:00").unwrap());
+        assert_eq!(
+            muc.history.unwrap().since.unwrap(),
+            DateTime::from_str("1970-01-01T00:00:00+00:00").unwrap()
+        );
     }
 }

@@ -21,9 +21,9 @@ impl MessagePayload for Replace {}
 #[cfg(test)]
 mod tests {
     use super::*;
-    use try_from::TryFrom;
-    use minidom::Element;
     use crate::error::Error;
+    use minidom::Element;
+    use try_from::TryFrom;
 
     #[cfg(target_pointer_width = "32")]
     #[test]
@@ -39,13 +39,17 @@ mod tests {
 
     #[test]
     fn test_simple() {
-        let elem: Element = "<replace xmlns='urn:xmpp:message-correct:0' id='coucou'/>".parse().unwrap();
+        let elem: Element = "<replace xmlns='urn:xmpp:message-correct:0' id='coucou'/>"
+            .parse()
+            .unwrap();
         Replace::try_from(elem).unwrap();
     }
 
     #[test]
     fn test_invalid_attribute() {
-        let elem: Element = "<replace xmlns='urn:xmpp:message-correct:0' coucou=''/>".parse().unwrap();
+        let elem: Element = "<replace xmlns='urn:xmpp:message-correct:0' coucou=''/>"
+            .parse()
+            .unwrap();
         let error = Replace::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
@@ -56,7 +60,9 @@ mod tests {
 
     #[test]
     fn test_invalid_child() {
-        let elem: Element = "<replace xmlns='urn:xmpp:message-correct:0'><coucou/></replace>".parse().unwrap();
+        let elem: Element = "<replace xmlns='urn:xmpp:message-correct:0'><coucou/></replace>"
+            .parse()
+            .unwrap();
         let error = Replace::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
@@ -67,7 +73,9 @@ mod tests {
 
     #[test]
     fn test_invalid_id() {
-        let elem: Element = "<replace xmlns='urn:xmpp:message-correct:0'/>".parse().unwrap();
+        let elem: Element = "<replace xmlns='urn:xmpp:message-correct:0'/>"
+            .parse()
+            .unwrap();
         let error = Replace::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
@@ -78,8 +86,12 @@ mod tests {
 
     #[test]
     fn test_serialise() {
-        let elem: Element = "<replace xmlns='urn:xmpp:message-correct:0' id='coucou'/>".parse().unwrap();
-        let replace = Replace { id: String::from("coucou") };
+        let elem: Element = "<replace xmlns='urn:xmpp:message-correct:0' id='coucou'/>"
+            .parse()
+            .unwrap();
+        let replace = Replace {
+            id: String::from("coucou"),
+        };
         let elem2 = replace.into();
         assert_eq!(elem, elem2);
     }

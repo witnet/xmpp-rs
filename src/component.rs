@@ -5,8 +5,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use crate::helpers::PlainText;
-use sha1::Sha1;
 use digest::Digest;
+use sha1::Sha1;
 
 generate_element!(
     /// The main authentication mechanism for components.
@@ -25,9 +25,7 @@ generate_element!(
 impl Handshake {
     /// Creates a successful reply from a server.
     pub fn new() -> Handshake {
-        Handshake {
-            data: None,
-        }
+        Handshake { data: None }
     }
 
     /// Creates an authentication request from the component.
@@ -44,8 +42,8 @@ impl Handshake {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use try_from::TryFrom;
     use minidom::Element;
+    use try_from::TryFrom;
 
     #[cfg(target_pointer_width = "32")]
     #[test]
@@ -61,11 +59,15 @@ mod tests {
 
     #[test]
     fn test_simple() {
-        let elem: Element = "<handshake xmlns='jabber:component:accept'/>".parse().unwrap();
+        let elem: Element = "<handshake xmlns='jabber:component:accept'/>"
+            .parse()
+            .unwrap();
         let handshake = Handshake::try_from(elem).unwrap();
         assert_eq!(handshake.data, None);
 
-        let elem: Element = "<handshake xmlns='jabber:component:accept'>Coucou</handshake>".parse().unwrap();
+        let elem: Element = "<handshake xmlns='jabber:component:accept'>Coucou</handshake>"
+            .parse()
+            .unwrap();
         let handshake = Handshake::try_from(elem).unwrap();
         assert_eq!(handshake.data, Some(String::from("Coucou")));
     }
@@ -76,6 +78,9 @@ mod tests {
         assert_eq!(handshake.data, None);
 
         let handshake = Handshake::from_password_and_stream_id("123456", "sid");
-        assert_eq!(handshake.data, Some(String::from("9accec263ab84a43c6037ccf7cd48cb1d3f6df8e")));
+        assert_eq!(
+            handshake.data,
+            Some(String::from("9accec263ab84a43c6037ccf7cd48cb1d3f6df8e"))
+        );
     }
 }

@@ -4,15 +4,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+use base64;
+use chrono;
+use jid;
 use std::convert::From;
-use std::num;
-use std::string;
 use std::fmt;
 use std::net;
-
-use base64;
-use jid;
-use chrono;
+use std::num;
+use std::string;
 
 /// Contains one of the potential errors triggered while parsing an
 /// [Element](../struct.Element.html) into a specialised struct.

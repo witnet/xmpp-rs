@@ -26,9 +26,9 @@ generate_element!(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use try_from::TryFrom;
-    use minidom::Element;
     use crate::error::Error;
+    use minidom::Element;
+    use try_from::TryFrom;
 
     #[cfg(target_pointer_width = "32")]
     #[test]
@@ -50,7 +50,9 @@ mod tests {
 
     #[test]
     fn test_invalid_child() {
-        let elem: Element = "<forwarded xmlns='urn:xmpp:forward:0'><coucou/></forwarded>".parse().unwrap();
+        let elem: Element = "<forwarded xmlns='urn:xmpp:forward:0'><coucou/></forwarded>"
+            .parse()
+            .unwrap();
         let error = Forwarded::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
@@ -62,7 +64,10 @@ mod tests {
     #[test]
     fn test_serialise() {
         let elem: Element = "<forwarded xmlns='urn:xmpp:forward:0'/>".parse().unwrap();
-        let forwarded = Forwarded { delay: None, stanza: None };
+        let forwarded = Forwarded {
+            delay: None,
+            stanza: None,
+        };
         let elem2 = forwarded.into();
         assert_eq!(elem, elem2);
     }

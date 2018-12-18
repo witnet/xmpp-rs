@@ -4,13 +4,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+use crate::date::DateTime;
+use crate::helpers::PlainText;
 use crate::message::MessagePayload;
 use crate::presence::PresencePayload;
-use crate::date::DateTime;
-
 use jid::Jid;
-
-use crate::helpers::PlainText;
 
 generate_element!(
     /// Notes when and by whom a message got stored for later delivery.
@@ -34,10 +32,10 @@ impl PresencePayload for Delay {}
 #[cfg(test)]
 mod tests {
     use super::*;
-    use try_from::TryFrom;
-    use minidom::Element;
     use crate::error::Error;
+    use minidom::Element;
     use std::str::FromStr;
+    use try_from::TryFrom;
 
     #[cfg(target_pointer_width = "32")]
     #[test]
@@ -53,16 +51,24 @@ mod tests {
 
     #[test]
     fn test_simple() {
-        let elem: Element = "<delay xmlns='urn:xmpp:delay' from='capulet.com' stamp='2002-09-10T23:08:25Z'/>".parse().unwrap();
+        let elem: Element =
+            "<delay xmlns='urn:xmpp:delay' from='capulet.com' stamp='2002-09-10T23:08:25Z'/>"
+                .parse()
+                .unwrap();
         let delay = Delay::try_from(elem).unwrap();
         assert_eq!(delay.from, Some(Jid::from_str("capulet.com").unwrap()));
-        assert_eq!(delay.stamp, DateTime::from_str("2002-09-10T23:08:25Z").unwrap());
+        assert_eq!(
+            delay.stamp,
+            DateTime::from_str("2002-09-10T23:08:25Z").unwrap()
+        );
         assert_eq!(delay.data, None);
     }
 
     #[test]
     fn test_unknown() {
-        let elem: Element = "<replace xmlns='urn:xmpp:message-correct:0'/>".parse().unwrap();
+        let elem: Element = "<replace xmlns='urn:xmpp:message-correct:0'/>"
+            .parse()
+            .unwrap();
         let error = Delay::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
@@ -73,7 +79,9 @@ mod tests {
 
     #[test]
     fn test_invalid_child() {
-        let elem: Element = "<delay xmlns='urn:xmpp:delay'><coucou/></delay>".parse().unwrap();
+        let elem: Element = "<delay xmlns='urn:xmpp:delay'><coucou/></delay>"
+            .parse()
+            .unwrap();
         let error = Delay::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
@@ -84,7 +92,9 @@ mod tests {
 
     #[test]
     fn test_serialise() {
-        let elem: Element = "<delay xmlns='urn:xmpp:delay' stamp='2002-09-10T23:08:25+00:00'/>".parse().unwrap();
+        let elem: Element = "<delay xmlns='urn:xmpp:delay' stamp='2002-09-10T23:08:25+00:00'/>"
+            .parse()
+            .unwrap();
         let delay = Delay {
             from: None,
             stamp: DateTime::from_str("2002-09-10T23:08:25Z").unwrap(),

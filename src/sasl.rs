@@ -6,10 +6,10 @@
 
 use std::collections::BTreeMap;
 
-use try_from::TryFrom;
-use minidom::Element;
 use crate::error::Error;
 use crate::ns;
+use minidom::Element;
+use try_from::TryFrom;
 
 use crate::helpers::Base64;
 
@@ -84,7 +84,9 @@ generate_element!(
 generate_empty_element!(
     /// Sent by the client at any point after [auth](struct.Auth.html) if it
     /// wants to cancel the current authentication process.
-    Abort, "abort", SASL
+    Abort,
+    "abort",
+    SASL
 );
 
 generate_element!(
@@ -166,11 +168,15 @@ impl TryFrom<Element> for Failure {
                 check_no_children!(child, "text");
                 let lang = get_attr!(child, "xml:lang", default);
                 if texts.insert(lang, child.text()).is_some() {
-                    return Err(Error::ParseError("Text element present twice for the same xml:lang in failure element."));
+                    return Err(Error::ParseError(
+                        "Text element present twice for the same xml:lang in failure element.",
+                    ));
                 }
             } else if child.has_ns(ns::SASL) {
                 if defined_condition.is_some() {
-                    return Err(Error::ParseError("Failure must not have more than one defined-condition."));
+                    return Err(Error::ParseError(
+                        "Failure must not have more than one defined-condition.",
+                    ));
                 }
                 check_no_attributes!(child, "defined-condition");
                 check_no_children!(child, "defined-condition");
@@ -184,7 +190,8 @@ impl TryFrom<Element> for Failure {
                 return Err(Error::ParseError("Unknown element in Failure."));
             }
         }
-        let defined_condition = defined_condition.ok_or(Error::ParseError("Failure must have a defined-condition."))?;
+        let defined_condition =
+            defined_condition.ok_or(Error::ParseError("Failure must have a defined-condition."))?;
 
         Ok(Failure {
             defined_condition: defined_condition,
@@ -196,24 +203,30 @@ impl TryFrom<Element> for Failure {
 impl From<Failure> for Element {
     fn from(failure: Failure) -> Element {
         Element::builder("failure")
-                .ns(ns::SASL)
-                .append(failure.defined_condition)
-                .append(failure.texts.into_iter().map(|(lang, text)| {
-                     Element::builder("text")
-                             .ns(ns::SASL)
-                             .attr("xml:lang", lang)
-                             .append(text)
-                             .build()
-                 }).collect::<Vec<_>>())
-                .build()
+            .ns(ns::SASL)
+            .append(failure.defined_condition)
+            .append(
+                failure
+                    .texts
+                    .into_iter()
+                    .map(|(lang, text)| {
+                        Element::builder("text")
+                            .ns(ns::SASL)
+                            .attr("xml:lang", lang)
+                            .append(text)
+                            .build()
+                    })
+                    .collect::<Vec<_>>(),
+            )
+            .build()
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use try_from::TryFrom;
     use minidom::Element;
+    use try_from::TryFrom;
 
     #[cfg(target_pointer_width = "32")]
     #[test]
@@ -243,7 +256,9 @@ mod tests {
 
     #[test]
     fn test_simple() {
-        let elem: Element = "<auth xmlns='urn:ietf:params:xml:ns:xmpp-sasl' mechanism='PLAIN'/>".parse().unwrap();
+        let elem: Element = "<auth xmlns='urn:ietf:params:xml:ns:xmpp-sasl' mechanism='PLAIN'/>"
+            .parse()
+            .unwrap();
         let auth = Auth::try_from(elem).unwrap();
         assert_eq!(auth.mechanism, Mechanism::Plain);
         assert!(auth.data.is_empty());
@@ -251,7 +266,10 @@ mod tests {
 
     #[test]
     fn section_6_5_1() {
-        let elem: Element = "<failure xmlns='urn:ietf:params:xml:ns:xmpp-sasl'><aborted/></failure>".parse().unwrap();
+        let elem: Element =
+            "<failure xmlns='urn:ietf:params:xml:ns:xmpp-sasl'><aborted/></failure>"
+                .parse()
+                .unwrap();
         let failure = Failure::try_from(elem).unwrap();
         assert_eq!(failure.defined_condition, DefinedCondition::Aborted);
         assert!(failure.texts.is_empty());
@@ -262,9 +280,14 @@ mod tests {
         let elem: Element = "<failure xmlns='urn:ietf:params:xml:ns:xmpp-sasl'>
             <account-disabled/>
             <text xml:lang='en'>Call 212-555-1212 for assistance.</text>
-        </failure>".parse().unwrap();
+        </failure>"
+            .parse()
+            .unwrap();
         let failure = Failure::try_from(elem).unwrap();
         assert_eq!(failure.defined_condition, DefinedCondition::AccountDisabled);
-        assert_eq!(failure.texts["en"], String::from("Call 212-555-1212 for assistance."));
+        assert_eq!(
+            failure.texts["en"],
+            String::from("Call 212-555-1212 for assistance.")
+        );
     }
 }

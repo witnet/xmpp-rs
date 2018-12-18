@@ -4,12 +4,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use std::str::FromStr;
-
-use minidom::{IntoAttributeValue, IntoElements, ElementEmitter};
-use chrono::{DateTime as ChronoDateTime, FixedOffset};
-
 use crate::error::Error;
+use chrono::{DateTime as ChronoDateTime, FixedOffset};
+use minidom::{ElementEmitter, IntoAttributeValue, IntoElements};
+use std::str::FromStr;
 
 /// Implements the DateTime profile of XEP-0082, which represents a
 /// non-recurring moment in time, with an accuracy of seconds or fraction of
@@ -114,7 +112,8 @@ mod tests {
 
     #[test]
     fn test_serialise() {
-        let date = DateTime(ChronoDateTime::parse_from_rfc3339("2017-05-21T20:19:55+01:00").unwrap());
+        let date =
+            DateTime(ChronoDateTime::parse_from_rfc3339("2017-05-21T20:19:55+01:00").unwrap());
         let attr = date.into_attribute_value();
         assert_eq!(attr, Some(String::from("2017-05-21T20:19:55+01:00")));
     }

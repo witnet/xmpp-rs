@@ -11,7 +11,9 @@ generate_empty_element!(
     ///
     /// It should only be used in an `<iq type='get'/>`, as it can only
     /// represent the request, and not a result.
-    VersionQuery, "query", VERSION
+    VersionQuery,
+    "query",
+    VERSION
 );
 
 impl IqGetPayload for VersionQuery {}
@@ -39,9 +41,9 @@ impl IqResultPayload for VersionResult {}
 #[cfg(test)]
 mod tests {
     use super::*;
-    use try_from::TryFrom;
-    use minidom::Element;
     use crate::compare_elements::NamespaceAwareCompare;
+    use minidom::Element;
+    use try_from::TryFrom;
 
     #[cfg(target_pointer_width = "32")]
     #[test]
@@ -59,7 +61,10 @@ mod tests {
 
     #[test]
     fn simple() {
-        let elem: Element = "<query xmlns='jabber:iq:version'><name>xmpp-rs</name><version>0.3.0</version></query>".parse().unwrap();
+        let elem: Element =
+            "<query xmlns='jabber:iq:version'><name>xmpp-rs</name><version>0.3.0</version></query>"
+                .parse()
+                .unwrap();
         let version = VersionResult::try_from(elem).unwrap();
         assert_eq!(version.name, String::from("xmpp-rs"));
         assert_eq!(version.version, String::from("0.3.0"));
@@ -74,7 +79,10 @@ mod tests {
             os: None,
         };
         let elem1 = Element::from(version);
-        let elem2: Element = "<query xmlns='jabber:iq:version'><name>xmpp-rs</name><version>0.3.0</version></query>".parse().unwrap();
+        let elem2: Element =
+            "<query xmlns='jabber:iq:version'><name>xmpp-rs</name><version>0.3.0</version></query>"
+                .parse()
+                .unwrap();
         println!("{:?}", elem1);
         assert!(elem1.compare_to(&elem2));
     }

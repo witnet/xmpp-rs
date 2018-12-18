@@ -5,15 +5,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use try_from::TryFrom;
-
-use minidom::Element;
-
-use jid::Jid;
-
 use crate::error::Error;
-
 use crate::ns;
+use jid::Jid;
+use minidom::Element;
+use try_from::TryFrom;
 
 generate_attribute_enum!(
 /// Lists all of the possible status codes used in MUC presences.
@@ -103,9 +99,11 @@ impl TryFrom<Element> for Actor {
         let nick = get_attr!(elem, "nick", optional);
 
         match (jid, nick) {
-            (Some(_), Some(_))
-          | (None, None) =>
-                return Err(Error::ParseError("Either 'jid' or 'nick' attribute is required.")),
+            (Some(_), Some(_)) | (None, None) => {
+                return Err(Error::ParseError(
+                    "Either 'jid' or 'nick' attribute is required.",
+                ))
+            }
             (Some(jid), _) => Ok(Actor::Jid(jid)),
             (_, Some(nick)) => Ok(Actor::Nick(nick)),
         }
@@ -119,7 +117,8 @@ impl From<Actor> for Element {
         (match actor {
             Actor::Jid(jid) => elem.attr("jid", jid),
             Actor::Nick(nick) => elem.attr("nick", nick),
-        }).build()
+        })
+        .build()
     }
 }
 
@@ -135,7 +134,9 @@ generate_element!(
 
 generate_elem_id!(
     /// A reason for inviting, declining, etc. a request.
-    Reason, "reason", MUC_USER
+    Reason,
+    "reason",
+    MUC_USER
 );
 
 generate_attribute!(
@@ -237,14 +238,16 @@ generate_element!(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::error::Error as StdError;
     use crate::compare_elements::NamespaceAwareCompare;
+    use std::error::Error as StdError;
 
     #[test]
     fn test_simple() {
         let elem: Element = "
             <x xmlns='http://jabber.org/protocol/muc#user'/>
-        ".parse().unwrap();
+        "
+        .parse()
+        .unwrap();
         MucUser::try_from(elem).unwrap();
     }
 
@@ -256,7 +259,9 @@ mod tests {
                 <status code='102'/>
                 <item affiliation='member' role='moderator'/>
             </x>
-        ".parse().unwrap();
+        "
+        .parse()
+        .unwrap();
         let muc_user = MucUser::try_from(elem).unwrap();
         assert_eq!(muc_user.status.len(), 2);
         assert_eq!(muc_user.status[0], Status::AffiliationChange);
@@ -272,7 +277,9 @@ mod tests {
             <x xmlns='http://jabber.org/protocol/muc#user'>
                 <coucou/>
             </x>
-        ".parse().unwrap();
+        "
+        .parse()
+        .unwrap();
         let error = MucUser::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
@@ -285,8 +292,13 @@ mod tests {
     fn test_serialise() {
         let elem: Element = "
             <x xmlns='http://jabber.org/protocol/muc#user'/>
-        ".parse().unwrap();
-        let muc = MucUser { status: vec!(), items: vec!() };
+        "
+        .parse()
+        .unwrap();
+        let muc = MucUser {
+            status: vec![],
+            items: vec![],
+        };
         let elem2 = muc.into();
         assert!(elem.compare_to(&elem2));
     }
@@ -295,7 +307,9 @@ mod tests {
     fn test_invalid_attribute() {
         let elem: Element = "
             <x xmlns='http://jabber.org/protocol/muc#user' coucou=''/>
-        ".parse().unwrap();
+        "
+        .parse()
+        .unwrap();
         let error = MucUser::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
@@ -308,7 +322,9 @@ mod tests {
     fn test_status_simple() {
         let elem: Element = "
             <status xmlns='http://jabber.org/protocol/muc#user' code='110'/>
-        ".parse().unwrap();
+        "
+        .parse()
+        .unwrap();
         Status::try_from(elem).unwrap();
     }
 
@@ -316,7 +332,9 @@ mod tests {
     fn test_status_invalid() {
         let elem: Element = "
             <status xmlns='http://jabber.org/protocol/muc#user'/>
-        ".parse().unwrap();
+        "
+        .parse()
+        .unwrap();
         let error = Status::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
@@ -331,7 +349,9 @@ mod tests {
             <status xmlns='http://jabber.org/protocol/muc#user' code='110'>
                 <foo/>
             </status>
-        ".parse().unwrap();
+        "
+        .parse()
+        .unwrap();
         let error = Status::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
@@ -344,7 +364,9 @@ mod tests {
     fn test_status_simple_code() {
         let elem: Element = "
             <status xmlns='http://jabber.org/protocol/muc#user' code='307'/>
-        ".parse().unwrap();
+        "
+        .parse()
+        .unwrap();
         let status = Status::try_from(elem).unwrap();
         assert_eq!(status, Status::Kicked);
     }
@@ -353,7 +375,9 @@ mod tests {
     fn test_status_invalid_code() {
         let elem: Element = "
             <status xmlns='http://jabber.org/protocol/muc#user' code='666'/>
-        ".parse().unwrap();
+        "
+        .parse()
+        .unwrap();
         let error = Status::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
@@ -366,7 +390,9 @@ mod tests {
     fn test_status_invalid_code2() {
         let elem: Element = "
             <status xmlns='http://jabber.org/protocol/muc#user' code='coucou'/>
-        ".parse().unwrap();
+        "
+        .parse()
+        .unwrap();
         let error = Status::try_from(elem).unwrap_err();
         let error = match error {
             Error::ParseIntError(error) => error,
@@ -379,7 +405,9 @@ mod tests {
     fn test_actor_required_attributes() {
         let elem: Element = "
             <actor xmlns='http://jabber.org/protocol/muc#user'/>
-        ".parse().unwrap();
+        "
+        .parse()
+        .unwrap();
         let error = Actor::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
@@ -394,7 +422,9 @@ mod tests {
             <actor xmlns='http://jabber.org/protocol/muc#user'
                    jid='foo@bar/baz'
                    nick='baz'/>
-        ".parse().unwrap();
+        "
+        .parse()
+        .unwrap();
         let error = Actor::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
@@ -408,7 +438,9 @@ mod tests {
         let elem: Element = "
             <actor xmlns='http://jabber.org/protocol/muc#user'
                    jid='foo@bar/baz'/>
-        ".parse().unwrap();
+        "
+        .parse()
+        .unwrap();
         let actor = Actor::try_from(elem).unwrap();
         let jid = match actor {
             Actor::Jid(jid) => jid,
@@ -421,7 +453,9 @@ mod tests {
     fn test_actor_nick() {
         let elem: Element = "
             <actor xmlns='http://jabber.org/protocol/muc#user' nick='baz'/>
-        ".parse().unwrap();
+        "
+        .parse()
+        .unwrap();
         let actor = Actor::try_from(elem).unwrap();
         let nick = match actor {
             Actor::Nick(nick) => nick,
@@ -434,7 +468,9 @@ mod tests {
     fn test_continue_simple() {
         let elem: Element = "
             <continue xmlns='http://jabber.org/protocol/muc#user'/>
-        ".parse().unwrap();
+        "
+        .parse()
+        .unwrap();
         Continue::try_from(elem).unwrap();
     }
 
@@ -443,7 +479,9 @@ mod tests {
         let elem: Element = "
             <continue xmlns='http://jabber.org/protocol/muc#user'
                       thread='foo'/>
-        ".parse().unwrap();
+        "
+        .parse()
+        .unwrap();
         let continue_ = Continue::try_from(elem).unwrap();
         assert_eq!(continue_.thread, Some("foo".to_owned()));
     }
@@ -454,7 +492,9 @@ mod tests {
             <continue xmlns='http://jabber.org/protocol/muc#user'>
                 <foobar/>
             </continue>
-        ".parse().unwrap();
+        "
+        .parse()
+        .unwrap();
         let continue_ = Continue::try_from(elem).unwrap_err();
         let message = match continue_ {
             Error::ParseError(string) => string,
@@ -467,7 +507,8 @@ mod tests {
     fn test_reason_simple() {
         let elem: Element = "
             <reason xmlns='http://jabber.org/protocol/muc#user'>Reason</reason>"
-        .parse().unwrap();
+            .parse()
+            .unwrap();
         let reason = Reason::try_from(elem).unwrap();
         assert_eq!(reason.0, "Reason".to_owned());
     }
@@ -476,7 +517,9 @@ mod tests {
     fn test_reason_invalid_attribute() {
         let elem: Element = "
             <reason xmlns='http://jabber.org/protocol/muc#user' foo='bar'/>
-        ".parse().unwrap();
+        "
+        .parse()
+        .unwrap();
         let error = Reason::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
@@ -491,7 +534,9 @@ mod tests {
             <reason xmlns='http://jabber.org/protocol/muc#user'>
                 <foobar/>
             </reason>
-        ".parse().unwrap();
+        "
+        .parse()
+        .unwrap();
         let error = Reason::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
@@ -501,11 +546,13 @@ mod tests {
     }
 
     #[test]
-    fn test_item_invalid_attr(){
+    fn test_item_invalid_attr() {
         let elem: Element = "
             <item xmlns='http://jabber.org/protocol/muc#user'
                   foo='bar'/>
-        ".parse().unwrap();
+        "
+        .parse()
+        .unwrap();
         let error = Item::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
@@ -515,21 +562,25 @@ mod tests {
     }
 
     #[test]
-    fn test_item_affiliation_role_attr(){
+    fn test_item_affiliation_role_attr() {
         let elem: Element = "
             <item xmlns='http://jabber.org/protocol/muc#user'
                   affiliation='member'
                   role='moderator'/>
-        ".parse().unwrap();
+        "
+        .parse()
+        .unwrap();
         Item::try_from(elem).unwrap();
     }
 
     #[test]
-    fn test_item_affiliation_role_invalid_attr(){
+    fn test_item_affiliation_role_invalid_attr() {
         let elem: Element = "
             <item xmlns='http://jabber.org/protocol/muc#user'
                   affiliation='member'/>
-        ".parse().unwrap();
+        "
+        .parse()
+        .unwrap();
         let error = Item::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
@@ -539,13 +590,15 @@ mod tests {
     }
 
     #[test]
-    fn test_item_nick_attr(){
+    fn test_item_nick_attr() {
         let elem: Element = "
             <item xmlns='http://jabber.org/protocol/muc#user'
                   affiliation='member'
                   role='moderator'
                   nick='foobar'/>
-        ".parse().unwrap();
+        "
+        .parse()
+        .unwrap();
         let item = Item::try_from(elem).unwrap();
         match item {
             Item { nick, .. } => assert_eq!(nick, Some("foobar".to_owned())),
@@ -553,65 +606,79 @@ mod tests {
     }
 
     #[test]
-    fn test_item_affiliation_role_invalid_attr2(){
+    fn test_item_affiliation_role_invalid_attr2() {
         let elem: Element = "
             <item xmlns='http://jabber.org/protocol/muc#user'
                   role='moderator'/>
-        ".parse().unwrap();
+        "
+        .parse()
+        .unwrap();
         let error = Item::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
         };
-        assert_eq!(message, "Required attribute 'affiliation' missing.".to_owned());
+        assert_eq!(
+            message,
+            "Required attribute 'affiliation' missing.".to_owned()
+        );
     }
 
     #[test]
-    fn test_item_role_actor_child(){
+    fn test_item_role_actor_child() {
         let elem: Element = "
             <item xmlns='http://jabber.org/protocol/muc#user'
                   affiliation='member'
                   role='moderator'>
                 <actor nick='foobar'/>
             </item>
-        ".parse().unwrap();
+        "
+        .parse()
+        .unwrap();
         let item = Item::try_from(elem).unwrap();
         match item {
-            Item { actor, .. } =>
-                assert_eq!(actor, Some(Actor::Nick("foobar".to_owned()))),
+            Item { actor, .. } => assert_eq!(actor, Some(Actor::Nick("foobar".to_owned()))),
         }
     }
 
     #[test]
-    fn test_item_role_continue_child(){
+    fn test_item_role_continue_child() {
         let elem: Element = "
             <item xmlns='http://jabber.org/protocol/muc#user'
                   affiliation='member'
                   role='moderator'>
                 <continue thread='foobar'/>
             </item>
-        ".parse().unwrap();
+        "
+        .parse()
+        .unwrap();
         let item = Item::try_from(elem).unwrap();
-        let continue_1 = Continue { thread: Some("foobar".to_owned()) };
+        let continue_1 = Continue {
+            thread: Some("foobar".to_owned()),
+        };
         match item {
-            Item { continue_: Some(continue_2), .. } => assert_eq!(continue_2.thread, continue_1.thread),
+            Item {
+                continue_: Some(continue_2),
+                ..
+            } => assert_eq!(continue_2.thread, continue_1.thread),
             _ => panic!(),
         }
     }
 
     #[test]
-    fn test_item_role_reason_child(){
+    fn test_item_role_reason_child() {
         let elem: Element = "
             <item xmlns='http://jabber.org/protocol/muc#user'
                   affiliation='member'
                   role='moderator'>
                 <reason>foobar</reason>
             </item>
-        ".parse().unwrap();
+        "
+        .parse()
+        .unwrap();
         let item = Item::try_from(elem).unwrap();
         match item {
-            Item { reason, .. } =>
-                assert_eq!(reason, Some(Reason("foobar".to_owned()))),
+            Item { reason, .. } => assert_eq!(reason, Some(Reason("foobar".to_owned()))),
         }
     }
 }

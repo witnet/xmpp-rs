@@ -4,15 +4,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use try_from::TryFrom;
-use std::net::IpAddr;
-
-use minidom::Element;
-use jid::Jid;
-
 use crate::error::Error;
-
 use crate::ns;
+use jid::Jid;
+use minidom::Element;
+use std::net::IpAddr;
+use try_from::TryFrom;
 
 generate_attribute!(
     /// The type of the connection being proposed by this candidate.
@@ -187,37 +184,50 @@ impl TryFrom<Element> for Transport {
         let mut payload = None;
         for child in elem.children() {
             payload = Some(if child.is("candidate", ns::JINGLE_S5B) {
-                let mut candidates = match payload {
-                    Some(TransportPayload::Candidates(candidates)) => candidates,
-                    Some(_) => return Err(Error::ParseError("Non-candidate child already present in JingleS5B transport element.")),
-                    None => vec!(),
-                };
+                let mut candidates =
+                    match payload {
+                        Some(TransportPayload::Candidates(candidates)) => candidates,
+                        Some(_) => return Err(Error::ParseError(
+                            "Non-candidate child already present in JingleS5B transport element.",
+                        )),
+                        None => vec![],
+                    };
                 candidates.push(Candidate::try_from(child.clone())?);
                 TransportPayload::Candidates(candidates)
             } else if child.is("activated", ns::JINGLE_S5B) {
                 if payload.is_some() {
-                    return Err(Error::ParseError("Non-activated child already present in JingleS5B transport element."));
+                    return Err(Error::ParseError(
+                        "Non-activated child already present in JingleS5B transport element.",
+                    ));
                 }
                 let cid = get_attr!(child, "cid", required);
                 TransportPayload::Activated(cid)
             } else if child.is("candidate-error", ns::JINGLE_S5B) {
                 if payload.is_some() {
-                    return Err(Error::ParseError("Non-candidate-error child already present in JingleS5B transport element."));
+                    return Err(Error::ParseError(
+                        "Non-candidate-error child already present in JingleS5B transport element.",
+                    ));
                 }
                 TransportPayload::CandidateError
             } else if child.is("candidate-used", ns::JINGLE_S5B) {
                 if payload.is_some() {
-                    return Err(Error::ParseError("Non-candidate-used child already present in JingleS5B transport element."));
+                    return Err(Error::ParseError(
+                        "Non-candidate-used child already present in JingleS5B transport element.",
+                    ));
                 }
                 let cid = get_attr!(child, "cid", required);
                 TransportPayload::CandidateUsed(cid)
             } else if child.is("proxy-error", ns::JINGLE_S5B) {
                 if payload.is_some() {
-                    return Err(Error::ParseError("Non-proxy-error child already present in JingleS5B transport element."));
+                    return Err(Error::ParseError(
+                        "Non-proxy-error child already present in JingleS5B transport element.",
+                    ));
                 }
                 TransportPayload::ProxyError
             } else {
-                return Err(Error::ParseError("Unknown child in JingleS5B transport element."));
+                return Err(Error::ParseError(
+                    "Unknown child in JingleS5B transport element.",
+                ));
             });
         }
         let payload = payload.unwrap_or(TransportPayload::None);
@@ -233,49 +243,40 @@ impl TryFrom<Element> for Transport {
 impl From<Transport> for Element {
     fn from(transport: Transport) -> Element {
         Element::builder("transport")
-                .ns(ns::JINGLE_S5B)
-                .attr("sid", transport.sid)
-                .attr("dstaddr", transport.dstaddr)
-                .attr("mode", transport.mode)
-                .append(match transport.payload {
-                     TransportPayload::Candidates(candidates) => {
-                         candidates.into_iter()
-                                   .map(Element::from)
-                                   .collect::<Vec<_>>()
-                     },
-                     TransportPayload::Activated(cid) => {
-                         vec!(Element::builder("activated")
-                                      .ns(ns::JINGLE_S5B)
-                                      .attr("cid", cid)
-                                      .build())
-                     },
-                     TransportPayload::CandidateError => {
-                         vec!(Element::builder("candidate-error")
-                                      .ns(ns::JINGLE_S5B)
-                                      .build())
-                     },
-                     TransportPayload::CandidateUsed(cid) => {
-                         vec!(Element::builder("candidate-used")
-                                      .ns(ns::JINGLE_S5B)
-                                      .attr("cid", cid)
-                                      .build())
-                     },
-                     TransportPayload::ProxyError => {
-                         vec!(Element::builder("proxy-error")
-                                      .ns(ns::JINGLE_S5B)
-                                      .build())
-                     },
-                     TransportPayload::None => vec!(),
-                 })
-                .build()
+            .ns(ns::JINGLE_S5B)
+            .attr("sid", transport.sid)
+            .attr("dstaddr", transport.dstaddr)
+            .attr("mode", transport.mode)
+            .append(match transport.payload {
+                TransportPayload::Candidates(candidates) => candidates
+                    .into_iter()
+                    .map(Element::from)
+                    .collect::<Vec<_>>(),
+                TransportPayload::Activated(cid) => vec![Element::builder("activated")
+                    .ns(ns::JINGLE_S5B)
+                    .attr("cid", cid)
+                    .build()],
+                TransportPayload::CandidateError => vec![Element::builder("candidate-error")
+                    .ns(ns::JINGLE_S5B)
+                    .build()],
+                TransportPayload::CandidateUsed(cid) => vec![Element::builder("candidate-used")
+                    .ns(ns::JINGLE_S5B)
+                    .attr("cid", cid)
+                    .build()],
+                TransportPayload::ProxyError => {
+                    vec![Element::builder("proxy-error").ns(ns::JINGLE_S5B).build()]
+                }
+                TransportPayload::None => vec![],
+            })
+            .build()
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::str::FromStr;
     use crate::compare_elements::NamespaceAwareCompare;
+    use std::str::FromStr;
 
     #[cfg(target_pointer_width = "32")]
     #[test]
@@ -303,7 +304,9 @@ mod tests {
 
     #[test]
     fn test_simple() {
-        let elem: Element = "<transport xmlns='urn:xmpp:jingle:transports:s5b:1' sid='coucou'/>".parse().unwrap();
+        let elem: Element = "<transport xmlns='urn:xmpp:jingle:transports:s5b:1' sid='coucou'/>"
+            .parse()
+            .unwrap();
         let transport = Transport::try_from(elem).unwrap();
         assert_eq!(transport.sid, StreamId(String::from("coucou")));
         assert_eq!(transport.dstaddr, None);
@@ -334,14 +337,14 @@ mod tests {
             sid: StreamId(String::from("coucou")),
             dstaddr: None,
             mode: Mode::Tcp,
-            payload: TransportPayload::Candidates(vec!(Candidate {
+            payload: TransportPayload::Candidates(vec![Candidate {
                 cid: CandidateId(String::from("coucou")),
                 host: IpAddr::from_str("127.0.0.1").unwrap(),
                 jid: Jid::from_str("coucou@coucou").unwrap(),
                 port: None,
                 priority: 0u32,
                 type_: Type::Direct,
-            })),
+            }]),
         };
         let elem2: Element = transport.into();
         assert!(elem.compare_to(&elem2));

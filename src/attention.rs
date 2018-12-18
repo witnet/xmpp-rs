@@ -8,7 +8,9 @@ use crate::message::MessagePayload;
 
 generate_empty_element!(
     /// Requests the attention of the recipient.
-    Attention, "attention", ATTENTION
+    Attention,
+    "attention",
+    ATTENTION
 );
 
 impl MessagePayload for Attention {}
@@ -16,9 +18,9 @@ impl MessagePayload for Attention {}
 #[cfg(test)]
 mod tests {
     use super::*;
-    use try_from::TryFrom;
-    use minidom::Element;
     use crate::error::Error;
+    use minidom::Element;
+    use try_from::TryFrom;
 
     #[test]
     fn test_size() {
@@ -33,7 +35,9 @@ mod tests {
 
     #[test]
     fn test_invalid_child() {
-        let elem: Element = "<attention xmlns='urn:xmpp:attention:0'><coucou/></attention>".parse().unwrap();
+        let elem: Element = "<attention xmlns='urn:xmpp:attention:0'><coucou/></attention>"
+            .parse()
+            .unwrap();
         let error = Attention::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
@@ -44,7 +48,9 @@ mod tests {
 
     #[test]
     fn test_invalid_attribute() {
-        let elem: Element = "<attention xmlns='urn:xmpp:attention:0' coucou=''/>".parse().unwrap();
+        let elem: Element = "<attention xmlns='urn:xmpp:attention:0' coucou=''/>"
+            .parse()
+            .unwrap();
         let error = Attention::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,

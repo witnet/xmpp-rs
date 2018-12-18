@@ -4,16 +4,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use try_from::TryFrom;
-
-use minidom::Element;
-use jid::Jid;
-
-use crate::error::Error;
-use crate::ns;
-
-use crate::iq::{IqGetPayload, IqResultPayload};
 use crate::data_forms::{DataForm, DataFormType};
+use crate::error::Error;
+use crate::iq::{IqGetPayload, IqResultPayload};
+use crate::ns;
+use jid::Jid;
+use minidom::Element;
+use try_from::TryFrom;
 
 generate_element!(
 /// Structure representing a `<query xmlns='http://jabber.org/protocol/disco#info'/>` element.
@@ -59,16 +56,24 @@ impl TryFrom<Element> for Identity {
     fn try_from(elem: Element) -> Result<Identity, Error> {
         check_self!(elem, "identity", DISCO_INFO, "disco#info identity");
         check_no_children!(elem, "disco#info identity");
-        check_no_unknown_attributes!(elem, "disco#info identity", ["category", "type", "xml:lang", "name"]);
+        check_no_unknown_attributes!(
+            elem,
+            "disco#info identity",
+            ["category", "type", "xml:lang", "name"]
+        );
 
         let category = get_attr!(elem, "category", required);
         if category == "" {
-            return Err(Error::ParseError("Identity must have a non-empty 'category' attribute."))
+            return Err(Error::ParseError(
+                "Identity must have a non-empty 'category' attribute.",
+            ));
         }
 
         let type_ = get_attr!(elem, "type", required);
         if type_ == "" {
-            return Err(Error::ParseError("Identity must have a non-empty 'type' attribute."))
+            return Err(Error::ParseError(
+                "Identity must have a non-empty 'type' attribute.",
+            ));
         }
 
         Ok(Identity {
@@ -83,12 +88,12 @@ impl TryFrom<Element> for Identity {
 impl From<Identity> for Element {
     fn from(identity: Identity) -> Element {
         Element::builder("identity")
-                .ns(ns::DISCO_INFO)
-                .attr("category", identity.category)
-                .attr("type", identity.type_)
-                .attr("xml:lang", identity.lang)
-                .attr("name", identity.name)
-                .build()
+            .ns(ns::DISCO_INFO)
+            .attr("category", identity.category)
+            .attr("type", identity.type_)
+            .attr("xml:lang", identity.lang)
+            .attr("name", identity.name)
+            .build()
     }
 }
 
@@ -122,9 +127,9 @@ impl TryFrom<Element> for DiscoInfoResult {
 
         let mut result = DiscoInfoResult {
             node: get_attr!(elem, "node", optional),
-            identities: vec!(),
-            features: vec!(),
-            extensions: vec!(),
+            identities: vec![],
+            features: vec![],
+            extensions: vec![],
         };
 
         for child in elem.children() {
@@ -137,7 +142,9 @@ impl TryFrom<Element> for DiscoInfoResult {
             } else if child.is("x", ns::DATA_FORMS) {
                 let data_form = DataForm::try_from(child.clone())?;
                 if data_form.type_ != DataFormType::Result_ {
-                    return Err(Error::ParseError("Data form must have a 'result' type in disco#info."));
+                    return Err(Error::ParseError(
+                        "Data form must have a 'result' type in disco#info.",
+                    ));
                 }
                 if data_form.form_type.is_none() {
                     return Err(Error::ParseError("Data form found without a FORM_TYPE."));
@@ -149,13 +156,21 @@ impl TryFrom<Element> for DiscoInfoResult {
         }
 
         if result.identities.is_empty() {
-            return Err(Error::ParseError("There must be at least one identity in disco#info."));
+            return Err(Error::ParseError(
+                "There must be at least one identity in disco#info.",
+            ));
         }
         if result.features.is_empty() {
-            return Err(Error::ParseError("There must be at least one feature in disco#info."));
+            return Err(Error::ParseError(
+                "There must be at least one feature in disco#info.",
+            ));
         }
-        if !result.features.contains(&Feature { var: ns::DISCO_INFO.to_owned() }) {
-            return Err(Error::ParseError("disco#info feature not present in disco#info."));
+        if !result.features.contains(&Feature {
+            var: ns::DISCO_INFO.to_owned(),
+        }) {
+            return Err(Error::ParseError(
+                "disco#info feature not present in disco#info.",
+            ));
         }
 
         Ok(result)
@@ -165,12 +180,12 @@ impl TryFrom<Element> for DiscoInfoResult {
 impl From<DiscoInfoResult> for Element {
     fn from(disco: DiscoInfoResult) -> Element {
         Element::builder("query")
-                .ns(ns::DISCO_INFO)
-                .attr("node", disco.node)
-                .append(disco.identities)
-                .append(disco.features)
-                .append(disco.extensions)
-                .build()
+            .ns(ns::DISCO_INFO)
+            .attr("node", disco.node)
+            .append(disco.identities)
+            .append(disco.features)
+            .append(disco.extensions)
+            .build()
     }
 }
 
@@ -295,7 +310,10 @@ mod tests {
 
     #[test]
     fn test_invalid() {
-        let elem: Element = "<query xmlns='http://jabber.org/protocol/disco#info'><coucou/></query>".parse().unwrap();
+        let elem: Element =
+            "<query xmlns='http://jabber.org/protocol/disco#info'><coucou/></query>"
+                .parse()
+                .unwrap();
         let error = DiscoInfoResult::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
@@ -306,7 +324,10 @@ mod tests {
 
     #[test]
     fn test_invalid_identity() {
-        let elem: Element = "<query xmlns='http://jabber.org/protocol/disco#info'><identity/></query>".parse().unwrap();
+        let elem: Element =
+            "<query xmlns='http://jabber.org/protocol/disco#info'><identity/></query>"
+                .parse()
+                .unwrap();
         let error = DiscoInfoResult::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
@@ -314,13 +335,19 @@ mod tests {
         };
         assert_eq!(message, "Required attribute 'category' missing.");
 
-        let elem: Element = "<query xmlns='http://jabber.org/protocol/disco#info'><identity category=''/></query>".parse().unwrap();
+        let elem: Element =
+            "<query xmlns='http://jabber.org/protocol/disco#info'><identity category=''/></query>"
+                .parse()
+                .unwrap();
         let error = DiscoInfoResult::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
         };
-        assert_eq!(message, "Identity must have a non-empty 'category' attribute.");
+        assert_eq!(
+            message,
+            "Identity must have a non-empty 'category' attribute."
+        );
 
         let elem: Element = "<query xmlns='http://jabber.org/protocol/disco#info'><identity category='coucou'/></query>".parse().unwrap();
         let error = DiscoInfoResult::try_from(elem).unwrap_err();
@@ -341,7 +368,10 @@ mod tests {
 
     #[test]
     fn test_invalid_feature() {
-        let elem: Element = "<query xmlns='http://jabber.org/protocol/disco#info'><feature/></query>".parse().unwrap();
+        let elem: Element =
+            "<query xmlns='http://jabber.org/protocol/disco#info'><feature/></query>"
+                .parse()
+                .unwrap();
         let error = DiscoInfoResult::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
@@ -352,13 +382,18 @@ mod tests {
 
     #[test]
     fn test_invalid_result() {
-        let elem: Element = "<query xmlns='http://jabber.org/protocol/disco#info'/>".parse().unwrap();
+        let elem: Element = "<query xmlns='http://jabber.org/protocol/disco#info'/>"
+            .parse()
+            .unwrap();
         let error = DiscoInfoResult::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
         };
-        assert_eq!(message, "There must be at least one identity in disco#info.");
+        assert_eq!(
+            message,
+            "There must be at least one identity in disco#info."
+        );
 
         let elem: Element = "<query xmlns='http://jabber.org/protocol/disco#info'><identity category='client' type='pc'/></query>".parse().unwrap();
         let error = DiscoInfoResult::try_from(elem).unwrap_err();
@@ -379,23 +414,31 @@ mod tests {
 
     #[test]
     fn test_simple_items() {
-        let elem: Element = "<query xmlns='http://jabber.org/protocol/disco#items'/>".parse().unwrap();
+        let elem: Element = "<query xmlns='http://jabber.org/protocol/disco#items'/>"
+            .parse()
+            .unwrap();
         let query = DiscoItemsQuery::try_from(elem).unwrap();
         assert!(query.node.is_none());
 
-        let elem: Element = "<query xmlns='http://jabber.org/protocol/disco#items' node='coucou'/>".parse().unwrap();
+        let elem: Element = "<query xmlns='http://jabber.org/protocol/disco#items' node='coucou'/>"
+            .parse()
+            .unwrap();
         let query = DiscoItemsQuery::try_from(elem).unwrap();
         assert_eq!(query.node, Some(String::from("coucou")));
     }
 
     #[test]
     fn test_simple_items_result() {
-        let elem: Element = "<query xmlns='http://jabber.org/protocol/disco#items'/>".parse().unwrap();
+        let elem: Element = "<query xmlns='http://jabber.org/protocol/disco#items'/>"
+            .parse()
+            .unwrap();
         let query = DiscoItemsResult::try_from(elem).unwrap();
         assert!(query.node.is_none());
         assert!(query.items.is_empty());
 
-        let elem: Element = "<query xmlns='http://jabber.org/protocol/disco#items' node='coucou'/>".parse().unwrap();
+        let elem: Element = "<query xmlns='http://jabber.org/protocol/disco#items' node='coucou'/>"
+            .parse()
+            .unwrap();
         let query = DiscoItemsResult::try_from(elem).unwrap();
         assert_eq!(query.node, Some(String::from("coucou")));
         assert!(query.items.is_empty());

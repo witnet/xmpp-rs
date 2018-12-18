@@ -74,12 +74,30 @@ impl TryFrom<Element> for SetQuery {
 impl From<SetQuery> for Element {
     fn from(set: SetQuery) -> Element {
         Element::builder("set")
-                .ns(ns::RSM)
-                .append(set.max.map(|max| Element::builder("max").ns(ns::RSM).append(format!("{}", max)).build()))
-                .append(set.after.map(|after| Element::builder("after").ns(ns::RSM).append(after).build()))
-                .append(set.before.map(|before| Element::builder("before").ns(ns::RSM).append(before).build()))
-                .append(set.index.map(|index| Element::builder("index").ns(ns::RSM).append(format!("{}", index)).build()))
-                .build()
+            .ns(ns::RSM)
+            .append(set.max.map(|max| {
+                Element::builder("max")
+                    .ns(ns::RSM)
+                    .append(format!("{}", max))
+                    .build()
+            }))
+            .append(
+                set.after
+                    .map(|after| Element::builder("after").ns(ns::RSM).append(after).build()),
+            )
+            .append(set.before.map(|before| {
+                Element::builder("before")
+                    .ns(ns::RSM)
+                    .append(before)
+                    .build()
+            }))
+            .append(set.index.map(|index| {
+                Element::builder("index")
+                    .ns(ns::RSM)
+                    .append(format!("{}", index))
+                    .build()
+            }))
+            .build()
     }
 }
 
@@ -138,18 +156,27 @@ impl TryFrom<Element> for SetResult {
 
 impl From<SetResult> for Element {
     fn from(set: SetResult) -> Element {
-        let first = set.first.clone()
-                             .map(|first| Element::builder("first")
-                                                  .ns(ns::RSM)
-                                                  .attr("index", set.first_index)
-                                                  .append(first)
-                                                  .build());
-        Element::builder("set")
+        let first = set.first.clone().map(|first| {
+            Element::builder("first")
                 .ns(ns::RSM)
+                .attr("index", set.first_index)
                 .append(first)
-                .append(set.last.map(|last| Element::builder("last").ns(ns::RSM).append(last).build()))
-                .append(set.count.map(|count| Element::builder("count").ns(ns::RSM).append(format!("{}", count)).build()))
                 .build()
+        });
+        Element::builder("set")
+            .ns(ns::RSM)
+            .append(first)
+            .append(
+                set.last
+                    .map(|last| Element::builder("last").ns(ns::RSM).append(last).build()),
+            )
+            .append(set.count.map(|count| {
+                Element::builder("count")
+                    .ns(ns::RSM)
+                    .append(format!("{}", count))
+                    .build()
+            }))
+            .build()
     }
 }
 
@@ -174,14 +201,18 @@ mod tests {
 
     #[test]
     fn test_simple() {
-        let elem: Element = "<set xmlns='http://jabber.org/protocol/rsm'/>".parse().unwrap();
+        let elem: Element = "<set xmlns='http://jabber.org/protocol/rsm'/>"
+            .parse()
+            .unwrap();
         let set = SetQuery::try_from(elem).unwrap();
         assert_eq!(set.max, None);
         assert_eq!(set.after, None);
         assert_eq!(set.before, None);
         assert_eq!(set.index, None);
 
-        let elem: Element = "<set xmlns='http://jabber.org/protocol/rsm'/>".parse().unwrap();
+        let elem: Element = "<set xmlns='http://jabber.org/protocol/rsm'/>"
+            .parse()
+            .unwrap();
         let set = SetResult::try_from(elem).unwrap();
         match set.first {
             Some(_) => panic!(),
@@ -193,7 +224,9 @@ mod tests {
 
     #[test]
     fn test_unknown() {
-        let elem: Element = "<replace xmlns='urn:xmpp:message-correct:0'/>".parse().unwrap();
+        let elem: Element = "<replace xmlns='urn:xmpp:message-correct:0'/>"
+            .parse()
+            .unwrap();
         let error = SetQuery::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
@@ -201,7 +234,9 @@ mod tests {
         };
         assert_eq!(message, "This is not a RSM set element.");
 
-        let elem: Element = "<replace xmlns='urn:xmpp:message-correct:0'/>".parse().unwrap();
+        let elem: Element = "<replace xmlns='urn:xmpp:message-correct:0'/>"
+            .parse()
+            .unwrap();
         let error = SetResult::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
@@ -212,7 +247,9 @@ mod tests {
 
     #[test]
     fn test_invalid_child() {
-        let elem: Element = "<set xmlns='http://jabber.org/protocol/rsm'><coucou/></set>".parse().unwrap();
+        let elem: Element = "<set xmlns='http://jabber.org/protocol/rsm'><coucou/></set>"
+            .parse()
+            .unwrap();
         let error = SetQuery::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
@@ -220,7 +257,9 @@ mod tests {
         };
         assert_eq!(message, "Unknown child in set element.");
 
-        let elem: Element = "<set xmlns='http://jabber.org/protocol/rsm'><coucou/></set>".parse().unwrap();
+        let elem: Element = "<set xmlns='http://jabber.org/protocol/rsm'><coucou/></set>"
+            .parse()
+            .unwrap();
         let error = SetResult::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
@@ -231,7 +270,9 @@ mod tests {
 
     #[test]
     fn test_serialise() {
-        let elem: Element = "<set xmlns='http://jabber.org/protocol/rsm'/>".parse().unwrap();
+        let elem: Element = "<set xmlns='http://jabber.org/protocol/rsm'/>"
+            .parse()
+            .unwrap();
         let rsm = SetQuery {
             max: None,
             after: None,
@@ -241,7 +282,9 @@ mod tests {
         let elem2 = rsm.into();
         assert_eq!(elem, elem2);
 
-        let elem: Element = "<set xmlns='http://jabber.org/protocol/rsm'/>".parse().unwrap();
+        let elem: Element = "<set xmlns='http://jabber.org/protocol/rsm'/>"
+            .parse()
+            .unwrap();
         let rsm = SetResult {
             first: None,
             first_index: None,
@@ -254,7 +297,10 @@ mod tests {
 
     #[test]
     fn test_first_index() {
-        let elem: Element = "<set xmlns='http://jabber.org/protocol/rsm'><first index='4'>coucou</first></set>".parse().unwrap();
+        let elem: Element =
+            "<set xmlns='http://jabber.org/protocol/rsm'><first index='4'>coucou</first></set>"
+                .parse()
+                .unwrap();
         let elem1 = elem.clone();
         let set = SetResult::try_from(elem).unwrap();
         assert_eq!(set.first, Some(String::from("coucou")));

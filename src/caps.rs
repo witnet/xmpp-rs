@@ -4,23 +4,20 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use try_from::TryFrom;
-
-use crate::presence::PresencePayload;
-use crate::disco::{Feature, Identity, DiscoInfoResult, DiscoInfoQuery};
 use crate::data_forms::DataForm;
-use crate::hashes::{Hash, Algo};
-
-use minidom::Element;
+use crate::disco::{DiscoInfoQuery, DiscoInfoResult, Feature, Identity};
 use crate::error::Error;
+use crate::hashes::{Algo, Hash};
 use crate::ns;
+use crate::presence::PresencePayload;
 use base64;
-
+use blake2::VarBlake2b;
+use digest::{Digest, Input, VariableOutput};
+use minidom::Element;
 use sha1::Sha1;
 use sha2::{Sha256, Sha512};
 use sha3::{Sha3_256, Sha3_512};
-use blake2::VarBlake2b;
-use digest::{Digest, VariableOutput, Input};
+use try_from::TryFrom;
 
 /// Represents a capability hash for a given client.
 #[derive(Debug, Clone)]
@@ -65,12 +62,12 @@ impl TryFrom<Element> for Caps {
 impl From<Caps> for Element {
     fn from(caps: Caps) -> Element {
         Element::builder("c")
-                .ns(ns::CAPS)
-                .attr("ext", caps.ext)
-                .attr("hash", caps.hash.algo)
-                .attr("node", caps.node)
-                .attr("ver", base64::encode(&caps.hash.hash))
-                .build()
+            .ns(ns::CAPS)
+            .attr("ext", caps.ext)
+            .attr("hash", caps.hash.algo)
+            .attr("node", caps.node)
+            .attr("ver", base64::encode(&caps.hash.hash))
+            .build()
     }
 }
 
@@ -81,8 +78,8 @@ fn compute_item(field: &str) -> Vec<u8> {
 }
 
 fn compute_items<T, F: Fn(&T) -> Vec<u8>>(things: &[T], encode: F) -> Vec<u8> {
-    let mut string: Vec<u8> = vec!();
-    let mut accumulator: Vec<Vec<u8>> = vec!();
+    let mut string: Vec<u8> = vec![];
+    let mut accumulator: Vec<Vec<u8>> = vec![];
     for thing in things {
         let bytes = encode(thing);
         accumulator.push(bytes);
@@ -114,7 +111,7 @@ fn compute_identities(identities: &[Identity]) -> Vec<u8> {
 
 fn compute_extensions(extensions: &[DataForm]) -> Vec<u8> {
     compute_items(extensions, |extension| {
-        let mut bytes = vec!();
+        let mut bytes = vec![];
         // TODO: maybe handle the error case?
         if let Some(ref form_type) = extension.form_type {
             bytes.extend_from_slice(form_type.as_bytes());
@@ -125,8 +122,9 @@ fn compute_extensions(extensions: &[DataForm]) -> Vec<u8> {
                 continue;
             }
             bytes.append(&mut compute_item(&field.var));
-            bytes.append(&mut compute_items(&field.values,
-                                            |value| compute_item(value)));
+            bytes.append(&mut compute_items(&field.values, |value| {
+                compute_item(value)
+            }));
         }
         bytes
     })
@@ -143,7 +141,7 @@ pub fn compute_disco(disco: &DiscoInfoResult) -> Vec<u8> {
     let features_string = compute_features(&disco.features);
     let extensions_string = compute_extensions(&disco.extensions);
 
-    let mut final_string = vec!();
+    let mut final_string = vec![];
     final_string.extend(identities_string);
     final_string.extend(features_string);
     final_string.extend(extensions_string);
@@ -164,33 +162,33 @@ pub fn hash_caps(data: &[u8], algo: Algo) -> Result<Hash, String> {
             Algo::Sha_1 => {
                 let hash = Sha1::digest(data);
                 get_hash_vec(hash.as_slice())
-            },
+            }
             Algo::Sha_256 => {
                 let hash = Sha256::digest(data);
                 get_hash_vec(hash.as_slice())
-            },
+            }
             Algo::Sha_512 => {
                 let hash = Sha512::digest(data);
                 get_hash_vec(hash.as_slice())
-            },
+            }
             Algo::Sha3_256 => {
                 let hash = Sha3_256::digest(data);
                 get_hash_vec(hash.as_slice())
-            },
+            }
             Algo::Sha3_512 => {
                 let hash = Sha3_512::digest(data);
                 get_hash_vec(hash.as_slice())
-            },
+            }
             Algo::Blake2b_256 => {
                 let mut hasher = VarBlake2b::new(32).unwrap();
                 hasher.input(data);
                 hasher.vec_result()
-            },
+            }
             Algo::Blake2b_512 => {
                 let mut hasher = VarBlake2b::new(64).unwrap();
                 hasher.input(data);
                 hasher.vec_result()
-            },
+            }
             Algo::Unknown(algo) => return Err(format!("Unknown algorithm: {}.", algo)),
         },
         algo: algo,
@@ -229,7 +227,10 @@ mod tests {
         let caps = Caps::try_from(elem).unwrap();
         assert_eq!(caps.node, String::from("coucou"));
         assert_eq!(caps.hash.algo, Algo::Sha_256);
-        assert_eq!(caps.hash.hash, base64::decode("K1Njy3HZBThlo4moOD5gBGhn0U0oK7/CbfLlIUDi6o4=").unwrap());
+        assert_eq!(
+            caps.hash.hash,
+            base64::decode("K1Njy3HZBThlo4moOD5gBGhn0U0oK7/CbfLlIUDi6o4=").unwrap()
+        );
     }
 
     #[test]
@@ -262,8 +263,10 @@ mod tests {
   <feature var='http://jabber.org/protocol/disco#items'/>
   <feature var='http://jabber.org/protocol/muc'/>
 </query>
-"#.parse().unwrap();
-        
+"#
+        .parse()
+        .unwrap();
+
         let data = b"client/pc//Exodus 0.9.1<http://jabber.org/protocol/caps<http://jabber.org/protocol/disco#info<http://jabber.org/protocol/disco#items<http://jabber.org/protocol/muc<";
         let mut expected = Vec::with_capacity(data.len());
         expected.extend_from_slice(data);
@@ -272,7 +275,10 @@ mod tests {
         assert_eq!(caps, expected);
 
         let sha_1 = caps::hash_caps(&caps, Algo::Sha_1).unwrap();
-        assert_eq!(sha_1.hash, base64::decode("QgayPKawpkPSDYmwT/WM94uAlu0=").unwrap());
+        assert_eq!(
+            sha_1.hash,
+            base64::decode("QgayPKawpkPSDYmwT/WM94uAlu0=").unwrap()
+        );
     }
 
     #[test]
@@ -308,7 +314,9 @@ mod tests {
     </field>
   </x>
 </query>
-"#.parse().unwrap();
+"#
+        .parse()
+        .unwrap();
         let data = b"client/pc/el/\xce\xa8 0.11<client/pc/en/Psi 0.11<http://jabber.org/protocol/caps<http://jabber.org/protocol/disco#info<http://jabber.org/protocol/disco#items<http://jabber.org/protocol/muc<urn:xmpp:dataforms:softwareinfo<ip_version<ipv4<ipv6<os<Mac<os_version<10.5.1<software<Psi<software_version<0.11<";
         let mut expected = Vec::with_capacity(data.len());
         expected.extend_from_slice(data);
@@ -317,6 +325,9 @@ mod tests {
         assert_eq!(caps, expected);
 
         let sha_1 = caps::hash_caps(&caps, Algo::Sha_1).unwrap();
-        assert_eq!(sha_1.hash, base64::decode("q07IKJEyjvHSyhy//CH0CxmKi8w=").unwrap());
+        assert_eq!(
+            sha_1.hash,
+            base64::decode("q07IKJEyjvHSyhy//CH0CxmKi8w=").unwrap()
+        );
     }
 }

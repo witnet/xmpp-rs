@@ -9,7 +9,9 @@ use crate::message::MessagePayload;
 generate_empty_element!(
     /// Requests that this message is acked by the final recipient once
     /// received.
-    Request, "request", RECEIPTS
+    Request,
+    "request",
+    RECEIPTS
 );
 
 impl MessagePayload for Request {}
@@ -29,9 +31,9 @@ impl MessagePayload for Received {}
 #[cfg(test)]
 mod tests {
     use super::*;
-    use try_from::TryFrom;
-    use minidom::Element;
     use crate::ns;
+    use minidom::Element;
+    use try_from::TryFrom;
 
     #[cfg(target_pointer_width = "32")]
     #[test]
@@ -55,7 +57,9 @@ mod tests {
         let elem: Element = "<received xmlns='urn:xmpp:receipts'/>".parse().unwrap();
         Received::try_from(elem).unwrap();
 
-        let elem: Element = "<received xmlns='urn:xmpp:receipts' id='coucou'/>".parse().unwrap();
+        let elem: Element = "<received xmlns='urn:xmpp:receipts' id='coucou'/>"
+            .parse()
+            .unwrap();
         Received::try_from(elem).unwrap();
     }
 

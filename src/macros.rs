@@ -5,34 +5,40 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 macro_rules! get_attr {
-    ($elem:ident, $attr:tt, $type:tt) => (
+    ($elem:ident, $attr:tt, $type:tt) => {
         get_attr!($elem, $attr, $type, value, value.parse()?)
-    );
-    ($elem:ident, $attr:tt, optional_empty, $value:ident, $func:expr) => (
+    };
+    ($elem:ident, $attr:tt, optional_empty, $value:ident, $func:expr) => {
         match $elem.attr($attr) {
             Some("") => None,
             Some($value) => Some($func),
             None => None,
         }
-    );
-    ($elem:ident, $attr:tt, optional, $value:ident, $func:expr) => (
+    };
+    ($elem:ident, $attr:tt, optional, $value:ident, $func:expr) => {
         match $elem.attr($attr) {
             Some($value) => Some($func),
             None => None,
         }
-    );
-    ($elem:ident, $attr:tt, required, $value:ident, $func:expr) => (
+    };
+    ($elem:ident, $attr:tt, required, $value:ident, $func:expr) => {
         match $elem.attr($attr) {
             Some($value) => $func,
-            None => return Err(crate::error::Error::ParseError(concat!("Required attribute '", $attr, "' missing."))),
+            None => {
+                return Err(crate::error::Error::ParseError(concat!(
+                    "Required attribute '",
+                    $attr,
+                    "' missing."
+                )))
+            }
         }
-    );
-    ($elem:ident, $attr:tt, default, $value:ident, $func:expr) => (
+    };
+    ($elem:ident, $attr:tt, default, $value:ident, $func:expr) => {
         match $elem.attr($attr) {
             Some($value) => $func,
             None => ::std::default::Default::default(),
         }
-    );
+    };
 }
 
 macro_rules! generate_attribute {
@@ -211,38 +217,54 @@ macro_rules! generate_attribute_enum {
 }
 
 macro_rules! check_self {
-    ($elem:ident, $name:tt, $ns:ident) => (
+    ($elem:ident, $name:tt, $ns:ident) => {
         check_self!($elem, $name, $ns, $name);
-    );
-    ($elem:ident, $name:tt, $ns:ident, $pretty_name:tt) => (
+    };
+    ($elem:ident, $name:tt, $ns:ident, $pretty_name:tt) => {
         if !$elem.is($name, crate::ns::$ns) {
-            return Err(crate::error::Error::ParseError(concat!("This is not a ", $pretty_name, " element.")));
+            return Err(crate::error::Error::ParseError(concat!(
+                "This is not a ",
+                $pretty_name,
+                " element."
+            )));
         }
-    );
+    };
 }
 
 macro_rules! check_ns_only {
-    ($elem:ident, $name:tt, $ns:ident) => (
+    ($elem:ident, $name:tt, $ns:ident) => {
         if !$elem.has_ns(crate::ns::$ns) {
-            return Err(crate::error::Error::ParseError(concat!("This is not a ", $name, " element.")));
+            return Err(crate::error::Error::ParseError(concat!(
+                "This is not a ",
+                $name,
+                " element."
+            )));
         }
-    );
+    };
 }
 
 macro_rules! check_no_children {
-    ($elem:ident, $name:tt) => (
+    ($elem:ident, $name:tt) => {
         for _ in $elem.children() {
-            return Err(crate::error::Error::ParseError(concat!("Unknown child in ", $name, " element.")));
+            return Err(crate::error::Error::ParseError(concat!(
+                "Unknown child in ",
+                $name,
+                " element."
+            )));
         }
-    );
+    };
 }
 
 macro_rules! check_no_attributes {
-    ($elem:ident, $name:tt) => (
+    ($elem:ident, $name:tt) => {
         for _ in $elem.attrs() {
-            return Err(crate::error::Error::ParseError(concat!("Unknown attribute in ", $name, " element.")));
+            return Err(crate::error::Error::ParseError(concat!(
+                "Unknown attribute in ",
+                $name,
+                " element."
+            )));
         }
-    );
+    };
 }
 
 macro_rules! check_no_unknown_attributes {
@@ -351,76 +373,95 @@ macro_rules! start_decl {
 }
 
 macro_rules! start_parse_elem {
-    ($temp:ident: Vec) => (
+    ($temp:ident: Vec) => {
         let mut $temp = Vec::new();
-    );
-    ($temp:ident: Option) => (
+    };
+    ($temp:ident: Option) => {
         let mut $temp = None;
-    );
-    ($temp:ident: Required) => (
+    };
+    ($temp:ident: Required) => {
         let mut $temp = None;
-    );
+    };
 }
 
 macro_rules! do_parse {
-    ($elem:ident, Element) => (
+    ($elem:ident, Element) => {
         $elem.clone()
-    );
-    ($elem:ident, String) => (
+    };
+    ($elem:ident, String) => {
         $elem.text()
-    );
-    ($elem:ident, $constructor:ident) => (
+    };
+    ($elem:ident, $constructor:ident) => {
         $constructor::try_from($elem.clone())?
-    );
+    };
 }
 
 macro_rules! do_parse_elem {
-    ($temp:ident: Vec = $constructor:ident => $elem:ident, $name:tt, $parent_name:tt) => (
+    ($temp:ident: Vec = $constructor:ident => $elem:ident, $name:tt, $parent_name:tt) => {
         $temp.push(do_parse!($elem, $constructor));
-    );
-    ($temp:ident: Option = $constructor:ident => $elem:ident, $name:tt, $parent_name:tt) => (
+    };
+    ($temp:ident: Option = $constructor:ident => $elem:ident, $name:tt, $parent_name:tt) => {
         if $temp.is_some() {
-            return Err(crate::error::Error::ParseError(concat!("Element ", $parent_name, " must not have more than one ", $name, " child.")));
+            return Err(crate::error::Error::ParseError(concat!(
+                "Element ",
+                $parent_name,
+                " must not have more than one ",
+                $name,
+                " child."
+            )));
         }
         $temp = Some(do_parse!($elem, $constructor));
-    );
-    ($temp:ident: Required = $constructor:ident => $elem:ident, $name:tt, $parent_name:tt) => (
+    };
+    ($temp:ident: Required = $constructor:ident => $elem:ident, $name:tt, $parent_name:tt) => {
         if $temp.is_some() {
-            return Err(crate::error::Error::ParseError(concat!("Element ", $parent_name, " must not have more than one ", $name, " child.")));
+            return Err(crate::error::Error::ParseError(concat!(
+                "Element ",
+                $parent_name,
+                " must not have more than one ",
+                $name,
+                " child."
+            )));
         }
         $temp = Some(do_parse!($elem, $constructor));
-    );
+    };
 }
 
 macro_rules! finish_parse_elem {
-    ($temp:ident: Vec = $name:tt, $parent_name:tt) => (
+    ($temp:ident: Vec = $name:tt, $parent_name:tt) => {
         $temp
-    );
-    ($temp:ident: Option = $name:tt, $parent_name:tt) => (
+    };
+    ($temp:ident: Option = $name:tt, $parent_name:tt) => {
         $temp
-    );
-    ($temp:ident: Required = $name:tt, $parent_name:tt) => (
-        $temp.ok_or(crate::error::Error::ParseError(concat!("Missing child ", $name, " in ", $parent_name, " element.")))?
-    );
+    };
+    ($temp:ident: Required = $name:tt, $parent_name:tt) => {
+        $temp.ok_or(crate::error::Error::ParseError(concat!(
+            "Missing child ",
+            $name,
+            " in ",
+            $parent_name,
+            " element."
+        )))?
+    };
 }
 
 macro_rules! generate_serialiser {
-    ($parent:ident, $elem:ident, Required, String, ($name:tt, $ns:ident)) => (
+    ($parent:ident, $elem:ident, Required, String, ($name:tt, $ns:ident)) => {
         ::minidom::Element::builder($name)
             .ns(crate::ns::$ns)
             .append($parent.$elem)
             .build()
-    );
-    ($parent:ident, $elem:ident, Option, String, ($name:tt, $ns:ident)) => (
-        $parent.$elem.map(|elem|
+    };
+    ($parent:ident, $elem:ident, Option, String, ($name:tt, $ns:ident)) => {
+        $parent.$elem.map(|elem| {
             ::minidom::Element::builder($name)
                 .ns(crate::ns::$ns)
                 .append(elem)
-                .build())
-    );
-    ($parent:ident, $elem:ident, $_:ident, $constructor:ident, ($name:tt, $ns:ident)) => (
+                .build()
+        })
+    };
+    ($parent:ident, $elem:ident, $_:ident, $constructor:ident, ($name:tt, $ns:ident)) => {
         $parent.$elem
-    );
+    };
 }
 
 macro_rules! generate_element {

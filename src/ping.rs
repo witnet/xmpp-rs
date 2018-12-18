@@ -10,7 +10,9 @@ use crate::iq::IqGetPayload;
 generate_empty_element!(
     /// Represents a ping to the recipient, which must be answered with an
     /// empty `<iq/>` or with an error.
-    Ping, "ping", PING
+    Ping,
+    "ping",
+    PING
 );
 
 impl IqGetPayload for Ping {}
@@ -18,9 +20,9 @@ impl IqGetPayload for Ping {}
 #[cfg(test)]
 mod tests {
     use super::*;
-    use try_from::TryFrom;
-    use minidom::Element;
     use crate::error::Error;
+    use minidom::Element;
+    use try_from::TryFrom;
 
     #[test]
     fn test_size() {
@@ -42,7 +44,9 @@ mod tests {
 
     #[test]
     fn test_invalid() {
-        let elem: Element = "<ping xmlns='urn:xmpp:ping'><coucou/></ping>".parse().unwrap();
+        let elem: Element = "<ping xmlns='urn:xmpp:ping'><coucou/></ping>"
+            .parse()
+            .unwrap();
         let error = Ping::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,

@@ -4,21 +4,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use try_from::TryFrom;
-
-use minidom::Element;
-use jid::Jid;
-
-use crate::error::Error;
-
-use crate::message::MessagePayload;
-use crate::iq::{IqGetPayload, IqSetPayload, IqResultPayload};
 use crate::data_forms::DataForm;
-use crate::rsm::{SetQuery, SetResult};
+use crate::error::Error;
 use crate::forwarding::Forwarded;
-use crate::pubsub::NodeName;
-
+use crate::iq::{IqGetPayload, IqResultPayload, IqSetPayload};
+use crate::message::MessagePayload;
 use crate::ns;
+use crate::pubsub::NodeName;
+use crate::rsm::{SetQuery, SetResult};
+use jid::Jid;
+use minidom::Element;
+use try_from::TryFrom;
 
 generate_id!(
     /// An identifier matching a result message to the query requesting it.
@@ -70,7 +66,9 @@ impl MessagePayload for Result_ {}
 
 generate_attribute!(
     /// True when the end of a MAM query has been reached.
-    Complete, "complete", bool
+    Complete,
+    "complete",
+    bool
 );
 
 generate_element!(
@@ -133,8 +131,8 @@ impl TryFrom<Element> for Prefs {
     fn try_from(elem: Element) -> Result<Prefs, Error> {
         check_self!(elem, "prefs", MAM);
         check_no_unknown_attributes!(elem, "prefs", ["default"]);
-        let mut always = vec!();
-        let mut never = vec!();
+        let mut always = vec![];
+        let mut never = vec![];
         for child in elem.children() {
             if child.is("always", ns::MAM) {
                 for jid_elem in child.children() {
@@ -155,7 +153,11 @@ impl TryFrom<Element> for Prefs {
             }
         }
         let default_ = get_attr!(elem, "default", required);
-        Ok(Prefs { default_, always, never })
+        Ok(Prefs {
+            default_,
+            always,
+            never,
+        })
     }
 }
 
@@ -163,26 +165,27 @@ fn serialise_jid_list(name: &str, jids: Vec<Jid>) -> Option<Element> {
     if jids.is_empty() {
         None
     } else {
-        Some(Element::builder(name)
-                     .ns(ns::MAM)
-                     .append(jids.into_iter()
-                                 .map(|jid| Element::builder("jid")
-                                                    .ns(ns::MAM)
-                                                    .append(jid)
-                                                    .build())
-                                 .collect::<Vec<_>>())
-                     .build())
+        Some(
+            Element::builder(name)
+                .ns(ns::MAM)
+                .append(
+                    jids.into_iter()
+                        .map(|jid| Element::builder("jid").ns(ns::MAM).append(jid).build())
+                        .collect::<Vec<_>>(),
+                )
+                .build(),
+        )
     }
 }
 
 impl From<Prefs> for Element {
     fn from(prefs: Prefs) -> Element {
         Element::builder("prefs")
-                .ns(ns::MAM)
-                .attr("default", prefs.default_)
-                .append(serialise_jid_list("always", prefs.always))
-                .append(serialise_jid_list("never", prefs.never))
-                .build()
+            .ns(ns::MAM)
+            .attr("default", prefs.default_)
+            .append(serialise_jid_list("always", prefs.always))
+            .append(serialise_jid_list("never", prefs.never))
+            .build()
     }
 }
 
@@ -233,7 +236,9 @@ mod tests {
     </message>
   </forwarded>
 </result>
-"#.parse().unwrap();
+"#
+        .parse()
+        .unwrap();
         #[cfg(feature = "component")]
         let elem: Element = r#"
 <result xmlns='urn:xmpp:mam:2' queryid='f27' id='28482-98726-73623'>
@@ -257,7 +262,9 @@ mod tests {
     <last>09af3-cc343-b409f</last>
   </set>
 </fin>
-"#.parse().unwrap();
+"#
+        .parse()
+        .unwrap();
         Fin::try_from(elem).unwrap();
     }
 
@@ -274,7 +281,9 @@ mod tests {
     </field>
   </x>
 </query>
-"#.parse().unwrap();
+"#
+        .parse()
+        .unwrap();
         Query::try_from(elem).unwrap();
     }
 
@@ -294,13 +303,17 @@ mod tests {
     <max>10</max>
   </set>
 </query>
-"#.parse().unwrap();
+"#
+        .parse()
+        .unwrap();
         Query::try_from(elem).unwrap();
     }
 
     #[test]
     fn test_prefs_get() {
-        let elem: Element = "<prefs xmlns='urn:xmpp:mam:2' default='always'/>".parse().unwrap();
+        let elem: Element = "<prefs xmlns='urn:xmpp:mam:2' default='always'/>"
+            .parse()
+            .unwrap();
         let prefs = Prefs::try_from(elem).unwrap();
         assert_eq!(prefs.always, vec!());
         assert_eq!(prefs.never, vec!());
@@ -310,7 +323,9 @@ mod tests {
   <always/>
   <never/>
 </prefs>
-"#.parse().unwrap();
+"#
+        .parse()
+        .unwrap();
         let prefs = Prefs::try_from(elem).unwrap();
         assert_eq!(prefs.always, vec!());
         assert_eq!(prefs.never, vec!());
@@ -327,10 +342,18 @@ mod tests {
     <jid>montague@montague.lit</jid>
   </never>
 </prefs>
-"#.parse().unwrap();
+"#
+        .parse()
+        .unwrap();
         let prefs = Prefs::try_from(elem).unwrap();
-        assert_eq!(prefs.always, vec!(Jid::from_str("romeo@montague.lit").unwrap()));
-        assert_eq!(prefs.never, vec!(Jid::from_str("montague@montague.lit").unwrap()));
+        assert_eq!(
+            prefs.always,
+            vec!(Jid::from_str("romeo@montague.lit").unwrap())
+        );
+        assert_eq!(
+            prefs.never,
+            vec!(Jid::from_str("montague@montague.lit").unwrap())
+        );
 
         let elem2 = Element::from(prefs.clone());
         println!("{:?}", elem2);
@@ -342,7 +365,9 @@ mod tests {
 
     #[test]
     fn test_invalid_child() {
-        let elem: Element = "<query xmlns='urn:xmpp:mam:2'><coucou/></query>".parse().unwrap();
+        let elem: Element = "<query xmlns='urn:xmpp:mam:2'><coucou/></query>"
+            .parse()
+            .unwrap();
         let error = Query::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
@@ -354,7 +379,12 @@ mod tests {
     #[test]
     fn test_serialise() {
         let elem: Element = "<query xmlns='urn:xmpp:mam:2'/>".parse().unwrap();
-        let replace = Query { queryid: None, node: None, form: None, set: None };
+        let replace = Query {
+            queryid: None,
+            node: None,
+            form: None,
+            set: None,
+        };
         let elem2 = replace.into();
         assert_eq!(elem, elem2);
     }

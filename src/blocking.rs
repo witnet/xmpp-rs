@@ -4,20 +4,19 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use try_from::TryFrom;
-
+use crate::error::Error;
+use crate::iq::{IqGetPayload, IqResultPayload, IqSetPayload};
+use crate::ns;
 use jid::Jid;
 use minidom::Element;
-
-use crate::error::Error;
-
-use crate::ns;
-use crate::iq::{IqGetPayload, IqSetPayload, IqResultPayload};
+use try_from::TryFrom;
 
 generate_empty_element!(
     /// The element requesting the blocklist, the result iq will contain a
     /// [BlocklistResult].
-    BlocklistRequest, "blocklist", BLOCKING
+    BlocklistRequest,
+    "blocklist",
+    BLOCKING
 );
 
 impl IqGetPayload for BlocklistRequest {}
@@ -67,7 +66,8 @@ macro_rules! generate_blocking_element {
 generate_blocking_element!(
     /// The element containing the current blocklist, as a reply from
     /// [BlocklistRequest].
-    BlocklistResult, "blocklist"
+    BlocklistResult,
+    "blocklist"
 );
 
 impl IqResultPayload for BlocklistResult {}
@@ -75,7 +75,8 @@ impl IqResultPayload for BlocklistResult {}
 // TODO: Prevent zero elements from being allowed.
 generate_blocking_element!(
     /// A query to block one or more JIDs.
-    Block, "block"
+    Block,
+    "block"
 );
 
 impl IqSetPayload for Block {}
@@ -84,14 +85,17 @@ generate_blocking_element!(
     /// A query to unblock one or more JIDs, or all of them.
     ///
     /// Warning: not putting any JID there means clearing out the blocklist.
-    Unblock, "unblock"
+    Unblock,
+    "unblock"
 );
 
 impl IqSetPayload for Unblock {}
 
 generate_empty_element!(
     /// The application-specific error condition when a message is blocked.
-    Blocked, "blocked", BLOCKING_ERRORS
+    Blocked,
+    "blocked",
+    BLOCKING_ERRORS
 );
 
 #[cfg(test)]
@@ -138,7 +142,7 @@ mod tests {
     #[test]
     fn test_items() {
         let elem: Element = "<blocklist xmlns='urn:xmpp:blocking'><item jid='coucou@coucou'/><item jid='domain'/></blocklist>".parse().unwrap();
-        let two_items = vec!(
+        let two_items = vec![
             Jid {
                 node: Some(String::from("coucou")),
                 domain: String::from("coucou"),
@@ -149,7 +153,7 @@ mod tests {
                 domain: String::from("domain"),
                 resource: None,
             },
-        );
+        ];
 
         let request_elem = elem.clone();
         let error = BlocklistRequest::try_from(request_elem).unwrap_err();
@@ -174,7 +178,9 @@ mod tests {
 
     #[test]
     fn test_invalid() {
-        let elem: Element = "<blocklist xmlns='urn:xmpp:blocking' coucou=''/>".parse().unwrap();
+        let elem: Element = "<blocklist xmlns='urn:xmpp:blocking' coucou=''/>"
+            .parse()
+            .unwrap();
         let request_elem = elem.clone();
         let error = BlocklistRequest::try_from(request_elem).unwrap_err();
         let message = match error {
@@ -191,7 +197,9 @@ mod tests {
         };
         assert_eq!(message, "Unknown attribute in blocklist element.");
 
-        let elem: Element = "<block xmlns='urn:xmpp:blocking' coucou=''/>".parse().unwrap();
+        let elem: Element = "<block xmlns='urn:xmpp:blocking' coucou=''/>"
+            .parse()
+            .unwrap();
         let error = Block::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
@@ -199,7 +207,9 @@ mod tests {
         };
         assert_eq!(message, "Unknown attribute in block element.");
 
-        let elem: Element = "<unblock xmlns='urn:xmpp:blocking' coucou=''/>".parse().unwrap();
+        let elem: Element = "<unblock xmlns='urn:xmpp:blocking' coucou=''/>"
+            .parse()
+            .unwrap();
         let error = Unblock::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,

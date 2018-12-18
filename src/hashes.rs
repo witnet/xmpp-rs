@@ -4,14 +4,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use std::str::FromStr;
-
-use minidom::IntoAttributeValue;
-
 use crate::error::Error;
-
 use crate::helpers::Base64;
 use base64;
+use minidom::IntoAttributeValue;
+use std::str::FromStr;
 
 /// List of the algorithms we support, or Unknown.
 #[allow(non_camel_case_types)]
@@ -114,10 +111,7 @@ generate_element!(
 impl Hash {
     /// Creates a [Hash] element with the given algo and data.
     pub fn new(algo: Algo, hash: Vec<u8>) -> Hash {
-        Hash {
-            algo,
-            hash,
-        }
+        Hash { algo, hash }
     }
 
     /// Like [new](#method.new) but takes base64-encoded data before decoding
@@ -130,8 +124,8 @@ impl Hash {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use try_from::TryFrom;
     use minidom::Element;
+    use try_from::TryFrom;
 
     #[cfg(target_pointer_width = "32")]
     #[test]
@@ -152,12 +146,17 @@ mod tests {
         let elem: Element = "<hash xmlns='urn:xmpp:hashes:2' algo='sha-256'>2XarmwTlNxDAMkvymloX3S5+VbylNrJt/l5QyPa+YoU=</hash>".parse().unwrap();
         let hash = Hash::try_from(elem).unwrap();
         assert_eq!(hash.algo, Algo::Sha_256);
-        assert_eq!(hash.hash, base64::decode("2XarmwTlNxDAMkvymloX3S5+VbylNrJt/l5QyPa+YoU=").unwrap());
+        assert_eq!(
+            hash.hash,
+            base64::decode("2XarmwTlNxDAMkvymloX3S5+VbylNrJt/l5QyPa+YoU=").unwrap()
+        );
     }
 
     #[test]
     fn test_unknown() {
-        let elem: Element = "<replace xmlns='urn:xmpp:message-correct:0'/>".parse().unwrap();
+        let elem: Element = "<replace xmlns='urn:xmpp:message-correct:0'/>"
+            .parse()
+            .unwrap();
         let error = Hash::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
@@ -168,7 +167,9 @@ mod tests {
 
     #[test]
     fn test_invalid_child() {
-        let elem: Element = "<hash xmlns='urn:xmpp:hashes:2'><coucou/></hash>".parse().unwrap();
+        let elem: Element = "<hash xmlns='urn:xmpp:hashes:2'><coucou/></hash>"
+            .parse()
+            .unwrap();
         let error = Hash::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,

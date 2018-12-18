@@ -24,15 +24,15 @@
 
 #![deny(missing_docs)]
 
-extern crate minidom;
-extern crate jid;
 extern crate base64;
+extern crate blake2;
+extern crate chrono;
 extern crate digest;
+extern crate jid;
+extern crate minidom;
 extern crate sha1;
 extern crate sha2;
 extern crate sha3;
-extern crate blake2;
-extern crate chrono;
 extern crate try_from;
 
 pub use minidom::Element;
@@ -53,19 +53,19 @@ mod macros;
 mod compare_elements;
 
 /// RFC 6120: Extensible Messaging and Presence Protocol (XMPP): Core
+pub mod bind;
+/// RFC 6120: Extensible Messaging and Presence Protocol (XMPP): Core
+pub mod iq;
+/// RFC 6120: Extensible Messaging and Presence Protocol (XMPP): Core
 pub mod message;
 /// RFC 6120: Extensible Messaging and Presence Protocol (XMPP): Core
 pub mod presence;
 /// RFC 6120: Extensible Messaging and Presence Protocol (XMPP): Core
-pub mod iq;
+pub mod sasl;
 /// RFC 6120: Extensible Messaging and Presence Protocol (XMPP): Core
 pub mod stanza_error;
 /// RFC 6120: Extensible Messaging and Presence Protocol (XMPP): Core
 pub mod stream;
-/// RFC 6120: Extensible Messaging and Presence Protocol (XMPP): Core
-pub mod sasl;
-/// RFC 6120: Extensible Messaging and Presence Protocol (XMPP): Core
-pub mod bind;
 
 /// RFC 6121: Extensible Messaging and Presence Protocol (XMPP): Instant Messaging and Presence
 pub mod roster;

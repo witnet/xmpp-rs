@@ -24,10 +24,10 @@ attributes: [
 #[cfg(test)]
 mod tests {
     use super::*;
-    use try_from::TryFrom;
-    use minidom::Element;
     use crate::error::Error;
+    use minidom::Element;
     use std::error::Error as StdError;
+    use try_from::TryFrom;
 
     #[cfg(target_pointer_width = "32")]
     #[test]
@@ -43,7 +43,10 @@ mod tests {
 
     #[test]
     fn test_simple() {
-        let elem: Element = "<transport xmlns='urn:xmpp:jingle:transports:ibb:1' block-size='3' sid='coucou'/>".parse().unwrap();
+        let elem: Element =
+            "<transport xmlns='urn:xmpp:jingle:transports:ibb:1' block-size='3' sid='coucou'/>"
+                .parse()
+                .unwrap();
         let transport = Transport::try_from(elem).unwrap();
         assert_eq!(transport.block_size, 3);
         assert_eq!(transport.sid, StreamId(String::from("coucou")));
@@ -52,7 +55,9 @@ mod tests {
 
     #[test]
     fn test_invalid() {
-        let elem: Element = "<transport xmlns='urn:xmpp:jingle:transports:ibb:1'/>".parse().unwrap();
+        let elem: Element = "<transport xmlns='urn:xmpp:jingle:transports:ibb:1'/>"
+            .parse()
+            .unwrap();
         let error = Transport::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
@@ -60,15 +65,23 @@ mod tests {
         };
         assert_eq!(message, "Required attribute 'block-size' missing.");
 
-        let elem: Element = "<transport xmlns='urn:xmpp:jingle:transports:ibb:1' block-size='65536'/>".parse().unwrap();
+        let elem: Element =
+            "<transport xmlns='urn:xmpp:jingle:transports:ibb:1' block-size='65536'/>"
+                .parse()
+                .unwrap();
         let error = Transport::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseIntError(error) => error,
             _ => panic!(),
         };
-        assert_eq!(message.description(), "number too large to fit in target type");
+        assert_eq!(
+            message.description(),
+            "number too large to fit in target type"
+        );
 
-        let elem: Element = "<transport xmlns='urn:xmpp:jingle:transports:ibb:1' block-size='-5'/>".parse().unwrap();
+        let elem: Element = "<transport xmlns='urn:xmpp:jingle:transports:ibb:1' block-size='-5'/>"
+            .parse()
+            .unwrap();
         let error = Transport::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseIntError(error) => error,
@@ -76,7 +89,10 @@ mod tests {
         };
         assert_eq!(message.description(), "invalid digit found in string");
 
-        let elem: Element = "<transport xmlns='urn:xmpp:jingle:transports:ibb:1' block-size='128'/>".parse().unwrap();
+        let elem: Element =
+            "<transport xmlns='urn:xmpp:jingle:transports:ibb:1' block-size='128'/>"
+                .parse()
+                .unwrap();
         let error = Transport::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,

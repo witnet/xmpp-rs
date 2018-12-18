@@ -263,14 +263,16 @@ generate_element_enum!(
 
 generate_elem_id!(
     /// Free-form text description of the mood.
-    Text, "text", MOOD
+    Text,
+    "text",
+    MOOD
 );
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use try_from::TryFrom;
     use minidom::Element;
+    use try_from::TryFrom;
 
     #[cfg(target_pointer_width = "32")]
     #[test]
@@ -288,14 +290,18 @@ mod tests {
 
     #[test]
     fn test_simple() {
-        let elem: Element = "<happy xmlns='http://jabber.org/protocol/mood'/>".parse().unwrap();
+        let elem: Element = "<happy xmlns='http://jabber.org/protocol/mood'/>"
+            .parse()
+            .unwrap();
         let mood = MoodEnum::try_from(elem).unwrap();
         assert_eq!(mood, MoodEnum::Happy);
     }
 
     #[test]
     fn test_text() {
-        let elem: Element = "<text xmlns='http://jabber.org/protocol/mood'>Yay!</text>".parse().unwrap();
+        let elem: Element = "<text xmlns='http://jabber.org/protocol/mood'>Yay!</text>"
+            .parse()
+            .unwrap();
         let text = Text::try_from(elem).unwrap();
         assert_eq!(text.0, String::from("Yay!"));
     }

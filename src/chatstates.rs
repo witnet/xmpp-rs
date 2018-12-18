@@ -32,10 +32,10 @@ impl MessagePayload for ChatState {}
 #[cfg(test)]
 mod tests {
     use super::*;
-    use try_from::TryFrom;
-    use minidom::Element;
     use crate::error::Error;
     use crate::ns;
+    use minidom::Element;
+    use try_from::TryFrom;
 
     #[test]
     fn test_size() {
@@ -44,13 +44,17 @@ mod tests {
 
     #[test]
     fn test_simple() {
-        let elem: Element = "<active xmlns='http://jabber.org/protocol/chatstates'/>".parse().unwrap();
+        let elem: Element = "<active xmlns='http://jabber.org/protocol/chatstates'/>"
+            .parse()
+            .unwrap();
         ChatState::try_from(elem).unwrap();
     }
 
     #[test]
     fn test_invalid() {
-        let elem: Element = "<coucou xmlns='http://jabber.org/protocol/chatstates'/>".parse().unwrap();
+        let elem: Element = "<coucou xmlns='http://jabber.org/protocol/chatstates'/>"
+            .parse()
+            .unwrap();
         let error = ChatState::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
@@ -61,7 +65,9 @@ mod tests {
 
     #[test]
     fn test_invalid_child() {
-        let elem: Element = "<gone xmlns='http://jabber.org/protocol/chatstates'><coucou/></gone>".parse().unwrap();
+        let elem: Element = "<gone xmlns='http://jabber.org/protocol/chatstates'><coucou/></gone>"
+            .parse()
+            .unwrap();
         let error = ChatState::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
@@ -72,7 +78,9 @@ mod tests {
 
     #[test]
     fn test_invalid_attribute() {
-        let elem: Element = "<inactive xmlns='http://jabber.org/protocol/chatstates' coucou=''/>".parse().unwrap();
+        let elem: Element = "<inactive xmlns='http://jabber.org/protocol/chatstates' coucou=''/>"
+            .parse()
+            .unwrap();
         let error = ChatState::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,

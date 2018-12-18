@@ -24,7 +24,9 @@ impl A {
 
 generate_attribute!(
     /// Whether to allow resumption of a previous stream.
-    ResumeAttr, "resume", bool
+    ResumeAttr,
+    "resume",
+    bool
 );
 
 generate_element!(
@@ -103,7 +105,9 @@ generate_element!(
 
 generate_empty_element!(
     /// Requests the currently received stanzas by the other party.
-    R, "r", SM
+    R,
+    "r",
+    SM
 );
 
 generate_element!(
@@ -135,14 +139,16 @@ generate_element!(
 // TODO: add support for optional and required.
 generate_empty_element!(
     /// Represents availability of Stream Management in `<stream:features/>`.
-    StreamManagement, "sm", SM
+    StreamManagement,
+    "sm",
+    SM
 );
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use try_from::TryFrom;
     use minidom::Element;
+    use try_from::TryFrom;
 
     #[cfg(target_pointer_width = "32")]
     #[test]
@@ -189,12 +195,16 @@ mod tests {
 
     #[test]
     fn resume() {
-        let elem: Element = "<enable xmlns='urn:xmpp:sm:3' resume='true'/>".parse().unwrap();
+        let elem: Element = "<enable xmlns='urn:xmpp:sm:3' resume='true'/>"
+            .parse()
+            .unwrap();
         let enable = Enable::try_from(elem).unwrap();
         assert_eq!(enable.max, None);
         assert_eq!(enable.resume, ResumeAttr::True);
 
-        let elem: Element = "<enabled xmlns='urn:xmpp:sm:3' resume='true' id='coucou' max='600'/>".parse().unwrap();
+        let elem: Element = "<enabled xmlns='urn:xmpp:sm:3' resume='true' id='coucou' max='600'/>"
+            .parse()
+            .unwrap();
         let enabled = Enabled::try_from(elem).unwrap();
         let previd = enabled.id.unwrap();
         assert_eq!(enabled.resume, ResumeAttr::True);
@@ -202,12 +212,16 @@ mod tests {
         assert_eq!(enabled.max, Some(600));
         assert_eq!(enabled.location, None);
 
-        let elem: Element = "<resume xmlns='urn:xmpp:sm:3' h='5' previd='coucou'/>".parse().unwrap();
+        let elem: Element = "<resume xmlns='urn:xmpp:sm:3' h='5' previd='coucou'/>"
+            .parse()
+            .unwrap();
         let resume = Resume::try_from(elem).unwrap();
         assert_eq!(resume.h, 5);
         assert_eq!(resume.previd, previd);
 
-        let elem: Element = "<resumed xmlns='urn:xmpp:sm:3' h='5' previd='coucou'/>".parse().unwrap();
+        let elem: Element = "<resumed xmlns='urn:xmpp:sm:3' h='5' previd='coucou'/>"
+            .parse()
+            .unwrap();
         let resumed = Resumed::try_from(elem).unwrap();
         assert_eq!(resumed.h, 5);
         assert_eq!(resumed.previd, previd);

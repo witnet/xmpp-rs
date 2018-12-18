@@ -37,10 +37,10 @@ impl MessagePayload for OriginId {}
 #[cfg(test)]
 mod tests {
     use super::*;
-    use try_from::TryFrom;
-    use minidom::Element;
     use crate::error::Error;
+    use minidom::Element;
     use std::str::FromStr;
+    use try_from::TryFrom;
 
     #[cfg(target_pointer_width = "32")]
     #[test]
@@ -58,19 +58,25 @@ mod tests {
 
     #[test]
     fn test_simple() {
-        let elem: Element = "<stanza-id xmlns='urn:xmpp:sid:0' id='coucou' by='coucou@coucou'/>".parse().unwrap();
+        let elem: Element = "<stanza-id xmlns='urn:xmpp:sid:0' id='coucou' by='coucou@coucou'/>"
+            .parse()
+            .unwrap();
         let stanza_id = StanzaId::try_from(elem).unwrap();
         assert_eq!(stanza_id.id, String::from("coucou"));
         assert_eq!(stanza_id.by, Jid::from_str("coucou@coucou").unwrap());
 
-        let elem: Element = "<origin-id xmlns='urn:xmpp:sid:0' id='coucou'/>".parse().unwrap();
+        let elem: Element = "<origin-id xmlns='urn:xmpp:sid:0' id='coucou'/>"
+            .parse()
+            .unwrap();
         let origin_id = OriginId::try_from(elem).unwrap();
         assert_eq!(origin_id.id, String::from("coucou"));
     }
 
     #[test]
     fn test_invalid_child() {
-        let elem: Element = "<stanza-id xmlns='urn:xmpp:sid:0'><coucou/></stanza-id>".parse().unwrap();
+        let elem: Element = "<stanza-id xmlns='urn:xmpp:sid:0'><coucou/></stanza-id>"
+            .parse()
+            .unwrap();
         let error = StanzaId::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
@@ -92,7 +98,9 @@ mod tests {
 
     #[test]
     fn test_invalid_by() {
-        let elem: Element = "<stanza-id xmlns='urn:xmpp:sid:0' id='coucou'/>".parse().unwrap();
+        let elem: Element = "<stanza-id xmlns='urn:xmpp:sid:0' id='coucou'/>"
+            .parse()
+            .unwrap();
         let error = StanzaId::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
@@ -103,8 +111,13 @@ mod tests {
 
     #[test]
     fn test_serialise() {
-        let elem: Element = "<stanza-id xmlns='urn:xmpp:sid:0' id='coucou' by='coucou@coucou'/>".parse().unwrap();
-        let stanza_id = StanzaId { id: String::from("coucou"), by: Jid::from_str("coucou@coucou").unwrap() };
+        let elem: Element = "<stanza-id xmlns='urn:xmpp:sid:0' id='coucou' by='coucou@coucou'/>"
+            .parse()
+            .unwrap();
+        let stanza_id = StanzaId {
+            id: String::from("coucou"),
+            by: Jid::from_str("coucou@coucou").unwrap(),
+        };
         let elem2 = stanza_id.into();
         assert_eq!(elem, elem2);
     }

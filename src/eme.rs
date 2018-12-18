@@ -24,9 +24,9 @@ impl MessagePayload for ExplicitMessageEncryption {}
 #[cfg(test)]
 mod tests {
     use super::*;
-    use try_from::TryFrom;
-    use minidom::Element;
     use crate::error::Error;
+    use minidom::Element;
+    use try_from::TryFrom;
 
     #[cfg(target_pointer_width = "32")]
     #[test]
@@ -42,7 +42,9 @@ mod tests {
 
     #[test]
     fn test_simple() {
-        let elem: Element = "<encryption xmlns='urn:xmpp:eme:0' namespace='urn:xmpp:otr:0'/>".parse().unwrap();
+        let elem: Element = "<encryption xmlns='urn:xmpp:eme:0' namespace='urn:xmpp:otr:0'/>"
+            .parse()
+            .unwrap();
         let encryption = ExplicitMessageEncryption::try_from(elem).unwrap();
         assert_eq!(encryption.namespace, "urn:xmpp:otr:0");
         assert_eq!(encryption.name, None);
@@ -55,7 +57,9 @@ mod tests {
 
     #[test]
     fn test_unknown() {
-        let elem: Element = "<replace xmlns='urn:xmpp:message-correct:0'/>".parse().unwrap();
+        let elem: Element = "<replace xmlns='urn:xmpp:message-correct:0'/>"
+            .parse()
+            .unwrap();
         let error = ExplicitMessageEncryption::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
@@ -66,7 +70,9 @@ mod tests {
 
     #[test]
     fn test_invalid_child() {
-        let elem: Element = "<encryption xmlns='urn:xmpp:eme:0'><coucou/></encryption>".parse().unwrap();
+        let elem: Element = "<encryption xmlns='urn:xmpp:eme:0'><coucou/></encryption>"
+            .parse()
+            .unwrap();
         let error = ExplicitMessageEncryption::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
@@ -77,8 +83,13 @@ mod tests {
 
     #[test]
     fn test_serialise() {
-        let elem: Element = "<encryption xmlns='urn:xmpp:eme:0' namespace='coucou'/>".parse().unwrap();
-        let eme = ExplicitMessageEncryption { namespace: String::from("coucou"), name: None };
+        let elem: Element = "<encryption xmlns='urn:xmpp:eme:0' namespace='coucou'/>"
+            .parse()
+            .unwrap();
+        let eme = ExplicitMessageEncryption {
+            namespace: String::from("coucou"),
+            name: None,
+        };
         let elem2 = eme.into();
         assert_eq!(elem, elem2);
     }

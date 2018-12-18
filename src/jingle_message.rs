@@ -4,15 +4,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use try_from::TryFrom;
-
-use minidom::Element;
-
 use crate::error::Error;
-
 use crate::jingle::SessionId;
-
 use crate::ns;
+use minidom::Element;
+use try_from::TryFrom;
 
 /// Defines a protocol for broadcasting Jingle requests to all of the clients
 /// of a user.
@@ -72,9 +68,11 @@ impl TryFrom<Element> for JingleMI {
                 }
                 JingleMI::Propose {
                     sid: get_sid(elem)?,
-                    description: description.ok_or(Error::ParseError("Propose element doesn’t contain a description."))?,
+                    description: description.ok_or(Error::ParseError(
+                        "Propose element doesn’t contain a description.",
+                    ))?,
                 }
-            },
+            }
             "retract" => JingleMI::Retract(check_empty_and_get_sid(elem)?),
             "accept" => JingleMI::Accept(check_empty_and_get_sid(elem)?),
             "proceed" => JingleMI::Proceed(check_empty_and_get_sid(elem)?),
@@ -87,33 +85,24 @@ impl TryFrom<Element> for JingleMI {
 impl From<JingleMI> for Element {
     fn from(jingle_mi: JingleMI) -> Element {
         match jingle_mi {
-            JingleMI::Propose { sid, description } => {
-                Element::builder("propose")
-                        .ns(ns::JINGLE_MESSAGE)
-                        .attr("id", sid)
-                        .append(description)
-            },
-            JingleMI::Retract(sid) => {
-                Element::builder("retract")
-                        .ns(ns::JINGLE_MESSAGE)
-                        .attr("id", sid)
-            }
-            JingleMI::Accept(sid) => {
-                Element::builder("accept")
-                        .ns(ns::JINGLE_MESSAGE)
-                        .attr("id", sid)
-            }
-            JingleMI::Proceed(sid) => {
-                Element::builder("proceed")
-                        .ns(ns::JINGLE_MESSAGE)
-                        .attr("id", sid)
-            }
-            JingleMI::Reject(sid) => {
-                Element::builder("reject")
-                        .ns(ns::JINGLE_MESSAGE)
-                        .attr("id", sid)
-            }
-        }.build()
+            JingleMI::Propose { sid, description } => Element::builder("propose")
+                .ns(ns::JINGLE_MESSAGE)
+                .attr("id", sid)
+                .append(description),
+            JingleMI::Retract(sid) => Element::builder("retract")
+                .ns(ns::JINGLE_MESSAGE)
+                .attr("id", sid),
+            JingleMI::Accept(sid) => Element::builder("accept")
+                .ns(ns::JINGLE_MESSAGE)
+                .attr("id", sid),
+            JingleMI::Proceed(sid) => Element::builder("proceed")
+                .ns(ns::JINGLE_MESSAGE)
+                .attr("id", sid),
+            JingleMI::Reject(sid) => Element::builder("reject")
+                .ns(ns::JINGLE_MESSAGE)
+                .attr("id", sid),
+        }
+        .build()
     }
 }
 
@@ -135,13 +124,18 @@ mod tests {
 
     #[test]
     fn test_simple() {
-        let elem: Element = "<accept xmlns='urn:xmpp:jingle-message:0' id='coucou'/>".parse().unwrap();
+        let elem: Element = "<accept xmlns='urn:xmpp:jingle-message:0' id='coucou'/>"
+            .parse()
+            .unwrap();
         JingleMI::try_from(elem).unwrap();
     }
 
     #[test]
     fn test_invalid_child() {
-        let elem: Element = "<propose xmlns='urn:xmpp:jingle-message:0' id='coucou'><coucou/></propose>".parse().unwrap();
+        let elem: Element =
+            "<propose xmlns='urn:xmpp:jingle-message:0' id='coucou'><coucou/></propose>"
+                .parse()
+                .unwrap();
         let error = JingleMI::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,

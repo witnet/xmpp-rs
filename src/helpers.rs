@@ -4,8 +4,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use base64;
 use crate::error::Error;
+use base64;
 
 /// Codec for plain text content.
 pub struct PlainText;
@@ -19,9 +19,7 @@ impl PlainText {
     }
 
     pub fn encode(string: &Option<String>) -> Option<String> {
-        string.as_ref().map(|text| {
-            text.to_owned()
-        })
+        string.as_ref().map(|text| text.to_owned())
     }
 }
 

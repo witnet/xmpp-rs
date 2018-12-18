@@ -4,17 +4,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+use crate::data_forms::DataForm;
+use crate::error::Error;
+use crate::iq::{IqGetPayload, IqResultPayload, IqSetPayload};
+use crate::ns;
+use minidom::Element;
 use std::collections::HashMap;
 use try_from::TryFrom;
-
-use minidom::Element;
-
-use crate::error::Error;
-
-use crate::iq::{IqGetPayload, IqSetPayload, IqResultPayload};
-use crate::data_forms::DataForm;
-
-use crate::ns;
 
 /// Query for registering against a service.
 #[derive(Debug, Clone)]
@@ -31,7 +27,6 @@ pub struct Query {
 
     /// A data form the user must fill before being allowed to register.
     pub form: Option<DataForm>,
-
     // Not yet implemented.
     //pub oob: Option<Oob>,
 }
@@ -55,9 +50,26 @@ impl TryFrom<Element> for Query {
             let namespace = child.ns().unwrap();
             if namespace == ns::REGISTER {
                 let name = child.name();
-                let fields = vec!["address", "city", "date", "email", "first", "instructions",
-                                  "key", "last", "misc", "name", "nick", "password", "phone",
-                                  "state", "text", "url", "username", "zip"];
+                let fields = vec![
+                    "address",
+                    "city",
+                    "date",
+                    "email",
+                    "first",
+                    "instructions",
+                    "key",
+                    "last",
+                    "misc",
+                    "name",
+                    "nick",
+                    "password",
+                    "phone",
+                    "state",
+                    "text",
+                    "url",
+                    "username",
+                    "zip",
+                ];
                 if fields.binary_search(&name).is_ok() {
                     query.fields.insert(name.to_owned(), child.text());
                 } else if name == "registered" {
@@ -80,14 +92,26 @@ impl TryFrom<Element> for Query {
 impl From<Query> for Element {
     fn from(query: Query) -> Element {
         Element::builder("query")
-                .ns(ns::REGISTER)
-                .append(if query.registered { Some(Element::builder("registered").ns(ns::REGISTER)) } else { None })
-                .append(query.fields.into_iter().map(|(name, value)| {
-                     Element::builder(name).ns(ns::REGISTER).append(value)
-                 }).collect::<Vec<_>>())
-                .append(if query.remove { Some(Element::builder("remove").ns(ns::REGISTER)) } else { None })
-                .append(query.form)
-                .build()
+            .ns(ns::REGISTER)
+            .append(if query.registered {
+                Some(Element::builder("registered").ns(ns::REGISTER))
+            } else {
+                None
+            })
+            .append(
+                query
+                    .fields
+                    .into_iter()
+                    .map(|(name, value)| Element::builder(name).ns(ns::REGISTER).append(value))
+                    .collect::<Vec<_>>(),
+            )
+            .append(if query.remove {
+                Some(Element::builder("remove").ns(ns::REGISTER))
+            } else {
+                None
+            })
+            .append(query.form)
+            .build()
     }
 }
 
@@ -126,7 +150,9 @@ mod tests {
   <password/>
   <email/>
 </query>
-"#.parse().unwrap();
+"#
+        .parse()
+        .unwrap();
         let query = Query::try_from(elem).unwrap();
         assert_eq!(query.registered, false);
         assert_eq!(query.fields["instructions"], "\n    Choose a username and password for use with this service.\n    Please also provide your email address.\n  ");
@@ -172,16 +198,27 @@ mod tests {
     </field>
   </x>
 </query>
-"#.parse().unwrap();
+"#
+        .parse()
+        .unwrap();
         let elem1 = elem.clone();
         let query = Query::try_from(elem).unwrap();
         assert_eq!(query.registered, false);
         assert!(!query.fields["instructions"].is_empty());
         let form = query.form.clone().unwrap();
         assert!(!form.instructions.unwrap().is_empty());
-        assert!(form.fields.binary_search_by(|field| field.var.cmp(&String::from("first"))).is_ok());
-        assert!(form.fields.binary_search_by(|field| field.var.cmp(&String::from("x-gender"))).is_ok());
-        assert!(form.fields.binary_search_by(|field| field.var.cmp(&String::from("coucou"))).is_err());
+        assert!(form
+            .fields
+            .binary_search_by(|field| field.var.cmp(&String::from("first")))
+            .is_ok());
+        assert!(form
+            .fields
+            .binary_search_by(|field| field.var.cmp(&String::from("x-gender")))
+            .is_ok());
+        assert!(form
+            .fields
+            .binary_search_by(|field| field.var.cmp(&String::from("coucou")))
+            .is_err());
         let elem2 = query.into();
         assert!(elem1.compare_to(&elem2));
     }
@@ -208,7 +245,9 @@ mod tests {
     </field>
   </x>
 </query>
-"#.parse().unwrap();
+"#
+        .parse()
+        .unwrap();
         let elem1 = elem.clone();
         let query = Query::try_from(elem).unwrap();
         assert_eq!(query.registered, false);

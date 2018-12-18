@@ -4,7 +4,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use minidom::{Node, Element};
+use minidom::{Element, Node};
 
 pub trait NamespaceAwareCompare {
     /// Namespace-aware comparison for tests
@@ -14,10 +14,10 @@ pub trait NamespaceAwareCompare {
 impl NamespaceAwareCompare for Node {
     fn compare_to(&self, other: &Self) -> bool {
         match (self, other) {
-            (&Node::Element(ref elem1), &Node::Element(ref elem2)) =>
-                Element::compare_to(elem1, elem2),
-            (&Node::Text(ref text1), &Node::Text(ref text2)) =>
-                text1 == text2,
+            (&Node::Element(ref elem1), &Node::Element(ref elem2)) => {
+                Element::compare_to(elem1, elem2)
+            }
+            (&Node::Text(ref text1), &Node::Text(ref text2)) => text1 == text2,
             _ => false,
         }
     }
@@ -25,20 +25,21 @@ impl NamespaceAwareCompare for Node {
 
 impl NamespaceAwareCompare for Element {
     fn compare_to(&self, other: &Self) -> bool {
-        if self.name() == other.name() &&
-            self.ns() == other.ns() &&
-            self.attrs().eq(other.attrs())
+        if self.name() == other.name() && self.ns() == other.ns() && self.attrs().eq(other.attrs())
         {
             let child_elems = self.children().count();
-            let text_is_whitespace = self.texts()
+            let text_is_whitespace = self
+                .texts()
                 .all(|text| text.chars().all(char::is_whitespace));
             if child_elems > 0 && text_is_whitespace {
                 // Ignore all the whitespace text nodes
-                self.children().zip(other.children())
+                self.children()
+                    .zip(other.children())
                     .all(|(node1, node2)| node1.compare_to(node2))
             } else {
                 // Compare with text nodes
-                self.nodes().zip(other.nodes())
+                self.nodes()
+                    .zip(other.nodes())
                     .all(|(node1, node2)| node1.compare_to(node2))
             }
         } else {

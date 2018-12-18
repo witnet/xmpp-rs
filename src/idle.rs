@@ -4,8 +4,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use crate::presence::PresencePayload;
 use crate::date::DateTime;
+use crate::presence::PresencePayload;
 
 generate_element!(
     /// Represents the last time the user interacted with their system.
@@ -21,11 +21,11 @@ impl PresencePayload for Idle {}
 #[cfg(test)]
 mod tests {
     use super::*;
-    use try_from::TryFrom;
-    use minidom::Element;
     use crate::error::Error;
-    use std::str::FromStr;
+    use minidom::Element;
     use std::error::Error as StdError;
+    use std::str::FromStr;
+    use try_from::TryFrom;
 
     #[test]
     fn test_size() {
@@ -34,13 +34,17 @@ mod tests {
 
     #[test]
     fn test_simple() {
-        let elem: Element = "<idle xmlns='urn:xmpp:idle:1' since='2017-05-21T20:19:55+01:00'/>".parse().unwrap();
+        let elem: Element = "<idle xmlns='urn:xmpp:idle:1' since='2017-05-21T20:19:55+01:00'/>"
+            .parse()
+            .unwrap();
         Idle::try_from(elem).unwrap();
     }
 
     #[test]
     fn test_invalid_child() {
-        let elem: Element = "<idle xmlns='urn:xmpp:idle:1'><coucou/></idle>".parse().unwrap();
+        let elem: Element = "<idle xmlns='urn:xmpp:idle:1'><coucou/></idle>"
+            .parse()
+            .unwrap();
         let error = Idle::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
@@ -63,7 +67,9 @@ mod tests {
     #[test]
     fn test_invalid_date() {
         // There is no thirteenth month.
-        let elem: Element = "<idle xmlns='urn:xmpp:idle:1' since='2017-13-01T12:23:34Z'/>".parse().unwrap();
+        let elem: Element = "<idle xmlns='urn:xmpp:idle:1' since='2017-13-01T12:23:34Z'/>"
+            .parse()
+            .unwrap();
         let error = Idle::try_from(elem).unwrap_err();
         let message = match error {
             Error::ChronoParseError(string) => string,
@@ -72,7 +78,9 @@ mod tests {
         assert_eq!(message.description(), "input is out of range");
 
         // Timezone ≥24:00 aren’t allowed.
-        let elem: Element = "<idle xmlns='urn:xmpp:idle:1' since='2017-05-27T12:11:02+25:00'/>".parse().unwrap();
+        let elem: Element = "<idle xmlns='urn:xmpp:idle:1' since='2017-05-27T12:11:02+25:00'/>"
+            .parse()
+            .unwrap();
         let error = Idle::try_from(elem).unwrap_err();
         let message = match error {
             Error::ChronoParseError(string) => string,
@@ -81,7 +89,9 @@ mod tests {
         assert_eq!(message.description(), "input is out of range");
 
         // Timezone without the : separator aren’t allowed.
-        let elem: Element = "<idle xmlns='urn:xmpp:idle:1' since='2017-05-27T12:11:02+0100'/>".parse().unwrap();
+        let elem: Element = "<idle xmlns='urn:xmpp:idle:1' since='2017-05-27T12:11:02+0100'/>"
+            .parse()
+            .unwrap();
         let error = Idle::try_from(elem).unwrap_err();
         let message = match error {
             Error::ChronoParseError(string) => string,
@@ -90,7 +100,9 @@ mod tests {
         assert_eq!(message.description(), "input contains invalid characters");
 
         // No seconds, error message could be improved.
-        let elem: Element = "<idle xmlns='urn:xmpp:idle:1' since='2017-05-27T12:11+01:00'/>".parse().unwrap();
+        let elem: Element = "<idle xmlns='urn:xmpp:idle:1' since='2017-05-27T12:11+01:00'/>"
+            .parse()
+            .unwrap();
         let error = Idle::try_from(elem).unwrap_err();
         let message = match error {
             Error::ChronoParseError(string) => string,
@@ -99,7 +111,9 @@ mod tests {
         assert_eq!(message.description(), "input contains invalid characters");
 
         // TODO: maybe we’ll want to support this one, as per XEP-0082 §4.
-        let elem: Element = "<idle xmlns='urn:xmpp:idle:1' since='20170527T12:11:02+01:00'/>".parse().unwrap();
+        let elem: Element = "<idle xmlns='urn:xmpp:idle:1' since='20170527T12:11:02+01:00'/>"
+            .parse()
+            .unwrap();
         let error = Idle::try_from(elem).unwrap_err();
         let message = match error {
             Error::ChronoParseError(string) => string,
@@ -108,7 +122,9 @@ mod tests {
         assert_eq!(message.description(), "input contains invalid characters");
 
         // No timezone.
-        let elem: Element = "<idle xmlns='urn:xmpp:idle:1' since='2017-05-27T12:11:02'/>".parse().unwrap();
+        let elem: Element = "<idle xmlns='urn:xmpp:idle:1' since='2017-05-27T12:11:02'/>"
+            .parse()
+            .unwrap();
         let error = Idle::try_from(elem).unwrap_err();
         let message = match error {
             Error::ChronoParseError(string) => string,
@@ -119,8 +135,12 @@ mod tests {
 
     #[test]
     fn test_serialise() {
-        let elem: Element = "<idle xmlns='urn:xmpp:idle:1' since='2017-05-21T20:19:55+01:00'/>".parse().unwrap();
-        let idle = Idle { since: DateTime::from_str("2017-05-21T20:19:55+01:00").unwrap() };
+        let elem: Element = "<idle xmlns='urn:xmpp:idle:1' since='2017-05-21T20:19:55+01:00'/>"
+            .parse()
+            .unwrap();
+        let idle = Idle {
+            since: DateTime::from_str("2017-05-21T20:19:55+01:00").unwrap(),
+        };
         let elem2 = idle.into();
         assert_eq!(elem, elem2);
     }
