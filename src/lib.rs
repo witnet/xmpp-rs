@@ -4,7 +4,6 @@
 //!
 //! For usage, check the documentation on the `Jid` struct.
 
-extern crate failure;
 #[macro_use] extern crate failure_derive;
 
 use std::fmt;
@@ -380,9 +379,6 @@ impl Jid {
     }
 
 }
-
-#[cfg(feature = "minidom")]
-extern crate minidom;
 
 #[cfg(feature = "minidom")]
 use minidom::{IntoAttributeValue, IntoElements, ElementEmitter};

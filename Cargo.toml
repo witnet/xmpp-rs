@@ -13,6 +13,7 @@ documentation = "https://docs.rs/jid"
 readme = "README.md"
 keywords = ["xmpp", "jid"]
 license = "LGPL-3.0+"
+edition = "2018"
 
 [badges]
 gitlab = { repository = "xmpp-rs/jid-rs" }
