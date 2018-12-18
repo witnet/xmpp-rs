@@ -24,17 +24,6 @@
 
 #![deny(missing_docs)]
 
-extern crate base64;
-extern crate blake2;
-extern crate chrono;
-extern crate digest;
-extern crate jid;
-extern crate minidom;
-extern crate sha1;
-extern crate sha2;
-extern crate sha3;
-extern crate try_from;
-
 pub use minidom::Element;
 
 /// Error type returned by every parser on failure.
