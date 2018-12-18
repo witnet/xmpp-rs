@@ -9,14 +9,14 @@ use std::str::FromStr;
 
 use std::collections::BTreeMap;
 
-use hashes::Hash;
-use jingle::{Creator, ContentId};
-use date::DateTime;
+use crate::hashes::Hash;
+use crate::jingle::{Creator, ContentId};
+use crate::date::DateTime;
 
 use minidom::Element;
 
-use error::Error;
-use ns;
+use crate::error::Error;
+use crate::ns;
 
 generate_element!(
     /// Represents a range in a file.
@@ -345,7 +345,7 @@ generate_element!(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use hashes::Algo;
+    use crate::hashes::Algo;
     use base64;
 
     #[cfg(target_pointer_width = "32")]

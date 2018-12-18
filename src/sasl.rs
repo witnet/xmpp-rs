@@ -8,10 +8,10 @@ use std::collections::BTreeMap;
 
 use try_from::TryFrom;
 use minidom::Element;
-use error::Error;
-use ns;
+use crate::error::Error;
+use crate::ns;
 
-use helpers::Base64;
+use crate::helpers::Base64;
 
 generate_attribute!(
     /// The list of available SASL mechanisms.

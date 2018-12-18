@@ -10,9 +10,9 @@ use std::net::IpAddr;
 use minidom::Element;
 use jid::Jid;
 
-use error::Error;
+use crate::error::Error;
 
-use ns;
+use crate::ns;
 
 generate_attribute!(
     /// The type of the connection being proposed by this candidate.
@@ -275,7 +275,7 @@ impl From<Transport> for Element {
 mod tests {
     use super::*;
     use std::str::FromStr;
-    use compare_elements::NamespaceAwareCompare;
+    use crate::compare_elements::NamespaceAwareCompare;
 
     #[cfg(target_pointer_width = "32")]
     #[test]

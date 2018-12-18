@@ -8,9 +8,9 @@ use std::str::FromStr;
 
 use minidom::IntoAttributeValue;
 
-use error::Error;
+use crate::error::Error;
 
-use helpers::Base64;
+use crate::helpers::Base64;
 use base64;
 
 /// List of the algorithms we support, or Unknown.

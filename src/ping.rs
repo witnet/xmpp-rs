@@ -5,7 +5,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use iq::IqGetPayload;
+use crate::iq::IqGetPayload;
 
 generate_empty_element!(
     /// Represents a ping to the recipient, which must be answered with an
@@ -20,7 +20,7 @@ mod tests {
     use super::*;
     use try_from::TryFrom;
     use minidom::Element;
-    use error::Error;
+    use crate::error::Error;
 
     #[test]
     fn test_size() {

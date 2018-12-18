@@ -9,16 +9,16 @@ use try_from::TryFrom;
 use minidom::Element;
 use jid::Jid;
 
-use error::Error;
+use crate::error::Error;
 
-use message::MessagePayload;
-use iq::{IqGetPayload, IqSetPayload, IqResultPayload};
-use data_forms::DataForm;
-use rsm::{SetQuery, SetResult};
-use forwarding::Forwarded;
-use pubsub::NodeName;
+use crate::message::MessagePayload;
+use crate::iq::{IqGetPayload, IqSetPayload, IqResultPayload};
+use crate::data_forms::DataForm;
+use crate::rsm::{SetQuery, SetResult};
+use crate::forwarding::Forwarded;
+use crate::pubsub::NodeName;
 
-use ns;
+use crate::ns;
 
 generate_id!(
     /// An identifier matching a result message to the query requesting it.

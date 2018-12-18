@@ -11,9 +11,9 @@ use minidom::Element;
 
 use jid::Jid;
 
-use error::Error;
+use crate::error::Error;
 
-use ns;
+use crate::ns;
 
 /// Should be implemented on every known payload of a `<message/>`.
 pub trait MessagePayload: TryFrom<Element> + Into<Element> {}
@@ -232,7 +232,7 @@ impl From<Message> for Element {
 mod tests {
     use super::*;
     use std::str::FromStr;
-    use compare_elements::NamespaceAwareCompare;
+    use crate::compare_elements::NamespaceAwareCompare;
 
     #[cfg(target_pointer_width = "32")]
     #[test]

@@ -8,9 +8,9 @@ use try_from::TryFrom;
 
 use minidom::Element;
 
-use error::Error;
+use crate::error::Error;
 
-use ns;
+use crate::ns;
 
 /// Requests paging through a potentially big set of items (represented by an
 /// UID).
@@ -156,7 +156,7 @@ impl From<SetResult> for Element {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use compare_elements::NamespaceAwareCompare;
+    use crate::compare_elements::NamespaceAwareCompare;
 
     #[cfg(target_pointer_width = "32")]
     #[test]

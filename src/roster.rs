@@ -5,7 +5,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use jid::Jid;
-use iq::{IqGetPayload, IqSetPayload, IqResultPayload};
+use crate::iq::{IqGetPayload, IqSetPayload, IqResultPayload};
 
 generate_elem_id!(
     /// Represents a group a contact is part of.
@@ -81,9 +81,9 @@ mod tests {
     use super::*;
     use try_from::TryFrom;
     use minidom::Element;
-    use error::Error;
+    use crate::error::Error;
     use std::str::FromStr;
-    use compare_elements::NamespaceAwareCompare;
+    use crate::compare_elements::NamespaceAwareCompare;
 
     #[cfg(target_pointer_width = "32")]
     #[test]

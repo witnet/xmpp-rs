@@ -4,7 +4,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use message::MessagePayload;
+use crate::message::MessagePayload;
 
 generate_element_enum!(
     /// Enum representing chatstate elements part of the
@@ -34,8 +34,8 @@ mod tests {
     use super::*;
     use try_from::TryFrom;
     use minidom::Element;
-    use error::Error;
-    use ns;
+    use crate::error::Error;
+    use crate::ns;
 
     #[test]
     fn test_size() {

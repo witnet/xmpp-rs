@@ -4,12 +4,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use presence::PresencePayload;
-use disco::{Feature, Identity, DiscoInfoResult, DiscoInfoQuery};
-use data_forms::DataForm;
-use hashes::{Hash, Algo};
+use crate::presence::PresencePayload;
+use crate::disco::{Feature, Identity, DiscoInfoResult, DiscoInfoQuery};
+use crate::data_forms::DataForm;
+use crate::hashes::{Hash, Algo};
 
-use ns;
+use crate::ns;
 use base64;
 
 use sha2::{Sha256, Sha512};
@@ -150,7 +150,7 @@ mod tests {
     use super::*;
     use try_from::TryFrom;
     use minidom::Element;
-    use error::Error;
+    use crate::error::Error;
 
     #[cfg(target_pointer_width = "32")]
     #[test]

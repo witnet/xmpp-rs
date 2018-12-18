@@ -8,15 +8,15 @@ use try_from::TryFrom;
 
 use minidom::Element;
 use jid::Jid;
-use date::DateTime;
+use crate::date::DateTime;
 
-use error::Error;
+use crate::error::Error;
 
-use ns;
+use crate::ns;
 
-use data_forms::DataForm;
+use crate::data_forms::DataForm;
 
-use pubsub::{NodeName, ItemId, Subscription, SubscriptionId};
+use crate::pubsub::{NodeName, ItemId, Subscription, SubscriptionId};
 
 /// One PubSub item from a node.
 #[derive(Debug, Clone)]
@@ -288,7 +288,7 @@ impl From<PubSubEvent> for Element {
 mod tests {
     use super::*;
     use std::str::FromStr;
-    use compare_elements::NamespaceAwareCompare;
+    use crate::compare_elements::NamespaceAwareCompare;
 
     #[test]
     fn missing_items() {

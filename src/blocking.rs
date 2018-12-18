@@ -9,10 +9,10 @@ use try_from::TryFrom;
 use jid::Jid;
 use minidom::Element;
 
-use error::Error;
+use crate::error::Error;
 
-use ns;
-use iq::{IqGetPayload, IqSetPayload, IqResultPayload};
+use crate::ns;
+use crate::iq::{IqGetPayload, IqSetPayload, IqResultPayload};
 
 generate_empty_element!(
     /// The element requesting the blocklist, the result iq will contain a

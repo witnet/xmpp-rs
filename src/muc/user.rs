@@ -11,9 +11,9 @@ use minidom::Element;
 
 use jid::Jid;
 
-use error::Error;
+use crate::error::Error;
 
-use ns;
+use crate::ns;
 
 generate_attribute_enum!(
 /// Lists all of the possible status codes used in MUC presences.
@@ -238,7 +238,7 @@ generate_element!(
 mod tests {
     use super::*;
     use std::error::Error as StdError;
-    use compare_elements::NamespaceAwareCompare;
+    use crate::compare_elements::NamespaceAwareCompare;
 
     #[test]
     fn test_simple() {

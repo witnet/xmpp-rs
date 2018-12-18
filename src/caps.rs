@@ -6,14 +6,14 @@
 
 use try_from::TryFrom;
 
-use presence::PresencePayload;
-use disco::{Feature, Identity, DiscoInfoResult, DiscoInfoQuery};
-use data_forms::DataForm;
-use hashes::{Hash, Algo};
+use crate::presence::PresencePayload;
+use crate::disco::{Feature, Identity, DiscoInfoResult, DiscoInfoQuery};
+use crate::data_forms::DataForm;
+use crate::hashes::{Hash, Algo};
 
 use minidom::Element;
-use error::Error;
-use ns;
+use crate::error::Error;
+use crate::ns;
 use base64;
 
 use sha1::Sha1;
@@ -208,7 +208,7 @@ pub fn query_caps(caps: Caps) -> DiscoInfoQuery {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use caps;
+    use crate::caps;
     use base64;
 
     #[cfg(target_pointer_width = "32")]

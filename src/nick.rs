@@ -14,7 +14,7 @@ mod tests {
     use super::*;
     use try_from::TryFrom;
     use minidom::Element;
-    use error::Error;
+    use crate::error::Error;
 
     #[cfg(target_pointer_width = "32")]
     #[test]

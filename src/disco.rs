@@ -9,11 +9,11 @@ use try_from::TryFrom;
 use minidom::Element;
 use jid::Jid;
 
-use error::Error;
-use ns;
+use crate::error::Error;
+use crate::ns;
 
-use iq::{IqGetPayload, IqResultPayload};
-use data_forms::{DataForm, DataFormType};
+use crate::iq::{IqGetPayload, IqResultPayload};
+use crate::data_forms::{DataForm, DataFormType};
 
 generate_element!(
 /// Structure representing a `<query xmlns='http://jabber.org/protocol/disco#info'/>` element.
@@ -221,7 +221,7 @@ impl IqResultPayload for DiscoItemsResult {}
 #[cfg(test)]
 mod tests {
     use super::*;
-    use compare_elements::NamespaceAwareCompare;
+    use crate::compare_elements::NamespaceAwareCompare;
     use std::str::FromStr;
 
     #[cfg(target_pointer_width = "32")]

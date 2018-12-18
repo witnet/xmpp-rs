@@ -11,6 +11,7 @@ repository = "https://hg.linkmauve.fr/xmpp-parsers"
 keywords = ["xmpp", "xml"]
 categories = ["parsing", "network-programming"]
 license = "MPL-2.0"
+edition = "2018"
 
 [dependencies]
 minidom = "0.9.1"

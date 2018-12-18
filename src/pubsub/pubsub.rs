@@ -9,14 +9,14 @@ use try_from::TryFrom;
 use minidom::Element;
 use jid::Jid;
 
-use error::Error;
+use crate::error::Error;
 
-use ns;
+use crate::ns;
 
-use iq::{IqGetPayload, IqSetPayload, IqResultPayload};
-use data_forms::DataForm;
+use crate::iq::{IqGetPayload, IqSetPayload, IqResultPayload};
+use crate::data_forms::DataForm;
 
-use pubsub::{NodeName, ItemId, Subscription, SubscriptionId};
+use crate::pubsub::{NodeName, ItemId, Subscription, SubscriptionId};
 
 // TODO: a better solution would be to split this into a query and a result elements, like for
 // XEP-0030.
@@ -497,7 +497,7 @@ impl From<PubSub> for Element {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use compare_elements::NamespaceAwareCompare;
+    use crate::compare_elements::NamespaceAwareCompare;
 
     #[test]
     fn create() {

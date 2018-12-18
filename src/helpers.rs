@@ -5,7 +5,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use base64;
-use error::Error;
+use crate::error::Error;
 
 /// Codec for plain text content.
 pub struct PlainText;

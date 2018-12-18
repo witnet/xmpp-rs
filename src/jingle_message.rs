@@ -8,11 +8,11 @@ use try_from::TryFrom;
 
 use minidom::Element;
 
-use error::Error;
+use crate::error::Error;
 
-use jingle::SessionId;
+use crate::jingle::SessionId;
 
-use ns;
+use crate::ns;
 
 /// Defines a protocol for broadcasting Jingle requests to all of the clients
 /// of a user.

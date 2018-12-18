@@ -8,10 +8,10 @@ use try_from::TryFrom;
 
 use minidom::Element;
 
-use error::Error;
-use ns;
+use crate::error::Error;
+use crate::ns;
 
-use media_element::MediaElement;
+use crate::media_element::MediaElement;
 
 generate_element!(
     /// Represents one of the possible values for a list- field.

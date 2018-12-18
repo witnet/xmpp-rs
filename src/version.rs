@@ -4,7 +4,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use iq::{IqGetPayload, IqResultPayload};
+use crate::iq::{IqGetPayload, IqResultPayload};
 
 generate_empty_element!(
     /// Represents a query for the software version a remote entity is using.
@@ -41,7 +41,7 @@ mod tests {
     use super::*;
     use try_from::TryFrom;
     use minidom::Element;
-    use compare_elements::NamespaceAwareCompare;
+    use crate::compare_elements::NamespaceAwareCompare;
 
     #[cfg(target_pointer_width = "32")]
     #[test]

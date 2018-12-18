@@ -9,11 +9,11 @@ use std::collections::BTreeMap;
 
 use minidom::Element;
 
-use message::MessagePayload;
-use presence::PresencePayload;
-use error::Error;
+use crate::message::MessagePayload;
+use crate::presence::PresencePayload;
+use crate::error::Error;
 use jid::Jid;
-use ns;
+use crate::ns;
 
 generate_attribute!(
     /// The type of the error.

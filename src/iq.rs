@@ -12,11 +12,11 @@ use minidom::IntoAttributeValue;
 
 use jid::Jid;
 
-use error::Error;
+use crate::error::Error;
 
-use ns;
+use crate::ns;
 
-use stanza_error::StanzaError;
+use crate::stanza_error::StanzaError;
 
 /// Should be implemented on every known payload of an `<iq type='get'/>`.
 pub trait IqGetPayload: TryFrom<Element> + Into<Element> {}
@@ -222,9 +222,9 @@ impl From<Iq> for Element {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use stanza_error::{ErrorType, DefinedCondition};
-    use compare_elements::NamespaceAwareCompare;
-    use disco::DiscoInfoQuery;
+    use crate::stanza_error::{ErrorType, DefinedCondition};
+    use crate::compare_elements::NamespaceAwareCompare;
+    use crate::disco::DiscoInfoQuery;
 
     #[cfg(target_pointer_width = "32")]
     #[test]

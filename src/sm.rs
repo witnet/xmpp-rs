@@ -4,7 +4,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use stanza_error::DefinedCondition;
+use crate::stanza_error::DefinedCondition;
 
 generate_element!(
     /// Acknowledgement of the currently received stanzas.

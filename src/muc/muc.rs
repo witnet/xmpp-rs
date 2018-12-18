@@ -5,8 +5,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use presence::PresencePayload;
-use date::DateTime;
+use crate::presence::PresencePayload;
+use crate::date::DateTime;
 
 generate_element!(
     /// Represents the query for messages before our join.
@@ -104,9 +104,9 @@ mod tests {
     use super::*;
     use try_from::TryFrom;
     use minidom::Element;
-    use error::Error;
+    use crate::error::Error;
     use std::str::FromStr;
-    use compare_elements::NamespaceAwareCompare;
+    use crate::compare_elements::NamespaceAwareCompare;
 
     #[test]
     fn test_muc_simple() {

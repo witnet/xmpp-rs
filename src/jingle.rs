@@ -10,9 +10,9 @@ use std::str::FromStr;
 use minidom::Element;
 use jid::Jid;
 
-use error::Error;
-use ns;
-use iq::IqSetPayload;
+use crate::error::Error;
+use crate::ns;
+use crate::iq::IqSetPayload;
 
 generate_attribute!(
     /// The action attribute.

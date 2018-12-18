@@ -9,7 +9,7 @@ use std::str::FromStr;
 use minidom::{IntoAttributeValue, IntoElements, ElementEmitter};
 use chrono::{DateTime as ChronoDateTime, FixedOffset};
 
-use error::Error;
+use crate::error::Error;
 
 /// Implements the DateTime profile of XEP-0082, which represents a
 /// non-recurring moment in time, with an accuracy of seconds or fraction of

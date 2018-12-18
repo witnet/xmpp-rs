@@ -9,12 +9,12 @@ use try_from::TryFrom;
 
 use minidom::Element;
 
-use error::Error;
+use crate::error::Error;
 
-use iq::{IqGetPayload, IqSetPayload, IqResultPayload};
-use data_forms::DataForm;
+use crate::iq::{IqGetPayload, IqSetPayload, IqResultPayload};
+use crate::data_forms::DataForm;
 
-use ns;
+use crate::ns;
 
 /// Query for registering against a service.
 #[derive(Debug, Clone)]
@@ -94,7 +94,7 @@ impl From<Query> for Element {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use compare_elements::NamespaceAwareCompare;
+    use crate::compare_elements::NamespaceAwareCompare;
 
     #[cfg(target_pointer_width = "32")]
     #[test]

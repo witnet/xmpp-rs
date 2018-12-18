@@ -4,13 +4,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use message::MessagePayload;
-use presence::PresencePayload;
-use date::DateTime;
+use crate::message::MessagePayload;
+use crate::presence::PresencePayload;
+use crate::date::DateTime;
 
 use jid::Jid;
 
-use helpers::PlainText;
+use crate::helpers::PlainText;
 
 generate_element!(
     /// Notes when and by whom a message got stored for later delivery.
@@ -36,7 +36,7 @@ mod tests {
     use super::*;
     use try_from::TryFrom;
     use minidom::Element;
-    use error::Error;
+    use crate::error::Error;
     use std::str::FromStr;
 
     #[cfg(target_pointer_width = "32")]

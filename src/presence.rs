@@ -13,9 +13,9 @@ use minidom::{Element, IntoElements, IntoAttributeValue, ElementEmitter};
 
 use jid::Jid;
 
-use error::Error;
+use crate::error::Error;
 
-use ns;
+use crate::ns;
 
 /// Should be implemented on every known payload of a `<presence/>`.
 pub trait PresencePayload: TryFrom<Element> + Into<Element> {}
@@ -331,7 +331,7 @@ impl From<Presence> for Element {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use compare_elements::NamespaceAwareCompare;
+    use crate::compare_elements::NamespaceAwareCompare;
 
     #[cfg(target_pointer_width = "32")]
     #[test]

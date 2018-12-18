@@ -4,8 +4,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use delay::Delay;
-use message::Message;
+use crate::delay::Delay;
+use crate::message::Message;
 
 generate_element!(
     /// Contains a forwarded stanza, either standalone or part of another
@@ -28,7 +28,7 @@ mod tests {
     use super::*;
     use try_from::TryFrom;
     use minidom::Element;
-    use error::Error;
+    use crate::error::Error;
 
     #[cfg(target_pointer_width = "32")]
     #[test]

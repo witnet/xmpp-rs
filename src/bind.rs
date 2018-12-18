@@ -9,10 +9,10 @@ use try_from::TryFrom;
 
 use minidom::Element;
 
-use error::Error;
+use crate::error::Error;
 use jid::Jid;
-use ns;
-use iq::{IqSetPayload, IqResultPayload};
+use crate::ns;
+use crate::iq::{IqSetPayload, IqResultPayload};
 
 /// The request for resource binding, which is the process by which a client
 /// can obtain a full JID and start exchanging on the XMPP network.
