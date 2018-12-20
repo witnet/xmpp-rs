@@ -288,4 +288,20 @@ mod tests {
             String::from("Call 212-555-1212 for assistance.")
         );
     }
+
+    #[test]
+    fn failure_with_non_prefixed_text_lang() {
+        let elem: Element = "<failure xmlns='urn:ietf:params:xml:ns:xmpp-sasl'>
+            <not-authorized xmlns='urn:ietf:params:xml:ns:xmpp-sasl'/>
+            <text xmlns='urn:ietf:params:xml:ns:xmpp-sasl' lang='en'>Invalid username or password</text>
+        </failure>"
+            .parse()
+            .unwrap();
+        let failure = Failure::try_from(elem).unwrap();
+        assert_eq!(failure.defined_condition, DefinedCondition::NotAuthorized);
+        assert_eq!(
+            failure.texts["en"],
+            String::from("Invalid username or password")
+        );
+    }
 }
