@@ -1,6 +1,16 @@
-image: "pitkley/rust:stable"
+stages:
+  - build
 
-test:cargo:
+rust-latest:
+  stage: build
+  image: rust:latest
   script:
-  - rustc --version && cargo --version
-  - cargo test --verbose --jobs 1 --release
+    - cargo build --verbose
+    - cargo test --verbose
+
+rust-nightly:
+  stage: build
+  image: rustlang/rust:nightly
+  script:
+    - cargo build --verbose
+    - cargo test --verbose
