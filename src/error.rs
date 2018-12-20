@@ -26,6 +26,8 @@ pub enum Error {
     Auth(AuthError),
     /// TLS error
     Tls(TlsError),
+    /// Connection closed
+    Disconnected,
     /// Shoud never happen
     InvalidState,
 }

@@ -19,7 +19,7 @@ use xml5ever::interface::Attribute;
 use xml5ever::tokenizer::{Tag, TagKind, Token, TokenSink, XmlTokenizer};
 
 /// Anything that can be sent or received on an XMPP/XML stream
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Packet {
     /// `<stream:stream>` start tag
     StreamStart(HashMap<String, String>),

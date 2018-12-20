@@ -104,7 +104,7 @@ impl Client {
         StartTlsClient::from_stream(stream)
     }
 
-    fn auth<S: AsyncRead + AsyncWrite>(
+    fn auth<S: AsyncRead + AsyncWrite + 'static>(
         stream: xmpp_stream::XMPPStream<S>,
         username: String,
         password: String,
