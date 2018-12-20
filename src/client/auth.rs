@@ -1,8 +1,6 @@
-use std::mem::replace;
 use std::str::FromStr;
 use std::collections::HashSet;
-use futures::{sink, Async, Future, Poll, Stream, future::{ok, err, IntoFuture}};
-use minidom::Element;
+use futures::{Future, Poll, Stream, future::{ok, err, IntoFuture}};
 use sasl::client::mechanisms::{Anonymous, Plain, Scram};
 use sasl::client::Mechanism;
 use sasl::common::scram::{Sha1, Sha256};
