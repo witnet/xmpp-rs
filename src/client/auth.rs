@@ -92,9 +92,11 @@ impl<S: AsyncRead + AsyncWrite + 'static> ClientAuth<S> {
                             Box::new(ok(stream))
                         } else if let Ok(failure) = Failure::try_from(stanza.clone()) {
                             Box::new(err(Error::Auth(AuthError::Fail(failure.defined_condition))))
+                        } else if stanza.name() == "failure" {
+                            // Workaround for https://gitlab.com/xmpp-rs/xmpp-parsers/merge_requests/1
+                            Box::new(err(Error::Auth(AuthError::Sasl("failure".to_string()))))
                         } else {
                             // ignore and loop
-                            println!("Ignore: {:?}", stanza);
                             Self::handle_challenge(stream, mechanism)
                         }
                     }
