@@ -19,7 +19,7 @@ use std::str::FromStr;
 
 use std::slice;
 
-use convert::{IntoElements, IntoAttributeValue, ElementEmitter};
+use convert::IntoAttributeValue;
 use namespace_set::NamespaceSet;
 
 /// helper function to escape a `&[u8]` and replace all
@@ -80,7 +80,8 @@ pub enum Node {
 }
 
 impl Node {
-    /// Turns this into an `Element` if possible, else returns None.
+    /// Turns this into a reference to an `Element` if this is an element node.
+    /// Else this returns `None`.
     ///
     /// # Examples
     ///
@@ -101,7 +102,52 @@ impl Node {
         }
     }
 
-    /// Turns this into a `String` if possible, else returns None.
+    /// Turns this into a mutable reference of an `Element` if this is an element node.
+    /// Else this returns `None`.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use minidom::Node;
+    ///
+    /// let mut elm = Node::Element("<meow />".parse().unwrap());
+    /// let mut txt = Node::Text("meow".to_owned());
+    ///
+    /// assert_eq!(elm.as_element_mut().unwrap().name(), "meow");
+    /// assert_eq!(txt.as_element_mut(), None);
+    /// ```
+    pub fn as_element_mut(&mut self) -> Option<&mut Element> {
+        match *self {
+            Node::Element(ref mut e) => Some(e),
+            Node::Text(_) => None,
+            Node::Comment(_) => None,
+        }
+    }
+
+    /// Turns this into an `Element`, consuming self, if this is an element node.
+    /// Else this returns `None`.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use minidom::Node;
+    ///
+    /// let elm = Node::Element("<meow />".parse().unwrap());
+    /// let txt = Node::Text("meow".to_owned());
+    ///
+    /// assert_eq!(elm.into_element().unwrap().name(), "meow");
+    /// assert_eq!(txt.into_element(), None);
+    /// ```
+    pub fn into_element(self) -> Option<Element> {
+        match self {
+            Node::Element(e) => Some(e),
+            Node::Text(_) => None,
+            Node::Comment(_) => None,
+        }
+    }
+
+    /// Turns this into an `&str` if this is a text node.
+    /// Else this returns `None`.
     ///
     /// # Examples
     ///
@@ -118,6 +164,56 @@ impl Node {
         match *self {
             Node::Element(_) => None,
             Node::Text(ref s) => Some(s),
+            Node::Comment(_) => None,
+        }
+    }
+
+    /// Turns this into an `&mut String` if this is a text node.
+    /// Else this returns `None`.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use minidom::Node;
+    ///
+    /// let mut elm = Node::Element("<meow />".parse().unwrap());
+    /// let mut txt = Node::Text("meow".to_owned());
+    ///
+    /// assert_eq!(elm.as_text_mut(), None);
+    /// {
+    ///     let text_mut = txt.as_text_mut().unwrap();
+    ///     assert_eq!(text_mut, "meow");
+    ///     text_mut.push_str("zies");
+    ///     assert_eq!(text_mut, "meowzies");
+    /// }
+    /// assert_eq!(txt.as_text().unwrap(), "meowzies");
+    /// ```
+    pub fn as_text_mut(&mut self) -> Option<&mut String> {
+        match *self {
+            Node::Element(_) => None,
+            Node::Text(ref mut s) => Some(s),
+            Node::Comment(_) => None,
+        }
+    }
+
+    /// Turns this into an `String`, consuming self, if this is a text node.
+    /// Else this returns `None`.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use minidom::Node;
+    ///
+    /// let elm = Node::Element("<meow />".parse().unwrap());
+    /// let txt = Node::Text("meow".to_owned());
+    ///
+    /// assert_eq!(elm.into_text(), None);
+    /// assert_eq!(txt.into_text().unwrap(), "meow");
+    /// ```
+    pub fn into_text(self) -> Option<String> {
+        match self {
+            Node::Element(_) => None,
+            Node::Text(s) => Some(s),
             Node::Comment(_) => None,
         }
     }
@@ -139,6 +235,30 @@ impl Node {
     }
 }
 
+impl From<Element> for Node {
+    fn from(elm: Element) -> Node {
+        Node::Element(elm)
+    }
+}
+
+impl From<String> for Node {
+    fn from(s: String) -> Node {
+        Node::Text(s)
+    }
+}
+
+impl<'a> From<&'a str> for Node {
+    fn from(s: &'a str) -> Node {
+        Node::Text(s.to_owned())
+    }
+}
+
+impl From<ElementBuilder> for Node {
+    fn from(builder: ElementBuilder) -> Node {
+        Node::Element(builder.build())
+    }
+}
+
 #[derive(Clone, PartialEq, Eq, Debug)]
 /// A struct representing a DOM Element.
 pub struct Element {
@@ -156,7 +276,6 @@ impl<'a> From<&'a Element> for String {
         String::from_utf8(writer).unwrap()
     }
 }
-
 
 impl FromStr for Element {
     type Err = Error;
@@ -736,6 +855,34 @@ impl Element {
     pub fn has_child<N: AsRef<str>, NS: AsRef<str>>(&self, name: N, namespace: NS) -> bool {
         self.get_child(name, namespace).is_some()
     }
+
+    /// Removes the first child with this name and namespace, if it exists, and returns an
+    /// `Option<Element>` containing this child if it succeeds.
+    /// Returns `None` if no child matches this name and namespace.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use minidom::Element;
+    ///
+    /// let mut elem: Element = r#"<node xmlns="ns"><a /><a xmlns="other_ns" /><b /></node>"#.parse().unwrap();
+    ///
+    /// assert!(elem.remove_child("a", "ns").unwrap().is("a", "ns"));
+    /// assert!(elem.remove_child("a", "ns").is_none());
+    /// assert!(elem.remove_child("inexistent", "inexistent").is_none());
+    /// ```
+    pub fn remove_child<N: AsRef<str>, NS: AsRef<str>>(&mut self, name: N, namespace: NS) -> Option<Element> {
+        let name = name.as_ref();
+        let namespace = namespace.as_ref();
+        let idx = self.children.iter().position(|x| {
+            if let Node::Element(ref elm) = x {
+                elm.is(name, namespace)
+            } else {
+                false
+            }
+        })?;
+        self.children.remove(idx).into_element()
+    }
 }
 
 fn split_element_name<S: AsRef<str>>(s: S) -> Result<(Option<String>, String)> {
@@ -900,11 +1047,16 @@ impl ElementBuilder {
         self
     }
 
-    /// Appends anything implementing `IntoElements` into the tree.
-    pub fn append<T: IntoElements>(mut self, into: T) -> ElementBuilder {
-        {
-            let mut emitter = ElementEmitter::new(&mut self.root);
-            into.into_elements(&mut emitter);
+    /// Appends anything implementing `Into<Node>` into the tree.
+    pub fn append<T: Into<Node>>(mut self, node: T) -> ElementBuilder {
+        self.root.append_node(node.into());
+        self
+    }
+
+    /// Appends an iterator of things implementing `Into<Node>` into the tree.
+    pub fn append_all<T: Into<Node>, I: IntoIterator<Item = T>>(mut self, iter: I) -> ElementBuilder {
+        for node in iter {
+            self.root.append_node(node.into());
         }
         self
     }
@@ -920,7 +1072,6 @@ impl ElementBuilder {
                 e.namespaces.set_parent(Rc::clone(&element.namespaces));
             }
         }
-
         element
     }
 }

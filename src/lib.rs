@@ -77,4 +77,4 @@ mod namespace_set;
 
 pub use error::{Error, Result};
 pub use element::{Element, Node, Children, ChildrenMut, ElementBuilder};
-pub use convert::{IntoElements, IntoAttributeValue, ElementEmitter};
+pub use convert::IntoAttributeValue;
