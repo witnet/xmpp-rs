@@ -71,10 +71,12 @@ extern crate failure;
 pub mod error;
 pub mod element;
 pub mod convert;
+pub mod node;
 mod namespace_set;
 
 #[cfg(test)] mod tests;
 
 pub use error::{Error, Result};
-pub use element::{Element, Node, Children, ChildrenMut, ElementBuilder};
+pub use element::{Element, Children, ChildrenMut, ElementBuilder};
+pub use node::Node;
 pub use convert::IntoAttributeValue;

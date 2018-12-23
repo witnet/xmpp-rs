@@ -1,7 +1,5 @@
 //! A module which exports a few traits for converting types to elements and attributes.
 
-use element::{Element, ElementBuilder};
-
 /// A trait for types which can be converted to an attribute value.
 pub trait IntoAttributeValue {
     /// Turns this into an attribute string, or None if it shouldn't be added.
