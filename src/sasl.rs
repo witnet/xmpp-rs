@@ -289,6 +289,7 @@ mod tests {
         );
     }
 
+    #[cfg(feature = "compat")]
     #[test]
     fn failure_with_non_prefixed_text_lang() {
         let elem: Element = "<failure xmlns='urn:ietf:params:xml:ns:xmpp-sasl'>
@@ -299,9 +300,5 @@ mod tests {
             .unwrap();
         let failure = Failure::try_from(elem).unwrap();
         assert_eq!(failure.defined_condition, DefinedCondition::NotAuthorized);
-        assert_eq!(
-            failure.texts["en"],
-            String::from("Invalid username or password")
-        );
     }
 }

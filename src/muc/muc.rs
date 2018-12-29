@@ -142,6 +142,7 @@ mod tests {
         assert_eq!(elem, elem2);
     }
 
+    #[cfg(not(feature = "compat"))]
     #[test]
     fn test_muc_invalid_attribute() {
         let elem: Element = "<x xmlns='http://jabber.org/protocol/muc' coucou=''/>"

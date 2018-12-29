@@ -510,13 +510,16 @@ mod tests {
         };
         assert_eq!(message, "Unknown child in received element.");
 
-        let elem: Element = "<received xmlns='urn:xmpp:jingle:apps:file-transfer:5' name='coucou' creator='initiator' coucou=''/>".parse().unwrap();
-        let error = Received::try_from(elem).unwrap_err();
-        let message = match error {
-            Error::ParseError(string) => string,
-            _ => panic!(),
-        };
-        assert_eq!(message, "Unknown attribute in received element.");
+        #[cfg(not(feature = "compat"))]
+        {
+            let elem: Element = "<received xmlns='urn:xmpp:jingle:apps:file-transfer:5' name='coucou' creator='initiator' coucou=''/>".parse().unwrap();
+            let error = Received::try_from(elem).unwrap_err();
+            let message = match error {
+                Error::ParseError(string) => string,
+                _ => panic!(),
+            };
+            assert_eq!(message, "Unknown attribute in received element.");
+        }
 
         let elem: Element =
             "<received xmlns='urn:xmpp:jingle:apps:file-transfer:5' creator='initiator'/>"
@@ -575,13 +578,16 @@ mod tests {
         };
         assert_eq!(message, "This is not a file element.");
 
-        let elem: Element = "<checksum xmlns='urn:xmpp:jingle:apps:file-transfer:5' name='coucou' creator='initiator' coucou=''><file><hash xmlns='urn:xmpp:hashes:2' algo='sha-1'>w0mcJylzCn+AfvuGdqkty2+KP48=</hash></file></checksum>".parse().unwrap();
-        let error = Checksum::try_from(elem).unwrap_err();
-        let message = match error {
-            Error::ParseError(string) => string,
-            _ => panic!(),
-        };
-        assert_eq!(message, "Unknown attribute in checksum element.");
+        #[cfg(not(feature = "compat"))]
+        {
+            let elem: Element = "<checksum xmlns='urn:xmpp:jingle:apps:file-transfer:5' name='coucou' creator='initiator' coucou=''><file><hash xmlns='urn:xmpp:hashes:2' algo='sha-1'>w0mcJylzCn+AfvuGdqkty2+KP48=</hash></file></checksum>".parse().unwrap();
+            let error = Checksum::try_from(elem).unwrap_err();
+            let message = match error {
+                Error::ParseError(string) => string,
+                _ => panic!(),
+            };
+            assert_eq!(message, "Unknown attribute in checksum element.");
+        }
 
         let elem: Element = "<checksum xmlns='urn:xmpp:jingle:apps:file-transfer:5' creator='initiator'><file><hash xmlns='urn:xmpp:hashes:2' algo='sha-1'>w0mcJylzCn+AfvuGdqkty2+KP48=</hash></file></checksum>".parse().unwrap();
         let error = Checksum::try_from(elem).unwrap_err();
@@ -631,11 +637,14 @@ mod tests {
         let elem: Element = "<range xmlns='urn:xmpp:jingle:apps:file-transfer:5' coucou=''/>"
             .parse()
             .unwrap();
-        let error = Range::try_from(elem).unwrap_err();
-        let message = match error {
-            Error::ParseError(string) => string,
-            _ => panic!(),
-        };
-        assert_eq!(message, "Unknown attribute in range element.");
+        #[cfg(not(feature = "compat"))]
+        {
+            let error = Range::try_from(elem).unwrap_err();
+            let message = match error {
+                Error::ParseError(string) => string,
+                _ => panic!(),
+            };
+            assert_eq!(message, "Unknown attribute in range element.");
+        }
     }
 }

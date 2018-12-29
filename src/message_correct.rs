@@ -45,6 +45,7 @@ mod tests {
         Replace::try_from(elem).unwrap();
     }
 
+    #[cfg(not(feature = "compat"))]
     #[test]
     fn test_invalid_attribute() {
         let elem: Element = "<replace xmlns='urn:xmpp:message-correct:0' coucou=''/>"

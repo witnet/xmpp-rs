@@ -155,13 +155,16 @@ mod tests {
             },
         ];
 
-        let request_elem = elem.clone();
-        let error = BlocklistRequest::try_from(request_elem).unwrap_err();
-        let message = match error {
-            Error::ParseError(string) => string,
-            _ => panic!(),
-        };
-        assert_eq!(message, "Unknown child in blocklist element.");
+        #[cfg(not(feature = "compat"))]
+        {
+            let request_elem = elem.clone();
+            let error = BlocklistRequest::try_from(request_elem).unwrap_err();
+            let message = match error {
+                Error::ParseError(string) => string,
+                _ => panic!(),
+            };
+            assert_eq!(message, "Unknown child in blocklist element.");
+        }
 
         let result_elem = elem.clone();
         let result = BlocklistResult::try_from(result_elem).unwrap();
@@ -176,6 +179,7 @@ mod tests {
         assert_eq!(unblock.items, two_items);
     }
 
+    #[cfg(not(feature = "compat"))]
     #[test]
     fn test_invalid() {
         let elem: Element = "<blocklist xmlns='urn:xmpp:blocking' coucou=''/>"

@@ -20,6 +20,7 @@ impl IqGetPayload for Ping {}
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[cfg(not(feature = "compat"))]
     use crate::error::Error;
     use minidom::Element;
     use try_from::TryFrom;
@@ -42,6 +43,7 @@ mod tests {
         assert_eq!(elem1, elem2);
     }
 
+    #[cfg(not(feature = "compat"))]
     #[test]
     fn test_invalid() {
         let elem: Element = "<ping xmlns='urn:xmpp:ping'><coucou/></ping>"
@@ -55,6 +57,7 @@ mod tests {
         assert_eq!(message, "Unknown child in ping element.");
     }
 
+    #[cfg(not(feature = "compat"))]
     #[test]
     fn test_invalid_attribute() {
         let elem: Element = "<ping xmlns='urn:xmpp:ping' coucou=''/>".parse().unwrap();

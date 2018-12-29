@@ -245,6 +245,7 @@ mod tests {
         assert_eq!(roster.items[0].subscription, Subscription::Remove);
     }
 
+    #[cfg(not(feature = "compat"))]
     #[test]
     fn test_invalid() {
         let elem: Element = "<query xmlns='jabber:iq:roster'><coucou/></query>"

@@ -233,6 +233,7 @@ mod tests {
         );
     }
 
+    #[cfg(not(feature = "compat"))]
     #[test]
     fn test_invalid_child() {
         let elem: Element = "<c xmlns='http://jabber.org/protocol/caps'><hash xmlns='urn:xmpp:hashes:2' algo='sha-256'>K1Njy3HZBThlo4moOD5gBGhn0U0oK7/CbfLlIUDi6o4=</hash></c>".parse().unwrap();
