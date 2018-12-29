@@ -1,16 +1,29 @@
 stages:
   - build
 
+variables:
+  FEATURES: ""
+
 rust-latest:
   stage: build
   image: rust:latest
   script:
-    - cargo build --verbose
-    - cargo test --verbose
+    - cargo build --verbose --no-default-features --features=$FEATURES
+    - cargo test --verbose --no-default-features --features=$FEATURES
 
 rust-nightly:
   stage: build
   image: rustlang/rust:nightly
   script:
-    - cargo build --verbose
-    - cargo test --verbose
+    - cargo build --verbose --no-default-features --features=$FEATURES
+    - cargo test --verbose --no-default-features --features=$FEATURES
+
+"rust-latest with features=compat":
+  extends: rust-latest
+  variables:
+    FEATURES: "compat"
+
+"rust-nightly with features=compat":
+  extends: rust-nightly
+  variables:
+    FEATURES: "compat"
