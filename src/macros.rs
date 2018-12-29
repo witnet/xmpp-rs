@@ -29,7 +29,7 @@ macro_rules! get_attr {
                     "Required attribute '",
                     $attr,
                     "' missing."
-                )))
+                )));
             }
         }
     };
@@ -151,8 +151,8 @@ macro_rules! generate_element_enum {
         #[derive(Debug, Clone, PartialEq)]
         pub enum $elem {
             $(
-            $(#[$enum_meta])*
-            $enum
+                $(#[$enum_meta])*
+                $enum
             ),+
         }
         impl ::try_from::TryFrom<::minidom::Element> for $elem {
@@ -169,10 +169,13 @@ macro_rules! generate_element_enum {
         }
         impl From<$elem> for ::minidom::Element {
             fn from(elem: $elem) -> ::minidom::Element {
-                ::minidom::Element::builder(match elem {
-                    $($elem::$enum => $enum_name,)+
-                }).ns(crate::ns::$ns)
-                  .build()
+                ::minidom::Element::builder(
+                    match elem {
+                        $($elem::$enum => $enum_name,)+
+                    }
+                )
+                    .ns(crate::ns::$ns)
+                    .build()
             }
         }
     );
@@ -187,8 +190,8 @@ macro_rules! generate_attribute_enum {
         #[derive(Debug, Clone, PartialEq)]
         pub enum $elem {
             $(
-            $(#[$enum_meta])*
-            $enum
+                $(#[$enum_meta])*
+                $enum
             ),+
         }
         impl ::try_from::TryFrom<::minidom::Element> for $elem {
@@ -206,11 +209,11 @@ macro_rules! generate_attribute_enum {
         impl From<$elem> for ::minidom::Element {
             fn from(elem: $elem) -> ::minidom::Element {
                 ::minidom::Element::builder($name)
-                        .ns(crate::ns::$ns)
-                        .attr($attr, match elem {
-                             $($elem::$enum => $enum_name,)+
-                         })
-                         .build()
+                    .ns(crate::ns::$ns)
+                    .attr($attr, match elem {
+                         $($elem::$enum => $enum_name,)+
+                     })
+                     .build()
             }
         }
     );
@@ -271,9 +274,9 @@ macro_rules! check_no_unknown_attributes {
     ($elem:ident, $name:tt, [$($attr:tt),*]) => (
         for (_attr, _) in $elem.attrs() {
             $(
-            if _attr == $attr {
-                continue;
-            }
+                if _attr == $attr {
+                    continue;
+                }
             )*
             return Err(crate::error::Error::ParseError(concat!("Unknown attribute in ", $name, " element.")));
         }
@@ -300,8 +303,8 @@ macro_rules! generate_empty_element {
         impl From<$elem> for ::minidom::Element {
             fn from(_: $elem) -> ::minidom::Element {
                 ::minidom::Element::builder($name)
-                        .ns(crate::ns::$ns)
-                        .build()
+                    .ns(crate::ns::$ns)
+                    .build()
             }
         }
     );
@@ -352,9 +355,9 @@ macro_rules! generate_elem_id {
         impl From<$elem> for ::minidom::Element {
             fn from(elem: $elem) -> ::minidom::Element {
                 ::minidom::Element::builder($name)
-                        .ns(crate::ns::$ns)
-                        .append(elem.0)
-                        .build()
+                    .ns(crate::ns::$ns)
+                    .append(elem.0)
+                    .build()
             }
         }
     );
@@ -488,16 +491,16 @@ macro_rules! generate_element {
         #[derive(Debug, Clone)]
         pub struct $elem {
             $(
-            $(#[$attr_meta])*
-            pub $attr: $attr_type,
+                $(#[$attr_meta])*
+                pub $attr: $attr_type,
             )*
             $(
-            $(#[$child_meta])*
-            pub $child_ident: start_decl!($coucou, $child_type),
+                $(#[$child_meta])*
+                pub $child_ident: start_decl!($coucou, $child_type),
             )*
             $(
-            $(#[$text_meta])*
-            pub $text_ident: $text_type,
+                $(#[$text_meta])*
+                pub $text_ident: $text_type,
             )*
         }
 
@@ -508,7 +511,7 @@ macro_rules! generate_element {
                 check_self!(elem, $name, $ns);
                 check_no_unknown_attributes!(elem, $name, [$($attr_name),*]);
                 $(
-                start_parse_elem!($child_ident: $coucou);
+                    start_parse_elem!($child_ident: $coucou);
                 )*
                 for _child in elem.children() {
                     $(
@@ -521,13 +524,13 @@ macro_rules! generate_element {
                 }
                 Ok($elem {
                     $(
-                    $attr: get_attr!(elem, $attr_name, $attr_action),
+                        $attr: get_attr!(elem, $attr_name, $attr_action),
                     )*
                     $(
-                    $child_ident: finish_parse_elem!($child_ident: $coucou = $child_name, $name),
+                        $child_ident: finish_parse_elem!($child_ident: $coucou = $child_name, $name),
                     )*
                     $(
-                    $text_ident: $codec::decode(&elem.text())?,
+                        $text_ident: $codec::decode(&elem.text())?,
                     )*
                 })
             }
@@ -536,17 +539,17 @@ macro_rules! generate_element {
         impl From<$elem> for ::minidom::Element {
             fn from(elem: $elem) -> ::minidom::Element {
                 ::minidom::Element::builder($name)
-                        .ns(crate::ns::$ns)
-                        $(
+                    .ns(crate::ns::$ns)
+                    $(
                         .attr($attr_name, elem.$attr)
-                        )*
-                        $(
+                    )*
+                    $(
                         .append(generate_serialiser!(elem, $child_ident, $coucou, $child_constructor, ($child_name, $child_ns)))
-                        )*
-                        $(
+                    )*
+                    $(
                         .append($codec::encode(&elem.$text_ident))
-                        )*
-                        .build()
+                    )*
+                    .build()
             }
         }
     );

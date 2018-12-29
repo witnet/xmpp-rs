@@ -136,7 +136,7 @@ impl FromStr for Type {
             _ => {
                 return Err(Error::ParseError(
                     "Invalid 'type' attribute on presence element.",
-                ))
+                ));
             }
         })
     }

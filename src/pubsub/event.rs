@@ -138,7 +138,7 @@ fn parse_items(elem: Element, node: NodeName) -> Result<PubSubEvent, Error> {
                 Some(true) => {
                     return Err(Error::ParseError(
                         "Mix of item and retract in items element.",
-                    ))
+                    ));
                 }
             }
             items.push(Item::try_from(child.clone())?);
@@ -149,7 +149,7 @@ fn parse_items(elem: Element, node: NodeName) -> Result<PubSubEvent, Error> {
                 Some(false) => {
                     return Err(Error::ParseError(
                         "Mix of item and retract in items element.",
-                    ))
+                    ));
                 }
             }
             check_no_children!(child, "retract");

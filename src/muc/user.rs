@@ -102,7 +102,7 @@ impl TryFrom<Element> for Actor {
             (Some(_), Some(_)) | (None, None) => {
                 return Err(Error::ParseError(
                     "Either 'jid' or 'nick' attribute is required.",
-                ))
+                ));
             }
             (Some(jid), _) => Ok(Actor::Jid(jid)),
             (_, Some(nick)) => Ok(Actor::Nick(nick)),
