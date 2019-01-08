@@ -104,7 +104,11 @@ impl ParserSink {
                     "xmlns" => (),
                     _ if is_prefix_xmlns(attr) => (),
                     _ => {
-                        el_builder = el_builder.attr(attr.name.local.as_ref(), attr.value.as_ref());
+                        if let Some(ref prefix) = attr.name.prefix {
+                            el_builder = el_builder.attr(format!("{}:{}", prefix, attr.name.local), attr.value.as_ref());
+                        } else {
+                            el_builder = el_builder.attr(attr.name.local.as_ref(), attr.value.as_ref());
+                        }
                     }
                 }
             }
@@ -426,6 +430,28 @@ mod tests {
             Ok(Some(Packet::Stanza(ref el))) if el.name() == "test" && el.text() == "ß" => true,
             _ => false,
         });
+    }
+
+    /// test case for https://gitlab.com/xmpp-rs/tokio-xmpp/issues/3
+    #[test]
+    fn test_atrribute_prefix() {
+        let mut c = XMPPCodec::new();
+        let mut b = BytesMut::with_capacity(1024);
+        b.put(r"<?xml version='1.0'?><stream:stream xmlns:stream='http://etherx.jabber.org/streams' version='1.0' xmlns='jabber:client'>");
+        let r = c.decode(&mut b);
+        assert!(match r {
+            Ok(Some(Packet::StreamStart(_))) => true,
+            _ => false,
+        });
+
+        b.clear();
+        b.put(r"<status xml:lang='en'>Test status</status>");
+        let r = c.decode(&mut b);
+        assert!(match r {
+            Ok(Some(Packet::Stanza(ref el))) if el.name() == "status" && el.text() == "Test status" && el.attr("xml:lang").map_or(false, |a| a == "en") => true,
+            _ => false,
+        });
+
     }
 
     /// By default, encode() only get's a BytesMut that has 8kb space reserved.
