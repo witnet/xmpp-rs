@@ -300,5 +300,9 @@ mod tests {
             .unwrap();
         let failure = Failure::try_from(elem).unwrap();
         assert_eq!(failure.defined_condition, DefinedCondition::NotAuthorized);
+        assert_eq!(
+            failure.texts[""],
+            String::from("Invalid username or password")
+        );
     }
 }
