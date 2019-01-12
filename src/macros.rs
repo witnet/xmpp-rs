@@ -107,6 +107,38 @@ macro_rules! generate_attribute {
             }
         }
     );
+    ($(#[$meta:meta])* $elem:ident, $name:tt, ($(#[$meta_symbol:meta])* $symbol:ident => $value:tt)) => (
+        $(#[$meta])*
+        #[derive(Debug, Clone, PartialEq)]
+        pub enum $elem {
+            $(#[$meta_symbol])*
+            $symbol,
+            /// Value when absent.
+            None,
+        }
+        impl ::std::str::FromStr for $elem {
+            type Err = crate::error::Error;
+            fn from_str(s: &str) -> Result<Self, crate::error::Error> {
+                Ok(match s {
+                    $value => $elem::$symbol,
+                    _ => return Err(crate::error::Error::ParseError(concat!("Unknown value for '", $name, "' attribute."))),
+                })
+            }
+        }
+        impl ::minidom::IntoAttributeValue for $elem {
+            fn into_attribute_value(self) -> Option<String> {
+                match self {
+                    $elem::$symbol => Some(String::from($value)),
+                    $elem::None => None
+                }
+            }
+        }
+        impl ::std::default::Default for $elem {
+            fn default() -> $elem {
+                $elem::None
+            }
+        }
+    );
     ($(#[$meta:meta])* $elem:ident, $name:tt, bool) => (
         $(#[$meta])*
         #[derive(Debug, Clone, PartialEq)]
