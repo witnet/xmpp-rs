@@ -18,7 +18,7 @@ impl MessagePayload for Attention {}
 #[cfg(test)]
 mod tests {
     use super::*;
-    #[cfg(not(feature = "compat"))]
+    #[cfg(not(feature = "disable-validation"))]
     use crate::error::Error;
     use minidom::Element;
     use try_from::TryFrom;
@@ -34,7 +34,7 @@ mod tests {
         Attention::try_from(elem).unwrap();
     }
 
-    #[cfg(not(feature = "compat"))]
+    #[cfg(not(feature = "disable-validation"))]
     #[test]
     fn test_invalid_child() {
         let elem: Element = "<attention xmlns='urn:xmpp:attention:0'><coucou/></attention>"
@@ -48,7 +48,7 @@ mod tests {
         assert_eq!(message, "Unknown child in attention element.");
     }
 
-    #[cfg(not(feature = "compat"))]
+    #[cfg(not(feature = "disable-validation"))]
     #[test]
     fn test_invalid_attribute() {
         let elem: Element = "<attention xmlns='urn:xmpp:attention:0' coucou=''/>"

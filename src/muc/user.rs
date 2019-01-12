@@ -303,7 +303,7 @@ mod tests {
         assert!(elem.compare_to(&elem2));
     }
 
-    #[cfg(not(feature = "compat"))]
+    #[cfg(not(feature = "disable-validation"))]
     #[test]
     fn test_invalid_attribute() {
         let elem: Element = "
@@ -344,7 +344,7 @@ mod tests {
         assert_eq!(message, "Required attribute 'code' missing.");
     }
 
-    #[cfg(not(feature = "compat"))]
+    #[cfg(not(feature = "disable-validation"))]
     #[test]
     fn test_status_invalid_child() {
         let elem: Element = "
@@ -515,7 +515,7 @@ mod tests {
         assert_eq!(reason.0, "Reason".to_owned());
     }
 
-    #[cfg(not(feature = "compat"))]
+    #[cfg(not(feature = "disable-validation"))]
     #[test]
     fn test_reason_invalid_attribute() {
         let elem: Element = "
@@ -531,7 +531,7 @@ mod tests {
         assert_eq!(message, "Unknown attribute in reason element.".to_owned());
     }
 
-    #[cfg(not(feature = "compat"))]
+    #[cfg(not(feature = "disable-validation"))]
     #[test]
     fn test_reason_invalid() {
         let elem: Element = "
@@ -549,7 +549,7 @@ mod tests {
         assert_eq!(message, "Unknown child in reason element.".to_owned());
     }
 
-    #[cfg(not(feature = "compat"))]
+    #[cfg(not(feature = "disable-validation"))]
     #[test]
     fn test_item_invalid_attr() {
         let elem: Element = "

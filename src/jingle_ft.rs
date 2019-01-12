@@ -530,7 +530,7 @@ mod tests {
         assert_eq!(message, "Unknown value for 'creator' attribute.");
     }
 
-    #[cfg(not(feature = "compat"))]
+    #[cfg(not(feature = "disable-validation"))]
     #[test]
     fn test_invalid_received() {
         let elem: Element = "<received xmlns='urn:xmpp:jingle:apps:file-transfer:5' name='coucou' creator='initiator' coucou=''/>".parse().unwrap();
@@ -596,7 +596,7 @@ mod tests {
         assert_eq!(message, "Unknown value for 'creator' attribute.");
     }
 
-    #[cfg(not(feature = "compat"))]
+    #[cfg(not(feature = "disable-validation"))]
     #[test]
     fn test_invalid_checksum() {
         let elem: Element = "<checksum xmlns='urn:xmpp:jingle:apps:file-transfer:5' name='coucou' creator='initiator' coucou=''><file><hash xmlns='urn:xmpp:hashes:2' algo='sha-1'>w0mcJylzCn+AfvuGdqkty2+KP48=</hash></file></checksum>".parse().unwrap();
@@ -637,7 +637,7 @@ mod tests {
         assert_eq!(range2.hashes, hashes);
     }
 
-    #[cfg(not(feature = "compat"))]
+    #[cfg(not(feature = "disable-validation"))]
     #[test]
     fn test_invalid_range() {
         let elem: Element = "<range xmlns='urn:xmpp:jingle:apps:file-transfer:5' coucou=''/>"

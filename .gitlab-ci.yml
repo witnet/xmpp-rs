@@ -18,12 +18,12 @@ rust-nightly:
     - cargo build --verbose --no-default-features --features=$FEATURES
     - cargo test --verbose --no-default-features --features=$FEATURES
 
-"rust-latest with features=compat":
+"rust-latest with features=disable-validation":
   extends: rust-latest
   variables:
-    FEATURES: "compat"
+    FEATURES: "disable-validation"
 
-"rust-nightly with features=compat":
+"rust-nightly with features=disable-validation":
   extends: rust-nightly
   variables:
-    FEATURES: "compat"
+    FEATURES: "disable-validation"

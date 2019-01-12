@@ -289,7 +289,7 @@ mod tests {
         );
     }
 
-    #[cfg(feature = "compat")]
+    #[cfg(feature = "disable-validation")]
     #[test]
     fn failure_with_non_prefixed_text_lang() {
         let elem: Element = "<failure xmlns='urn:ietf:params:xml:ns:xmpp-sasl'>

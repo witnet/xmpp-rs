@@ -112,7 +112,7 @@ mod tests {
         assert_eq!(bind, Bind::None);
     }
 
-    #[cfg(not(feature = "compat"))]
+    #[cfg(not(feature = "disable-validation"))]
     #[test]
     fn test_invalid_resource() {
         let elem: Element = "<bind xmlns='urn:ietf:params:xml:ns:xmpp-bind'><resource attr='coucou'>resource</resource></bind>"

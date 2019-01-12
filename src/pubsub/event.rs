@@ -420,7 +420,7 @@ mod tests {
         assert_eq!(message, "Unknown child in event element.");
     }
 
-    #[cfg(not(feature = "compat"))]
+    #[cfg(not(feature = "disable-validation"))]
     #[test]
     fn test_invalid_attribute() {
         let elem: Element = "<event xmlns='http://jabber.org/protocol/pubsub#event' coucou=''/>"

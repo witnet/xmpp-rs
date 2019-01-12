@@ -570,7 +570,7 @@ mod tests {
         assert!(payload.is("test", "invalid"));
     }
 
-    #[cfg(not(feature = "compat"))]
+    #[cfg(not(feature = "disable-validation"))]
     #[test]
     fn test_invalid_status_child() {
         #[cfg(not(feature = "component"))]
@@ -590,7 +590,7 @@ mod tests {
         assert_eq!(message, "Unknown child in status element.");
     }
 
-    #[cfg(not(feature = "compat"))]
+    #[cfg(not(feature = "disable-validation"))]
     #[test]
     fn test_invalid_attribute() {
         #[cfg(not(feature = "component"))]

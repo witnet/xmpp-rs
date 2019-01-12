@@ -168,7 +168,7 @@ mod tests {
         assert_eq!(unblock.items, two_items);
     }
 
-    #[cfg(not(feature = "compat"))]
+    #[cfg(not(feature = "disable-validation"))]
     #[test]
     fn test_invalid() {
         let elem: Element = "<blocklist xmlns='urn:xmpp:blocking' coucou=''/>"
@@ -211,7 +211,7 @@ mod tests {
         assert_eq!(message, "Unknown attribute in unblock element.");
     }
 
-    #[cfg(not(feature = "compat"))]
+    #[cfg(not(feature = "disable-validation"))]
     #[test]
     fn test_non_empty_blocklist_request() {
         let elem: Element = "<blocklist xmlns='urn:xmpp:blocking'><item jid='coucou@coucou'/><item jid='domain'/></blocklist>".parse().unwrap();

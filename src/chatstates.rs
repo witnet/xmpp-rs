@@ -63,7 +63,7 @@ mod tests {
         assert_eq!(message, "This is not a chatstate element.");
     }
 
-    #[cfg(not(feature = "compat"))]
+    #[cfg(not(feature = "disable-validation"))]
     #[test]
     fn test_invalid_child() {
         let elem: Element = "<gone xmlns='http://jabber.org/protocol/chatstates'><coucou/></gone>"
@@ -77,7 +77,7 @@ mod tests {
         assert_eq!(message, "Unknown child in chatstate element.");
     }
 
-    #[cfg(not(feature = "compat"))]
+    #[cfg(not(feature = "disable-validation"))]
     #[test]
     fn test_invalid_attribute() {
         let elem: Element = "<inactive xmlns='http://jabber.org/protocol/chatstates' coucou=''/>"
