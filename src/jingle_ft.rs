@@ -510,17 +510,6 @@ mod tests {
         };
         assert_eq!(message, "Unknown child in received element.");
 
-        #[cfg(not(feature = "compat"))]
-        {
-            let elem: Element = "<received xmlns='urn:xmpp:jingle:apps:file-transfer:5' name='coucou' creator='initiator' coucou=''/>".parse().unwrap();
-            let error = Received::try_from(elem).unwrap_err();
-            let message = match error {
-                Error::ParseError(string) => string,
-                _ => panic!(),
-            };
-            assert_eq!(message, "Unknown attribute in received element.");
-        }
-
         let elem: Element =
             "<received xmlns='urn:xmpp:jingle:apps:file-transfer:5' creator='initiator'/>"
                 .parse()
@@ -539,6 +528,18 @@ mod tests {
             _ => panic!(),
         };
         assert_eq!(message, "Unknown value for 'creator' attribute.");
+    }
+
+    #[cfg(not(feature = "compat"))]
+    #[test]
+    fn test_invalid_received() {
+        let elem: Element = "<received xmlns='urn:xmpp:jingle:apps:file-transfer:5' name='coucou' creator='initiator' coucou=''/>".parse().unwrap();
+        let error = Received::try_from(elem).unwrap_err();
+        let message = match error {
+            Error::ParseError(string) => string,
+            _ => panic!(),
+        };
+        assert_eq!(message, "Unknown attribute in received element.");
     }
 
     #[test]
@@ -578,17 +579,6 @@ mod tests {
         };
         assert_eq!(message, "This is not a file element.");
 
-        #[cfg(not(feature = "compat"))]
-        {
-            let elem: Element = "<checksum xmlns='urn:xmpp:jingle:apps:file-transfer:5' name='coucou' creator='initiator' coucou=''><file><hash xmlns='urn:xmpp:hashes:2' algo='sha-1'>w0mcJylzCn+AfvuGdqkty2+KP48=</hash></file></checksum>".parse().unwrap();
-            let error = Checksum::try_from(elem).unwrap_err();
-            let message = match error {
-                Error::ParseError(string) => string,
-                _ => panic!(),
-            };
-            assert_eq!(message, "Unknown attribute in checksum element.");
-        }
-
         let elem: Element = "<checksum xmlns='urn:xmpp:jingle:apps:file-transfer:5' creator='initiator'><file><hash xmlns='urn:xmpp:hashes:2' algo='sha-1'>w0mcJylzCn+AfvuGdqkty2+KP48=</hash></file></checksum>".parse().unwrap();
         let error = Checksum::try_from(elem).unwrap_err();
         let message = match error {
@@ -604,6 +594,18 @@ mod tests {
             _ => panic!(),
         };
         assert_eq!(message, "Unknown value for 'creator' attribute.");
+    }
+
+    #[cfg(not(feature = "compat"))]
+    #[test]
+    fn test_invalid_checksum() {
+        let elem: Element = "<checksum xmlns='urn:xmpp:jingle:apps:file-transfer:5' name='coucou' creator='initiator' coucou=''><file><hash xmlns='urn:xmpp:hashes:2' algo='sha-1'>w0mcJylzCn+AfvuGdqkty2+KP48=</hash></file></checksum>".parse().unwrap();
+        let error = Checksum::try_from(elem).unwrap_err();
+        let message = match error {
+            Error::ParseError(string) => string,
+            _ => panic!(),
+        };
+        assert_eq!(message, "Unknown attribute in checksum element.");
     }
 
     #[test]
@@ -633,18 +635,19 @@ mod tests {
         assert_eq!(range2.offset, 2048);
         assert_eq!(range2.length, Some(1024));
         assert_eq!(range2.hashes, hashes);
+    }
 
+    #[cfg(not(feature = "compat"))]
+    #[test]
+    fn test_invalid_range() {
         let elem: Element = "<range xmlns='urn:xmpp:jingle:apps:file-transfer:5' coucou=''/>"
             .parse()
             .unwrap();
-        #[cfg(not(feature = "compat"))]
-        {
-            let error = Range::try_from(elem).unwrap_err();
-            let message = match error {
-                Error::ParseError(string) => string,
-                _ => panic!(),
-            };
-            assert_eq!(message, "Unknown attribute in range element.");
-        }
+        let error = Range::try_from(elem).unwrap_err();
+        let message = match error {
+            Error::ParseError(string) => string,
+            _ => panic!(),
+        };
+        assert_eq!(message, "Unknown attribute in range element.");
     }
 }
