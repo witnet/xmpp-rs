@@ -38,10 +38,10 @@ generate_attribute!(
 
 generate_attribute!(
     /// The sub-state of subscription with a contact.
-    Ask, "ask", {
-        /// Pending sub-state of the 'none' subscription state
-        Subscribe => "subscribe",
-    }
+    Ask, "ask", (
+        /// Pending sub-state of the 'none' subscription state.
+        Subscribe => "subscribe"
+    )
 );
 
 generate_element!(
@@ -58,8 +58,8 @@ generate_element!(
         /// Subscription status of this contact.
         subscription: Subscription = "subscription" => default,
 
-        ///
-        ask: Option<Ask> = "ask" => optional_empty
+        /// Indicates “Pending Out” sub-states for this contact.
+        ask: Ask = "ask" => default,
     ],
 
     children: [
@@ -174,7 +174,7 @@ mod tests {
         );
         assert_eq!(roster.items[0].name, Some(String::from("Romeo")));
         assert_eq!(roster.items[0].subscription, Subscription::Both);
-        assert_eq!(roster.items[0].ask, None);
+        assert_eq!(roster.items[0].ask, Ask::None);
         assert_eq!(
             roster.items[0].groups,
             vec!(Group::from_str("Friends").unwrap())
@@ -186,7 +186,7 @@ mod tests {
         );
         assert_eq!(roster.items[3].name, Some(String::from("MyContact")));
         assert_eq!(roster.items[3].subscription, Subscription::None);
-        assert_eq!(roster.items[3].ask, Some(Ask::Subscribe));
+        assert_eq!(roster.items[3].ask, Ask::Subscribe);
         assert_eq!(
             roster.items[3].groups,
             vec!(Group::from_str("MyBuddies").unwrap())
