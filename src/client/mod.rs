@@ -45,12 +45,19 @@ impl Client {
     /// and yield events.
     pub fn new(jid: &str, password: &str) -> Result<Self, JidParseError> {
         let jid = Jid::from_str(jid)?;
+        let client = Self::new_with_jid(jid, password);
+        Ok(client)
+    }
+
+    /// Start a new client given that the JID is already parsed.
+    pub fn new_with_jid(jid: Jid, password: &str) -> Self {
         let password = password.to_owned();
         let connect = Self::make_connect(jid.clone(), password.clone());
-        Ok(Client {
+        let client = Client {
             jid,
             state: ClientState::Connecting(Box::new(connect)),
-        })
+        };
+        client
     }
 
     fn make_connect(jid: Jid, password: String) -> impl Future<Item = XMPPStream, Error = Error> {
