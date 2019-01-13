@@ -14,6 +14,7 @@ use std::io;
 use std::iter::FromIterator;
 use std::rc::Rc;
 use std::str::from_utf8;
+use std::borrow::Cow;
 use tokio_codec::{Decoder, Encoder};
 use xml5ever::interface::Attribute;
 use xml5ever::tokenizer::{Tag, TagKind, Token, TokenSink, XmlTokenizer};
@@ -104,11 +105,12 @@ impl ParserSink {
                     "xmlns" => (),
                     _ if is_prefix_xmlns(attr) => (),
                     _ => {
-                        if let Some(ref prefix) = attr.name.prefix {
-                            el_builder = el_builder.attr(format!("{}:{}", prefix, attr.name.local), attr.value.as_ref());
+                        let attr_name = if let Some(ref prefix) = attr.name.prefix {
+                            Cow::Owned(format!("{}:{}", prefix, attr.name.local))
                         } else {
-                            el_builder = el_builder.attr(attr.name.local.as_ref(), attr.value.as_ref());
-                        }
+                            Cow::Borrowed(attr.name.local.as_ref())
+                        };
+                        el_builder = el_builder.attr(attr_name, attr.value.as_ref());
                     }
                 }
             }
