@@ -41,7 +41,7 @@ impl IqResultPayload for VersionResult {}
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::compare_elements::NamespaceAwareCompare;
+    use crate::util::compare_elements::NamespaceAwareCompare;
     use minidom::Element;
     use try_from::TryFrom;
 

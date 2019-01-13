@@ -102,8 +102,8 @@ impl Muc {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::compare_elements::NamespaceAwareCompare;
-    use crate::error::Error;
+    use crate::util::compare_elements::NamespaceAwareCompare;
+    use crate::util::error::Error;
     use minidom::Element;
     use std::str::FromStr;
     use try_from::TryFrom;

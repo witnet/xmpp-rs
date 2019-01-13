@@ -5,7 +5,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use crate::data_forms::{DataForm, DataFormType};
-use crate::error::Error;
+use crate::util::error::Error;
 use crate::iq::{IqGetPayload, IqResultPayload};
 use crate::ns;
 use jid::Jid;
@@ -236,7 +236,7 @@ impl IqResultPayload for DiscoItemsResult {}
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::compare_elements::NamespaceAwareCompare;
+    use crate::util::compare_elements::NamespaceAwareCompare;
     use std::str::FromStr;
 
     #[cfg(target_pointer_width = "32")]

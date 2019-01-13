@@ -4,7 +4,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use crate::helpers::Base64;
+use crate::util::helpers::Base64;
 use crate::iq::IqSetPayload;
 
 generate_id!(
@@ -72,7 +72,7 @@ impl IqSetPayload for Close {}
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::error::Error;
+    use crate::util::error::Error;
     use minidom::Element;
     use std::error::Error as StdError;
     use try_from::TryFrom;

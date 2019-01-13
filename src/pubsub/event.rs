@@ -6,7 +6,7 @@
 
 use crate::data_forms::DataForm;
 use crate::date::DateTime;
-use crate::error::Error;
+use crate::util::error::Error;
 use crate::ns;
 use crate::pubsub::{ItemId, NodeName, Subscription, SubscriptionId};
 use jid::Jid;
@@ -298,7 +298,7 @@ impl From<PubSubEvent> for Element {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::compare_elements::NamespaceAwareCompare;
+    use crate::util::compare_elements::NamespaceAwareCompare;
     use std::str::FromStr;
 
     #[test]

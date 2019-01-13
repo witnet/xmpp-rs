@@ -5,7 +5,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use crate::data_forms::DataForm;
-use crate::error::Error;
+use crate::util::error::Error;
 use crate::forwarding::Forwarded;
 use crate::iq::{IqGetPayload, IqResultPayload, IqSetPayload};
 use crate::message::MessagePayload;

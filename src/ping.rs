@@ -21,7 +21,7 @@ impl IqGetPayload for Ping {}
 mod tests {
     use super::*;
     #[cfg(not(feature = "disable-validation"))]
-    use crate::error::Error;
+    use crate::util::error::Error;
     use minidom::Element;
     use try_from::TryFrom;
 

@@ -26,20 +26,11 @@
 
 pub use minidom::Element;
 
-/// Error type returned by every parser on failure.
-pub mod error;
 /// XML namespace definitions used through XMPP.
 pub mod ns;
 
-/// Various helpers.
-mod helpers;
-/// Helper macros to parse and serialise more easily.
 #[macro_use]
-mod macros;
-
-#[cfg(test)]
-/// Namespace-aware comparison for tests
-mod compare_elements;
+mod util;
 
 /// RFC 6120: Extensible Messaging and Presence Protocol (XMPP): Core
 pub mod bind;

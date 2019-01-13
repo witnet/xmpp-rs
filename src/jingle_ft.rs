@@ -5,7 +5,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use crate::date::DateTime;
-use crate::error::Error;
+use crate::util::error::Error;
 use crate::hashes::Hash;
 use crate::jingle::{ContentId, Creator};
 use crate::ns;

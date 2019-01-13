@@ -37,7 +37,7 @@ impl MessagePayload for OriginId {}
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::error::Error;
+    use crate::util::error::Error;
     use minidom::Element;
     use std::str::FromStr;
     use try_from::TryFrom;

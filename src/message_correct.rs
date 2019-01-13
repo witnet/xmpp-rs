@@ -21,7 +21,7 @@ impl MessagePayload for Replace {}
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::error::Error;
+    use crate::util::error::Error;
     use minidom::Element;
     use try_from::TryFrom;
 

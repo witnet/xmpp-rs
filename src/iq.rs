@@ -5,7 +5,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use crate::error::Error;
+use crate::util::error::Error;
 use crate::ns;
 use crate::stanza_error::StanzaError;
 use jid::Jid;
@@ -218,7 +218,7 @@ impl From<Iq> for Element {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::compare_elements::NamespaceAwareCompare;
+    use crate::util::compare_elements::NamespaceAwareCompare;
     use crate::disco::DiscoInfoQuery;
     use crate::stanza_error::{DefinedCondition, ErrorType};
 

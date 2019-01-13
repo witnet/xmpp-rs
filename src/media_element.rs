@@ -4,7 +4,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use crate::helpers::TrimmedPlainText;
+use crate::util::helpers::TrimmedPlainText;
 
 generate_element!(
     /// Represents an URI used in a media element.
@@ -46,7 +46,7 @@ generate_element!(
 mod tests {
     use super::*;
     use crate::data_forms::DataForm;
-    use crate::error::Error;
+    use crate::util::error::Error;
     use minidom::Element;
     use std::error::Error as StdError;
     use try_from::TryFrom;

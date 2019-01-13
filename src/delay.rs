@@ -5,7 +5,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use crate::date::DateTime;
-use crate::helpers::PlainText;
+use crate::util::helpers::PlainText;
 use crate::message::MessagePayload;
 use crate::presence::PresencePayload;
 use jid::Jid;
@@ -32,7 +32,7 @@ impl PresencePayload for Delay {}
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::error::Error;
+    use crate::util::error::Error;
     use minidom::Element;
     use std::str::FromStr;
     use try_from::TryFrom;

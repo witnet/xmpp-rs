@@ -6,7 +6,7 @@
 
 use crate::data_forms::DataForm;
 use crate::disco::{DiscoInfoQuery, DiscoInfoResult, Feature, Identity};
-use crate::error::Error;
+use crate::util::error::Error;
 use crate::hashes::{Algo, Hash};
 use crate::ns;
 use crate::presence::PresencePayload;

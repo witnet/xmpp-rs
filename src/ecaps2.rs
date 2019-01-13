@@ -156,7 +156,7 @@ pub fn query_ecaps2(hash: Hash) -> DiscoInfoQuery {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::error::Error;
+    use crate::util::error::Error;
     use minidom::Element;
     use try_from::TryFrom;
 

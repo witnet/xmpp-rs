@@ -21,7 +21,7 @@ impl PresencePayload for Idle {}
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::error::Error;
+    use crate::util::error::Error;
     use minidom::Element;
     use std::error::Error as StdError;
     use std::str::FromStr;
