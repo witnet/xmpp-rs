@@ -289,9 +289,11 @@ mod tests {
         );
     }
 
+    /// Some servers apparently use a non-namespaced 'lang' attribute, which is invalid as not part
+    /// of the schema.  This tests whether we can parse it when disabling validation.
     #[cfg(feature = "disable-validation")]
     #[test]
-    fn failure_with_non_prefixed_text_lang() {
+    fn invalid_failure_with_non_prefixed_text_lang() {
         let elem: Element = "<failure xmlns='urn:ietf:params:xml:ns:xmpp-sasl'>
             <not-authorized xmlns='urn:ietf:params:xml:ns:xmpp-sasl'/>
             <text xmlns='urn:ietf:params:xml:ns:xmpp-sasl' lang='en'>Invalid username or password</text>
