@@ -2,26 +2,39 @@ stages:
   - build
   - test
 
+variables:
+  FEATURES: ""
+
 rust-latest-build:
   stage: build
   image: rust:latest
   script:
-    - cargo build --verbose
+    - cargo build --verbose --no-default-features --features=$FEATURES
 
 rust-nightly-build:
   stage: build
   image: rustlang/rust:nightly
   script:
-    - cargo build --verbose
+    - cargo build --verbose --no-default-features --features=$FEATURES
 
 rust-latest-test:
   stage: test
   image: rust:latest
   script:
-    - cargo test --verbose
+    - cargo test --verbose --no-default-features --features=$FEATURES
 
 rust-nightly-test:
   stage: test
   image: rustlang/rust:nightly
   script:
-    - cargo test --verbose
+    - cargo test --verbose --no-default-features --features=$FEATURES
+
+"rust-latest-test with features=disable-validation":
+  extends: rust-latest-test
+  variables:
+    FEATURES: "disable-validation"
+
+"rust-nightly-test with features=disable-validation":
+  extends: rust-nightly-test
+  variables:
+    FEATURES: "disable-validation"

@@ -14,6 +14,7 @@ generate_elem_id!(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[cfg(not(feature = "disable-validation"))]
     use crate::error::Error;
     use minidom::Element;
     use try_from::TryFrom;
@@ -48,6 +49,7 @@ mod tests {
         assert_eq!(elem1, elem2);
     }
 
+    #[cfg(not(feature = "disable-validation"))]
     #[test]
     fn test_invalid() {
         let elem: Element = "<nick xmlns='http://jabber.org/protocol/nick'><coucou/></nick>"
@@ -61,6 +63,7 @@ mod tests {
         assert_eq!(message, "Unknown child in nick element.");
     }
 
+    #[cfg(not(feature = "disable-validation"))]
     #[test]
     fn test_invalid_attribute() {
         let elem: Element = "<nick xmlns='http://jabber.org/protocol/nick' coucou=''/>"

@@ -248,6 +248,7 @@ macro_rules! check_ns_only {
 
 macro_rules! check_no_children {
     ($elem:ident, $name:tt) => {
+        #[cfg(not(feature = "disable-validation"))]
         for _ in $elem.children() {
             return Err(crate::error::Error::ParseError(concat!(
                 "Unknown child in ",
@@ -260,6 +261,7 @@ macro_rules! check_no_children {
 
 macro_rules! check_no_attributes {
     ($elem:ident, $name:tt) => {
+        #[cfg(not(feature = "disable-validation"))]
         for _ in $elem.attrs() {
             return Err(crate::error::Error::ParseError(concat!(
                 "Unknown attribute in ",
@@ -272,6 +274,7 @@ macro_rules! check_no_attributes {
 
 macro_rules! check_no_unknown_attributes {
     ($elem:ident, $name:tt, [$($attr:tt),*]) => (
+        #[cfg(not(feature = "disable-validation"))]
         for (_attr, _) in $elem.attrs() {
             $(
                 if _attr == $attr {

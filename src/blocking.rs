@@ -155,14 +155,6 @@ mod tests {
             },
         ];
 
-        let request_elem = elem.clone();
-        let error = BlocklistRequest::try_from(request_elem).unwrap_err();
-        let message = match error {
-            Error::ParseError(string) => string,
-            _ => panic!(),
-        };
-        assert_eq!(message, "Unknown child in blocklist element.");
-
         let result_elem = elem.clone();
         let result = BlocklistResult::try_from(result_elem).unwrap();
         assert_eq!(result.items, two_items);
@@ -176,6 +168,7 @@ mod tests {
         assert_eq!(unblock.items, two_items);
     }
 
+    #[cfg(not(feature = "disable-validation"))]
     #[test]
     fn test_invalid() {
         let elem: Element = "<blocklist xmlns='urn:xmpp:blocking' coucou=''/>"
@@ -216,5 +209,17 @@ mod tests {
             _ => panic!(),
         };
         assert_eq!(message, "Unknown attribute in unblock element.");
+    }
+
+    #[cfg(not(feature = "disable-validation"))]
+    #[test]
+    fn test_non_empty_blocklist_request() {
+        let elem: Element = "<blocklist xmlns='urn:xmpp:blocking'><item jid='coucou@coucou'/><item jid='domain'/></blocklist>".parse().unwrap();
+        let error = BlocklistRequest::try_from(elem).unwrap_err();
+        let message = match error {
+            Error::ParseError(string) => string,
+            _ => panic!(),
+        };
+        assert_eq!(message, "Unknown child in blocklist element.");
     }
 }
