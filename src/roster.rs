@@ -36,6 +36,14 @@ generate_attribute!(
     }, Default = None
 );
 
+generate_attribute!(
+    /// The sub-state of subscription with a contact.
+    Ask, "ask", {
+        /// Pending sub-state of the 'none' subscription state
+        Subscribe => "subscribe",
+    }
+);
+
 generate_element!(
     /// Contact from the user’s contact list.
     #[derive(PartialEq)]
@@ -48,7 +56,10 @@ generate_element!(
         name: Option<String> = "name" => optional_empty,
 
         /// Subscription status of this contact.
-        subscription: Subscription = "subscription" => default
+        subscription: Subscription = "subscription" => default,
+
+        ///
+        ask: Option<Ask> = "ask" => optional_empty
     ],
 
     children: [
@@ -144,22 +155,41 @@ mod tests {
   <item jid='benvolio@example.net'
         name='Benvolio'
         subscription='both'/>
+  <item jid='contact@example.org'
+        subscription='none'
+        ask='subscribe'
+        name='MyContact'>
+      <group>MyBuddies</group>
+  </item>
 </query>
 "#
         .parse()
         .unwrap();
         let roster = Roster::try_from(elem).unwrap();
         assert_eq!(roster.ver, Some(String::from("ver11")));
-        assert_eq!(roster.items.len(), 3);
+        assert_eq!(roster.items.len(), 4);
         assert_eq!(
             roster.items[0].jid,
             Jid::from_str("romeo@example.net").unwrap()
         );
         assert_eq!(roster.items[0].name, Some(String::from("Romeo")));
         assert_eq!(roster.items[0].subscription, Subscription::Both);
+        assert_eq!(roster.items[0].ask, None);
         assert_eq!(
             roster.items[0].groups,
             vec!(Group::from_str("Friends").unwrap())
+        );
+
+        assert_eq!(
+            roster.items[3].jid,
+            Jid::from_str("contact@example.org").unwrap()
+        );
+        assert_eq!(roster.items[3].name, Some(String::from("MyContact")));
+        assert_eq!(roster.items[3].subscription, Subscription::None);
+        assert_eq!(roster.items[3].ask, Some(Ask::Subscribe));
+        assert_eq!(
+            roster.items[3].groups,
+            vec!(Group::from_str("MyBuddies").unwrap())
         );
     }
 
