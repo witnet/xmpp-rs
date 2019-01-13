@@ -103,6 +103,7 @@ mod tests {
     fn test_size() {
         assert_size!(Group, 12);
         assert_size!(Subscription, 1);
+        assert_size!(Ask, 1);
         assert_size!(Item, 64);
         assert_size!(Roster, 24);
     }
@@ -112,6 +113,7 @@ mod tests {
     fn test_size() {
         assert_size!(Group, 24);
         assert_size!(Subscription, 1);
+        assert_size!(Ask, 1);
         assert_size!(Item, 128);
         assert_size!(Roster, 48);
     }
