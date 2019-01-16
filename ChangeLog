@@ -1,3 +1,8 @@
+Version 0.12.1:
+2019-01-16  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
+    * Improvements:
+        - Reexport missing JidParseError from the jid crate.
+
 Version 0.12.0:
 2019-01-16  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
     * Breaking changes:
