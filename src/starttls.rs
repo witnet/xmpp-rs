@@ -1,8 +1,7 @@
 use futures::sink;
 use futures::stream::Stream;
 use futures::{Async, Future, Poll, Sink};
-use jid::Jid;
-use minidom::Element;
+use xmpp_parsers::{Jid, Element};
 use native_tls::TlsConnector as NativeTlsConnector;
 use std::mem::replace;
 use tokio_io::{AsyncRead, AsyncWrite};

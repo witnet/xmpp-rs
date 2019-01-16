@@ -1,11 +1,9 @@
 use futures::{future, Sink, Stream};
-use jid::Jid;
-use minidom::Element;
 use std::env::args;
 use std::process::exit;
 use tokio::runtime::current_thread::Runtime;
 use tokio_xmpp::Client;
-use try_from::TryFrom;
+use xmpp_parsers::{Jid, Element, TryFrom};
 use xmpp_parsers::message::{Body, Message, MessageType};
 use xmpp_parsers::presence::{Presence, Show as PresenceShow, Type as PresenceType};
 

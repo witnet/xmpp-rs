@@ -1,7 +1,7 @@
 use futures::{sink, Async, Future, Poll, Stream};
 use std::mem::replace;
 use tokio_io::{AsyncRead, AsyncWrite};
-use try_from::TryFrom;
+use xmpp_parsers::TryFrom;
 use xmpp_parsers::bind::Bind;
 use xmpp_parsers::iq::{Iq, IqType};
 

@@ -2,8 +2,7 @@
 
 use futures::sink::Send;
 use futures::{Poll, Sink, StartSend, Stream};
-use jid::Jid;
-use minidom::Element;
+use xmpp_parsers::{Jid, Element};
 use tokio_codec::Framed;
 use tokio_io::{AsyncRead, AsyncWrite};
 

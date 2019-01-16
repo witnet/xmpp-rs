@@ -1,4 +1,4 @@
-use minidom::Element;
+use xmpp_parsers::Element;
 
 /// High-level event on the Stream implemented by Client and Component
 #[derive(Debug)]
