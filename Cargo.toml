@@ -14,8 +14,8 @@ license = "MPL-2.0"
 edition = "2018"
 
 [dependencies]
-minidom = "0.9.1"
-jid = { version = "0.5.2", features = ["minidom"] }
+minidom = "0.10.0"
+jid = { version = "0.5.3", features = ["minidom"] }
 base64 = "0.10"
 digest = "0.8"
 sha-1 = "0.8"
