@@ -1,3 +1,8 @@
+Version 0.12.2:
+2019-01-16  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
+    * Improvements:
+        - Reexport missing util::error::Error and try_from::TryFrom.
+
 Version 0.12.1:
 2019-01-16  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
     * Improvements:
