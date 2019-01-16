@@ -1,3 +1,23 @@
+Version 0.12.0:
+2018-09-20  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
+    * Breaking changes:
+        - Update dependencies.
+        - Switch to git, upstream is now available at
+          https://gitlab.com/xmpp-rs/xmpp-parsers
+        - Switch to Edition 2018, this removes support for rustc
+          versions older than 1.31.
+        - Implement support for XEP-0030 2.5rc3, relaxing the ordering
+          of children in disco#info.
+    * Improvements:
+        - Test for struct size, to keep them known and avoid bloat.
+        - Add various constructors to make the API easier to use.
+        - Add forgotten 'ask' attribute on roster item (thanks O01eg!).
+        - Use cargo-fmt on the codebase, to lower the barrier of entry.
+        - Add a disable-validation feature, disabling many checks
+          xmpp-parsers is doing.  This should be used for software
+          which want to let invalid XMPP pass through instead of being
+          rejected as invalid (thanks Astro-!).
+
 Version 0.11.1:
 2018-09-20  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
     * Improvements:
