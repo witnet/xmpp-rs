@@ -25,7 +25,7 @@
 #![deny(missing_docs)]
 
 pub use minidom::Element;
-pub use jid::Jid;
+pub use jid::{Jid, JidParseError};
 
 /// XML namespace definitions used through XMPP.
 pub mod ns;
