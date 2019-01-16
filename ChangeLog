@@ -11,6 +11,8 @@ Version 0.12.0:
     * Improvements:
         - Test for struct size, to keep them known and avoid bloat.
         - Add various constructors to make the API easier to use.
+        - Reexport Jid from the jid crate, to avoid any weird issue on
+          using different incompatible versions of the same crate.
         - Add forgotten 'ask' attribute on roster item (thanks O01eg!).
         - Use cargo-fmt on the codebase, to lower the barrier of entry.
         - Add a disable-validation feature, disabling many checks
