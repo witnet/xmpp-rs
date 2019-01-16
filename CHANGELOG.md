@@ -1,3 +1,9 @@
+Version 0.5.3, released 2019-01-16:
+  * Updates
+    - Link Mauve bumped the minidom dependency version.
+    - Use Edition 2018, putting the baseline rustc version to 1.31.
+    - Run cargo-fmt on the code, to lower the barrier of entry.
+
 Version 0.5.2, released 2018-07-31:
   * Updates
     - Astro bumped the minidom dependency version.
