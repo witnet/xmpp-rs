@@ -1,7 +1,6 @@
 use futures::{done, Async, AsyncSink, Future, Poll, Sink, StartSend, Stream};
 use idna;
-use jid::{Jid, JidParseError};
-use minidom::Element;
+use xmpp_parsers::{Jid, JidParseError, Element};
 use sasl::common::{ChannelBinding, Credentials};
 use std::mem::replace;
 use std::str::FromStr;

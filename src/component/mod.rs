@@ -2,8 +2,7 @@
 //! XMPP server under a JID consisting of just a domain name. They are
 //! allowed to use any user and resource identifiers in their stanzas.
 use futures::{done, Async, AsyncSink, Future, Poll, Sink, StartSend, Stream};
-use jid::{Jid, JidParseError};
-use minidom::Element;
+use xmpp_parsers::{Jid, JidParseError, Element};
 use std::mem::replace;
 use std::str::FromStr;
 use tokio::net::TcpStream;

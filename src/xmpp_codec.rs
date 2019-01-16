@@ -2,7 +2,7 @@
 
 use crate::{ParseError, ParserError};
 use bytes::{BufMut, BytesMut};
-use minidom::Element;
+use xmpp_parsers::Element;
 use quick_xml::Writer as EventWriter;
 use std;
 use std::cell::RefCell;

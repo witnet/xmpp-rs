@@ -7,7 +7,7 @@ use std::str::Utf8Error;
 use trust_dns_proto::error::ProtoError;
 use trust_dns_resolver::error::ResolveError;
 
-use xmpp_parsers::error::Error as ParsersError;
+use xmpp_parsers::Error as ParsersError;
 use xmpp_parsers::sasl::DefinedCondition as SaslDefinedCondition;
 
 /// Top-level error type

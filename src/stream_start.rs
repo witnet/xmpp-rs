@@ -1,6 +1,5 @@
 use futures::{sink, Async, Future, Poll, Sink, Stream};
-use jid::Jid;
-use minidom::Element;
+use xmpp_parsers::{Jid, Element};
 use std::mem::replace;
 use tokio_codec::Framed;
 use tokio_io::{AsyncRead, AsyncWrite};
