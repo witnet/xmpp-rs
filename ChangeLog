@@ -1,5 +1,5 @@
 Version 0.12.0:
-2018-09-20  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
+2019-01-16  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
     * Breaking changes:
         - Update dependencies.
         - Switch to git, upstream is now available at
