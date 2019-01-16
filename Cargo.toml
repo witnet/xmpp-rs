@@ -6,9 +6,9 @@ authors = [
   "Maxime “pep” Buquet <pep+code@bouah.net>",
 ]
 description = "Collection of parsers and serialisers for XMPP extensions"
-homepage = "https://hg.linkmauve.fr/xmpp-parsers"
-repository = "https://hg.linkmauve.fr/xmpp-parsers"
-keywords = ["xmpp", "xml"]
+homepage = "https://gitlab.com/xmpp-rs/xmpp-parsers"
+repository = "https://gitlab.com/xmpp-rs/xmpp-parsers"
+keywords = ["xmpp", "jabber", "xml"]
 categories = ["parsing", "network-programming"]
 license = "MPL-2.0"
 edition = "2018"
