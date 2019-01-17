@@ -9,6 +9,7 @@ use std::net::SocketAddr;
 use tokio::net::tcp::ConnectFuture;
 use tokio::net::TcpStream;
 use trust_dns_resolver::{AsyncResolver, Name, IntoName, Background, BackgroundLookup};
+use trust_dns_resolver::config::LookupIpStrategy;
 use trust_dns_resolver::lookup::SrvLookupFuture;
 use trust_dns_resolver::lookup_ip::LookupIpFuture;
 
@@ -30,7 +31,9 @@ pub struct Connecter {
 }
 
 fn resolver() -> Result<AsyncResolver, IoError> {
-    let (resolver, resolver_background) = AsyncResolver::from_system_conf()?;
+    let (config, mut opts) = trust_dns_resolver::system_conf::read_system_conf()?;
+    opts.ip_strategy = LookupIpStrategy::Ipv4AndIpv6;
+    let (resolver, resolver_background) = AsyncResolver::new(config, opts);
     tokio::runtime::current_thread::spawn(resolver_background);
     Ok(resolver)
 }
