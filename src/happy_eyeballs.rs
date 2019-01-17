@@ -8,17 +8,16 @@ use std::mem;
 use std::net::SocketAddr;
 use tokio::net::tcp::ConnectFuture;
 use tokio::net::TcpStream;
-use trust_dns_resolver::config::LookupIpStrategy;
+use trust_dns_resolver::{AsyncResolver, Name, IntoName, Background, BackgroundLookup};
 use trust_dns_resolver::lookup::SrvLookupFuture;
 use trust_dns_resolver::lookup_ip::LookupIpFuture;
-use trust_dns_resolver::system_conf;
-use trust_dns_resolver::{error::ResolveError, IntoName, Name, ResolverFuture};
+
 
 enum State {
-    AwaitResolver(Box<Future<Item = ResolverFuture, Error = ResolveError> + Send>),
-    ResolveSrv(ResolverFuture, SrvLookupFuture),
-    ResolveTarget(ResolverFuture, LookupIpFuture, u16),
-    Connecting(Option<ResolverFuture>, Vec<RefCell<ConnectFuture>>),
+    Start(AsyncResolver),
+    ResolveSrv(AsyncResolver, BackgroundLookup<SrvLookupFuture>),
+    ResolveTarget(AsyncResolver, Background<LookupIpFuture>, u16),
+    Connecting(Option<AsyncResolver>, Vec<RefCell<ConnectFuture>>),
     Invalid,
 }
 
@@ -31,11 +30,10 @@ pub struct Connecter {
     error: Option<Error>,
 }
 
-fn resolver_future(
-) -> Result<Box<Future<Item = ResolverFuture, Error = ResolveError> + Send>, IoError> {
-    let (conf, mut opts) = system_conf::read_system_conf()?;
-    opts.ip_strategy = LookupIpStrategy::Ipv4AndIpv6;
-    Ok(ResolverFuture::new(conf, opts))
+fn resolver() -> Result<AsyncResolver, IoError> {
+    let (resolver, resolver_background) = AsyncResolver::from_system_conf()?;
+    tokio::runtime::current_thread::spawn(resolver_background);
+    Ok(resolver)
 }
 
 impl Connecter {
@@ -57,7 +55,7 @@ impl Connecter {
             });
         }
 
-        let state = State::AwaitResolver(resolver_future()?);
+        let state = State::Start(resolver()?);
         let srv_domain = match srv {
             Some(srv) => Some(
                 format!("{}.{}.", srv, domain)
@@ -85,29 +83,21 @@ impl Future for Connecter {
     fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
         let state = mem::replace(&mut self.state, State::Invalid);
         match state {
-            State::AwaitResolver(mut resolver_future) => {
-                match resolver_future.poll().map_err(ConnecterError::Resolve)? {
-                    Async::NotReady => {
-                        self.state = State::AwaitResolver(resolver_future);
-                        Ok(Async::NotReady)
+            State::Start(resolver) => {
+                match &self.srv_domain {
+                    &Some(ref srv_domain) => {
+                        let srv_lookup = resolver.lookup_srv(srv_domain);
+                        self.state = State::ResolveSrv(resolver, srv_lookup);
                     }
-                    Async::Ready(resolver) => {
-                        match &self.srv_domain {
-                            &Some(ref srv_domain) => {
-                                let srv_lookup = resolver.lookup_srv(srv_domain);
-                                self.state = State::ResolveSrv(resolver, srv_lookup);
-                            }
-                            None => {
-                                self.targets = [(self.domain.clone(), self.fallback_port)]
-                                    .into_iter()
-                                    .cloned()
-                                    .collect();
-                                self.state = State::Connecting(Some(resolver), vec![]);
-                            }
-                        }
-                        self.poll()
+                    None => {
+                        self.targets = [(self.domain.clone(), self.fallback_port)]
+                            .into_iter()
+                            .cloned()
+                            .collect();
+                        self.state = State::Connecting(Some(resolver), vec![]);
                     }
                 }
+                self.poll()
             }
             State::ResolveSrv(resolver, mut srv_lookup) => {
                 match srv_lookup.poll() {

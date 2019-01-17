@@ -107,7 +107,7 @@ pub enum AuthError {
 }
 
 /// Error establishing connection
-#[derive(Debug, Error)]
+#[derive(Debug)]
 pub enum ConnecterError {
     /// All attempts failed, no error available
     AllFailed,
@@ -115,4 +115,12 @@ pub enum ConnecterError {
     Dns(ProtoError),
     /// DNS resolution error
     Resolve(ResolveError),
+}
+
+impl std::error::Error for ConnecterError {}
+
+impl std::fmt::Display for ConnecterError {
+    fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
+        write!(fmt, "{:?}", self)
+    }
 }
