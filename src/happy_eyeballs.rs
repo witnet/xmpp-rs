@@ -14,7 +14,6 @@ use trust_dns_resolver::lookup_ip::LookupIpFuture;
 
 
 enum State {
-    Start(AsyncResolver),
     ResolveSrv(AsyncResolver, BackgroundLookup<SrvLookupFuture>),
     ResolveTarget(AsyncResolver, Background<LookupIpFuture>, u16),
     Connecting(Option<AsyncResolver>, Vec<RefCell<ConnectFuture>>),
@@ -55,7 +54,6 @@ impl Connecter {
             });
         }
 
-        let state = State::Start(resolver()?);
         let srv_domain = match srv {
             Some(srv) => Some(
                 format!("{}.{}.", srv, domain)
@@ -65,14 +63,32 @@ impl Connecter {
             None => None,
         };
 
-        Ok(Connecter {
+        let mut self_ = Connecter {
             fallback_port,
             srv_domain,
             domain: domain.into_name().map_err(ConnecterError::Dns)?,
-            state,
+            state: State::Invalid,
             targets: VecDeque::new(),
             error: None,
-        })
+        };
+
+        let resolver = resolver()?;
+        // Initialize state
+        match &self_.srv_domain {
+            &Some(ref srv_domain) => {
+                let srv_lookup = resolver.lookup_srv(srv_domain);
+                self_.state = State::ResolveSrv(resolver, srv_lookup);
+            }
+            None => {
+                self_.targets = [(self_.domain.clone(), self_.fallback_port)]
+                    .into_iter()
+                    .cloned()
+                    .collect();
+                self_.state = State::Connecting(Some(resolver), vec![]);
+            }
+        }
+
+        Ok(self_)
     }
 }
 
@@ -83,22 +99,6 @@ impl Future for Connecter {
     fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
         let state = mem::replace(&mut self.state, State::Invalid);
         match state {
-            State::Start(resolver) => {
-                match &self.srv_domain {
-                    &Some(ref srv_domain) => {
-                        let srv_lookup = resolver.lookup_srv(srv_domain);
-                        self.state = State::ResolveSrv(resolver, srv_lookup);
-                    }
-                    None => {
-                        self.targets = [(self.domain.clone(), self.fallback_port)]
-                            .into_iter()
-                            .cloned()
-                            .collect();
-                        self.state = State::Connecting(Some(resolver), vec![]);
-                    }
-                }
-                self.poll()
-            }
             State::ResolveSrv(resolver, mut srv_lookup) => {
                 match srv_lookup.poll() {
                     Ok(Async::NotReady) => {
