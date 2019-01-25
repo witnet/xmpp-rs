@@ -106,9 +106,10 @@ mod tests {
         assert_eq!(data.data, b"\0\0\0");
     }
 
+    #[cfg(not(feature = "disable-validation"))]
     #[test]
     fn test_invalid() {
-        let elem: Element = "<data xmlns='urn:xmpp:avatar:data' id='coucou'>"
+        let elem: Element = "<data xmlns='urn:xmpp:avatar:data' id='coucou'/>"
             .parse()
             .unwrap();
         let error = Data::try_from(elem).unwrap_err();
