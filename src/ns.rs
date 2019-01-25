@@ -56,6 +56,11 @@ pub const PUBSUB_OWNER: &str = "http://jabber.org/protocol/pubsub#owner";
 /// XEP-0077: In-Band Registration
 pub const REGISTER: &str = "jabber:iq:register";
 
+/// XEP-0084: User Avatar
+pub const AVATAR_DATA: &str = "urn:xmpp:avatar:data";
+/// XEP-0084: User Avatar
+pub const AVATAR_METADATA: &str = "urn:xmpp:avatar:metadata";
+
 /// XEP-0085: Chat State Notifications
 pub const CHATSTATES: &str = "http://jabber.org/protocol/chatstates";
 
