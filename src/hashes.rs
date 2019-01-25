@@ -8,6 +8,8 @@ use crate::util::error::Error;
 use crate::util::helpers::Base64;
 use base64;
 use minidom::IntoAttributeValue;
+use std::num::ParseIntError;
+use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
 
 /// List of the algorithms we support, or Unknown.
@@ -118,6 +120,47 @@ impl Hash {
     /// it.
     pub fn from_base64(algo: Algo, hash: &str) -> Result<Hash, Error> {
         Ok(Hash::new(algo, base64::decode(hash)?))
+    }
+}
+
+/// Helper for parsing and serialising a SHA-1 attribute.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Sha1HexAttribute(Hash);
+
+impl FromStr for Sha1HexAttribute {
+    type Err = ParseIntError;
+
+    fn from_str(hex: &str) -> Result<Self, Self::Err> {
+        let mut bytes = vec![];
+        for i in 0..hex.len() / 2 {
+            let byte = u8::from_str_radix(&hex[2 * i..2 * i + 2], 16);
+            bytes.push(byte?);
+        }
+        Ok(Sha1HexAttribute(Hash::new(Algo::Sha_1, bytes)))
+    }
+}
+
+impl IntoAttributeValue for Sha1HexAttribute {
+    fn into_attribute_value(self) -> Option<String> {
+        let mut bytes = vec![];
+        for byte in self.0.hash {
+            bytes.push(format!("{:02x}", byte));
+        }
+        Some(bytes.join(""))
+    }
+}
+
+impl DerefMut for Sha1HexAttribute {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+impl Deref for Sha1HexAttribute {
+    type Target = Hash;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
     }
 }
 
