@@ -79,6 +79,9 @@ pub const COMPONENT: &str = "jabber:component:accept";
 /// XEP-0115: Entity Capabilities
 pub const CAPS: &str = "http://jabber.org/protocol/caps";
 
+/// XEP-0157: Contact Addresses for XMPP Services
+pub const SERVER_INFO: &str = "http://jabber.org/network/serverinfo";
+
 /// XEP-0166: Jingle
 pub const JINGLE: &str = "urn:xmpp:jingle:1";
 
