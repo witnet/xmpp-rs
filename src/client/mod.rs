@@ -208,4 +208,19 @@ impl Sink for Client {
             _ => Ok(Async::Ready(())),
         }
     }
+
+    /// This closes the inner TCP stream.
+    ///
+    /// To synchronize your shutdown with the server side, you should
+    /// first send `Packet::StreamEnd` and wait it to be sent back
+    /// before closing the connection.
+    fn close(&mut self) -> Poll<(), Self::SinkError> {
+        match self.state {
+            ClientState::Connected(ref mut stream) =>
+                stream.close()
+                .map_err(|e| e.into()),
+            _ =>
+                Ok(Async::Ready(())),
+        }
+    }
 }
