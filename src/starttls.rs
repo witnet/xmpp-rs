@@ -75,8 +75,8 @@ impl<S: AsyncRead + AsyncWrite> Future for StartTlsClient<S> {
                     retry = true;
                     (new_state, Ok(Async::NotReady))
                 }
-                Ok(Async::Ready(value)) => {
-                    println!("StartTlsClient ignore {:?}", value);
+                Ok(Async::Ready(_value)) => {
+                    // println!("StartTlsClient ignore {:?}", _value);
                     (
                         StartTlsClientState::AwaitProceed(xmpp_stream),
                         Ok(Async::NotReady),

@@ -73,8 +73,8 @@ impl<S: AsyncRead + AsyncWrite> Future for ComponentAuth<S> {
                 {
                     Err(AuthError::ComponentFail.into())
                 }
-                Ok(Async::Ready(event)) => {
-                    println!("ComponentAuth ignore {:?}", event);
+                Ok(Async::Ready(_event)) => {
+                    // println!("ComponentAuth ignore {:?}", _event);
                     Ok(Async::NotReady)
                 }
                 Ok(_) => {

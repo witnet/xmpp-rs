@@ -289,7 +289,7 @@ impl Encoder for XMPPCodec {
                 }
                 write!(buf, ">\n").unwrap();
 
-                print!(">> {}", buf);
+                // print!(">> {}", buf);
                 write!(dst, "{}", buf).map_err(|e| io::Error::new(io::ErrorKind::InvalidInput, e))
             }
             Packet::Stanza(stanza) => {
