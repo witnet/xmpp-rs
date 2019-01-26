@@ -3,7 +3,7 @@ name = "xmpp-parsers"
 version = "0.12.2"
 authors = [
   "Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>",
-  "Maxime “pep” Buquet <pep+code@bouah.net>",
+  "Maxime “pep” Buquet <pep@bouah.net>",
 ]
 description = "Collection of parsers and serialisers for XMPP extensions"
 homepage = "https://gitlab.com/xmpp-rs/xmpp-parsers"
