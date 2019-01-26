@@ -88,6 +88,8 @@ pub enum ProtocolError {
     NoStreamId,
     /// Encountered an unexpected XML token
     InvalidToken,
+    /// Unexpected <stream:stream> (shouldn't occur)
+    InvalidStreamStart,
 }
 
 /// Authentication error

@@ -379,6 +379,25 @@ mod tests {
     }
 
     #[test]
+    fn test_stream_end() {
+        let mut c = XMPPCodec::new();
+        let mut b = BytesMut::with_capacity(1024);
+        b.put(r"<?xml version='1.0'?><stream:stream xmlns:stream='http://etherx.jabber.org/streams' version='1.0' xmlns='jabber:client'>");
+        let r = c.decode(&mut b);
+        assert!(match r {
+            Ok(Some(Packet::StreamStart(_))) => true,
+            _ => false,
+        });
+        b.clear();
+        b.put(r"</stream:stream>");
+        let r = c.decode(&mut b);
+        assert!(match r {
+            Ok(Some(Packet::StreamEnd)) => true,
+            _ => false,
+        });
+    }
+
+    #[test]
     fn test_truncated_stanza() {
         let mut c = XMPPCodec::new();
         let mut b = BytesMut::with_capacity(1024);

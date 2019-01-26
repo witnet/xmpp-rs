@@ -164,10 +164,24 @@ impl Stream for Client {
                         Ok(Async::Ready(Some(Event::Disconnected)))
                     }
                     Ok(Async::Ready(Some(Packet::Stanza(stanza)))) => {
+                        // Receive stanza
                         self.state = ClientState::Connected(stream);
                         Ok(Async::Ready(Some(Event::Stanza(stanza))))
                     }
-                    Ok(Async::NotReady) | Ok(Async::Ready(_)) => {
+                    Ok(Async::Ready(Some(Packet::Text(_)))) => {
+                        // Ignore text between stanzas
+                        Ok(Async::NotReady)
+                    }
+                    Ok(Async::Ready(Some(Packet::StreamStart(_)))) => {
+                        // <stream:stream>
+                        Err(ProtocolError::InvalidStreamStart.into())
+                    }
+                    Ok(Async::Ready(Some(Packet::StreamEnd))) => {
+                        // End of stream: </stream:stream>
+                        Ok(Async::Ready(None))
+                    }
+                    Ok(Async::NotReady) => {
+                        // Try again later
                         self.state = ClientState::Connected(stream);
                         Ok(Async::NotReady)
                     }
@@ -212,8 +226,8 @@ impl Sink for Client {
     /// This closes the inner TCP stream.
     ///
     /// To synchronize your shutdown with the server side, you should
-    /// first send `Packet::StreamEnd` and wait it to be sent back
-    /// before closing the connection.
+    /// first send `Packet::StreamEnd` and wait for the end of the
+    /// incoming stream before closing the connection.
     fn close(&mut self) -> Poll<(), Self::SinkError> {
         match self.state {
             ClientState::Connected(ref mut stream) =>
