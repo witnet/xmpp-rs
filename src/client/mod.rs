@@ -184,16 +184,21 @@ impl Sink for Client {
 
     fn start_send(&mut self, item: Self::SinkItem) -> StartSend<Self::SinkItem, Self::SinkError> {
         match self.state {
-            ClientState::Connected(ref mut stream) => match stream.start_send(Packet::Stanza(item))
-            {
-                Ok(AsyncSink::NotReady(Packet::Stanza(stanza))) => Ok(AsyncSink::NotReady(stanza)),
-                Ok(AsyncSink::NotReady(_)) => {
-                    panic!("Client.start_send with stanza but got something else back")
+            ClientState::Connected(ref mut stream) => {
+                match stream.start_send(Packet::Stanza(item)) {
+                    Ok(AsyncSink::NotReady(Packet::Stanza(stanza))) =>
+                        Ok(AsyncSink::NotReady(stanza)),
+                    Ok(AsyncSink::NotReady(_)) => {
+                        panic!("Client.start_send with stanza but got something else back")
+                    }
+                    Ok(AsyncSink::Ready) =>
+                        Ok(AsyncSink::Ready),
+                    Err(e) =>
+                        Err(e)?,
                 }
-                Ok(AsyncSink::Ready) => Ok(AsyncSink::Ready),
-                Err(e) => Err(e)?,
-            },
-            _ => Ok(AsyncSink::NotReady(item)),
+            }
+            _ =>
+                Ok(AsyncSink::NotReady(item)),
         }
     }
 
