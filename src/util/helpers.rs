@@ -39,12 +39,26 @@ impl TrimmedPlainText {
     }
 }
 
-/// Codec wrapping base64 encode/decode
+/// Codec wrapping base64 encode/decode.
 pub struct Base64;
 
 impl Base64 {
     pub fn decode(s: &str) -> Result<Vec<u8>, Error> {
         Ok(base64::decode(s)?)
+    }
+
+    pub fn encode(b: &Vec<u8>) -> Option<String> {
+        Some(base64::encode(b))
+    }
+}
+
+/// Codec wrapping base64 encode/decode, while ignoring whitespace characters.
+pub struct WhitespaceAwareBase64;
+
+impl WhitespaceAwareBase64 {
+    pub fn decode(s: &str) -> Result<Vec<u8>, Error> {
+        let s: String = s.chars().into_iter().filter(|ch| *ch != ' ' && *ch != '\n' && *ch != '\t').collect();
+        Ok(base64::decode(&s)?)
     }
 
     pub fn encode(b: &Vec<u8>) -> Option<String> {
