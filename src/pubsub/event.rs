@@ -8,7 +8,7 @@ use crate::data_forms::DataForm;
 use crate::date::DateTime;
 use crate::util::error::Error;
 use crate::ns;
-use crate::pubsub::{ItemId, NodeName, Subscription, SubscriptionId};
+use crate::pubsub::{ItemId, NodeName, Subscription, SubscriptionId, PubSubPayload};
 use jid::Jid;
 use minidom::Element;
 use try_from::TryFrom;
@@ -55,6 +55,17 @@ impl From<Item> for Element {
             .attr("publisher", item.publisher)
             .append(item.payload)
             .build()
+    }
+}
+
+impl Item {
+    /// Create a new item event, accepting only payloads implementing `PubSubPayload`.
+    pub fn new<P: PubSubPayload>(id: Option<ItemId>, publisher: Option<Jid>, payload: Option<P>) -> Item {
+        Item {
+            id,
+            publisher,
+            payload: payload.map(|payload| payload.into()),
+        }
     }
 }
 

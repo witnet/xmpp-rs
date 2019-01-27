@@ -5,6 +5,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use crate::hashes::Sha1HexAttribute;
+use crate::pubsub::PubSubPayload;
 use crate::util::helpers::WhitespaceAwareBase64;
 
 generate_element!(
@@ -15,6 +16,8 @@ generate_element!(
         infos: Vec<Info> = ("info", AVATAR_METADATA) => Info
     ]
 );
+
+impl PubSubPayload for Metadata {}
 
 generate_element!(
     /// Communicates avatar metadata.
@@ -48,6 +51,8 @@ generate_element!(
         data: WhitespaceAwareBase64<Vec<u8>>
     )
 );
+
+impl PubSubPayload for Data {}
 
 #[cfg(test)]
 mod tests {
