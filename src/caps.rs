@@ -71,6 +71,17 @@ impl From<Caps> for Element {
     }
 }
 
+impl Caps {
+    /// Create a Caps element from its node and hash.
+    pub fn new<N: Into<String>>(node: N, hash: Hash) -> Caps {
+        Caps {
+            ext: None,
+            node: node.into(),
+            hash,
+        }
+    }
+}
+
 fn compute_item(field: &str) -> Vec<u8> {
     let mut bytes = field.as_bytes().to_vec();
     bytes.push(b'<');
