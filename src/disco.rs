@@ -34,6 +34,15 @@ attributes: [
     var: String = "var" => required,
 ]);
 
+impl Feature {
+    /// Create a new `<feature/>` with the according `@var`.
+    pub fn new(var: &str) -> Feature {
+        Feature {
+            var: String::from(var)
+        }
+    }
+}
+
 /// Structure representing an `<identity xmlns='http://jabber.org/protocol/disco#info'/>` element.
 #[derive(Debug, Clone)]
 pub struct Identity {
