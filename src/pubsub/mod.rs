@@ -13,6 +13,8 @@ pub mod pubsub;
 pub use self::event::PubSubEvent;
 pub use self::pubsub::PubSub;
 
+use crate::{Jid, Element};
+
 generate_id!(
     /// The name of a PubSub node, used to identify it on a JID.
     NodeName
@@ -45,6 +47,30 @@ generate_attribute!(
         Unconfigured => "unconfigured",
     }, Default = None
 );
+
+/// An item from a PubSub node.
+#[derive(Debug, Clone)]
+pub struct Item {
+    /// The identifier for this item, unique per node.
+    pub id: Option<ItemId>,
+
+    /// The JID of the entity who published this item.
+    pub publisher: Option<Jid>,
+
+    /// The payload of this item, in an arbitrary namespace.
+    pub payload: Option<Element>,
+}
+
+impl Item {
+    /// Create a new item, accepting only payloads implementing `PubSubPayload`.
+    pub fn new<P: PubSubPayload>(id: Option<ItemId>, publisher: Option<Jid>, payload: Option<P>) -> Item {
+        Item {
+            id,
+            publisher,
+            payload: payload.map(|payload| payload.into()),
+        }
+    }
+}
 
 /// This trait should be implemented on any element which can be included as a PubSub payload.
 pub trait PubSubPayload: crate::TryFrom<crate::Element> + Into<crate::Element> {}

@@ -8,66 +8,16 @@ use crate::data_forms::DataForm;
 use crate::date::DateTime;
 use crate::util::error::Error;
 use crate::ns;
-use crate::pubsub::{ItemId, NodeName, Subscription, SubscriptionId, PubSubPayload};
+use crate::pubsub::{ItemId, NodeName, Subscription, SubscriptionId, Item as PubSubItem};
 use jid::Jid;
 use minidom::Element;
 use try_from::TryFrom;
 
-/// One PubSub item from a node.
+/// Event wrapper for a PubSub `<item/>`.
 #[derive(Debug, Clone)]
-pub struct Item {
-    /// The identifier for this item, unique per node.
-    pub id: Option<ItemId>,
+pub struct Item(pub PubSubItem);
 
-    /// The JID of the entity who published this item.
-    pub publisher: Option<Jid>,
-
-    /// The actual content of this item.
-    pub payload: Option<Element>,
-}
-
-impl TryFrom<Element> for Item {
-    type Err = Error;
-
-    fn try_from(elem: Element) -> Result<Item, Error> {
-        check_self!(elem, "item", PUBSUB_EVENT);
-        check_no_unknown_attributes!(elem, "item", ["id", "publisher"]);
-        let mut payloads = elem.children().cloned().collect::<Vec<_>>();
-        let payload = payloads.pop();
-        if !payloads.is_empty() {
-            return Err(Error::ParseError(
-                "More than a single payload in item element.",
-            ));
-        }
-        Ok(Item {
-            payload,
-            id: get_attr!(elem, "id", optional),
-            publisher: get_attr!(elem, "publisher", optional),
-        })
-    }
-}
-
-impl From<Item> for Element {
-    fn from(item: Item) -> Element {
-        Element::builder("item")
-            .ns(ns::PUBSUB_EVENT)
-            .attr("id", item.id)
-            .attr("publisher", item.publisher)
-            .append(item.payload)
-            .build()
-    }
-}
-
-impl Item {
-    /// Create a new item event, accepting only payloads implementing `PubSubPayload`.
-    pub fn new<P: PubSubPayload>(id: Option<ItemId>, publisher: Option<Jid>, payload: Option<P>) -> Item {
-        Item {
-            id,
-            publisher,
-            payload: payload.map(|payload| payload.into()),
-        }
-    }
-}
+impl_pubsub_item!(Item, PUBSUB_EVENT);
 
 /// Represents an event happening to a PubSub node.
 #[derive(Debug, Clone)]

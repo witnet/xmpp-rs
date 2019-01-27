@@ -8,7 +8,7 @@ use crate::data_forms::DataForm;
 use crate::util::error::Error;
 use crate::iq::{IqGetPayload, IqResultPayload, IqSetPayload};
 use crate::ns;
-use crate::pubsub::{ItemId, NodeName, Subscription, SubscriptionId};
+use crate::pubsub::{NodeName, Subscription, SubscriptionId, Item as PubSubItem};
 use jid::Jid;
 use minidom::Element;
 use try_from::TryFrom;
@@ -113,45 +113,11 @@ generate_element!(
     ]
 );
 
-/// An item from a PubSub node.
+/// Response wrapper for a PubSub `<item/>`.
 #[derive(Debug, Clone)]
-pub struct Item {
-    /// The payload of this item, in an arbitrary namespace.
-    pub payload: Option<Element>,
+pub struct Item(pub PubSubItem);
 
-    /// The 'id' attribute of this item.
-    pub id: Option<ItemId>,
-}
-
-impl TryFrom<Element> for Item {
-    type Err = Error;
-
-    fn try_from(elem: Element) -> Result<Item, Error> {
-        check_self!(elem, "item", PUBSUB);
-        check_no_unknown_attributes!(elem, "item", ["id"]);
-        let mut payloads = elem.children().cloned().collect::<Vec<_>>();
-        let payload = payloads.pop();
-        if !payloads.is_empty() {
-            return Err(Error::ParseError(
-                "More than a single payload in item element.",
-            ));
-        }
-        Ok(Item {
-            payload,
-            id: get_attr!(elem, "id", optional),
-        })
-    }
-}
-
-impl From<Item> for Element {
-    fn from(item: Item) -> Element {
-        Element::builder("item")
-            .ns(ns::PUBSUB)
-            .attr("id", item.id)
-            .append(item.payload)
-            .build()
-    }
-}
+impl_pubsub_item!(Item, PUBSUB);
 
 generate_element!(
     /// The options associated to a subscription request.

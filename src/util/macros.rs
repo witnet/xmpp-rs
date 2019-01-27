@@ -596,3 +596,54 @@ macro_rules! assert_size (
         assert_eq!(::std::mem::size_of::<$t>(), $sz);
     );
 );
+
+// TODO: move that to src/pubsub/mod.rs, once we figure out how to use macros from there.
+macro_rules! impl_pubsub_item {
+    ($item:ident, $ns:ident) => {
+        impl crate::TryFrom<crate::Element> for $item {
+            type Err = Error;
+
+            fn try_from(elem: crate::Element) -> Result<$item, Error> {
+                check_self!(elem, "item", $ns);
+                check_no_unknown_attributes!(elem, "item", ["id", "publisher"]);
+                let mut payloads = elem.children().cloned().collect::<Vec<_>>();
+                let payload = payloads.pop();
+                if !payloads.is_empty() {
+                    return Err(Error::ParseError(
+                        "More than a single payload in item element.",
+                    ));
+                }
+                Ok($item(crate::pubsub::Item {
+                    id: get_attr!(elem, "id", optional),
+                    publisher: get_attr!(elem, "publisher", optional),
+                    payload,
+                }))
+            }
+        }
+
+        impl From<$item> for crate::Element {
+            fn from(item: $item) -> crate::Element {
+                crate::Element::builder("item")
+                    .ns(ns::$ns)
+                    .attr("id", item.0.id)
+                    .attr("publisher", item.0.publisher)
+                    .append(item.0.payload)
+                    .build()
+            }
+        }
+
+        impl ::std::ops::Deref for $item {
+            type Target = crate::pubsub::Item;
+
+            fn deref(&self) -> &Self::Target {
+                &self.0
+            }
+        }
+
+        impl ::std::ops::DerefMut for $item {
+            fn deref_mut(&mut self) -> &mut Self::Target {
+                &mut self.0
+            }
+        }
+    }
+}
