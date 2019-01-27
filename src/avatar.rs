@@ -5,7 +5,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use crate::hashes::Sha1HexAttribute;
-use crate::util::helpers::Base64;
+use crate::util::helpers::WhitespaceAwareBase64;
 
 generate_element!(
     /// Communicates information about an avatar.
@@ -45,7 +45,7 @@ generate_element!(
     Data, "data", AVATAR_DATA,
     text: (
         /// Vector of bytes representing the avatar’s image.
-        data: Base64<Vec<u8>>
+        data: WhitespaceAwareBase64<Vec<u8>>
     )
 );
 
