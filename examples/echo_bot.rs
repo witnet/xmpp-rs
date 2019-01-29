@@ -2,7 +2,7 @@ use futures::{future, Future, Sink, Stream};
 use std::env::args;
 use std::process::exit;
 use tokio::runtime::current_thread::Runtime;
-use tokio_xmpp::Client;
+use tokio_xmpp::{Client, Packet};
 use xmpp_parsers::{Jid, Element, TryFrom};
 use xmpp_parsers::message::{Body, Message, MessageType};
 use xmpp_parsers::presence::{Presence, Show as PresenceShow, Type as PresenceType};
@@ -34,7 +34,7 @@ fn main() {
 
             let presence = make_presence();
             let sink = sink_state.take().unwrap();
-            sink_future = Some(Box::new(sink.send(presence)));
+            sink_future = Some(Box::new(sink.send(Packet::Stanza(presence))));
         } else if let Some(message) = event
             .into_stanza()
             .and_then(|stanza| Message::try_from(stanza).ok())
@@ -42,15 +42,15 @@ fn main() {
             match (message.from, message.bodies.get("")) {
                 (Some(ref from), Some(ref body)) if body.0 == "die" => {
                     println!("Secret die command triggered by {}", from);
-                    let sink = sink_state.as_mut().unwrap();
-                    sink.close().expect("close");
+                    let sink = sink_state.take().unwrap();
+                    sink_future = Some(Box::new(sink.send(Packet::StreamEnd)));
                 }
                 (Some(ref from), Some(ref body)) => {
                     if message.type_ != MessageType::Error {
                         // This is a message we'll echo
                         let reply = make_reply(from.clone(), &body.0);
                         let sink = sink_state.take().unwrap();
-                        sink_future = Some(Box::new(sink.send(reply)));
+                        sink_future = Some(Box::new(sink.send(Packet::Stanza(reply))));
                     }
                 }
                 _ => {}

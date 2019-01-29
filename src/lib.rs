@@ -8,6 +8,7 @@ extern crate derive_error;
 mod starttls;
 mod stream_start;
 pub mod xmpp_codec;
+pub use crate::xmpp_codec::Packet;
 pub mod xmpp_stream;
 pub use crate::starttls::StartTlsClient;
 mod event;
