@@ -277,20 +277,28 @@ impl Encoder for XMPPCodec {
             dst.reserve(max_stanza_size - remaining);
         }
 
+        fn to_io_err<E: Into<Box<dyn std::error::Error + Send + Sync>>>(e: E) -> io::Error {
+            io::Error::new(io::ErrorKind::InvalidInput, e)
+        }
+
         match item {
             Packet::StreamStart(start_attrs) => {
                 let mut buf = String::new();
-                write!(buf, "<stream:stream").unwrap();
+                write!(buf, "<stream:stream")
+                    .map_err(to_io_err)?;
                 for (name, value) in start_attrs {
-                    write!(buf, " {}=\"{}\"", escape(&name), escape(&value)).unwrap();
+                    write!(buf, " {}=\"{}\"", escape(&name), escape(&value))
+                        .map_err(to_io_err)?;
                     if name == "xmlns" {
                         self.ns = Some(value);
                     }
                 }
-                write!(buf, ">\n").unwrap();
+                write!(buf, ">\n")
+                    .map_err(to_io_err)?;
 
                 // print!(">> {}", buf);
-                write!(dst, "{}", buf).map_err(|e| io::Error::new(io::ErrorKind::InvalidInput, e))
+                write!(dst, "{}", buf)
+                    .map_err(to_io_err)
             }
             Packet::Stanza(stanza) => {
                 stanza
@@ -299,7 +307,7 @@ impl Encoder for XMPPCodec {
                         // println!(">> {:?}", dst);
                         Ok(())
                     })
-                    .map_err(|e| io::Error::new(io::ErrorKind::InvalidInput, format!("{}", e)))
+                    .map_err(|e| to_io_err(format!("{}", e)))
             }
             Packet::Text(text) => {
                 write_text(&text, dst)
@@ -307,7 +315,7 @@ impl Encoder for XMPPCodec {
                         // println!(">> {:?}", dst);
                         Ok(())
                     })
-                    .map_err(|e| io::Error::new(io::ErrorKind::InvalidInput, format!("{}", e)))
+                    .map_err(to_io_err)
             }
             // TODO: Implement all
             _ => Ok(()),
