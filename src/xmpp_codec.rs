@@ -317,8 +317,10 @@ impl Encoder for XMPPCodec {
                     })
                     .map_err(to_io_err)
             }
-            // TODO: Implement all
-            _ => Ok(()),
+            Packet::StreamEnd => {
+                write!(dst, "</stream:stream>\n")
+                    .map_err(to_io_err)
+            }
         }
     }
 }
