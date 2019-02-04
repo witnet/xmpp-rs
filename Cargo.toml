@@ -30,3 +30,6 @@ try_from = "0.3.2"
 component = []
 # Disable validation of unknown attributes.
 disable-validation = []
+
+[package.metadata.docs.rs]
+rustdoc-args = [ "--sort-modules-by-appearance", "-Z unstable-options" ]
