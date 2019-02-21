@@ -58,7 +58,7 @@ impl From<BTreeMap<Option<String>, String>> for NamespaceSet {
     fn from(namespaces: BTreeMap<Option<String>, String>) -> Self {
         NamespaceSet {
             parent: RefCell::new(None),
-            namespaces: namespaces,
+            namespaces,
         }
     }
 }
@@ -79,7 +79,7 @@ impl From<String> for NamespaceSet {
 
         NamespaceSet {
             parent: RefCell::new(None),
-            namespaces: namespaces,
+            namespaces,
         }
     }
 }
@@ -92,7 +92,7 @@ impl From<(Option<String>, String)> for NamespaceSet {
 
         NamespaceSet {
             parent: RefCell::new(None),
-            namespaces: namespaces,
+            namespaces,
         }
     }
 }
