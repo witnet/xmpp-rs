@@ -222,7 +222,7 @@ impl TryFrom<Element> for DataForm {
         check_no_unknown_attributes!(elem, "x", ["type"]);
         let type_ = get_attr!(elem, "type", required);
         let mut form = DataForm {
-            type_: type_,
+            type_,
             form_type: None,
             title: None,
             instructions: None,

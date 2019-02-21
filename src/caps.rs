@@ -54,7 +54,7 @@ impl TryFrom<Element> for Caps {
         Ok(Caps {
             ext: get_attr!(elem, "ext", optional),
             node: get_attr!(elem, "node", required),
-            hash: hash,
+            hash,
         })
     }
 }
@@ -202,7 +202,7 @@ pub fn hash_caps(data: &[u8], algo: Algo) -> Result<Hash, String> {
             }
             Algo::Unknown(algo) => return Err(format!("Unknown algorithm: {}.", algo)),
         },
-        algo: algo,
+        algo,
     })
 }
 

@@ -398,8 +398,8 @@ impl TryFrom<Element> for ReasonElement {
             "Reason doesn’t contain a valid reason.",
         ))?;
         Ok(ReasonElement {
-            reason: reason,
-            text: text,
+            reason,
+            text,
         })
     }
 }
@@ -449,8 +449,8 @@ impl Jingle {
     /// Create a new Jingle element.
     pub fn new(action: Action, sid: SessionId) -> Jingle {
         Jingle {
-            action: action,
-            sid: sid,
+            action,
+            sid,
             initiator: None,
             responder: None,
             contents: Vec::new(),

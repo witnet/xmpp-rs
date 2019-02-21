@@ -178,7 +178,7 @@ impl TryFrom<Element> for PubSubEvent {
             } else if child.is("subscription", ns::PUBSUB_EVENT) {
                 check_no_children!(child, "subscription");
                 payload = Some(PubSubEvent::Subscription {
-                    node: node,
+                    node,
                     expiry: get_attr!(child, "expiry", optional),
                     jid: get_attr!(child, "jid", optional),
                     subid: get_attr!(child, "subid", optional),

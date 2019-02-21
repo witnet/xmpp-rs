@@ -31,6 +31,7 @@ generate_attribute!(
 
 generate_element!(
     /// Client request for enabling stream management.
+    #[derive(Default)]
     Enable, "enable", SM,
     attributes: [
         /// The preferred resumption time in seconds by the client.
@@ -45,10 +46,7 @@ generate_element!(
 impl Enable {
     /// Generates a new `<enable/>` element.
     pub fn new() -> Self {
-        Enable {
-            max: None,
-            resume: ResumeAttr::False,
-        }
+        Enable::default()
     }
 
     /// Sets the preferred resumption time in seconds.

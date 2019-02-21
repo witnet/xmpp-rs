@@ -10,7 +10,7 @@ use crate::presence::PresencePayload;
 
 generate_element!(
     /// Represents the query for messages before our join.
-    #[derive(PartialEq)]
+    #[derive(PartialEq, Default)]
     History, "history", MUC,
     attributes: [
         /// How many characters of history to send, in XML characters.
@@ -30,12 +30,7 @@ generate_element!(
 impl History {
     /// Create a new empty history element.
     pub fn new() -> Self {
-        History {
-            maxchars: None,
-            maxstanzas: None,
-            seconds: None,
-            since: None,
-        }
+        History::default()
     }
 
     /// Set how many characters of history to send.
@@ -65,7 +60,7 @@ impl History {
 
 generate_element!(
     /// Represents a room join request.
-    #[derive(PartialEq)]
+    #[derive(PartialEq, Default)]
     Muc, "x", MUC, children: [
         /// Password to use when the room is protected by a password.
         password: Option<String> = ("password", MUC) => String,
@@ -80,10 +75,7 @@ impl PresencePayload for Muc {}
 impl Muc {
     /// Create a new MUC join element.
     pub fn new() -> Self {
-        Muc {
-            password: None,
-            history: None,
-        }
+        Muc::default()
     }
 
     /// Join a room with this password.

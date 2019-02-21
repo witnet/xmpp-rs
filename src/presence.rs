@@ -197,7 +197,7 @@ impl Presence {
             from: None,
             to: None,
             id: None,
-            type_: type_,
+            type_,
             show: Show::None,
             statuses: BTreeMap::new(),
             priority: 0i8,

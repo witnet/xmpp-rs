@@ -49,6 +49,7 @@ generate_element!(
 
 generate_element!(
     /// Container element for multiple bookmarks.
+    #[derive(Default)]
     Storage, "storage", BOOKMARKS,
     children: [
         /// Conferences the user has expressed an interest in.
@@ -62,10 +63,7 @@ generate_element!(
 impl Storage {
     /// Create an empty bookmarks storage.
     pub fn new() -> Storage {
-        Storage {
-            conferences: Vec::new(),
-            urls: Vec::new(),
-        }
+        Storage::default()
     }
 }
 

@@ -192,8 +192,8 @@ impl TryFrom<Element> for Failure {
             defined_condition.ok_or(Error::ParseError("Failure must have a defined-condition."))?;
 
         Ok(Failure {
-            defined_condition: defined_condition,
-            texts: texts,
+            defined_condition,
+            texts,
         })
     }
 }

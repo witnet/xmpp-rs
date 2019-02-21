@@ -258,11 +258,11 @@ impl TryFrom<Element> for StanzaError {
             defined_condition.ok_or(Error::ParseError("Error must have a defined-condition."))?;
 
         Ok(StanzaError {
-            type_: type_,
-            by: by,
-            defined_condition: defined_condition,
-            texts: texts,
-            other: other,
+            type_,
+            by,
+            defined_condition,
+            texts,
+            other,
         })
     }
 }

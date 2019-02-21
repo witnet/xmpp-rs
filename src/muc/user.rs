@@ -100,9 +100,9 @@ impl TryFrom<Element> for Actor {
 
         match (jid, nick) {
             (Some(_), Some(_)) | (None, None) => {
-                return Err(Error::ParseError(
+                Err(Error::ParseError(
                     "Either 'jid' or 'nick' attribute is required.",
-                ));
+                ))
             }
             (Some(jid), _) => Ok(Actor::Jid(jid)),
             (_, Some(nick)) => Ok(Actor::Nick(nick)),

@@ -86,8 +86,8 @@ impl TryFrom<Element> for Identity {
         }
 
         Ok(Identity {
-            category: category,
-            type_: type_,
+            category,
+            type_,
             lang: get_attr!(elem, "xml:lang", optional),
             name: get_attr!(elem, "name", optional),
         })

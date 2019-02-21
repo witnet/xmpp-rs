@@ -96,7 +96,7 @@ impl Iq {
             from: None,
             to: None,
             id,
-            payload: IqType::Result(payload.map(|payload| payload.into())),
+            payload: IqType::Result(payload.map(Into::into)),
         }
     }
 
@@ -188,9 +188,9 @@ impl TryFrom<Element> for Iq {
         };
 
         Ok(Iq {
-            from: from,
-            to: to,
-            id: id,
+            from,
+            to,
+            id,
             payload: type_,
         })
     }

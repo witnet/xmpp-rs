@@ -98,7 +98,7 @@ impl Message {
     pub fn new(to: Option<Jid>) -> Message {
         Message {
             from: None,
-            to: to,
+            to,
             id: None,
             type_: MessageType::Chat,
             bodies: BTreeMap::new(),
@@ -192,14 +192,14 @@ impl TryFrom<Element> for Message {
             }
         }
         Ok(Message {
-            from: from,
-            to: to,
-            id: id,
-            type_: type_,
-            bodies: bodies,
-            subjects: subjects,
-            thread: thread,
-            payloads: payloads,
+            from,
+            to,
+            id,
+            type_,
+            bodies,
+            subjects,
+            thread,
+            payloads,
         })
     }
 }

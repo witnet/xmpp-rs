@@ -232,10 +232,10 @@ impl TryFrom<Element> for Transport {
         }
         let payload = payload.unwrap_or(TransportPayload::None);
         Ok(Transport {
-            sid: sid,
-            dstaddr: dstaddr,
-            mode: mode,
-            payload: payload,
+            sid,
+            dstaddr,
+            mode,
+            payload,
         })
     }
 }

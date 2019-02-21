@@ -10,6 +10,7 @@ use sha1::Sha1;
 
 generate_element!(
     /// The main authentication mechanism for components.
+    #[derive(Default)]
     Handshake, "handshake", COMPONENT,
     text: (
         /// If Some, contains the hex-encoded SHA-1 of the concatenation of the
@@ -25,7 +26,7 @@ generate_element!(
 impl Handshake {
     /// Creates a successful reply from a server.
     pub fn new() -> Handshake {
-        Handshake { data: None }
+        Handshake::default()
     }
 
     /// Creates an authentication request from the component.

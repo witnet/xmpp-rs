@@ -136,7 +136,7 @@ pub fn hash_ecaps2(data: &[u8], algo: Algo) -> Result<Hash, String> {
             Algo::Sha_1 => return Err(String::from("Disabled algorithm sha-1: unsafe.")),
             Algo::Unknown(algo) => return Err(format!("Unknown algorithm: {}.", algo)),
         },
-        algo: algo,
+        algo,
     })
 }
 

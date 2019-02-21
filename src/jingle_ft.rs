@@ -47,7 +47,7 @@ generate_id!(
 );
 
 /// Represents a file to be transferred.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct File {
     /// The date of last modification of this file.
     pub date: Option<DateTime>,
@@ -74,15 +74,7 @@ pub struct File {
 impl File {
     /// Creates a new file descriptor.
     pub fn new() -> File {
-        File {
-            date: None,
-            media_type: None,
-            name: None,
-            descs: BTreeMap::new(),
-            size: None,
-            range: None,
-            hashes: Vec::new(),
-        }
+        File::default()
     }
 
     /// Sets the date of last modification on this file.

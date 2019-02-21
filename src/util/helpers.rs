@@ -19,7 +19,7 @@ impl PlainText {
     }
 
     pub fn encode(string: &Option<String>) -> Option<String> {
-        string.as_ref().map(|text| text.to_owned())
+        string.as_ref().map(ToOwned::to_owned)
     }
 }
 
@@ -34,7 +34,7 @@ impl TrimmedPlainText {
         })
     }
 
-    pub fn encode(string: &String) -> String {
+    pub fn encode(string: &str) -> String {
         string.to_owned()
     }
 }
@@ -47,7 +47,7 @@ impl Base64 {
         Ok(base64::decode(s)?)
     }
 
-    pub fn encode(b: &Vec<u8>) -> Option<String> {
+    pub fn encode(b: &[u8]) -> Option<String> {
         Some(base64::encode(b))
     }
 }
@@ -57,11 +57,11 @@ pub struct WhitespaceAwareBase64;
 
 impl WhitespaceAwareBase64 {
     pub fn decode(s: &str) -> Result<Vec<u8>, Error> {
-        let s: String = s.chars().into_iter().filter(|ch| *ch != ' ' && *ch != '\n' && *ch != '\t').collect();
+        let s: String = s.chars().filter(|ch| *ch != ' ' && *ch != '\n' && *ch != '\t').collect();
         Ok(base64::decode(&s)?)
     }
 
-    pub fn encode(b: &Vec<u8>) -> Option<String> {
+    pub fn encode(b: &[u8]) -> Option<String> {
         Some(base64::encode(b))
     }
 }

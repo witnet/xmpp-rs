@@ -67,7 +67,7 @@ impl Item {
         Item {
             id,
             publisher,
-            payload: payload.map(|payload| payload.into()),
+            payload: payload.map(Into::into),
         }
     }
 }
