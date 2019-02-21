@@ -165,13 +165,11 @@ impl Node {
             Node::Element(ref elmt) => elmt.write_to_inner(writer)?,
             Node::Text(ref s) => {
                 writer.write_event(Event::Text(BytesText::from_plain_str(s)))?;
-                ()
             },
             Node::Comment(ref s) => {
                 writer.write_event(Event::Comment(BytesText::from_plain_str(s)))?;
-                ()
             },
-        };
+        }
 
         Ok(())
     }

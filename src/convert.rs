@@ -44,7 +44,7 @@ impl<'a> IntoAttributeValue for &'a str {
 
 impl<T: IntoAttributeValue> IntoAttributeValue for Option<T> {
     fn into_attribute_value(self) -> Option<String> {
-        self.and_then(|t| t.into_attribute_value())
+        self.and_then(IntoAttributeValue::into_attribute_value)
     }
 }
 

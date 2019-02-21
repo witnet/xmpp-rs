@@ -102,8 +102,8 @@ impl Element {
         Element {
             prefix, name,
             namespaces: Rc::new(namespaces.into()),
-            attributes: attributes,
-            children: children,
+            attributes,
+            children,
         }
     }
 
