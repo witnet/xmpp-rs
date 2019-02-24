@@ -14,16 +14,16 @@ generate_element!(
     History, "history", MUC,
     attributes: [
         /// How many characters of history to send, in XML characters.
-        maxchars: Option<u32> = "maxchars" => optional,
+        maxchars: Option<u32> = "maxchars",
 
         /// How many messages to send.
-        maxstanzas: Option<u32> = "maxstanzas" => optional,
+        maxstanzas: Option<u32> = "maxstanzas",
 
         /// Only send messages received in these last seconds.
-        seconds: Option<u32> = "seconds" => optional,
+        seconds: Option<u32> = "seconds",
 
         /// Only send messages after this date.
-        since: Option<DateTime> = "since" => optional,
+        since: Option<DateTime> = "since",
     ]
 );
 

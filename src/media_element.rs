@@ -17,7 +17,7 @@ generate_element!(
         /// accepted too.
         ///
         /// [1]: https://www.iana.org/assignments/media-types/media-types.xhtml
-        type_: String = "type" => required
+        type_: Required<String> = "type"
     ],
     text: (
         /// The actual URI contained.
@@ -31,10 +31,10 @@ generate_element!(
     MediaElement, "media", MEDIA_ELEMENT,
     attributes: [
         /// The recommended display width in pixels.
-        width: Option<usize> = "width" => optional,
+        width: Option<usize> = "width",
 
         /// The recommended display height in pixels.
-        height: Option<usize> = "height" => optional
+        height: Option<usize> = "height"
     ],
     children: [
         /// A list of URIs referencing this media.

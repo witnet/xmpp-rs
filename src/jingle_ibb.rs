@@ -12,13 +12,13 @@ generate_element!(
 Transport, "transport", JINGLE_IBB,
 attributes: [
     /// Maximum size in bytes for each chunk.
-    block_size: u16 = "block-size" => required,
+    block_size: Required<u16> = "block-size",
 
     /// The identifier to be used to create a stream.
-    sid: StreamId = "sid" => required,
+    sid: Required<StreamId> = "sid",
 
     /// Which stanza type to use to exchange data.
-    stanza: Stanza = "stanza" => default,
+    stanza: Default<Stanza> = "stanza",
 ]);
 
 #[cfg(test)]

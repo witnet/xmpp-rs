@@ -12,7 +12,7 @@ generate_element!(
     Replace, "replace", MESSAGE_CORRECT,
     attributes: [
         /// The 'id' attribute of the message getting corrected.
-        id: String = "id" => required,
+        id: Required<String> = "id",
     ]
 );
 

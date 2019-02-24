@@ -20,7 +20,7 @@ generate_element!(
 DiscoInfoQuery, "query", DISCO_INFO,
 attributes: [
     /// Node on which we are doing the discovery.
-    node: Option<String> = "node" => optional,
+    node: Option<String> = "node",
 ]);
 
 impl IqGetPayload for DiscoInfoQuery {}
@@ -31,7 +31,7 @@ generate_element!(
 Feature, "feature", DISCO_INFO,
 attributes: [
     /// Namespace of the feature we want to represent.
-    var: String = "var" => required,
+    var: Required<String> = "var",
 ]);
 
 impl Feature {
@@ -206,7 +206,7 @@ generate_element!(
 DiscoItemsQuery, "query", DISCO_ITEMS,
 attributes: [
     /// Node on which we are doing the discovery.
-    node: Option<String> = "node" => optional,
+    node: Option<String> = "node",
 ]);
 
 impl IqGetPayload for DiscoItemsQuery {}
@@ -216,11 +216,11 @@ generate_element!(
 Item, "item", DISCO_ITEMS,
 attributes: [
     /// JID of the entity pointed by this item.
-    jid: Jid = "jid" => required,
+    jid: Required<Jid> = "jid",
     /// Node of the entity pointed by this item.
-    node: Option<String> = "node" => optional,
+    node: Option<String> = "node",
     /// Name of the entity pointed by this item.
-    name: Option<String> = "name" => optional,
+    name: Option<String> = "name",
 ]);
 
 generate_element!(
@@ -232,7 +232,7 @@ generate_element!(
     DiscoItemsResult, "query", DISCO_ITEMS,
     attributes: [
         /// Node on which we have done this discovery.
-        node: Option<String> = "node" => optional
+        node: Option<String> = "node"
     ],
     children: [
         /// List of items pointed by this entity.

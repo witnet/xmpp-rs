@@ -18,13 +18,13 @@ generate_element!(
     Conference, "conference", BOOKMARKS,
     attributes: [
         /// Whether a conference bookmark should be joined automatically.
-        autojoin: Autojoin = "autojoin" => default,
+        autojoin: Default<Autojoin> = "autojoin",
 
         /// The JID of the conference.
-        jid: Jid = "jid" => required,
+        jid: Required<Jid> = "jid",
 
         /// A user-defined name for this conference.
-        name: String = "name" => required
+        name: Required<String> = "name",
     ],
     children: [
         /// The nick the user will use to join this conference.
@@ -40,10 +40,10 @@ generate_element!(
     Url, "url", BOOKMARKS,
     attributes: [
         /// A user-defined name for this URL.
-        name: String = "name" => required,
+        name: Required<String> = "name",
 
         /// The URL of this bookmark.
-        url: String = "url" => required
+        url: Required<String> = "url",
     ]
 );
 

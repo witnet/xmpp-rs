@@ -11,7 +11,7 @@ generate_element!(
     A, "a", SM,
     attributes: [
         /// The last handled stanza.
-        h: u32 = "h" => required,
+        h: Required<u32> = "h",
     ]
 );
 
@@ -36,10 +36,10 @@ generate_element!(
     attributes: [
         /// The preferred resumption time in seconds by the client.
         // TODO: should be the infinite integer set ≥ 1.
-        max: Option<u32> = "max" => optional,
+        max: Option<u32> = "max",
 
         /// Whether the client wants to be allowed to resume the stream.
-        resume: ResumeAttr = "resume" => default,
+        resume: Default<ResumeAttr> = "resume",
     ]
 );
 
@@ -72,18 +72,18 @@ generate_element!(
     Enabled, "enabled", SM,
     attributes: [
         /// A random identifier used for stream resumption.
-        id: Option<StreamId> = "id" => optional,
+        id: Option<StreamId> = "id",
 
         /// The preferred IP, domain, IP:port or domain:port location for
         /// resumption.
-        location: Option<String> = "location" => optional,
+        location: Option<String> = "location",
 
         /// The preferred resumption time in seconds by the server.
         // TODO: should be the infinite integer set ≥ 1.
-        max: Option<u32> = "max" => optional,
+        max: Option<u32> = "max",
 
         /// Whether stream resumption is allowed.
-        resume: ResumeAttr = "resume" => default,
+        resume: Default<ResumeAttr> = "resume",
     ]
 );
 
@@ -92,7 +92,7 @@ generate_element!(
     Failed, "failed", SM,
     attributes: [
         /// The last handled stanza.
-        h: Option<u32> = "h" => optional,
+        h: Option<u32> = "h",
     ],
     children: [
         /// The error returned.
@@ -113,11 +113,11 @@ generate_element!(
     Resume, "resume", SM,
     attributes: [
         /// The last handled stanza.
-        h: u32 = "h" => required,
+        h: Required<u32> = "h",
 
         /// The previous id given by the server on
         /// [enabled](struct.Enabled.html).
-        previd: StreamId = "previd" => required,
+        previd: Required<StreamId> = "previd",
     ]
 );
 
@@ -126,11 +126,11 @@ generate_element!(
     Resumed, "resumed", SM,
     attributes: [
         /// The last handled stanza.
-        h: u32 = "h" => required,
+        h: Required<u32> = "h",
 
         /// The previous id given by the server on
         /// [enabled](struct.Enabled.html).
-        previd: StreamId = "previd" => required,
+        previd: Required<StreamId> = "previd",
     ]
 );
 

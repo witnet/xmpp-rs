@@ -20,7 +20,7 @@ generate_element!(
     Affiliations, "affiliations", PUBSUB,
     attributes: [
         /// The optional node name this request pertains to.
-        node: Option<NodeName> = "node" => optional,
+        node: Option<NodeName> = "node",
     ],
     children: [
         /// The actual list of affiliation elements.
@@ -56,10 +56,10 @@ generate_element!(
     Affiliation, "affiliation", PUBSUB,
     attributes: [
         /// The node this affiliation pertains to.
-        node: NodeName = "node" => required,
+        node: Required<NodeName> = "node",
 
         /// The affiliation you currently have on this node.
-        affiliation: AffiliationAttribute = "affiliation" => required,
+        affiliation: Required<AffiliationAttribute> = "affiliation",
     ]
 );
 
@@ -77,7 +77,7 @@ generate_element!(
     Create, "create", PUBSUB,
     attributes: [
         /// The node name to create, if `None` the service will generate one.
-        node: Option<NodeName> = "node" => optional,
+        node: Option<NodeName> = "node",
     ]
 );
 
@@ -86,10 +86,10 @@ generate_element!(
     Default, "default", PUBSUB,
     attributes: [
         /// The node targetted by this request, otherwise the entire service.
-        node: Option<NodeName> = "node" => optional,
+        node: Option<NodeName> = "node",
 
         // TODO: do we really want to support collection nodes?
-        // type: String = "type" => optional,
+        // type: Option<String> = "type",
     ]
 );
 
@@ -99,13 +99,13 @@ generate_element!(
     attributes: [
         // TODO: should be an xs:positiveInteger, that is, an unbounded int ≥ 1.
         /// Maximum number of items returned.
-        max_items: Option<u32> = "max_items" => optional,
+        max_items: Option<u32> = "max_items",
 
         /// The node queried by this request.
-        node: NodeName = "node" => required,
+        node: Required<NodeName> = "node",
 
         /// The subscription identifier related to this request.
-        subid: Option<SubscriptionId> = "subid" => optional,
+        subid: Option<SubscriptionId> = "subid",
     ],
     children: [
         /// The actual list of items returned.
@@ -124,13 +124,13 @@ generate_element!(
     Options, "options", PUBSUB,
     attributes: [
         /// The JID affected by this request.
-        jid: Jid = "jid" => required,
+        jid: Required<Jid> = "jid",
 
         /// The node affected by this request.
-        node: Option<NodeName> = "node" => optional,
+        node: Option<NodeName> = "node",
 
         /// The subscription identifier affected by this request.
-        subid: Option<SubscriptionId> = "subid" => optional,
+        subid: Option<SubscriptionId> = "subid",
     ],
     children: [
         /// The form describing the subscription.
@@ -143,7 +143,7 @@ generate_element!(
     Publish, "publish", PUBSUB,
     attributes: [
         /// The target node for this operation.
-        node: NodeName = "node" => required,
+        node: Required<NodeName> = "node",
     ],
     children: [
         /// The items you want to publish.
@@ -172,10 +172,10 @@ generate_element!(
     Retract, "retract", PUBSUB,
     attributes: [
         /// The node affected by this request.
-        node: NodeName = "node" => required,
+        node: Required<NodeName> = "node",
 
         /// Whether a retract request should notify subscribers or not.
-        notify: Notify = "notify" => default,
+        notify: Default<Notify> = "notify",
     ],
     children: [
         /// The items affected by this request.
@@ -233,10 +233,10 @@ generate_element!(
     Subscribe, "subscribe", PUBSUB,
     attributes: [
         /// The JID being subscribed.
-        jid: Jid = "jid" => required,
+        jid: Required<Jid> = "jid",
 
         /// The node to subscribe to.
-        node: Option<NodeName> = "node" => optional,
+        node: Option<NodeName> = "node",
     ]
 );
 
@@ -245,7 +245,7 @@ generate_element!(
     Subscriptions, "subscriptions", PUBSUB,
     attributes: [
         /// The node to query.
-        node: Option<NodeName> = "node" => optional,
+        node: Option<NodeName> = "node",
     ],
     children: [
         /// The list of subscription elements returned.
@@ -258,16 +258,16 @@ generate_element!(
     SubscriptionElem, "subscription", PUBSUB,
     attributes: [
         /// The JID affected by this subscription.
-        jid: Jid = "jid" => required,
+        jid: Required<Jid> = "jid",
 
         /// The node affected by this subscription.
-        node: Option<NodeName> = "node" => optional,
+        node: Option<NodeName> = "node",
 
         /// The subscription identifier for this subscription.
-        subid: Option<SubscriptionId> = "subid" => optional,
+        subid: Option<SubscriptionId> = "subid",
 
         /// The state of the subscription.
-        subscription: Option<Subscription> = "subscription" => optional,
+        subscription: Option<Subscription> = "subscription",
     ],
     children: [
         /// The options related to this subscription.
@@ -280,13 +280,13 @@ generate_element!(
     Unsubscribe, "unsubscribe", PUBSUB,
     attributes: [
         /// The JID affected by this request.
-        jid: Jid = "jid" => required,
+        jid: Required<Jid> = "jid",
 
         /// The node affected by this request.
-        node: Option<NodeName> = "node" => optional,
+        node: Option<NodeName> = "node",
 
         /// The subscription identifier for this subscription.
-        subid: Option<SubscriptionId> = "subid" => optional,
+        subid: Option<SubscriptionId> = "subid",
     ]
 );
 

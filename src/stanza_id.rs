@@ -13,10 +13,10 @@ generate_element!(
     StanzaId, "stanza-id", SID,
     attributes: [
         /// The id associated to this stanza by another entity.
-        id: String = "id" => required,
+        id: Required<String> = "id",
 
         /// The entity who stamped this stanza-id.
-        by: Jid = "by" => required,
+        by: Required<Jid> = "by",
     ]
 );
 
@@ -28,7 +28,7 @@ generate_element!(
     OriginId, "origin-id", SID,
     attributes: [
         /// The id this client set for this stanza.
-        id: String = "id" => required,
+        id: Required<String> = "id",
     ]
 );
 

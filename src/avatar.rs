@@ -24,22 +24,22 @@ generate_element!(
     Info, "info", AVATAR_METADATA,
     attributes: [
         /// The size of the image data in bytes.
-        bytes: u16 = "bytes" => required,
+        bytes: Required<u16> = "bytes",
 
         /// The width of the image in pixels.
-        width: Option<u8> = "width" => optional,
+        width: Option<u8> = "width",
 
         /// The height of the image in pixels.
-        height: Option<u8> = "height" => optional,
+        height: Option<u8> = "height",
 
         /// The SHA-1 hash of the image data for the specified content-type.
-        id: Sha1HexAttribute = "id" => required,
+        id: Required<Sha1HexAttribute> = "id",
 
         /// The IANA-registered content type of the image data.
-        type_: String = "type" => required,
+        type_: Required<String> = "type",
 
         /// The http: or https: URL at which the image data file is hosted.
-        url: Option<String> = "url" => optional,
+        url: Option<String> = "url",
     ]
 );
 

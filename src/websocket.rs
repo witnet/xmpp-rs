@@ -11,20 +11,20 @@ generate_element!(
     Open, "open", WEBSOCKET,
     attributes: [
         /// The JID of the entity opening this stream.
-        from: Option<Jid> = "from" => optional,
+        from: Option<Jid> = "from",
 
         /// The JID of the entity receiving this stream opening.
-        to: Option<Jid> = "to" => optional,
+        to: Option<Jid> = "to",
 
         /// The id of the stream, used for authentication challenges.
-        id: Option<String> = "id" => optional,
+        id: Option<String> = "id",
 
         /// The XMPP version used during this stream.
-        version: Option<String> = "version" => optional,
+        version: Option<String> = "version",
 
         /// The default human language for all subsequent stanzas, which will
         /// be transmitted to other entities for better localisation.
-        xml_lang: Option<String> = "xml:lang" => optional,
+        xml_lang: Option<String> = "xml:lang",
     ]
 );
 

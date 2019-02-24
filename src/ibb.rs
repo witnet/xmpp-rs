@@ -30,13 +30,13 @@ generate_element!(
 Open, "open", IBB,
 attributes: [
     /// Maximum size in bytes for each chunk.
-    block_size: u16 = "block-size" => required,
+    block_size: Required<u16> = "block-size",
 
     /// The identifier to be used to create a stream.
-    sid: StreamId = "sid" => required,
+    sid: Required<StreamId> = "sid",
 
     /// Which stanza type to use to exchange data.
-    stanza: Stanza = "stanza" => default,
+    stanza: Default<Stanza> = "stanza",
 ]);
 
 impl IqSetPayload for Open {}
@@ -46,10 +46,10 @@ generate_element!(
 Data, "data", IBB,
     attributes: [
         /// Sequence number of this chunk, must wraparound after 65535.
-        seq: u16 = "seq" => required,
+        seq: Required<u16> = "seq",
 
         /// The identifier of the stream on which data is being exchanged.
-        sid: StreamId = "sid" => required
+        sid: Required<StreamId> = "sid"
     ],
     text: (
         /// Vector of bytes to be exchanged.
@@ -64,7 +64,7 @@ generate_element!(
 Close, "close", IBB,
 attributes: [
     /// The identifier of the stream to be closed.
-    sid: StreamId = "sid" => required,
+    sid: Required<StreamId> = "sid",
 ]);
 
 impl IqSetPayload for Close {}

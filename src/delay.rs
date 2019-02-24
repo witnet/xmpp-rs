@@ -15,10 +15,10 @@ generate_element!(
     Delay, "delay", DELAY,
     attributes: [
         /// The entity which delayed this message.
-        from: Option<Jid> = "from" => optional,
+        from: Option<Jid> = "from",
 
         /// The time at which this message got stored.
-        stamp: DateTime = "stamp" => required
+        stamp: Required<DateTime> = "stamp"
     ],
     text: (
         /// The optional reason this message got delayed.

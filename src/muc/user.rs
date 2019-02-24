@@ -128,7 +128,7 @@ generate_element!(
     Continue, "continue", MUC_USER,
     attributes: [
         /// The thread to continue in this room.
-        thread: Option<String> = "thread" => optional,
+        thread: Option<String> = "thread",
     ]
 );
 
@@ -187,16 +187,16 @@ generate_element!(
     /// An item representing a user in a room.
     Item, "item", MUC_USER, attributes: [
         /// The affiliation of this user with the room.
-        affiliation: Affiliation = "affiliation" => required,
+        affiliation: Required<Affiliation> = "affiliation",
 
         /// The real JID of this user, if you are allowed to see it.
-        jid: Option<Jid> = "jid" => optional,
+        jid: Option<Jid> = "jid",
 
         /// The current nickname of this user.
-        nick: Option<String> = "nick" => optional,
+        nick: Option<String> = "nick",
 
         /// The current role of this user.
-        role: Role = "role" => required
+        role: Required<Role> = "role",
     ], children: [
         /// The actor affected by this item.
         actor: Option<Actor> = ("actor", MUC_USER) => Actor,

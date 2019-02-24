@@ -20,11 +20,11 @@ generate_element!(
     Range, "range", JINGLE_FT,
     attributes: [
         /// The offset in bytes from the beginning of the file.
-        offset: u64 = "offset" => default,
+        offset: Default<u64> = "offset",
 
         /// The length in bytes of the range, or None to be the entire
         /// remaining of the file.
-        length: Option<u64> = "length" => optional
+        length: Option<u64> = "length"
     ],
     children: [
         /// List of hashes for this range.
@@ -344,10 +344,10 @@ generate_element!(
     Received, "received", JINGLE_FT,
     attributes: [
         /// The content identifier of this Jingle session.
-        name: ContentId = "name" => required,
+        name: Required<ContentId> = "name",
 
         /// The creator of this file transfer.
-        creator: Creator = "creator" => required,
+        creator: Required<Creator> = "creator",
     ]
 );
 

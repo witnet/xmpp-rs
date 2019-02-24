@@ -8,20 +8,20 @@ macro_rules! get_attr {
     ($elem:ident, $attr:tt, $type:tt) => {
         get_attr!($elem, $attr, $type, value, value.parse()?)
     };
-    ($elem:ident, $attr:tt, optional_empty, $value:ident, $func:expr) => {
+    ($elem:ident, $attr:tt, OptionEmpty, $value:ident, $func:expr) => {
         match $elem.attr($attr) {
             Some("") => None,
             Some($value) => Some($func),
             None => None,
         }
     };
-    ($elem:ident, $attr:tt, optional, $value:ident, $func:expr) => {
+    ($elem:ident, $attr:tt, Option, $value:ident, $func:expr) => {
         match $elem.attr($attr) {
             Some($value) => Some($func),
             None => None,
         }
     };
-    ($elem:ident, $attr:tt, required, $value:ident, $func:expr) => {
+    ($elem:ident, $attr:tt, Required, $value:ident, $func:expr) => {
         match $elem.attr($attr) {
             Some($value) => $func,
             None => {
@@ -33,11 +33,21 @@ macro_rules! get_attr {
             }
         }
     };
-    ($elem:ident, $attr:tt, default, $value:ident, $func:expr) => {
+    ($elem:ident, $attr:tt, Default, $value:ident, $func:expr) => {
         match $elem.attr($attr) {
             Some($value) => $func,
             None => ::std::default::Default::default(),
         }
+    };
+    // The remaining ones are only for backwards-compatibility.
+    ($elem:ident, $attr:tt, optional, $value:ident, $func:expr) => {
+        get_attr!($elem, $attr, Option, $value, $func)
+    };
+    ($elem:ident, $attr:tt, required, $value:ident, $func:expr) => {
+        get_attr!($elem, $attr, Required, $value, $func)
+    };
+    ($elem:ident, $attr:tt, default, $value:ident, $func:expr) => {
+        get_attr!($elem, $attr, Default, $value, $func)
     };
 }
 
@@ -398,6 +408,21 @@ macro_rules! generate_elem_id {
     );
 }
 
+macro_rules! decl_attr {
+    (OptionEmpty, $type:ty) => (
+        Option<$type>
+    );
+    (Option, $type:ty) => (
+        Option<$type>
+    );
+    (Required, $type:ty) => (
+        $type
+    );
+    (Default, $type:ty) => (
+        $type
+    );
+}
+
 macro_rules! start_decl {
     (Vec, $type:ty) => (
         Vec<$type>
@@ -503,31 +528,31 @@ macro_rules! generate_serialiser {
 }
 
 macro_rules! generate_element {
-    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident, attributes: [$($(#[$attr_meta:meta])* $attr:ident: $attr_type:ty = $attr_name:tt => $attr_action:tt),+,]) => (
-        generate_element!($(#[$meta])* $elem, $name, $ns, attributes: [$($(#[$attr_meta])* $attr: $attr_type = $attr_name => $attr_action),*], children: []);
+    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident, attributes: [$($(#[$attr_meta:meta])* $attr:ident: $attr_action:tt<$attr_type:ty> = $attr_name:tt),+,]) => (
+        generate_element!($(#[$meta])* $elem, $name, $ns, attributes: [$($(#[$attr_meta])* $attr: $attr_action<$attr_type> = $attr_name),*], children: []);
     );
-    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident, attributes: [$($(#[$attr_meta:meta])* $attr:ident: $attr_type:ty = $attr_name:tt => $attr_action:tt),+]) => (
-        generate_element!($(#[$meta])* $elem, $name, $ns, attributes: [$($(#[$attr_meta])* $attr: $attr_type = $attr_name => $attr_action),*], children: []);
+    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident, attributes: [$($(#[$attr_meta:meta])* $attr:ident: $attr_action:tt<$attr_type:ty> = $attr_name:tt),+]) => (
+        generate_element!($(#[$meta])* $elem, $name, $ns, attributes: [$($(#[$attr_meta])* $attr: $attr_action<$attr_type> = $attr_name),*], children: []);
     );
     ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident, children: [$($(#[$child_meta:meta])* $child_ident:ident: $coucou:tt<$child_type:ty> = ($child_name:tt, $child_ns:ident) => $child_constructor:ident),*]) => (
         generate_element!($(#[$meta])* $elem, $name, $ns, attributes: [], children: [$($(#[$child_meta])* $child_ident: $coucou<$child_type> = ($child_name, $child_ns) => $child_constructor),*]);
     );
-    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident, attributes: [$($(#[$attr_meta:meta])* $attr:ident: $attr_type:ty = $attr_name:tt => $attr_action:tt),*,], children: [$($(#[$child_meta:meta])* $child_ident:ident: $coucou:tt<$child_type:ty> = ($child_name:tt, $child_ns:ident) => $child_constructor:ident),*]) => (
-        generate_element!($(#[$meta])* $elem, $name, $ns, attributes: [$($(#[$attr_meta])* $attr: $attr_type = $attr_name => $attr_action),*], children: [$($(#[$child_meta])* $child_ident: $coucou<$child_type> = ($child_name, $child_ns) => $child_constructor),*]);
+    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident, attributes: [$($(#[$attr_meta:meta])* $attr:ident: $attr_action:tt<$attr_type:ty> = $attr_name:tt),*,], children: [$($(#[$child_meta:meta])* $child_ident:ident: $coucou:tt<$child_type:ty> = ($child_name:tt, $child_ns:ident) => $child_constructor:ident),*]) => (
+        generate_element!($(#[$meta])* $elem, $name, $ns, attributes: [$($(#[$attr_meta])* $attr: $attr_action<$attr_type> = $attr_name),*], children: [$($(#[$child_meta])* $child_ident: $coucou<$child_type> = ($child_name, $child_ns) => $child_constructor),*]);
     );
     ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident, text: ($(#[$text_meta:meta])* $text_ident:ident: $codec:ident < $text_type:ty >)) => (
         generate_element!($(#[$meta])* $elem, $name, $ns, attributes: [], children: [], text: ($(#[$text_meta])* $text_ident: $codec<$text_type>));
     );
-    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident, attributes: [$($(#[$attr_meta:meta])* $attr:ident: $attr_type:ty = $attr_name:tt => $attr_action:tt),+], text: ($(#[$text_meta:meta])* $text_ident:ident: $codec:ident < $text_type:ty >)) => (
-        generate_element!($(#[$meta])* $elem, $name, $ns, attributes: [$($(#[$attr_meta])* $attr: $attr_type = $attr_name => $attr_action),*], children: [], text: ($(#[$text_meta])* $text_ident: $codec<$text_type>));
+    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident, attributes: [$($(#[$attr_meta:meta])* $attr:ident: $attr_action:tt<$attr_type:ty> = $attr_name:tt),+], text: ($(#[$text_meta:meta])* $text_ident:ident: $codec:ident < $text_type:ty >)) => (
+        generate_element!($(#[$meta])* $elem, $name, $ns, attributes: [$($(#[$attr_meta])* $attr: $attr_action<$attr_type> = $attr_name),*], children: [], text: ($(#[$text_meta])* $text_ident: $codec<$text_type>));
     );
-    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident, attributes: [$($(#[$attr_meta:meta])* $attr:ident: $attr_type:ty = $attr_name:tt => $attr_action:tt),*], children: [$($(#[$child_meta:meta])* $child_ident:ident: $coucou:tt<$child_type:ty> = ($child_name:tt, $child_ns:ident) => $child_constructor:ident),*] $(, text: ($(#[$text_meta:meta])* $text_ident:ident: $codec:ident < $text_type:ty >))*) => (
+    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident, attributes: [$($(#[$attr_meta:meta])* $attr:ident: $attr_action:tt<$attr_type:ty> = $attr_name:tt),*], children: [$($(#[$child_meta:meta])* $child_ident:ident: $coucou:tt<$child_type:ty> = ($child_name:tt, $child_ns:ident) => $child_constructor:ident),*] $(, text: ($(#[$text_meta:meta])* $text_ident:ident: $codec:ident < $text_type:ty >))*) => (
         $(#[$meta])*
         #[derive(Debug, Clone)]
         pub struct $elem {
             $(
                 $(#[$attr_meta])*
-                pub $attr: $attr_type,
+                pub $attr: decl_attr!($attr_action, $attr_type),
             )*
             $(
                 $(#[$child_meta])*

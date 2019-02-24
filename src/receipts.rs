@@ -22,7 +22,7 @@ generate_element!(
     Received, "received", RECEIPTS,
     attributes: [
         /// The 'id' attribute of the received message.
-        id: Option<String> = "id" => optional,
+        id: Option<String> = "id",
     ]
 );
 

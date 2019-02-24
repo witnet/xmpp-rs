@@ -27,10 +27,10 @@ generate_element!(
     attributes: [
         /// An optional identifier for matching forwarded messages to this
         /// query.
-        queryid: Option<QueryId> = "queryid" => optional,
+        queryid: Option<QueryId> = "queryid",
 
         /// Must be set to Some when querying a PubSub node’s archive.
-        node: Option<NodeName> = "node" => optional
+        node: Option<NodeName> = "node"
     ],
     children: [
         /// Used for filtering the results.
@@ -50,11 +50,11 @@ generate_element!(
     Result_, "result", MAM,
     attributes: [
         /// The stanza-id under which the archive stored this stanza.
-        id: String = "id" => required,
+        id: Required<String> = "id",
 
         /// The same queryid as the one requested in the
         /// [query](struct.Query.html).
-        queryid: Option<QueryId> = "queryid" => optional,
+        queryid: Option<QueryId> = "queryid",
     ],
     children: [
         /// The actual stanza being forwarded.
@@ -76,7 +76,7 @@ generate_element!(
     Fin, "fin", MAM,
     attributes: [
         /// True when the end of a MAM query has been reached.
-        complete: Complete = "complete" => default
+        complete: Default<Complete> = "complete",
     ],
     children: [
         /// Describes the current page, it should contain at least [first]

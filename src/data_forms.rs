@@ -15,7 +15,7 @@ generate_element!(
     Option_, "option", DATA_FORMS,
     attributes: [
         /// The optional label to be displayed to the user for this option.
-        label: Option<String> = "label" => optional
+        label: Option<String> = "label"
     ],
     children: [
         /// The value returned to the server when selecting this option.

@@ -55,23 +55,23 @@ generate_element!(
     Candidate, "candidate", JINGLE_S5B,
     attributes: [
         /// The identifier for this candidate.
-        cid: CandidateId = "cid" => required,
+        cid: Required<CandidateId> = "cid",
 
         /// The host to connect to.
-        host: IpAddr = "host" => required,
+        host: Required<IpAddr> = "host",
 
         /// The JID to request at the given end.
-        jid: Jid = "jid" => required,
+        jid: Required<Jid> = "jid",
 
         /// The port to connect to.
-        port: Option<u16> = "port" => optional,
+        port: Option<u16> = "port",
 
         /// The priority of this candidate, computed using this formula:
         /// priority = (2^16)*(type preference) + (local preference)
-        priority: u32 = "priority" => required,
+        priority: Required<u32> = "priority",
 
         /// The type of the connection being proposed by this candidate.
-        type_: Type = "type" => default,
+        type_: Default<Type> = "type",
     ]
 );
 

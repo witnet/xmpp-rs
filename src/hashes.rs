@@ -102,7 +102,7 @@ generate_element!(
     Hash, "hash", HASHES,
     attributes: [
         /// The algorithm used to create this hash.
-        algo: Algo = "algo" => required
+        algo: Required<Algo> = "algo"
     ],
     text: (
         /// The hash value, as a vector of bytes.

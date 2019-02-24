@@ -50,16 +50,16 @@ generate_element!(
     Item, "item", ROSTER,
     attributes: [
         /// JID of this contact.
-        jid: Jid = "jid" => required,
+        jid: Required<Jid> = "jid",
 
         /// Name of this contact.
-        name: Option<String> = "name" => optional_empty,
+        name: OptionEmpty<String> = "name",
 
         /// Subscription status of this contact.
-        subscription: Subscription = "subscription" => default,
+        subscription: Default<Subscription> = "subscription",
 
         /// Indicates “Pending Out” sub-states for this contact.
-        ask: Ask = "ask" => default,
+        ask: Default<Ask> = "ask",
     ],
 
     children: [
@@ -77,7 +77,7 @@ generate_element!(
         /// This is an opaque string that should only be sent back to the server on
         /// a new connection, if this client is storing the contact list between
         /// connections.
-        ver: Option<String> = "ver" => optional
+        ver: Option<String> = "ver"
     ],
     children: [
         /// List of the contacts of the user.

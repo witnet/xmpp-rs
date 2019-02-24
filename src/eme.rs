@@ -11,11 +11,11 @@ generate_element!(
     ExplicitMessageEncryption, "encryption", EME,
     attributes: [
         /// Namespace of the encryption scheme used.
-        namespace: String = "namespace" => required,
+        namespace: Required<String> = "namespace",
 
         /// User-friendly name for the encryption scheme, should be `None` for OTR,
         /// legacy OpenPGP and OX.
-        name: Option<String> = "name" => optional,
+        name: Option<String> = "name",
     ]
 );
 

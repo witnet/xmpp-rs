@@ -12,7 +12,7 @@ generate_element!(
     Idle, "idle", IDLE,
     attributes: [
         /// The time at which the user stopped interacting.
-        since: DateTime = "since" => required,
+        since: Required<DateTime> = "since",
     ]
 );
 

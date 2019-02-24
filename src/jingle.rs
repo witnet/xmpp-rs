@@ -169,16 +169,16 @@ generate_element!(
     Content, "content", JINGLE,
     attributes: [
         /// Who created this content.
-        creator: Creator = "creator" => required,
+        creator: Required<Creator> = "creator",
 
         /// How the content definition is to be interpreted by the recipient.
-        disposition: Disposition = "disposition" => default,
+        disposition: Default<Disposition> = "disposition",
 
         /// A per-session unique identifier for this content.
-        name: ContentId = "name" => required,
+        name: Required<ContentId> = "name",
 
         /// Who can send data for this content.
-        senders: Senders = "senders" => default
+        senders: Default<Senders> = "senders",
     ],
     children: [
         /// What to send.

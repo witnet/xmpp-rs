@@ -49,7 +49,7 @@ generate_element!(
     Auth, "auth", SASL,
     attributes: [
         /// The mechanism used.
-        mechanism: Mechanism = "mechanism" => required
+        mechanism: Required<Mechanism> = "mechanism"
     ],
     text: (
         /// The content of the handshake.
