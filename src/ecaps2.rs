@@ -69,31 +69,40 @@ fn compute_identities(identities: &[Identity]) -> Vec<u8> {
     })
 }
 
-fn compute_extensions(extensions: &[DataForm]) -> Vec<u8> {
-    compute_items(extensions, 0x1c, |extension| {
-        compute_items(&extension.fields, 0x1d, |field| {
+fn compute_extensions(extensions: &[DataForm]) -> Result<Vec<u8>, ()> {
+    for extension in extensions {
+        if extension.form_type.is_none() {
+            return Err(());
+        }
+    }
+    Ok(compute_items(extensions, 0x1c, |extension| {
+        let mut bytes = compute_item("FORM_TYPE");
+        bytes.append(&mut compute_item(if let Some(ref form_type) = extension.form_type { form_type } else { unreachable!() }));
+        bytes.push(0x1e);
+        bytes.append(&mut compute_items(&extension.fields, 0x1d, |field| {
             let mut bytes = compute_item(&field.var);
             bytes.append(&mut compute_items(&field.values, 0x1e, |value| {
                 compute_item(value)
             }));
             bytes
-        })
-    })
+        }));
+        bytes
+    }))
 }
 
 /// Applies the [algorithm from
 /// XEP-0390](https://xmpp.org/extensions/xep-0390.html#algorithm-input) on a
 /// [disco#info query element](../disco/struct.DiscoInfoResult.html).
-pub fn compute_disco(disco: &DiscoInfoResult) -> Vec<u8> {
+pub fn compute_disco(disco: &DiscoInfoResult) -> Result<Vec<u8>, ()> {
     let features_string = compute_features(&disco.features);
     let identities_string = compute_identities(&disco.identities);
-    let extensions_string = compute_extensions(&disco.extensions);
+    let extensions_string = compute_extensions(&disco.extensions)?;
 
     let mut final_string = vec![];
     final_string.extend(features_string);
     final_string.extend(identities_string);
     final_string.extend(extensions_string);
-    final_string
+    Ok(final_string)
 }
 
 fn get_hash_vec(hash: &[u8]) -> Vec<u8> {
@@ -204,7 +213,7 @@ mod tests {
     fn test_simple() {
         let elem: Element = "<query xmlns='http://jabber.org/protocol/disco#info'><identity category='client' type='pc'/><feature var='http://jabber.org/protocol/disco#info'/></query>".parse().unwrap();
         let disco = DiscoInfoResult::try_from(elem).unwrap();
-        let ecaps2 = compute_disco(&disco);
+        let ecaps2 = compute_disco(&disco).unwrap();
         assert_eq!(ecaps2.len(), 54);
     }
 
@@ -263,7 +272,7 @@ mod tests {
             117, 115, 77, 111, 100, 31, 30, 28, 28,
         ];
         let disco = DiscoInfoResult::try_from(elem).unwrap();
-        let ecaps2 = compute_disco(&disco);
+        let ecaps2 = compute_disco(&disco).unwrap();
         assert_eq!(ecaps2.len(), 0x1d9);
         assert_eq!(ecaps2, expected);
 
@@ -424,7 +433,7 @@ mod tests {
             98, 50, 41, 31, 30, 29, 28,
         ];
         let disco = DiscoInfoResult::try_from(elem).unwrap();
-        let ecaps2 = compute_disco(&disco);
+        let ecaps2 = compute_disco(&disco).unwrap();
         assert_eq!(ecaps2.len(), 0x543);
         assert_eq!(ecaps2, expected);
 

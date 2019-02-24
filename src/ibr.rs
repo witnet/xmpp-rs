@@ -207,18 +207,6 @@ mod tests {
         assert!(!query.fields["instructions"].is_empty());
         let form = query.form.clone().unwrap();
         assert!(!form.instructions.unwrap().is_empty());
-        assert!(form
-            .fields
-            .binary_search_by(|field| field.var.cmp(&String::from("first")))
-            .is_ok());
-        assert!(form
-            .fields
-            .binary_search_by(|field| field.var.cmp(&String::from("x-gender")))
-            .is_ok());
-        assert!(form
-            .fields
-            .binary_search_by(|field| field.var.cmp(&String::from("coucou")))
-            .is_err());
         let elem2 = query.into();
         assert!(elem1.compare_to(&elem2));
     }

@@ -247,16 +247,21 @@ impl TryFrom<Element> for DataForm {
                 form.instructions = Some(child.text());
             } else if child.is("field", ns::DATA_FORMS) {
                 let field = Field::try_from(child.clone())?;
-                if field.var == "FORM_TYPE" && field.type_ == FieldType::Hidden {
+                if field.var == "FORM_TYPE" {
+                    let mut field = field;
                     if form.form_type.is_some() {
                         return Err(Error::ParseError("More than one FORM_TYPE in a data form."));
+                    }
+                    if field.type_ != FieldType::Hidden {
+                        return Err(Error::ParseError("Invalid field type for FORM_TYPE."));
                     }
                     if field.values.len() != 1 {
                         return Err(Error::ParseError("Wrong number of values in FORM_TYPE."));
                     }
-                    form.form_type = Some(field.values[0].clone());
+                    form.form_type = field.values.pop();
+                } else {
+                    form.fields.push(field);
                 }
-                form.fields.push(field);
             } else {
                 return Err(Error::ParseError("Unknown child in data form element."));
             }
@@ -279,6 +284,11 @@ impl From<DataForm> for Element {
                     .ns(ns::DATA_FORMS)
                     .append(text)
             }))
+            .append(if let Some(form_type) = form.form_type {
+                vec![Element::builder("field").ns(ns::DATA_FORMS).attr("var", "FORM_TYPE").attr("type", "hidden").append(Element::builder("value").ns(ns::DATA_FORMS).append(form_type).build()).build()]
+            } else {
+                vec![]
+            })
             .append(form.fields)
             .build()
     }

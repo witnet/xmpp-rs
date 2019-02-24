@@ -329,9 +329,7 @@ mod tests {
 "#
         .parse()
         .unwrap();
-        let data = b"client/pc/el/\xce\xa8 0.11<client/pc/en/Psi 0.11<http://jabber.org/protocol/caps<http://jabber.org/protocol/disco#info<http://jabber.org/protocol/disco#items<http://jabber.org/protocol/muc<urn:xmpp:dataforms:softwareinfo<ip_version<ipv4<ipv6<os<Mac<os_version<10.5.1<software<Psi<software_version<0.11<";
-        let mut expected = Vec::with_capacity(data.len());
-        expected.extend_from_slice(data);
+        let expected = b"client/pc/el/\xce\xa8 0.11<client/pc/en/Psi 0.11<http://jabber.org/protocol/caps<http://jabber.org/protocol/disco#info<http://jabber.org/protocol/disco#items<http://jabber.org/protocol/muc<urn:xmpp:dataforms:softwareinfo<ip_version<ipv4<ipv6<os<Mac<os_version<10.5.1<software<Psi<software_version<0.11<".to_vec();
         let disco = DiscoInfoResult::try_from(elem).unwrap();
         let caps = caps::compute_disco(&disco);
         assert_eq!(caps, expected);
