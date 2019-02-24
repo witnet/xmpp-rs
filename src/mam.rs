@@ -152,7 +152,7 @@ impl TryFrom<Element> for Prefs {
                 return Err(Error::ParseError("Unknown child in prefs element."));
             }
         }
-        let default_ = get_attr!(elem, "default", required);
+        let default_ = get_attr!(elem, "default", Required);
         Ok(Prefs {
             default_,
             always,

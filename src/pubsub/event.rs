@@ -115,7 +115,7 @@ fn parse_items(elem: Element, node: NodeName) -> Result<PubSubEvent, Error> {
             }
             check_no_children!(child, "retract");
             check_no_unknown_attributes!(child, "retract", ["id"]);
-            let id = get_attr!(child, "id", required);
+            let id = get_attr!(child, "id", Required);
             retracts.push(id);
         } else {
             return Err(Error::ParseError("Invalid child in items element."));
@@ -140,7 +140,7 @@ impl TryFrom<Element> for PubSubEvent {
 
         let mut payload = None;
         for child in elem.children() {
-            let node = get_attr!(child, "node", required);
+            let node = get_attr!(child, "node", Required);
             if child.is("configuration", ns::PUBSUB_EVENT) {
                 let mut payloads = child.children().cloned().collect::<Vec<_>>();
                 let item = payloads.pop();
@@ -163,7 +163,7 @@ impl TryFrom<Element> for PubSubEvent {
                                 "More than one redirect in delete element.",
                             ));
                         }
-                        let uri = get_attr!(item, "uri", required);
+                        let uri = get_attr!(item, "uri", Required);
                         redirect = Some(uri);
                     } else {
                         return Err(Error::ParseError("Unknown child in delete element."));
@@ -179,10 +179,10 @@ impl TryFrom<Element> for PubSubEvent {
                 check_no_children!(child, "subscription");
                 payload = Some(PubSubEvent::Subscription {
                     node,
-                    expiry: get_attr!(child, "expiry", optional),
-                    jid: get_attr!(child, "jid", optional),
-                    subid: get_attr!(child, "subid", optional),
-                    subscription: get_attr!(child, "subscription", optional),
+                    expiry: get_attr!(child, "expiry", Option),
+                    jid: get_attr!(child, "jid", Option),
+                    subid: get_attr!(child, "subid", Option),
+                    subscription: get_attr!(child, "subscription", Option),
                 });
             } else {
                 return Err(Error::ParseError("Unknown child in event element."));

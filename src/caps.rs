@@ -46,14 +46,14 @@ impl TryFrom<Element> for Caps {
         check_self!(elem, "c", CAPS, "caps");
         check_no_children!(elem, "caps");
         check_no_unknown_attributes!(elem, "caps", ["hash", "ver", "ext", "node"]);
-        let ver: String = get_attr!(elem, "ver", required);
+        let ver: String = get_attr!(elem, "ver", Required);
         let hash = Hash {
-            algo: get_attr!(elem, "hash", required),
+            algo: get_attr!(elem, "hash", Required),
             hash: base64::decode(&ver)?,
         };
         Ok(Caps {
-            ext: get_attr!(elem, "ext", optional),
-            node: get_attr!(elem, "node", required),
+            ext: get_attr!(elem, "ext", Option),
+            node: get_attr!(elem, "node", Required),
             hash,
         })
     }

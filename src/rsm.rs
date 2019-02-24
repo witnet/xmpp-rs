@@ -131,7 +131,7 @@ impl TryFrom<Element> for SetResult {
                 if set.first.is_some() {
                     return Err(Error::ParseError("Set can’t have more than one first."));
                 }
-                set.first_index = get_attr!(child, "index", optional);
+                set.first_index = get_attr!(child, "index", Option);
                 set.first = Some(child.text());
             } else if child.is("last", ns::RSM) {
                 if set.last.is_some() {

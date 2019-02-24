@@ -263,10 +263,10 @@ impl TryFrom<Element> for Presence {
         let mut show = None;
         let mut priority = None;
         let mut presence = Presence {
-            from: get_attr!(root, "from", optional),
-            to: get_attr!(root, "to", optional),
-            id: get_attr!(root, "id", optional),
-            type_: get_attr!(root, "type", default),
+            from: get_attr!(root, "from", Option),
+            to: get_attr!(root, "to", Option),
+            id: get_attr!(root, "id", Option),
+            type_: get_attr!(root, "type", Default),
             show: Show::None,
             statuses: BTreeMap::new(),
             priority: 0i8,
@@ -285,7 +285,7 @@ impl TryFrom<Element> for Presence {
             } else if elem.is("status", ns::DEFAULT_NS) {
                 check_no_unknown_attributes!(elem, "status", ["xml:lang"]);
                 check_no_children!(elem, "status");
-                let lang = get_attr!(elem, "xml:lang", default);
+                let lang = get_attr!(elem, "xml:lang", Default);
                 if presence.statuses.insert(lang, elem.text()).is_some() {
                     return Err(Error::ParseError(
                         "Status element present twice for the same xml:lang.",

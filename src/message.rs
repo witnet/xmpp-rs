@@ -154,10 +154,10 @@ impl TryFrom<Element> for Message {
 
     fn try_from(root: Element) -> Result<Message, Error> {
         check_self!(root, "message", DEFAULT_NS);
-        let from = get_attr!(root, "from", optional);
-        let to = get_attr!(root, "to", optional);
-        let id = get_attr!(root, "id", optional);
-        let type_ = get_attr!(root, "type", default);
+        let from = get_attr!(root, "from", Option);
+        let to = get_attr!(root, "to", Option);
+        let id = get_attr!(root, "id", Option);
+        let type_ = get_attr!(root, "type", Default);
         let mut bodies = BTreeMap::new();
         let mut subjects = BTreeMap::new();
         let mut thread = None;
@@ -165,7 +165,7 @@ impl TryFrom<Element> for Message {
         for elem in root.children() {
             if elem.is("body", ns::DEFAULT_NS) {
                 check_no_children!(elem, "body");
-                let lang = get_attr!(elem, "xml:lang", default);
+                let lang = get_attr!(elem, "xml:lang", Default);
                 let body = Body(elem.text());
                 if bodies.insert(lang, body).is_some() {
                     return Err(Error::ParseError(
@@ -174,7 +174,7 @@ impl TryFrom<Element> for Message {
                 }
             } else if elem.is("subject", ns::DEFAULT_NS) {
                 check_no_children!(elem, "subject");
-                let lang = get_attr!(elem, "xml:lang", default);
+                let lang = get_attr!(elem, "xml:lang", Default);
                 let subject = Subject(elem.text());
                 if subjects.insert(lang, subject).is_some() {
                     return Err(Error::ParseError(

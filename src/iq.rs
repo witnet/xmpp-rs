@@ -134,10 +134,10 @@ impl TryFrom<Element> for Iq {
 
     fn try_from(root: Element) -> Result<Iq, Error> {
         check_self!(root, "iq", DEFAULT_NS);
-        let from = get_attr!(root, "from", optional);
-        let to = get_attr!(root, "to", optional);
-        let id = get_attr!(root, "id", required);
-        let type_: String = get_attr!(root, "type", required);
+        let from = get_attr!(root, "from", Option);
+        let to = get_attr!(root, "to", Option);
+        let id = get_attr!(root, "id", Required);
+        let type_: String = get_attr!(root, "type", Required);
 
         let mut payload = None;
         let mut error_payload = None;

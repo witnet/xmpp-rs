@@ -39,16 +39,6 @@ macro_rules! get_attr {
             None => ::std::default::Default::default(),
         }
     };
-    // The remaining ones are only for backwards-compatibility.
-    ($elem:ident, $attr:tt, optional, $value:ident, $func:expr) => {
-        get_attr!($elem, $attr, Option, $value, $func)
-    };
-    ($elem:ident, $attr:tt, required, $value:ident, $func:expr) => {
-        get_attr!($elem, $attr, Required, $value, $func)
-    };
-    ($elem:ident, $attr:tt, default, $value:ident, $func:expr) => {
-        get_attr!($elem, $attr, Default, $value, $func)
-    };
 }
 
 macro_rules! generate_attribute {
@@ -242,7 +232,7 @@ macro_rules! generate_attribute_enum {
                 check_ns_only!(elem, $name, $ns);
                 check_no_children!(elem, $name);
                 check_no_unknown_attributes!(elem, $name, [$attr]);
-                Ok(match get_attr!(elem, $attr, required) {
+                Ok(match get_attr!(elem, $attr, Required) {
                     $($enum_name => $elem::$enum,)+
                     _ => return Err(crate::util::error::Error::ParseError(concat!("Invalid ", $name, " ", $attr, " value."))),
                 })
@@ -639,8 +629,8 @@ macro_rules! impl_pubsub_item {
                     ));
                 }
                 Ok($item(crate::pubsub::Item {
-                    id: get_attr!(elem, "id", optional),
-                    publisher: get_attr!(elem, "publisher", optional),
+                    id: get_attr!(elem, "id", Option),
+                    publisher: get_attr!(elem, "publisher", Option),
                     payload,
                 }))
             }

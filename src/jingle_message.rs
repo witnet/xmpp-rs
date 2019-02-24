@@ -39,7 +39,7 @@ pub enum JingleMI {
 
 fn get_sid(elem: Element) -> Result<SessionId, Error> {
     check_no_unknown_attributes!(elem, "Jingle message", ["id"]);
-    Ok(SessionId(get_attr!(elem, "id", required)))
+    Ok(SessionId(get_attr!(elem, "id", Required)))
 }
 
 fn check_empty_and_get_sid(elem: Element) -> Result<SessionId, Error> {

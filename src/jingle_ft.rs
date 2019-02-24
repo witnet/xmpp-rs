@@ -163,7 +163,7 @@ impl TryFrom<Element> for File {
                 }
                 file.name = Some(child.text());
             } else if child.is("desc", ns::JINGLE_FT) {
-                let lang = get_attr!(child, "xml:lang", default);
+                let lang = get_attr!(child, "xml:lang", Default);
                 let desc = Desc(child.text());
                 if file.descs.insert(lang, desc).is_some() {
                     return Err(Error::ParseError(
@@ -321,8 +321,8 @@ impl TryFrom<Element> for Checksum {
             ));
         }
         Ok(Checksum {
-            name: get_attr!(elem, "name", required),
-            creator: get_attr!(elem, "creator", required),
+            name: get_attr!(elem, "name", Required),
+            creator: get_attr!(elem, "creator", Required),
             file: file.unwrap(),
         })
     }

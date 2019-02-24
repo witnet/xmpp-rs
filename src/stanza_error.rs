@@ -221,8 +221,8 @@ impl TryFrom<Element> for StanzaError {
     fn try_from(elem: Element) -> Result<StanzaError, Error> {
         check_self!(elem, "error", DEFAULT_NS);
 
-        let type_ = get_attr!(elem, "type", required);
-        let by = get_attr!(elem, "by", optional);
+        let type_ = get_attr!(elem, "type", Required);
+        let by = get_attr!(elem, "by", Option);
         let mut defined_condition = None;
         let mut texts = BTreeMap::new();
         let mut other = None;
@@ -230,7 +230,7 @@ impl TryFrom<Element> for StanzaError {
         for child in elem.children() {
             if child.is("text", ns::XMPP_STANZAS) {
                 check_no_children!(child, "text");
-                let lang = get_attr!(elem, "xml:lang", default);
+                let lang = get_attr!(elem, "xml:lang", Default);
                 if texts.insert(lang, child.text()).is_some() {
                     return Err(Error::ParseError(
                         "Text element present twice for the same xml:lang.",

@@ -95,8 +95,8 @@ impl TryFrom<Element> for Actor {
         check_self!(elem, "actor", MUC_USER);
         check_no_unknown_attributes!(elem, "actor", ["jid", "nick"]);
         check_no_children!(elem, "actor");
-        let jid: Option<Jid> = get_attr!(elem, "jid", optional);
-        let nick = get_attr!(elem, "nick", optional);
+        let jid: Option<Jid> = get_attr!(elem, "jid", Option);
+        let nick = get_attr!(elem, "nick", Option);
 
         match (jid, nick) {
             (Some(_), Some(_)) | (None, None) => {

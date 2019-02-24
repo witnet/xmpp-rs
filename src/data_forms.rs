@@ -106,9 +106,9 @@ impl TryFrom<Element> for Field {
         check_self!(elem, "field", DATA_FORMS);
         check_no_unknown_attributes!(elem, "field", ["label", "type", "var"]);
         let mut field = Field {
-            var: get_attr!(elem, "var", required),
-            type_: get_attr!(elem, "type", default),
-            label: get_attr!(elem, "label", optional),
+            var: get_attr!(elem, "var", Required),
+            type_: get_attr!(elem, "type", Default),
+            label: get_attr!(elem, "label", Option),
             required: false,
             options: vec![],
             values: vec![],
@@ -220,7 +220,7 @@ impl TryFrom<Element> for DataForm {
     fn try_from(elem: Element) -> Result<DataForm, Error> {
         check_self!(elem, "x", DATA_FORMS);
         check_no_unknown_attributes!(elem, "x", ["type"]);
-        let type_ = get_attr!(elem, "type", required);
+        let type_ = get_attr!(elem, "type", Required);
         let mut form = DataForm {
             type_,
             form_type: None,

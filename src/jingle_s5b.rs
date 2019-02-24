@@ -177,9 +177,9 @@ impl TryFrom<Element> for Transport {
     fn try_from(elem: Element) -> Result<Transport, Error> {
         check_self!(elem, "transport", JINGLE_S5B);
         check_no_unknown_attributes!(elem, "transport", ["sid", "dstaddr", "mode"]);
-        let sid = get_attr!(elem, "sid", required);
-        let dstaddr = get_attr!(elem, "dstaddr", optional);
-        let mode = get_attr!(elem, "mode", default);
+        let sid = get_attr!(elem, "sid", Required);
+        let dstaddr = get_attr!(elem, "dstaddr", Option);
+        let mode = get_attr!(elem, "mode", Default);
 
         let mut payload = None;
         for child in elem.children() {
@@ -200,7 +200,7 @@ impl TryFrom<Element> for Transport {
                         "Non-activated child already present in JingleS5B transport element.",
                     ));
                 }
-                let cid = get_attr!(child, "cid", required);
+                let cid = get_attr!(child, "cid", Required);
                 TransportPayload::Activated(cid)
             } else if child.is("candidate-error", ns::JINGLE_S5B) {
                 if payload.is_some() {
@@ -215,7 +215,7 @@ impl TryFrom<Element> for Transport {
                         "Non-candidate-used child already present in JingleS5B transport element.",
                     ));
                 }
-                let cid = get_attr!(child, "cid", required);
+                let cid = get_attr!(child, "cid", Required);
                 TransportPayload::CandidateUsed(cid)
             } else if child.is("proxy-error", ns::JINGLE_S5B) {
                 if payload.is_some() {

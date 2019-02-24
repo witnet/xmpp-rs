@@ -492,10 +492,10 @@ impl TryFrom<Element> for Jingle {
         check_no_unknown_attributes!(root, "Jingle", ["action", "initiator", "responder", "sid"]);
 
         let mut jingle = Jingle {
-            action: get_attr!(root, "action", required),
-            initiator: get_attr!(root, "initiator", optional),
-            responder: get_attr!(root, "responder", optional),
-            sid: get_attr!(root, "sid", required),
+            action: get_attr!(root, "action", Required),
+            initiator: get_attr!(root, "initiator", Option),
+            responder: get_attr!(root, "responder", Option),
+            sid: get_attr!(root, "sid", Required),
             contents: vec![],
             reason: None,
             other: vec![],

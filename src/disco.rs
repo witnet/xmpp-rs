@@ -71,14 +71,14 @@ impl TryFrom<Element> for Identity {
             ["category", "type", "xml:lang", "name"]
         );
 
-        let category = get_attr!(elem, "category", required);
+        let category = get_attr!(elem, "category", Required);
         if category == "" {
             return Err(Error::ParseError(
                 "Identity must have a non-empty 'category' attribute.",
             ));
         }
 
-        let type_ = get_attr!(elem, "type", required);
+        let type_ = get_attr!(elem, "type", Required);
         if type_ == "" {
             return Err(Error::ParseError(
                 "Identity must have a non-empty 'type' attribute.",
@@ -88,8 +88,8 @@ impl TryFrom<Element> for Identity {
         Ok(Identity {
             category,
             type_,
-            lang: get_attr!(elem, "xml:lang", optional),
-            name: get_attr!(elem, "name", optional),
+            lang: get_attr!(elem, "xml:lang", Option),
+            name: get_attr!(elem, "name", Option),
         })
     }
 }
@@ -135,7 +135,7 @@ impl TryFrom<Element> for DiscoInfoResult {
         check_no_unknown_attributes!(elem, "disco#info result", ["node"]);
 
         let mut result = DiscoInfoResult {
-            node: get_attr!(elem, "node", optional),
+            node: get_attr!(elem, "node", Option),
             identities: vec![],
             features: vec![],
             extensions: vec![],

@@ -164,7 +164,7 @@ impl TryFrom<Element> for Failure {
             if child.is("text", ns::SASL) {
                 check_no_unknown_attributes!(child, "text", ["xml:lang"]);
                 check_no_children!(child, "text");
-                let lang = get_attr!(child, "xml:lang", default);
+                let lang = get_attr!(child, "xml:lang", Default);
                 if texts.insert(lang, child.text()).is_some() {
                     return Err(Error::ParseError(
                         "Text element present twice for the same xml:lang in failure element.",
