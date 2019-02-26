@@ -33,7 +33,7 @@ impl<S: AsyncWrite> ClientBind<S> {
             }
             Some(_) => {
                 let resource = stream.jid.resource.clone();
-                let iq = Iq::from_set(Bind::new(resource)).with_id(BIND_REQ_ID.to_string());
+                let iq = Iq::from_set(BIND_REQ_ID, Bind::new(resource));
                 let send = stream.send_stanza(iq);
                 ClientBind::WaitSend(send)
             }
@@ -64,7 +64,7 @@ impl<S: AsyncRead + AsyncWrite> Future for ClientBind<S> {
             ClientBind::WaitRecv(mut stream) => match stream.poll() {
                 Ok(Async::Ready(Some(Packet::Stanza(stanza)))) => match Iq::try_from(stanza) {
                     Ok(iq) => {
-                        if iq.id == Some(BIND_REQ_ID.to_string()) {
+                        if iq.id == BIND_REQ_ID {
                             match iq.payload {
                                 IqType::Result(payload) => {
                                     payload
