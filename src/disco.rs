@@ -36,9 +36,9 @@ attributes: [
 
 impl Feature {
     /// Create a new `<feature/>` with the according `@var`.
-    pub fn new(var: &str) -> Feature {
+    pub fn new<S: Into<String>>(var: S) -> Feature {
         Feature {
-            var: String::from(var)
+            var: var.into(),
         }
     }
 }
@@ -57,6 +57,36 @@ pub struct Identity {
 
     /// Name of this identity.
     pub name: Option<String>,
+}
+
+impl Identity {
+    /// Create a new `<identity/>`.
+    pub fn new<C, T, L, N>(category: C, type_: T, lang: L, name: N) -> Identity
+    where C: Into<String>,
+          T: Into<String>,
+          L: Into<String>,
+          N: Into<String>,
+    {
+        Identity {
+            category: category.into(),
+            type_: type_.into(),
+            lang: Some(lang.into()),
+            name: Some(name.into()),
+        }
+    }
+
+    /// Create a new `<identity/>` without a name.
+    pub fn new_anonymous<C, T, L, N>(category: C, type_: T) -> Identity
+    where C: Into<String>,
+          T: Into<String>,
+    {
+        Identity {
+            category: category.into(),
+            type_: type_.into(),
+            lang: None,
+            name: None,
+        }
+    }
 }
 
 impl TryFrom<Element> for Identity {
