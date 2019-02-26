@@ -71,41 +71,41 @@ pub struct Iq {
 
 impl Iq {
     /// Creates an `<iq/>` stanza containing a get request.
-    pub fn from_get(id: String, payload: impl IqGetPayload) -> Iq {
+    pub fn from_get<S: Into<String>>(id: S, payload: impl IqGetPayload) -> Iq {
         Iq {
             from: None,
             to: None,
-            id,
+            id: id.into(),
             payload: IqType::Get(payload.into()),
         }
     }
 
     /// Creates an `<iq/>` stanza containing a set request.
-    pub fn from_set(id: String, payload: impl IqSetPayload) -> Iq {
+    pub fn from_set<S: Into<String>>(id: S, payload: impl IqSetPayload) -> Iq {
         Iq {
             from: None,
             to: None,
-            id,
+            id: id.into(),
             payload: IqType::Set(payload.into()),
         }
     }
 
     /// Creates an `<iq/>` stanza containing a result.
-    pub fn from_result(id: String, payload: Option<impl IqResultPayload>) -> Iq {
+    pub fn from_result<S: Into<String>>(id: S, payload: Option<impl IqResultPayload>) -> Iq {
         Iq {
             from: None,
             to: None,
-            id,
+            id: id.into(),
             payload: IqType::Result(payload.map(Into::into)),
         }
     }
 
     /// Creates an `<iq/>` stanza containing an error.
-    pub fn from_error(id: String, payload: StanzaError) -> Iq {
+    pub fn from_error<S: Into<String>>(id: S, payload: StanzaError) -> Iq {
         Iq {
             from: None,
             to: None,
-            id,
+            id: id.into(),
             payload: IqType::Error(payload),
         }
     }
