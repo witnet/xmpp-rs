@@ -215,6 +215,26 @@ pub struct StanzaError {
 impl MessagePayload for StanzaError {}
 impl PresencePayload for StanzaError {}
 
+impl StanzaError {
+    /// Create a new `<error/>` with the according content.
+    pub fn new<L, T>(type_: ErrorType, defined_condition: DefinedCondition, lang: L, text: T) -> StanzaError
+    where L: Into<Lang>,
+          T: Into<String>,
+    {
+        StanzaError {
+            type_,
+            by: None,
+            defined_condition,
+            texts: {
+                let mut map = BTreeMap::new();
+                map.insert(lang.into(), text.into());
+                map
+            },
+            other: None,
+        }
+    }
+}
+
 impl TryFrom<Element> for StanzaError {
     type Err = Error;
 
