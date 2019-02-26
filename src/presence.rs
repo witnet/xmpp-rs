@@ -245,8 +245,11 @@ impl Presence {
     }
 
     /// Set the availability information of this presence.
-    pub fn set_status(&mut self, lang: Lang, status: Status) {
-        self.statuses.insert(lang, status);
+    pub fn set_status<L, S>(&mut self, lang: L, status: S)
+    where L: Into<Lang>,
+          S: Into<Status>,
+    {
+        self.statuses.insert(lang.into(), status.into());
     }
 
     /// Add a payload to this presence.
