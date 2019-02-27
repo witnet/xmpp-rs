@@ -26,7 +26,7 @@
 
 pub use minidom::Element;
 pub use jid::{Jid, JidParseError};
-pub use try_from::TryFrom;
+pub use try_from::{TryFrom, TryInto};
 pub use crate::util::error::Error;
 
 /// XML namespace definitions used through XMPP.
