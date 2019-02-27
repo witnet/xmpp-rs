@@ -82,6 +82,13 @@ pub const CAPS: &str = "http://jabber.org/protocol/caps";
 /// XEP-0166: Jingle
 pub const JINGLE: &str = "urn:xmpp:jingle:1";
 
+/// XEP-0167: Jingle RTP Sessions
+pub const JINGLE_RTP: &str = "urn:xmpp:jingle:apps:rtp:1";
+/// XEP-0167: Jingle RTP Sessions
+pub const JINGLE_RTP_AUDIO: &str = "urn:xmpp:jingle:apps:rtp:audio";
+/// XEP-0167: Jingle RTP Sessions
+pub const JINGLE_RTP_VIDEO: &str = "urn:xmpp:jingle:apps:rtp:video";
+
 /// XEP-0172: User Nickname
 pub const NICK: &str = "http://jabber.org/protocol/nick";
 

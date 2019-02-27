@@ -104,6 +104,9 @@ pub mod caps;
 /// XEP-0166: Jingle
 pub mod jingle;
 
+/// XEP-0167: Jingle RTP Sessions
+pub mod jingle_rtp;
+
 /// XEP-0172: User Nickname
 pub mod nick;
 
