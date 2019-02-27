@@ -110,6 +110,9 @@ pub mod jingle_rtp;
 /// XEP-0172: User Nickname
 pub mod nick;
 
+/// XEP-0176: Jingle ICE-UDP Transport Method
+pub mod jingle_ice_udp;
+
 /// XEP-0184: Message Delivery Receipts
 pub mod receipts;
 
