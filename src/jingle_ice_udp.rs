@@ -4,6 +4,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+use crate::jingle_dtls_srtp::Fingerprint;
 use std::net::IpAddr;
 
 generate_element!(
@@ -17,8 +18,11 @@ generate_element!(
         ufrag: Option<String> = "ufrag",
     ],
     children: [
-	/// List of candidates for this ICE-UDP session.
-        candidates: Vec<Candidate> = ("candidate", JINGLE_ICE_UDP) => Candidate
+        /// List of candidates for this ICE-UDP session.
+        candidates: Vec<Candidate> = ("candidate", JINGLE_ICE_UDP) => Candidate,
+
+        /// Fingerprint of the key used for the DTLS handshake.
+        fingerprint: Option<Fingerprint> = ("fingerprint", JINGLE_DTLS) => Fingerprint
     ]
 );
 
@@ -89,25 +93,27 @@ mod tests {
     use super::*;
     use minidom::Element;
     use try_from::TryFrom;
+    use crate::hashes::Algo;
+    use crate::jingle_dtls_srtp::Setup;
 
     #[cfg(target_pointer_width = "32")]
     #[test]
     fn test_size() {
-        assert_size!(Transport, 36);
+        assert_size!(Transport, 68);
         assert_size!(Type, 1);
-        assert_size!(Candidate, 72);
+        assert_size!(Candidate, 80);
     }
 
     #[cfg(target_pointer_width = "64")]
     #[test]
     fn test_size() {
-        assert_size!(Transport, 72);
+        assert_size!(Transport, 136);
         assert_size!(Type, 1);
         assert_size!(Candidate, 104);
     }
 
     #[test]
-    fn test_simple() {
+    fn test_gajim() {
         let elem: Element = "
 <transport xmlns='urn:xmpp:jingle:transports:ice-udp:1' pwd='wakMJ8Ydd5rqnPaFerws5o' ufrag='aeXX'>
     <candidate xmlns='urn:xmpp:jingle:transports:ice-udp:1' component='2' foundation='1' generation='0' id='11b72719-6a1b-4c51-8ae6-9f1538047568' ip='192.168.0.12' network='0' port='56715' priority='1010828030' protocol='tcp' type='host'/>
@@ -134,5 +140,26 @@ mod tests {
         let transport = Transport::try_from(elem).unwrap();
         assert_eq!(transport.pwd.unwrap(), "wakMJ8Ydd5rqnPaFerws5o");
         assert_eq!(transport.ufrag.unwrap(), "aeXX");
+    }
+
+    #[test]
+    fn test_jitsi_meet() {
+        let elem: Element = "
+<transport ufrag='2acq51d4p07v2m' pwd='7lk9uul39gckit6t02oavv2r9j' xmlns='urn:xmpp:jingle:transports:ice-udp:1'>
+    <fingerprint hash='sha-1' setup='actpass' xmlns='urn:xmpp:jingle:apps:dtls:0'>97:F2:B5:BE:DB:A6:00:B1:3E:40:B2:41:3C:0D:FC:E0:BD:B2:A0:E8</fingerprint>
+    <candidate type='host' protocol='udp' id='186cb069513c2bbe546192c93cc4ab3b05ab0d426' ip='2a05:d014:fc7:54a1:8bfc:7248:3d1c:51a4' component='1' port='10000' foundation='1' generation='0' priority='2130706431' network='0'/>
+    <candidate type='host' protocol='udp' id='186cb069513c2bbe546192c93cc4ab3b063daeefd' ip='10.15.1.120' component='1' port='10000' foundation='2' generation='0' priority='2130706431' network='0'/>
+    <candidate rel-port='10000' type='srflx' protocol='udp' id='186cb069513c2bbe546192c93cc4ab3b05d449db8' ip='3.120.176.51' component='1' port='10000' foundation='3' generation='0' network='0' priority='1677724415' rel-addr='10.15.1.120'/>
+</transport>"
+                .parse()
+                .unwrap();
+        let transport = Transport::try_from(elem).unwrap();
+        assert_eq!(transport.pwd.unwrap(), "7lk9uul39gckit6t02oavv2r9j");
+        assert_eq!(transport.ufrag.unwrap(), "2acq51d4p07v2m");
+
+        let fingerprint = transport.fingerprint.unwrap();
+        assert_eq!(fingerprint.hash, Algo::Sha_1);
+        assert_eq!(fingerprint.setup, Setup::Actpass);
+        assert_eq!(fingerprint.value, [151, 242, 181, 190, 219, 166, 0, 177, 62, 64, 178, 65, 60, 13, 252, 224, 189, 178, 160, 232]);
     }
 }
