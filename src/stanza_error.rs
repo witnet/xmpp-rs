@@ -289,24 +289,21 @@ impl TryFrom<Element> for StanzaError {
 
 impl From<StanzaError> for Element {
     fn from(err: StanzaError) -> Element {
-        let mut root = Element::builder("error")
+        Element::builder("error")
             .ns(ns::DEFAULT_NS)
             .attr("type", err.type_)
             .attr("by", err.by)
             .append(err.defined_condition)
-            .build();
-        for (lang, text) in err.texts {
-            let elem = Element::builder("text")
-                .ns(ns::XMPP_STANZAS)
-                .attr("xml:lang", lang)
-                .append(text)
-                .build();
-            root.append_child(elem);
-        }
-        if let Some(other) = err.other {
-            root.append_child(other);
-        }
-        root
+            .append(
+                err.texts.into_iter().map(|(lang, text)| {
+                    Element::builder("text")
+                        .ns(ns::XMPP_STANZAS)
+                        .attr("xml:lang", lang)
+                        .append(text)
+                        .build()
+                }).collect::<Vec<_>>())
+            .append(err.other)
+            .build()
     }
 }
 
