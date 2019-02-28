@@ -43,21 +43,25 @@ impl Feature {
     }
 }
 
-/// Structure representing an `<identity xmlns='http://jabber.org/protocol/disco#info'/>` element.
-#[derive(Debug, Clone)]
-pub struct Identity {
-    /// Category of this identity.
-    pub category: String, // TODO: use an enum here.
+generate_element!(
+    /// Structure representing an `<identity xmlns='http://jabber.org/protocol/disco#info'/>` element.
+    Identity, "identity", DISCO_INFO,
+    attributes: [
+        /// Category of this identity.
+        // TODO: use an enum here.
+        category: RequiredNonEmpty<String> = "category",
 
-    /// Type of this identity.
-    pub type_: String, // TODO: use an enum here.
+        /// Type of this identity.
+        // TODO: use an enum here.
+        type_: RequiredNonEmpty<String> = "type",
 
-    /// Lang of the name of this identity.
-    pub lang: Option<String>,
+        /// Lang of the name of this identity.
+        lang: Option<String> = "xml:lang",
 
-    /// Name of this identity.
-    pub name: Option<String>,
-}
+        /// Name of this identity.
+        name: Option<String> = "name",
+    ]
+);
 
 impl Identity {
     /// Create a new `<identity/>`.
@@ -86,53 +90,6 @@ impl Identity {
             lang: None,
             name: None,
         }
-    }
-}
-
-impl TryFrom<Element> for Identity {
-    type Err = Error;
-
-    fn try_from(elem: Element) -> Result<Identity, Error> {
-        check_self!(elem, "identity", DISCO_INFO, "disco#info identity");
-        check_no_children!(elem, "disco#info identity");
-        check_no_unknown_attributes!(
-            elem,
-            "disco#info identity",
-            ["category", "type", "xml:lang", "name"]
-        );
-
-        let category = get_attr!(elem, "category", Required);
-        if category == "" {
-            return Err(Error::ParseError(
-                "Identity must have a non-empty 'category' attribute.",
-            ));
-        }
-
-        let type_ = get_attr!(elem, "type", Required);
-        if type_ == "" {
-            return Err(Error::ParseError(
-                "Identity must have a non-empty 'type' attribute.",
-            ));
-        }
-
-        Ok(Identity {
-            category,
-            type_,
-            lang: get_attr!(elem, "xml:lang", Option),
-            name: get_attr!(elem, "name", Option),
-        })
-    }
-}
-
-impl From<Identity> for Element {
-    fn from(identity: Identity) -> Element {
-        Element::builder("identity")
-            .ns(ns::DISCO_INFO)
-            .attr("category", identity.category)
-            .attr("type", identity.type_)
-            .attr("xml:lang", identity.lang)
-            .attr("name", identity.name)
-            .build()
     }
 }
 
@@ -385,7 +342,7 @@ mod tests {
         };
         assert_eq!(
             message,
-            "Identity must have a non-empty 'category' attribute."
+            "Required attribute 'category' must not be empty."
         );
 
         let elem: Element = "<query xmlns='http://jabber.org/protocol/disco#info'><identity category='coucou'/></query>".parse().unwrap();
@@ -402,7 +359,7 @@ mod tests {
             Error::ParseError(string) => string,
             _ => panic!(),
         };
-        assert_eq!(message, "Identity must have a non-empty 'type' attribute.");
+        assert_eq!(message, "Required attribute 'type' must not be empty.");
     }
 
     #[test]

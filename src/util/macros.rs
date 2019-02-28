@@ -33,6 +33,25 @@ macro_rules! get_attr {
             }
         }
     };
+    ($elem:ident, $attr:tt, RequiredNonEmpty, $value:ident, $func:expr) => {
+        match $elem.attr($attr) {
+            Some("") => {
+                return Err(crate::util::error::Error::ParseError(concat!(
+                    "Required attribute '",
+                    $attr,
+                    "' must not be empty."
+                )));
+            },
+            Some($value) => $func,
+            None => {
+                return Err(crate::util::error::Error::ParseError(concat!(
+                    "Required attribute '",
+                    $attr,
+                    "' missing."
+                )));
+            }
+        }
+    };
     ($elem:ident, $attr:tt, Default, $value:ident, $func:expr) => {
         match $elem.attr($attr) {
             Some($value) => $func,
@@ -406,6 +425,9 @@ macro_rules! decl_attr {
         Option<$type>
     );
     (Required, $type:ty) => (
+        $type
+    );
+    (RequiredNonEmpty, $type:ty) => (
         $type
     );
     (Default, $type:ty) => (
