@@ -74,7 +74,7 @@ generate_element!(
         protocol: Required<String> = "protocol",
 
         /// A related address as defined in ICE-CORE.
-        rel_addr: Option<String> = "rel-addr",
+        rel_addr: Option<IpAddr> = "rel-addr",
 
         /// A related port as defined in ICE-CORE.
         rel_port: Option<u16> = "rel-port",
