@@ -9,6 +9,7 @@ use crate::iq::IqSetPayload;
 use crate::ns;
 use jid::Jid;
 use minidom::Element;
+use std::collections::BTreeMap;
 use std::str::FromStr;
 use try_from::TryFrom;
 
@@ -354,6 +355,8 @@ impl From<Reason> for Element {
     }
 }
 
+type Lang = String;
+
 /// Informs the recipient of something.
 #[derive(Debug, Clone)]
 pub struct ReasonElement {
@@ -361,7 +364,7 @@ pub struct ReasonElement {
     pub reason: Reason,
 
     /// A human-readable description of this reason.
-    pub text: Option<String>,
+    pub texts: BTreeMap<Lang, String>,
 }
 
 impl TryFrom<Element> for ReasonElement {
@@ -369,29 +372,30 @@ impl TryFrom<Element> for ReasonElement {
 
     fn try_from(elem: Element) -> Result<ReasonElement, Error> {
         check_self!(elem, "reason", JINGLE);
+        check_no_attributes!(elem, "reason");
         let mut reason = None;
-        let mut text = None;
+        let mut texts = BTreeMap::new();
         for child in elem.children() {
-            if !child.has_ns(ns::JINGLE) {
+            if child.is("text", ns::JINGLE) {
+                check_no_children!(child, "text");
+                check_no_unknown_attributes!(child, "text", ["xml:lang"]);
+                let lang = get_attr!(elem, "xml:lang", Default);
+                if texts.insert(lang, child.text()).is_some() {
+                    return Err(Error::ParseError(
+                        "Text element present twice for the same xml:lang.",
+                    ));
+                }
+            } else if child.has_ns(ns::JINGLE) {
+                if reason.is_some() {
+                    return Err(Error::ParseError(
+                        "Reason must not have more than one reason.",
+                    ));
+                }
+                check_no_children!(child, "reason");
+                check_no_attributes!(child, "reason");
+                reason = Some(child.name().parse()?);
+            } else {
                 return Err(Error::ParseError("Reason contains a foreign element."));
-            }
-            match child.name() {
-                "text" => {
-                    if text.is_some() {
-                        return Err(Error::ParseError(
-                            "Reason must not have more than one text.",
-                        ));
-                    }
-                    text = Some(child.text());
-                }
-                name => {
-                    if reason.is_some() {
-                        return Err(Error::ParseError(
-                            "Reason must not have more than one reason.",
-                        ));
-                    }
-                    reason = Some(name.parse()?);
-                }
             }
         }
         let reason = reason.ok_or(Error::ParseError(
@@ -399,7 +403,7 @@ impl TryFrom<Element> for ReasonElement {
         ))?;
         Ok(ReasonElement {
             reason,
-            text,
+            texts,
         })
     }
 }
@@ -407,8 +411,16 @@ impl TryFrom<Element> for ReasonElement {
 impl From<ReasonElement> for Element {
     fn from(reason: ReasonElement) -> Element {
         Element::builder("reason")
+            .ns(ns::JINGLE)
             .append(Element::from(reason.reason))
-            .append(reason.text)
+            .append(
+                reason.texts.into_iter().map(|(lang, text)| {
+                    Element::builder("text")
+                        .ns(ns::JINGLE)
+                        .attr("xml:lang", lang)
+                        .append(text)
+                        .build()
+                }).collect::<Vec<_>>())
             .build()
     }
 }
@@ -679,13 +691,13 @@ mod tests {
         let jingle = Jingle::try_from(elem).unwrap();
         let reason = jingle.reason.unwrap();
         assert_eq!(reason.reason, Reason::Success);
-        assert_eq!(reason.text, None);
+        assert_eq!(reason.texts, BTreeMap::new());
 
         let elem: Element = "<jingle xmlns='urn:xmpp:jingle:1' action='session-initiate' sid='coucou'><reason><success/><text>coucou</text></reason></jingle>".parse().unwrap();
         let jingle = Jingle::try_from(elem).unwrap();
         let reason = jingle.reason.unwrap();
         assert_eq!(reason.reason, Reason::Success);
-        assert_eq!(reason.text, Some(String::from("coucou")));
+        assert_eq!(reason.texts.get(""), Some(&String::from("coucou")));
     }
 
     #[test]
@@ -728,6 +740,6 @@ mod tests {
             Error::ParseError(string) => string,
             _ => panic!(),
         };
-        assert_eq!(message, "Reason must not have more than one text.");
+        assert_eq!(message, "Text element present twice for the same xml:lang.");
     }
 }
