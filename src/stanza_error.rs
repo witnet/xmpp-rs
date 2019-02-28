@@ -240,6 +240,7 @@ impl TryFrom<Element> for StanzaError {
 
     fn try_from(elem: Element) -> Result<StanzaError, Error> {
         check_self!(elem, "error", DEFAULT_NS);
+        check_no_unknown_attributes!(elem, "error", ["type", "by"]);
 
         let type_ = get_attr!(elem, "type", Required);
         let by = get_attr!(elem, "by", Option);
@@ -250,6 +251,7 @@ impl TryFrom<Element> for StanzaError {
         for child in elem.children() {
             if child.is("text", ns::XMPP_STANZAS) {
                 check_no_children!(child, "text");
+                check_no_unknown_attributes!(child, "text", ["xml:lang"]);
                 let lang = get_attr!(elem, "xml:lang", Default);
                 if texts.insert(lang, child.text()).is_some() {
                     return Err(Error::ParseError(
@@ -263,6 +265,7 @@ impl TryFrom<Element> for StanzaError {
                     ));
                 }
                 check_no_children!(child, "defined-condition");
+                check_no_attributes!(child, "defined-condition");
                 let condition = DefinedCondition::try_from(child.clone())?;
                 defined_condition = Some(condition);
             } else {
