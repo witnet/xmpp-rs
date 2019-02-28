@@ -158,6 +158,9 @@ pub mod mam;
 /// XEP-0319: Last User Interaction in Presence
 pub mod idle;
 
+/// XEP-0320: Use of DTLS-SRTP in Jingle Sessions
+pub mod jingle_dtls_srtp;
+
 /// XEP-0353: Jingle Message Initiation
 pub mod jingle_message;
 

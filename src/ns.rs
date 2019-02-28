@@ -156,6 +156,9 @@ pub const MAM: &str = "urn:xmpp:mam:2";
 /// XEP-0319: Last User Interaction in Presence
 pub const IDLE: &str = "urn:xmpp:idle:1";
 
+/// XEP-0320: Use of DTLS-SRTP in Jingle Sessions
+pub const JINGLE_DTLS: &str = "urn:xmpp:jingle:apps:dtls:0";
+
 /// XEP-0353: Jingle Message Initiation
 pub const JINGLE_MESSAGE: &str = "urn:xmpp:jingle-message:0";
 

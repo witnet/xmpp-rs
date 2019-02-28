@@ -133,8 +133,8 @@ impl FromStr for Sha1HexAttribute {
     fn from_str(hex: &str) -> Result<Self, Self::Err> {
         let mut bytes = vec![];
         for i in 0..hex.len() / 2 {
-            let byte = u8::from_str_radix(&hex[2 * i..2 * i + 2], 16);
-            bytes.push(byte?);
+            let byte = u8::from_str_radix(&hex[2 * i..2 * i + 2], 16)?;
+            bytes.push(byte);
         }
         Ok(Sha1HexAttribute(Hash::new(Algo::Sha_1, bytes)))
     }
