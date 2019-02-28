@@ -4,10 +4,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use std::num::ParseIntError;
-use std::str::FromStr;
-use minidom::IntoAttributeValue;
-
 generate_element!(
     /// Wrapper element describing an RTP session.
     Description, "description", JINGLE_RTP,
@@ -28,33 +24,10 @@ generate_element!(
     ]
 );
 
-/// The number of channels.
-#[derive(Debug, Clone)]
-pub struct Channels(pub u8);
-
-impl Default for Channels {
-    fn default() -> Channels {
-        Channels(1)
-    }
-}
-
-impl FromStr for Channels {
-    type Err = ParseIntError;
-
-    fn from_str(s: &str) -> Result<Channels, ParseIntError> {
-        Ok(Channels(u8::from_str(s)?))
-    }
-}
-
-impl IntoAttributeValue for Channels {
-    fn into_attribute_value(self) -> Option<String> {
-        if self.0 == 1 {
-            None
-        } else {
-            Some(format!("{}", self.0))
-        }
-    }
-}
+generate_attribute!(
+    /// The number of channels.
+    Channels, "channels", u8, Default = 1
+);
 
 generate_element!(
     /// An encoding that can be used for an RTP stream.

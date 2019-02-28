@@ -191,6 +191,30 @@ macro_rules! generate_attribute {
             }
         }
     );
+    ($(#[$meta:meta])* $elem:ident, $name:tt, $type:tt, Default = $default:expr) => (
+        $(#[$meta])*
+        #[derive(Debug, Clone, PartialEq)]
+        pub struct $elem(pub $type);
+        impl ::std::str::FromStr for $elem {
+            type Err = crate::util::error::Error;
+            fn from_str(s: &str) -> Result<Self, crate::util::error::Error> {
+                Ok($elem($type::from_str(s)?))
+            }
+        }
+        impl ::minidom::IntoAttributeValue for $elem {
+            fn into_attribute_value(self) -> Option<String> {
+                match self {
+                    $elem($default) => None,
+                    $elem(value) => Some(format!("{}", value)),
+                }
+            }
+        }
+        impl ::std::default::Default for $elem {
+            fn default() -> $elem {
+                $elem($default)
+            }
+        }
+    );
 }
 
 macro_rules! generate_element_enum {
