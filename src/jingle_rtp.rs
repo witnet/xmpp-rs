@@ -78,6 +78,24 @@ mod tests {
     use minidom::Element;
     use try_from::TryFrom;
 
+    #[cfg(target_pointer_width = "32")]
+    #[test]
+    fn test_size() {
+        assert_size!(Description, 36);
+        assert_size!(Channels, 1);
+        assert_size!(PayloadType, 52);
+        assert_size!(Parameter, 24);
+    }
+
+    #[cfg(target_pointer_width = "64")]
+    #[test]
+    fn test_size() {
+        assert_size!(Description, 72);
+        assert_size!(Channels, 1);
+        assert_size!(PayloadType, 80);
+        assert_size!(Parameter, 48);
+    }
+
     #[test]
     fn test_simple() {
         let elem: Element = "
