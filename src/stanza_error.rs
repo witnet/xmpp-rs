@@ -242,18 +242,21 @@ impl TryFrom<Element> for StanzaError {
         check_self!(elem, "error", DEFAULT_NS);
         check_no_unknown_attributes!(elem, "error", ["type", "by"]);
 
-        let type_ = get_attr!(elem, "type", Required);
-        let by = get_attr!(elem, "by", Option);
+        let mut stanza_error = StanzaError {
+            type_: get_attr!(elem, "type", Required),
+            by: get_attr!(elem, "by", Option),
+            defined_condition: DefinedCondition::UndefinedCondition,
+            texts: BTreeMap::new(),
+            other: None,
+        };
         let mut defined_condition = None;
-        let mut texts = BTreeMap::new();
-        let mut other = None;
 
         for child in elem.children() {
             if child.is("text", ns::XMPP_STANZAS) {
                 check_no_children!(child, "text");
                 check_no_unknown_attributes!(child, "text", ["xml:lang"]);
                 let lang = get_attr!(elem, "xml:lang", Default);
-                if texts.insert(lang, child.text()).is_some() {
+                if stanza_error.texts.insert(lang, child.text()).is_some() {
                     return Err(Error::ParseError(
                         "Text element present twice for the same xml:lang.",
                     ));
@@ -269,24 +272,18 @@ impl TryFrom<Element> for StanzaError {
                 let condition = DefinedCondition::try_from(child.clone())?;
                 defined_condition = Some(condition);
             } else {
-                if other.is_some() {
+                if stanza_error.other.is_some() {
                     return Err(Error::ParseError(
                         "Error must not have more than one other element.",
                     ));
                 }
-                other = Some(child.clone());
+                stanza_error.other = Some(child.clone());
             }
         }
-        let defined_condition =
+        stanza_error.defined_condition =
             defined_condition.ok_or(Error::ParseError("Error must have a defined-condition."))?;
 
-        Ok(StanzaError {
-            type_,
-            by,
-            defined_condition,
-            texts,
-            other,
-        })
+        Ok(stanza_error)
     }
 }
 
