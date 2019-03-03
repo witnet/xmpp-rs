@@ -28,6 +28,15 @@ generate_element!(
 
 impl PresencePayload for ECaps2 {}
 
+impl ECaps2 {
+    /// Create an ECaps2 element from a list of hashes.
+    pub fn new(hashes: Vec<Hash>) -> ECaps2 {
+        ECaps2 {
+            hashes,
+        }
+    }
+}
+
 fn compute_item(field: &str) -> Vec<u8> {
     let mut bytes = field.as_bytes().to_vec();
     bytes.push(0x1f);
