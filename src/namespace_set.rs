@@ -1,9 +1,10 @@
 use std::collections::BTreeMap;
 use std::cell::RefCell;
+use std::fmt;
 use std::rc::Rc;
 
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct NamespaceSet {
     parent: RefCell<Option<Rc<NamespaceSet>>>,
     namespaces: BTreeMap<Option<String>, String>,
@@ -15,6 +16,19 @@ impl Default for NamespaceSet {
             parent: RefCell::new(None),
             namespaces: BTreeMap::new(),
         }
+    }
+}
+
+impl fmt::Debug for NamespaceSet {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "NamespaceSet(")?;
+        for (prefix, namespace) in &self.namespaces {
+            write!(f, "xmlns{}={:?}, ", match prefix {
+                None => String::new(),
+                Some(prefix) => format!(":{}", prefix),
+            }, namespace)?;
+        }
+        write!(f, "parent: {:?})", *self.parent.borrow())
     }
 }
 
@@ -107,7 +121,6 @@ impl From<(String, String)> for NamespaceSet {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::rc::Rc;
 
     #[test]
     fn get_has() {
@@ -147,4 +160,11 @@ mod tests {
         }
     }
 
+    #[test]
+    fn debug_looks_correct() {
+        let parent = NamespaceSet::from("http://www.w3.org/2000/svg".to_owned());
+        let namespaces = NamespaceSet::from(("xhtml".to_owned(), "http://www.w3.org/1999/xhtml".to_owned()));
+        namespaces.set_parent(Rc::new(parent));
+        assert_eq!(format!("{:?}", namespaces), "NamespaceSet(xmlns:xhtml=\"http://www.w3.org/1999/xhtml\", parent: Some(NamespaceSet(xmlns=\"http://www.w3.org/2000/svg\", parent: None)))");
+    }
 }
