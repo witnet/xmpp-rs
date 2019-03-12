@@ -1,6 +1,6 @@
 #![deny(unsafe_code, unused, missing_docs)]
 
-//! XMPP implemeentation with asynchronous I/O using Tokio.
+//! XMPP implementation with asynchronous I/O using Tokio.
 
 #[macro_use]
 extern crate derive_error;
