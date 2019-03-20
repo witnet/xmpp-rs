@@ -46,6 +46,7 @@ generate_element!(
     )
 );
 
+#[cfg(test)]
 mod tests {
     use super::*;
     use minidom::Element;
