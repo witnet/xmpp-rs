@@ -2,6 +2,7 @@ Version 0.13.0:
 2019-03-20  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
     * New parsers/serialisers:
         - User Avatar (XEP-0084).
+        - Contact Addresses for XMPP Services (XEP-0157).
         - Jingle RTP Sessions (XEP-0167).
         - Jingle ICE-UDP Transport Method (XEP-0176).
         - Use of DTLS-SRTP in Jingle Sessions (XEP-0320).
