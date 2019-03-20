@@ -9,7 +9,7 @@ use crate::util::error::Error;
 use try_from::TryFrom;
 
 /// Structure representing a `http://jabber.org/network/serverinfo` form type.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub struct ServerInfo {
     /// Abuse addresses
     pub abuse: Vec<String>,
@@ -40,14 +40,7 @@ impl TryFrom<DataForm> for ServerInfo {
         if form.form_type != Some(String::from(ns::SERVER_INFO)) {
             return Err(Error::ParseError("Wrong FORM_TYPE for form."));
         }
-        let mut server_info = ServerInfo {
-            abuse: vec![],
-            admin: vec![],
-            feedback: vec![],
-            sales: vec![],
-            security: vec![],
-            support: vec![],
-        };
+        let mut server_info = ServerInfo::default();
         for field in form.fields {
             if field.type_ != FieldType::ListMulti {
                 return Err(Error::ParseError("Field is not of the required type."));
