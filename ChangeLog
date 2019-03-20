@@ -1,3 +1,24 @@
+Version 0.13.0:
+2019-03-20  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
+    * New parsers/serialisers:
+        - User Avatar (XEP-0084).
+        - Jingle RTP Sessions (XEP-0167).
+        - Jingle ICE-UDP Transport Method (XEP-0176).
+        - Use of DTLS-SRTP in Jingle Sessions (XEP-0320).
+    * Breaking changes:
+        - Make 'id' required on iq, as per RFC6120 §8.1.3.
+        - Refactor PubSub to have more type-safety.
+        - Treat FORM_TYPE as a special case in data forms, to avoid
+          duplicating it into a field.
+        - Add forgotten i18n to Jingle text element.
+    * Improvements:
+        - Add various helpers for hash representations.
+        - Add helpers constructors for multiple extensions (disco, caps,
+          pubsub, stanza_error).
+        - Use Into<String> in more constructors.
+        - Internal change on attribute declaration in macros.
+        - Reexport missing try_from::TryInto.
+
 Version 0.12.2:
 2019-01-16  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
     * Improvements:
