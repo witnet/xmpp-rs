@@ -9,7 +9,7 @@ use crate::util::error::Error;
 use try_from::TryFrom;
 
 /// Structure representing a `http://jabber.org/network/serverinfo` form type.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ServerInfo {
     /// Abuse addresses
     pub abuse: Vec<String>,
@@ -81,15 +81,6 @@ impl From<ServerInfo> for DataForm {
             title: None,
             instructions: None,
             fields: vec![
-                Field {
-                    var: String::from("FORM_TYPE"),
-                    type_: FieldType::Hidden,
-                    label: None,
-                    required: false,
-                    options: vec![],
-                    values: vec![String::from(ns::SERVER_INFO)],
-                    media: vec![],
-                },
                 generate_address_field("abuse-addresses", server_info.abuse),
                 generate_address_field("admin-addresses", server_info.admin),
                 generate_address_field("feedback-addresses", server_info.feedback),
@@ -139,15 +130,6 @@ mod tests {
             title: None,
             instructions: None,
             fields: vec![
-                Field {
-                    var: String::from("FORM_TYPE"),
-                    type_: FieldType::Hidden,
-                    label: None,
-                    required: false,
-                    options: vec![],
-                    values: vec![String::from(ns::SERVER_INFO)],
-                    media: vec![],
-                },
                 Field {
                     var: String::from("abuse-addresses"),
                     type_: FieldType::ListMulti,
@@ -229,6 +211,6 @@ mod tests {
         };
 
         // assert_eq!(DataForm::from(server_info), form);
-        // assert_eq!(ServerInfo::try_from(form), Ok(form));
+        assert_eq!(ServerInfo::try_from(form).unwrap(), server_info);
     }
 }
