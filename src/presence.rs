@@ -347,7 +347,11 @@ impl From<Presence> for Element {
             .append(if presence.priority == 0 {
                 None
             } else {
-                Some(format!("{}", presence.priority))
+                Some(
+                    Element::builder("priority")
+                        .append(format!("{}", presence.priority))
+                        .build()
+                )
             })
             .append(presence.payloads)
             .build()
@@ -621,5 +625,16 @@ mod tests {
         let elem: Element = presence.into();
         assert!(elem.is("presence", ns::DEFAULT_NS));
         assert!(elem.children().next().unwrap().is("status", ns::DEFAULT_NS));
+    }
+
+    #[test]
+    fn test_serialise_priority() {
+        let presence = Presence::new(Type::None)
+            .with_priority(42);
+        let elem: Element = presence.into();
+        assert!(elem.is("presence", ns::DEFAULT_NS));
+        let priority = elem.children().next().unwrap();
+        assert!(priority.is("priority", ns::DEFAULT_NS));
+        assert_eq!(priority.text(), "42");
     }
 }
