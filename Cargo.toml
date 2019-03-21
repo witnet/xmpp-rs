@@ -1,0 +1,11 @@
+[package]
+name = "xmpp"
+version = "0.3.0"
+authors = ["Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>"]
+edition = "2018"
+
+[dependencies]
+tokio-xmpp = "1"
+xmpp-parsers = "0.13"
+futures = "0.1"
+tokio = "0.1"
