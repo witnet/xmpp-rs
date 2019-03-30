@@ -188,6 +188,11 @@ pub const JINGLE_MESSAGE: &str = "urn:xmpp:jingle-message:0";
 /// XEP-0359: Unique and Stable Stanza IDs
 pub const SID: &str = "urn:xmpp:sid:0";
 
+/// XEP-0373: OpenPGP for XMPP
+pub const OX: &str = "urn:xmpp:openpgp:0";
+/// XEP-0373: OpenPGP for XMPP
+pub const OX_PUBKEYS: &str = "urn:xmpp:openpgp:0:public-keys";
+
 /// XEP-0380: Explicit Message Encryption
 pub const EME: &str = "urn:xmpp:eme:0";
 

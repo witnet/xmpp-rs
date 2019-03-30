@@ -183,6 +183,9 @@ pub mod jingle_message;
 /// XEP-0359: Unique and Stable Stanza IDs
 pub mod stanza_id;
 
+/// XEP-0373: OpenPGP for XMPP
+pub mod openpgp;
+
 /// XEP-0380: Explicit Message Encryption
 pub mod eme;
 

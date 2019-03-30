@@ -1,3 +1,8 @@
+Version NEXT:
+DATE  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
+    * New parsers/serialisers:
+        - OpenPGP for XMPP (XEP-0373)
+
 Version 0.15.0:
 2019-09-06  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
     * New parsers/serialisers:
