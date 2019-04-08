@@ -27,10 +27,10 @@ generate_element!(
         bytes: Required<u16> = "bytes",
 
         /// The width of the image in pixels.
-        width: Option<u8> = "width",
+        width: Option<u16> = "width",
 
         /// The height of the image in pixels.
-        height: Option<u8> = "height",
+        height: Option<u16> = "height",
 
         /// The SHA-1 hash of the image data for the specified content-type.
         id: Required<Sha1HexAttribute> = "id",
@@ -66,7 +66,7 @@ mod tests {
     #[test]
     fn test_size() {
         assert_size!(Metadata, 12);
-        assert_size!(Info, 60);
+        assert_size!(Info, 64);
         assert_size!(Data, 12);
     }
 
@@ -74,7 +74,7 @@ mod tests {
     #[test]
     fn test_size() {
         assert_size!(Metadata, 24);
-        assert_size!(Info, 112);
+        assert_size!(Info, 120);
         assert_size!(Data, 24);
     }
 
