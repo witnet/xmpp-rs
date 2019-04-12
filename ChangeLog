@@ -1,3 +1,12 @@
+Version 0.13.1:
+2019-04-12  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
+    * Bugfixes:
+        - Fix invalid serialisation of priority in presence.
+        - Bump image size to u16 from u8, as per XEP-0084 version 1.1.2.
+    * Improvements:
+        - Drop try_from dependency, as std::convert::TryFrom got
+          stabilised.
+
 Version 0.13.0:
 2019-03-20  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
     * New parsers/serialisers:
