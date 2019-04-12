@@ -7,7 +7,7 @@
 use crate::util::error::Error;
 use crate::ns;
 use minidom::Element;
-use try_from::TryFrom;
+use std::convert::TryFrom;
 
 /// Requests paging through a potentially big set of items (represented by an
 /// UID).
@@ -29,7 +29,7 @@ pub struct SetQuery {
 }
 
 impl TryFrom<Element> for SetQuery {
-    type Err = Error;
+    type Error = Error;
 
     fn try_from(elem: Element) -> Result<SetQuery, Error> {
         check_self!(elem, "set", RSM, "RSM set");
@@ -116,7 +116,7 @@ pub struct SetResult {
 }
 
 impl TryFrom<Element> for SetResult {
-    type Err = Error;
+    type Error = Error;
 
     fn try_from(elem: Element) -> Result<SetResult, Error> {
         check_self!(elem, "set", RSM, "RSM set");

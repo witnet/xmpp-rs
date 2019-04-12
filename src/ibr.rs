@@ -10,7 +10,7 @@ use crate::iq::{IqGetPayload, IqResultPayload, IqSetPayload};
 use crate::ns;
 use minidom::Element;
 use std::collections::HashMap;
-use try_from::TryFrom;
+use std::convert::TryFrom;
 
 /// Query for registering against a service.
 #[derive(Debug, Clone)]
@@ -36,7 +36,7 @@ impl IqSetPayload for Query {}
 impl IqResultPayload for Query {}
 
 impl TryFrom<Element> for Query {
-    type Err = Error;
+    type Error = Error;
 
     fn try_from(elem: Element) -> Result<Query, Error> {
         check_self!(elem, "query", REGISTER, "IBR query");

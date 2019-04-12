@@ -11,7 +11,7 @@ use jid::Jid;
 use minidom::Element;
 use std::collections::BTreeMap;
 use std::str::FromStr;
-use try_from::TryFrom;
+use std::convert::TryFrom;
 
 generate_attribute!(
     /// The action attribute.
@@ -368,7 +368,7 @@ pub struct ReasonElement {
 }
 
 impl TryFrom<Element> for ReasonElement {
-    type Err = Error;
+    type Error = Error;
 
     fn try_from(elem: Element) -> Result<ReasonElement, Error> {
         check_self!(elem, "reason", JINGLE);
@@ -497,7 +497,7 @@ impl Jingle {
 }
 
 impl TryFrom<Element> for Jingle {
-    type Err = Error;
+    type Error = Error;
 
     fn try_from(root: Element) -> Result<Jingle, Error> {
         check_self!(root, "jingle", JINGLE, "Jingle");

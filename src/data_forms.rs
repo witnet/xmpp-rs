@@ -8,7 +8,7 @@ use crate::util::error::Error;
 use crate::media_element::MediaElement;
 use crate::ns;
 use minidom::Element;
-use try_from::TryFrom;
+use std::convert::TryFrom;
 
 generate_element!(
     /// Represents one of the possible values for a list- field.
@@ -100,7 +100,7 @@ impl Field {
 }
 
 impl TryFrom<Element> for Field {
-    type Err = Error;
+    type Error = Error;
 
     fn try_from(elem: Element) -> Result<Field, Error> {
         check_self!(elem, "field", DATA_FORMS);
@@ -215,7 +215,7 @@ pub struct DataForm {
 }
 
 impl TryFrom<Element> for DataForm {
-    type Err = Error;
+    type Error = Error;
 
     fn try_from(elem: Element) -> Result<DataForm, Error> {
         check_self!(elem, "x", DATA_FORMS);

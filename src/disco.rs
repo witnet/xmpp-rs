@@ -10,7 +10,7 @@ use crate::iq::{IqGetPayload, IqResultPayload};
 use crate::ns;
 use jid::Jid;
 use minidom::Element;
-use try_from::TryFrom;
+use std::convert::TryFrom;
 
 generate_element!(
 /// Structure representing a `<query xmlns='http://jabber.org/protocol/disco#info'/>` element.
@@ -115,7 +115,7 @@ pub struct DiscoInfoResult {
 impl IqResultPayload for DiscoInfoResult {}
 
 impl TryFrom<Element> for DiscoInfoResult {
-    type Err = Error;
+    type Error = Error;
 
     fn try_from(elem: Element) -> Result<DiscoInfoResult, Error> {
         check_self!(elem, "query", DISCO_INFO, "disco#info result");

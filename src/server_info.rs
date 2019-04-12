@@ -6,7 +6,7 @@
 use crate::data_forms::{DataForm, DataFormType, Field, FieldType};
 use crate::ns;
 use crate::util::error::Error;
-use try_from::TryFrom;
+use std::convert::TryFrom;
 
 /// Structure representing a `http://jabber.org/network/serverinfo` form type.
 #[derive(Debug, Clone, PartialEq, Default)]
@@ -31,7 +31,7 @@ pub struct ServerInfo {
 }
 
 impl TryFrom<DataForm> for ServerInfo {
-    type Err = Error;
+    type Error = Error;
 
     fn try_from(form: DataForm) -> Result<ServerInfo, Error> {
         if form.type_ != DataFormType::Result_ {

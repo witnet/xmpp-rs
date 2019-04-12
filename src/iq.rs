@@ -11,7 +11,7 @@ use crate::stanza_error::StanzaError;
 use jid::Jid;
 use minidom::Element;
 use minidom::IntoAttributeValue;
-use try_from::TryFrom;
+use std::convert::TryFrom;
 
 /// Should be implemented on every known payload of an `<iq type='get'/>`.
 pub trait IqGetPayload: TryFrom<Element> + Into<Element> {}
@@ -130,7 +130,7 @@ impl Iq {
 }
 
 impl TryFrom<Element> for Iq {
-    type Err = Error;
+    type Error = Error;
 
     fn try_from(root: Element) -> Result<Iq, Error> {
         check_self!(root, "iq", DEFAULT_NS);

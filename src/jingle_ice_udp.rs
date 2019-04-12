@@ -92,7 +92,7 @@ generate_element!(
 mod tests {
     use super::*;
     use minidom::Element;
-    use try_from::TryFrom;
+    use std::convert::TryFrom;
     use crate::hashes::Algo;
     use crate::jingle_dtls_srtp::Setup;
 

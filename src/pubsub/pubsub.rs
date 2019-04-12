@@ -11,7 +11,7 @@ use crate::ns;
 use crate::pubsub::{NodeName, Subscription, SubscriptionId, Item as PubSubItem};
 use jid::Jid;
 use minidom::Element;
-use try_from::TryFrom;
+use std::convert::TryFrom;
 
 // TODO: a better solution would be to split this into a query and a result elements, like for
 // XEP-0030.
@@ -191,7 +191,7 @@ pub struct SubscribeOptions {
 }
 
 impl TryFrom<Element> for SubscribeOptions {
-    type Err = Error;
+    type Error = Error;
 
     fn try_from(elem: Element) -> Result<Self, Error> {
         check_self!(elem, "subscribe-options", PUBSUB);
@@ -340,7 +340,7 @@ impl IqSetPayload for PubSub {}
 impl IqResultPayload for PubSub {}
 
 impl TryFrom<Element> for PubSub {
-    type Err = Error;
+    type Error = Error;
 
     fn try_from(elem: Element) -> Result<PubSub, Error> {
         check_self!(elem, "pubsub", PUBSUB);

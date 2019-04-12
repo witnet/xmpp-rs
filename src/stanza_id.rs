@@ -40,7 +40,7 @@ mod tests {
     use crate::util::error::Error;
     use minidom::Element;
     use std::str::FromStr;
-    use try_from::TryFrom;
+    use std::convert::TryFrom;
 
     #[cfg(target_pointer_width = "32")]
     #[test]

@@ -8,7 +8,7 @@ use crate::util::error::Error;
 use crate::jingle::SessionId;
 use crate::ns;
 use minidom::Element;
-use try_from::TryFrom;
+use std::convert::TryFrom;
 
 /// Defines a protocol for broadcasting Jingle requests to all of the clients
 /// of a user.
@@ -48,7 +48,7 @@ fn check_empty_and_get_sid(elem: Element) -> Result<SessionId, Error> {
 }
 
 impl TryFrom<Element> for JingleMI {
-    type Err = Error;
+    type Error = Error;
 
     fn try_from(elem: Element) -> Result<JingleMI, Error> {
         if !elem.has_ns(ns::JINGLE_MESSAGE) {

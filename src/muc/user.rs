@@ -9,7 +9,7 @@ use crate::util::error::Error;
 use crate::ns;
 use jid::Jid;
 use minidom::Element;
-use try_from::TryFrom;
+use std::convert::TryFrom;
 
 generate_attribute_enum!(
 /// Lists all of the possible status codes used in MUC presences.
@@ -89,7 +89,7 @@ pub enum Actor {
 }
 
 impl TryFrom<Element> for Actor {
-    type Err = Error;
+    type Error = Error;
 
     fn try_from(elem: Element) -> Result<Actor, Error> {
         check_self!(elem, "actor", MUC_USER);

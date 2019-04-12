@@ -25,7 +25,7 @@ mod tests {
     use minidom::Element;
     use std::error::Error as StdError;
     use std::str::FromStr;
-    use try_from::TryFrom;
+    use std::convert::TryFrom;
 
     #[test]
     fn test_size() {

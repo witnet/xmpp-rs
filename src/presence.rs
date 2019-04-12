@@ -11,7 +11,7 @@ use jid::Jid;
 use minidom::{Element, ElementEmitter, IntoAttributeValue, IntoElements};
 use std::collections::BTreeMap;
 use std::str::FromStr;
-use try_from::TryFrom;
+use std::convert::TryFrom;
 
 /// Should be implemented on every known payload of a `<presence/>`.
 pub trait PresencePayload: TryFrom<Element> + Into<Element> {}
@@ -259,7 +259,7 @@ impl Presence {
 }
 
 impl TryFrom<Element> for Presence {
-    type Err = Error;
+    type Error = Error;
 
     fn try_from(root: Element) -> Result<Presence, Error> {
         check_self!(root, "presence", DEFAULT_NS);

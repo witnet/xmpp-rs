@@ -10,7 +10,7 @@ use crate::ns;
 use jid::Jid;
 use minidom::Element;
 use std::str::FromStr;
-use try_from::TryFrom;
+use std::convert::TryFrom;
 
 /// The request for resource binding, which is the process by which a client
 /// can obtain a full JID and start exchanging on the XMPP network.
@@ -43,7 +43,7 @@ impl IqSetPayload for Bind {}
 impl IqResultPayload for Bind {}
 
 impl TryFrom<Element> for Bind {
-    type Err = Error;
+    type Error = Error;
 
     fn try_from(elem: Element) -> Result<Bind, Error> {
         check_self!(elem, "bind", BIND);

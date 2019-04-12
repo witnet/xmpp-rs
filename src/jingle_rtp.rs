@@ -76,7 +76,7 @@ generate_element!(
 mod tests {
     use super::*;
     use minidom::Element;
-    use try_from::TryFrom;
+    use std::convert::TryFrom;
 
     #[cfg(target_pointer_width = "32")]
     #[test]

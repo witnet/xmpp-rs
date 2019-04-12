@@ -9,7 +9,7 @@ use crate::ns;
 use jid::Jid;
 use minidom::Element;
 use std::net::IpAddr;
-use try_from::TryFrom;
+use std::convert::TryFrom;
 
 generate_attribute!(
     /// The type of the connection being proposed by this candidate.
@@ -172,7 +172,7 @@ impl Transport {
 }
 
 impl TryFrom<Element> for Transport {
-    type Err = Error;
+    type Error = Error;
 
     fn try_from(elem: Element) -> Result<Transport, Error> {
         check_self!(elem, "transport", JINGLE_S5B);

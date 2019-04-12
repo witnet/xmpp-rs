@@ -23,7 +23,6 @@ sha2 = "0.8"
 sha3 = "0.8"
 blake2 = "0.8"
 chrono = "0.4.5"
-try_from = "0.3.2"
 
 [features]
 # Build xmpp-parsers to make components instead of clients.

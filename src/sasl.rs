@@ -9,7 +9,7 @@ use crate::util::helpers::Base64;
 use crate::ns;
 use minidom::Element;
 use std::collections::BTreeMap;
-use try_from::TryFrom;
+use std::convert::TryFrom;
 
 generate_attribute!(
     /// The list of available SASL mechanisms.
@@ -151,7 +151,7 @@ pub struct Failure {
 }
 
 impl TryFrom<Element> for Failure {
-    type Err = Error;
+    type Error = Error;
 
     fn try_from(root: Element) -> Result<Failure, Error> {
         check_self!(root, "failure", SASL);
@@ -224,7 +224,7 @@ impl From<Failure> for Element {
 mod tests {
     use super::*;
     use minidom::Element;
-    use try_from::TryFrom;
+    use std::convert::TryFrom;
 
     #[cfg(target_pointer_width = "32")]
     #[test]

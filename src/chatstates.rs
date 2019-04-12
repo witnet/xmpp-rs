@@ -35,7 +35,7 @@ mod tests {
     use crate::util::error::Error;
     use crate::ns;
     use minidom::Element;
-    use try_from::TryFrom;
+    use std::convert::TryFrom;
 
     #[test]
     fn test_size() {

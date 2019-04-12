@@ -11,7 +11,7 @@ use crate::presence::PresencePayload;
 use jid::Jid;
 use minidom::Element;
 use std::collections::BTreeMap;
-use try_from::TryFrom;
+use std::convert::TryFrom;
 
 generate_attribute!(
     /// The type of the error.
@@ -236,7 +236,7 @@ impl StanzaError {
 }
 
 impl TryFrom<Element> for StanzaError {
-    type Err = Error;
+    type Error = Error;
 
     fn try_from(elem: Element) -> Result<StanzaError, Error> {
         check_self!(elem, "error", DEFAULT_NS);

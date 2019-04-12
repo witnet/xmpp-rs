@@ -17,7 +17,7 @@ use minidom::Element;
 use sha1::Sha1;
 use sha2::{Sha256, Sha512};
 use sha3::{Sha3_256, Sha3_512};
-use try_from::TryFrom;
+use std::convert::TryFrom;
 
 /// Represents a capability hash for a given client.
 #[derive(Debug, Clone)]
@@ -40,7 +40,7 @@ pub struct Caps {
 impl PresencePayload for Caps {}
 
 impl TryFrom<Element> for Caps {
-    type Err = Error;
+    type Error = Error;
 
     fn try_from(elem: Element) -> Result<Caps, Error> {
         check_self!(elem, "c", CAPS, "caps");

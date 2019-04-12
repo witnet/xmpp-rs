@@ -11,7 +11,7 @@ use crate::ns;
 use crate::pubsub::{ItemId, NodeName, Subscription, SubscriptionId, Item as PubSubItem};
 use jid::Jid;
 use minidom::Element;
-use try_from::TryFrom;
+use std::convert::TryFrom;
 
 /// Event wrapper for a PubSub `<item/>`.
 #[derive(Debug, Clone)]
@@ -132,7 +132,7 @@ fn parse_items(elem: Element, node: NodeName) -> Result<PubSubEvent, Error> {
 }
 
 impl TryFrom<Element> for PubSubEvent {
-    type Err = Error;
+    type Error = Error;
 
     fn try_from(elem: Element) -> Result<PubSubEvent, Error> {
         check_self!(elem, "event", PUBSUB_EVENT);

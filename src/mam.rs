@@ -14,7 +14,7 @@ use crate::pubsub::NodeName;
 use crate::rsm::{SetQuery, SetResult};
 use jid::Jid;
 use minidom::Element;
-use try_from::TryFrom;
+use std::convert::TryFrom;
 
 generate_id!(
     /// An identifier matching a result message to the query requesting it.
@@ -126,7 +126,7 @@ impl IqSetPayload for Prefs {}
 impl IqResultPayload for Prefs {}
 
 impl TryFrom<Element> for Prefs {
-    type Err = Error;
+    type Error = Error;
 
     fn try_from(elem: Element) -> Result<Prefs, Error> {
         check_self!(elem, "prefs", MAM);

@@ -9,7 +9,7 @@ use crate::ns;
 use jid::Jid;
 use minidom::Element;
 use std::collections::BTreeMap;
-use try_from::TryFrom;
+use std::convert::TryFrom;
 
 /// Should be implemented on every known payload of a `<message/>`.
 pub trait MessagePayload: TryFrom<Element> + Into<Element> {}
@@ -150,7 +150,7 @@ impl Message {
 }
 
 impl TryFrom<Element> for Message {
-    type Err = Error;
+    type Error = Error;
 
     fn try_from(root: Element) -> Result<Message, Error> {
         check_self!(root, "message", DEFAULT_NS);

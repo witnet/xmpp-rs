@@ -98,7 +98,7 @@ mod tests {
     use crate::util::error::Error;
     use minidom::Element;
     use std::str::FromStr;
-    use try_from::TryFrom;
+    use std::convert::TryFrom;
 
     #[test]
     fn test_muc_simple() {

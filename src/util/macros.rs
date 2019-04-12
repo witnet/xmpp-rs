@@ -230,8 +230,8 @@ macro_rules! generate_element_enum {
                 $enum
             ),+
         }
-        impl ::try_from::TryFrom<::minidom::Element> for $elem {
-            type Err = crate::util::error::Error;
+        impl ::std::convert::TryFrom<::minidom::Element> for $elem {
+            type Error = crate::util::error::Error;
             fn try_from(elem: ::minidom::Element) -> Result<$elem, crate::util::error::Error> {
                 check_ns_only!(elem, $name, $ns);
                 check_no_children!(elem, $name);
@@ -269,8 +269,8 @@ macro_rules! generate_attribute_enum {
                 $enum
             ),+
         }
-        impl ::try_from::TryFrom<::minidom::Element> for $elem {
-            type Err = crate::util::error::Error;
+        impl ::std::convert::TryFrom<::minidom::Element> for $elem {
+            type Error = crate::util::error::Error;
             fn try_from(elem: ::minidom::Element) -> Result<$elem, crate::util::error::Error> {
                 check_ns_only!(elem, $name, $ns);
                 check_no_children!(elem, $name);
@@ -367,8 +367,8 @@ macro_rules! generate_empty_element {
         #[derive(Debug, Clone)]
         pub struct $elem;
 
-        impl ::try_from::TryFrom<::minidom::Element> for $elem {
-            type Err = crate::util::error::Error;
+        impl ::std::convert::TryFrom<::minidom::Element> for $elem {
+            type Error = crate::util::error::Error;
 
             fn try_from(elem: ::minidom::Element) -> Result<$elem, crate::util::error::Error> {
                 check_self!(elem, $name, $ns);
@@ -420,8 +420,8 @@ macro_rules! generate_elem_id {
                 Ok($elem(String::from(s)))
             }
         }
-        impl ::try_from::TryFrom<::minidom::Element> for $elem {
-            type Err = crate::util::error::Error;
+        impl ::std::convert::TryFrom<::minidom::Element> for $elem {
+            type Error = crate::util::error::Error;
             fn try_from(elem: ::minidom::Element) -> Result<$elem, crate::util::error::Error> {
                 check_self!(elem, $name, $ns);
                 check_no_children!(elem, $name);
@@ -600,8 +600,8 @@ macro_rules! generate_element {
             )*
         }
 
-        impl ::try_from::TryFrom<::minidom::Element> for $elem {
-            type Err = crate::util::error::Error;
+        impl ::std::convert::TryFrom<::minidom::Element> for $elem {
+            type Error = crate::util::error::Error;
 
             fn try_from(elem: ::minidom::Element) -> Result<$elem, crate::util::error::Error> {
                 check_self!(elem, $name, $ns);
@@ -662,7 +662,7 @@ macro_rules! assert_size (
 macro_rules! impl_pubsub_item {
     ($item:ident, $ns:ident) => {
         impl crate::TryFrom<crate::Element> for $item {
-            type Err = Error;
+            type Error = Error;
 
             fn try_from(elem: crate::Element) -> Result<$item, Error> {
                 check_self!(elem, "item", $ns);

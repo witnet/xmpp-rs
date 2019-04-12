@@ -72,7 +72,7 @@ mod tests {
     use super::*;
     use crate::util::compare_elements::NamespaceAwareCompare;
     use minidom::Element;
-    use try_from::TryFrom;
+    use std::convert::TryFrom;
 
     #[cfg(target_pointer_width = "32")]
     #[test]

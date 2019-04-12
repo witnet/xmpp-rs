@@ -9,7 +9,7 @@ use crate::iq::{IqGetPayload, IqResultPayload, IqSetPayload};
 use crate::ns;
 use jid::Jid;
 use minidom::Element;
-use try_from::TryFrom;
+use std::convert::TryFrom;
 
 generate_empty_element!(
     /// The element requesting the blocklist, the result iq will contain a
@@ -31,7 +31,7 @@ macro_rules! generate_blocking_element {
         }
 
         impl TryFrom<Element> for $elem {
-            type Err = Error;
+            type Error = Error;
 
             fn try_from(elem: Element) -> Result<$elem, Error> {
                 check_self!(elem, $name, BLOCKING);
