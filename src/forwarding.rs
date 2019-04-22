@@ -33,7 +33,7 @@ mod tests {
     #[cfg(target_pointer_width = "32")]
     #[test]
     fn test_size() {
-        assert_size!(Forwarded, 204);
+        assert_size!(Forwarded, 212);
     }
 
     #[cfg(target_pointer_width = "64")]

@@ -316,7 +316,7 @@ mod tests {
     fn test_size() {
         assert_size!(ErrorType, 1);
         assert_size!(DefinedCondition, 1);
-        assert_size!(StanzaError, 104);
+        assert_size!(StanzaError, 108);
     }
 
     #[cfg(target_pointer_width = "64")]
