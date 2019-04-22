@@ -128,6 +128,9 @@ pub mod sm;
 /// XEP-0199: XMPP Ping
 pub mod ping;
 
+/// XEP-0202: Entity Time
+pub mod time;
+
 /// XEP-0203: Delayed Delivery
 pub mod delay;
 

@@ -15,6 +15,20 @@ use std::str::FromStr;
 #[derive(Debug, Clone, PartialEq)]
 pub struct DateTime(ChronoDateTime<FixedOffset>);
 
+impl DateTime {
+    pub fn timezone(&self) -> FixedOffset {
+        self.0.timezone()
+    }
+
+    pub fn with_timezone(&self, tz: &FixedOffset) -> DateTime {
+        DateTime(self.0.with_timezone(tz))
+    }
+
+    pub fn format(&self, fmt: &str) -> String {
+        format!("{}", self.0.format(fmt))
+    }
+}
+
 impl FromStr for DateTime {
     type Err = Error;
 
@@ -41,6 +55,7 @@ mod tests {
     use chrono::{Datelike, Timelike};
     use std::error::Error as StdError;
 
+    // DateTime’s size doesn’t depend on the architecture.
     #[test]
     fn test_size() {
         assert_size!(DateTime, 16);

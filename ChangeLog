@@ -1,3 +1,8 @@
+Version TODO:
+TODO  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
+    * New parsers/serialisers:
+        - Entity Time (XEP-0202).
+
 Version 0.13.1:
 2019-04-12  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
     * Bugfixes:

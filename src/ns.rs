@@ -112,6 +112,9 @@ pub const SM: &str = "urn:xmpp:sm:3";
 /// XEP-0199: XMPP Ping
 pub const PING: &str = "urn:xmpp:ping";
 
+/// XEP-0202: Entity Time
+pub const TIME: &str = "urn:xmpp:time";
+
 /// XEP-0203: Delayed Delivery
 pub const DELAY: &str = "urn:xmpp:delay";
 
