@@ -14,11 +14,13 @@ use std::convert::TryFrom;
 use std::str::FromStr;
 
 generate_empty_element!(
+    /// An entity time query.
     TimeQuery, "time", TIME
 );
 
 impl IqGetPayload for TimeQuery {}
 
+/// An entity time result, containing an unique DateTime.
 #[derive(Debug, Clone)]
 pub struct TimeResult(pub DateTime);
 

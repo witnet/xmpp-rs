@@ -16,14 +16,17 @@ use std::str::FromStr;
 pub struct DateTime(ChronoDateTime<FixedOffset>);
 
 impl DateTime {
+    /// Retrieves the associated timezone.
     pub fn timezone(&self) -> FixedOffset {
         self.0.timezone()
     }
 
+    /// Returns a new `DateTime` with a different timezone.
     pub fn with_timezone(&self, tz: &FixedOffset) -> DateTime {
         DateTime(self.0.with_timezone(tz))
     }
 
+    /// Formats this `DateTime` with the specified format string.
     pub fn format(&self, fmt: &str) -> String {
         format!("{}", self.0.format(fmt))
     }
