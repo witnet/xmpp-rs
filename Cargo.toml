@@ -31,4 +31,4 @@ component = []
 disable-validation = []
 
 [package.metadata.docs.rs]
-rustdoc-args = [ "--sort-modules-by-appearance", "-Z unstable-options" ]
+rustdoc-args = [ "--sort-modules-by-appearance", "-Zunstable-options" ]
