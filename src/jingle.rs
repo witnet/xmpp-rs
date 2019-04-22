@@ -579,7 +579,7 @@ mod tests {
         assert_size!(Reason, 1);
         assert_size!(ReasonElement, 32);
         assert_size!(SessionId, 24);
-        assert_size!(Jingle, 256);
+        assert_size!(Jingle, 272);
     }
 
     #[test]

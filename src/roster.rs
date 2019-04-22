@@ -114,7 +114,7 @@ mod tests {
         assert_size!(Group, 24);
         assert_size!(Subscription, 1);
         assert_size!(Ask, 1);
-        assert_size!(Item, 128);
+        assert_size!(Item, 104);
         assert_size!(Roster, 48);
     }
 

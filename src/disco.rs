@@ -256,7 +256,7 @@ mod tests {
         assert_size!(DiscoInfoQuery, 24);
         assert_size!(DiscoInfoResult, 96);
 
-        assert_size!(Item, 120);
+        assert_size!(Item, 128);
         assert_size!(DiscoItemsQuery, 24);
         assert_size!(DiscoItemsResult, 48);
     }
