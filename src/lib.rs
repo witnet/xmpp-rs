@@ -27,6 +27,7 @@ use xmpp_parsers::{
         event::PubSubEvent,
         pubsub::PubSub,
     },
+    roster::{Roster, Item as RosterItem},
     stanza_error::{StanzaError, ErrorType, DefinedCondition},
     Jid, JidParseError, TryFrom,
 };
@@ -59,11 +60,15 @@ impl ToString for ClientType {
 #[derive(PartialEq)]
 pub enum ClientFeature {
     Avatars,
+    ContactList,
 }
 
 pub enum Event {
     Online,
     Disconnected,
+    ContactAdded(RosterItem),
+    ContactRemoved(RosterItem),
+    ContactChanged(RosterItem),
     AvatarRetrieved(Jid, String),
     RoomJoined(Jid),
 }
@@ -158,6 +163,9 @@ impl ClientBuilder<'_> {
                         sender_tx.unbounded_send(packet)
                             .unwrap();
                         app_tx.unbounded_send(Event::Online).unwrap();
+                        let iq = Iq::from_get("roster", Roster { ver: None, items: vec![] })
+                            .into();
+                        sender_tx.unbounded_send(Packet::Stanza(iq)).unwrap();
                     }
                     TokioXmppEvent::Disconnected => {
                         app_tx.unbounded_send(Event::Disconnected).unwrap();
@@ -186,7 +194,12 @@ impl ClientBuilder<'_> {
                                     send_error(iq.from.unwrap(), iq.id, ErrorType::Cancel, DefinedCondition::ServiceUnavailable, "No handler defined for this kind of iq.");
                                 }
                             } else if let IqType::Result(Some(payload)) = iq.payload {
-                                if payload.is("pubsub", ns::PUBSUB) {
+                                if payload.is("query", ns::ROSTER) {
+                                    let roster = Roster::try_from(payload).unwrap();
+                                    for item in roster.items.into_iter() {
+                                        app_tx.unbounded_send(Event::ContactAdded(item)).unwrap();
+                                    }
+                                } else if payload.is("pubsub", ns::PUBSUB) {
                                     let pubsub = PubSub::try_from(payload).unwrap();
                                     let from =
                                         iq.from.clone().unwrap_or(Jid::from_str(&jid).unwrap());

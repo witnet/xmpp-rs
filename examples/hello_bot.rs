@@ -33,6 +33,7 @@ fn main() {
         .set_client(ClientType::Bot, "xmpp-rs")
         .set_website("https://gitlab.com/xmpp-rs/xmpp-rs")
         .enable_feature(ClientFeature::Avatars)
+        .enable_feature(ClientFeature::ContactList)
         .build(value_tx)
         .unwrap();
 
@@ -46,6 +47,15 @@ fn main() {
             Event::Disconnected => {
                 println!("Disconnected.");
                 return Err(());
+            },
+            Event::ContactAdded(contact) => {
+                println!("Contact {:?} added.", contact);
+            },
+            Event::ContactRemoved(contact) => {
+                println!("Contact {:?} removed.", contact);
+            },
+            Event::ContactChanged(contact) => {
+                println!("Contact {:?} changed.", contact);
             },
             Event::RoomJoined(jid) => {
                 println!("Joined room {}.", jid);
