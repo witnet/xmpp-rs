@@ -20,7 +20,7 @@ pub enum JidParseError {
     NoDomain,
 
     /// Happens when there is no resource, that is string contains no /.
-    #[fail(display = "no resource found in this JID")]
+    #[fail(display = "no resource found in this full JID")]
     NoResource,
 
     /// Happens when the node is empty, that is the string starts with a @.
