@@ -1,3 +1,13 @@
+// Copyright (c) 2017, 2018 lumi <lumi@pew.im>
+// Copyright (c) 2017, 2018, 2019 Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
+// Copyright (c) 2017, 2018, 2019 Maxime “pep” Buquet <pep@bouah.net>
+// Copyright (c) 2017, 2018 Astro <astro@spaceboyz.net>
+// Copyright (c) 2017 Bastien Orivel <eijebong@bananium.fr>
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 #![deny(missing_docs)]
 
 //! Provides a type for Jabber IDs.
