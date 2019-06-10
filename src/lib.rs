@@ -56,7 +56,7 @@ impl FromStr for Jid {
             None => Jid::Bare(BareJid {
                 node: ns,
                 domain: ds,
-            })
+            }),
         })
     }
 }
@@ -235,11 +235,7 @@ fn _from_str(s: &str) -> Result<StringJid, JidParseError> {
     } else if let ParserState::Resource = state {
         return Err(JidParseError::EmptyResource);
     }
-    Ok((
-        node,
-        domain.ok_or(JidParseError::NoDomain)?,
-        resource,
-    ))
+    Ok((node, domain.ok_or(JidParseError::NoDomain)?, resource))
 }
 
 impl FromStr for FullJid {
@@ -280,7 +276,7 @@ impl FullJid {
         FullJid {
             node: Some(node.into()),
             domain: domain.into(),
-            resource: resource.into()
+            resource: resource.into(),
         }
     }
 
@@ -554,7 +550,10 @@ mod tests {
 
     #[test]
     fn can_parse_full_jids() {
-        assert_eq!(FullJid::from_str("a@b.c/d"), Ok(FullJid::new("a", "b.c", "d")));
+        assert_eq!(
+            FullJid::from_str("a@b.c/d"),
+            Ok(FullJid::new("a", "b.c", "d"))
+        );
         assert_eq!(
             FullJid::from_str("b.c/d"),
             Ok(FullJid {
@@ -606,7 +605,10 @@ mod tests {
 
     #[test]
     fn bare_to_full_jid() {
-        assert_eq!(BareJid::new("a", "b.c").with_resource("d"), FullJid::new("a", "b.c", "d"));
+        assert_eq!(
+            BareJid::new("a", "b.c").with_resource("d"),
+            FullJid::new("a", "b.c", "d")
+        );
     }
 
     #[test]
@@ -615,10 +617,7 @@ mod tests {
             String::from(FullJid::new("a", "b", "c")),
             String::from("a@b/c")
         );
-        assert_eq!(
-            String::from(BareJid::new("a", "b")),
-            String::from("a@b")
-        );
+        assert_eq!(String::from(BareJid::new("a", "b")), String::from("a@b"));
     }
 
     #[test]
