@@ -1,6 +1,7 @@
 Version 0.6.0, released 2019-06-19:
   * Updates
     - Jid is now an enum, with two variants, Bare(BareJid) and Full(FullJid)
+    - BareJid and FullJid are two specialised variants of a JID.
 
 Version 0.5.3, released 2019-01-16:
   * Updates
