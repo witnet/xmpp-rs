@@ -70,9 +70,9 @@ impl From<Jid> for String {
     }
 }
 
-/// A struct representing a Full Jabber ID.
+/// A struct representing a full Jabber ID.
 ///
-/// A Full Jabber ID is composed of 3 components, of which one is optional:
+/// A full Jabber ID is composed of 3 components, of which one is optional:
 ///
 ///  - A node/name, `node`, which is the optional part before the @.
 ///  - A domain, `domain`, which is the mandatory part after the @ but before the /.
@@ -87,9 +87,9 @@ pub struct FullJid {
     pub resource: String,
 }
 
-/// A struct representing a Bare Jabber ID.
+/// A struct representing a bare Jabber ID.
 ///
-/// A Bare Jabber ID is composed of 2 components, of which one is optional:
+/// A bare Jabber ID is composed of 2 components, of which one is optional:
 ///
 ///  - A node/name, `node`, which is the optional part before the @.
 ///  - A domain, `domain`, which is the mandatory part after the @ but before the /.
@@ -252,7 +252,7 @@ impl FromStr for FullJid {
 }
 
 impl FullJid {
-    /// Constructs a Full Jabber ID containing all three components.
+    /// Constructs a full Jabber ID containing all three components.
     ///
     /// This is of the form `node`@`domain`/`resource`.
     ///
@@ -332,7 +332,7 @@ impl FullJid {
         }
     }
 
-    /// Constructs a Full Jabber ID from a Bare Jabber ID, specifying a `resource`.
+    /// Constructs a full Jabber ID from a bare Jabber ID, specifying a `resource`.
     ///
     /// # Examples
     ///
@@ -372,7 +372,7 @@ impl FromStr for BareJid {
 }
 
 impl BareJid {
-    /// Constructs a Bare Jabber ID, containing two components.
+    /// Constructs a bare Jabber ID, containing two components.
     ///
     /// This is of the form `node`@`domain`.
     ///
@@ -397,7 +397,7 @@ impl BareJid {
         }
     }
 
-    /// Constructs a Bare Jabber ID containing only a `domain`.
+    /// Constructs a bare Jabber ID containing only a `domain`.
     ///
     /// This is of the form `domain`.
     ///
@@ -471,7 +471,7 @@ impl BareJid {
         }
     }
 
-    /// Constructs a Full Jabber ID from a Bare Jabber ID, specifying a `resource`.
+    /// Constructs a full Jabber ID from a bare Jabber ID, specifying a `resource`.
     ///
     /// # Examples
     ///
