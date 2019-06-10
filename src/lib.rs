@@ -77,6 +77,9 @@ impl From<Jid> for String {
 ///  - A node/name, `node`, which is the optional part before the @.
 ///  - A domain, `domain`, which is the mandatory part after the @ but before the /.
 ///  - A resource, `resource`, which is the part after the /.
+///
+/// Unlike a `BareJid`, it always contains a resource, and should only be used when you are certain
+/// there is no case where a resource can be missing.  Otherwise, use a `Jid` enum.
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub struct FullJid {
     /// The node part of the Jabber ID, if it exists, else None.
@@ -92,7 +95,10 @@ pub struct FullJid {
 /// A bare Jabber ID is composed of 2 components, of which one is optional:
 ///
 ///  - A node/name, `node`, which is the optional part before the @.
-///  - A domain, `domain`, which is the mandatory part after the @ but before the /.
+///  - A domain, `domain`, which is the mandatory part after the @.
+///
+/// Unlike a `FullJid`, it can’t contain a resource, and should only be used when you are certain
+/// there is no case where a resource can be set.  Otherwise, use a `Jid` enum.
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub struct BareJid {
     /// The node part of the Jabber ID, if it exists, else None.
