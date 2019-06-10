@@ -7,7 +7,7 @@
 use crate::util::error::Error;
 use crate::iq::{IqResultPayload, IqSetPayload};
 use crate::ns;
-use jid::Jid;
+use jid::FullJid;
 use minidom::Element;
 use std::str::FromStr;
 use std::convert::TryFrom;
@@ -26,7 +26,7 @@ pub enum Bind {
     Resource(String),
 
     /// The full JID returned by the server for this client.
-    Jid(Jid),
+    Jid(FullJid),
 }
 
 impl Bind {
@@ -61,7 +61,7 @@ impl TryFrom<Element> for Bind {
             } else if child.is("jid", ns::BIND) {
                 check_no_attributes!(child, "jid");
                 check_no_children!(child, "jid");
-                bind = Bind::Jid(Jid::from_str(&child.text())?);
+                bind = Bind::Jid(FullJid::from_str(&child.text())?);
             } else {
                 return Err(Error::ParseError("Unknown element in bind."));
             }

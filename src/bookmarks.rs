@@ -4,7 +4,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use jid::Jid;
+use jid::BareJid;
 
 generate_attribute!(
     /// Whether a conference bookmark should be joined automatically.
@@ -21,7 +21,7 @@ generate_element!(
         autojoin: Default<Autojoin> = "autojoin",
 
         /// The JID of the conference.
-        jid: Required<Jid> = "jid",
+        jid: Required<BareJid> = "jid",
 
         /// A user-defined name for this conference.
         name: Required<String> = "name",
@@ -113,7 +113,7 @@ mod tests {
         assert_eq!(storage.conferences[0].autojoin, Autojoin::True);
         assert_eq!(
             storage.conferences[0].jid,
-            Jid::bare("test-muc", "muc.localhost")
+            BareJid::new("test-muc", "muc.localhost")
         );
         assert_eq!(storage.conferences[0].name, "Test MUC");
         assert_eq!(storage.conferences[0].clone().nick.unwrap(), "Coucou");

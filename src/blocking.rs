@@ -101,6 +101,7 @@ generate_empty_element!(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use jid::BareJid;
 
     #[cfg(target_pointer_width = "32")]
     #[test]
@@ -143,16 +144,14 @@ mod tests {
     fn test_items() {
         let elem: Element = "<blocklist xmlns='urn:xmpp:blocking'><item jid='coucou@coucou'/><item jid='domain'/></blocklist>".parse().unwrap();
         let two_items = vec![
-            Jid {
+            Jid::Bare(BareJid {
                 node: Some(String::from("coucou")),
                 domain: String::from("coucou"),
-                resource: None,
-            },
-            Jid {
+            }),
+            Jid::Bare(BareJid {
                 node: None,
                 domain: String::from("domain"),
-                resource: None,
-            },
+            }),
         ];
 
         let result_elem = elem.clone();

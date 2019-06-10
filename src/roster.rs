@@ -5,7 +5,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use crate::iq::{IqGetPayload, IqResultPayload, IqSetPayload};
-use jid::Jid;
+use jid::BareJid;
 
 generate_elem_id!(
     /// Represents a group a contact is part of.
@@ -50,7 +50,7 @@ generate_element!(
     Item, "item", ROSTER,
     attributes: [
         /// JID of this contact.
-        jid: Required<Jid> = "jid",
+        jid: Required<BareJid> = "jid",
 
         /// Name of this contact.
         name: OptionEmpty<String> = "name",
@@ -172,7 +172,7 @@ mod tests {
         assert_eq!(roster.items.len(), 4);
         assert_eq!(
             roster.items[0].jid,
-            Jid::from_str("romeo@example.net").unwrap()
+            BareJid::from_str("romeo@example.net").unwrap()
         );
         assert_eq!(roster.items[0].name, Some(String::from("Romeo")));
         assert_eq!(roster.items[0].subscription, Subscription::Both);
@@ -184,7 +184,7 @@ mod tests {
 
         assert_eq!(
             roster.items[3].jid,
-            Jid::from_str("contact@example.org").unwrap()
+            BareJid::from_str("contact@example.org").unwrap()
         );
         assert_eq!(roster.items[3].name, Some(String::from("MyContact")));
         assert_eq!(roster.items[3].subscription, Subscription::None);
@@ -213,7 +213,7 @@ mod tests {
         assert_eq!(roster.items.len(), 1);
         assert_eq!(
             roster.items[0].jid,
-            Jid::from_str("test@example.org").unwrap()
+            BareJid::from_str("test@example.org").unwrap()
         );
         assert_eq!(roster.items[0].name, None);
         assert_eq!(roster.items[0].groups.len(), 2);
@@ -248,7 +248,7 @@ mod tests {
         assert_eq!(roster.items.len(), 1);
         assert_eq!(
             roster.items[0].jid,
-            Jid::from_str("nurse@example.com").unwrap()
+            BareJid::from_str("nurse@example.com").unwrap()
         );
         assert_eq!(roster.items[0].name, Some(String::from("Nurse")));
         assert_eq!(roster.items[0].groups.len(), 1);
@@ -270,7 +270,7 @@ mod tests {
         assert_eq!(roster.items.len(), 1);
         assert_eq!(
             roster.items[0].jid,
-            Jid::from_str("nurse@example.com").unwrap()
+            BareJid::from_str("nurse@example.com").unwrap()
         );
         assert!(roster.items[0].name.is_none());
         assert!(roster.items[0].groups.is_empty());

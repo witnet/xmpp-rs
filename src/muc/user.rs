@@ -7,7 +7,7 @@
 
 use crate::util::error::Error;
 use crate::ns;
-use jid::Jid;
+use jid::FullJid;
 use minidom::Element;
 use std::convert::TryFrom;
 
@@ -82,7 +82,7 @@ Status, "status", MUC_USER, "code", {
 #[derive(Debug, Clone, PartialEq)]
 pub enum Actor {
     /// The full JID associated with this user.
-    Jid(Jid),
+    Jid(FullJid),
 
     /// The nickname of this user.
     Nick(String),
@@ -95,7 +95,7 @@ impl TryFrom<Element> for Actor {
         check_self!(elem, "actor", MUC_USER);
         check_no_unknown_attributes!(elem, "actor", ["jid", "nick"]);
         check_no_children!(elem, "actor");
-        let jid: Option<Jid> = get_attr!(elem, "jid", Option);
+        let jid: Option<FullJid> = get_attr!(elem, "jid", Option);
         let nick = get_attr!(elem, "nick", Option);
 
         match (jid, nick) {
@@ -190,7 +190,7 @@ generate_element!(
         affiliation: Required<Affiliation> = "affiliation",
 
         /// The real JID of this user, if you are allowed to see it.
-        jid: Option<Jid> = "jid",
+        jid: Option<FullJid> = "jid",
 
         /// The current nickname of this user.
         nick: Option<String> = "nick",
@@ -448,7 +448,7 @@ mod tests {
             Actor::Jid(jid) => jid,
             _ => panic!(),
         };
-        assert_eq!(jid, "foo@bar/baz".parse::<Jid>().unwrap());
+        assert_eq!(jid, "foo@bar/baz".parse::<FullJid>().unwrap());
     }
 
     #[test]

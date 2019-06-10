@@ -4,17 +4,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use jid::Jid;
+use jid::BareJid;
 
 generate_element!(
     /// The stream opening for WebSocket.
     Open, "open", WEBSOCKET,
     attributes: [
         /// The JID of the entity opening this stream.
-        from: Option<Jid> = "from",
+        from: Option<BareJid> = "from",
 
         /// The JID of the entity receiving this stream opening.
-        to: Option<Jid> = "to",
+        to: Option<BareJid> = "to",
 
         /// The id of the stream, used for authentication challenges.
         id: Option<String> = "id",
@@ -30,7 +30,7 @@ generate_element!(
 
 impl Open {
     /// Creates a simple client→server `<open/>` element.
-    pub fn new(to: Jid) -> Open {
+    pub fn new(to: BareJid) -> Open {
         Open {
             from: None,
             to: Some(to),
@@ -42,7 +42,7 @@ impl Open {
 
     /// Sets the [@from](#structfield.from) attribute on this `<open/>`
     /// element.
-    pub fn with_from(mut self, from: Jid) -> Open {
+    pub fn with_from(mut self, from: BareJid) -> Open {
         self.from = Some(from);
         self
     }

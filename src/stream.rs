@@ -4,17 +4,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use jid::Jid;
+use jid::BareJid;
 
 generate_element!(
     /// The stream opening for client-server communications.
     Stream, "stream", STREAM,
     attributes: [
         /// The JID of the entity opening this stream.
-        from: Option<Jid> = "from",
+        from: Option<BareJid> = "from",
 
         /// The JID of the entity receiving this stream opening.
-        to: Option<Jid> = "to",
+        to: Option<BareJid> = "to",
 
         /// The id of the stream, used for authentication challenges.
         id: Option<String> = "id",
@@ -30,7 +30,7 @@ generate_element!(
 
 impl Stream {
     /// Creates a simple client→server `<stream:stream>` element.
-    pub fn new(to: Jid) -> Stream {
+    pub fn new(to: BareJid) -> Stream {
         Stream {
             from: None,
             to: Some(to),
@@ -42,7 +42,7 @@ impl Stream {
 
     /// Sets the [@from](#structfield.from) attribute on this `<stream:stream>`
     /// element.
-    pub fn with_from(mut self, from: Jid) -> Stream {
+    pub fn with_from(mut self, from: BareJid) -> Stream {
         self.from = Some(from);
         self
     }
@@ -92,7 +92,7 @@ mod tests {
     fn test_simple() {
         let elem: Element = "<stream:stream xmlns='jabber:client' xmlns:stream='http://etherx.jabber.org/streams' xml:lang='en' version='1.0' id='abc' from='some-server.example'/>".parse().unwrap();
         let stream = Stream::try_from(elem).unwrap();
-        assert_eq!(stream.from, Some(Jid::domain("some-server.example")));
+        assert_eq!(stream.from, Some(BareJid::domain("some-server.example")));
         assert_eq!(stream.to, None);
         assert_eq!(stream.id, Some(String::from("abc")));
         assert_eq!(stream.version, Some(String::from("1.0")));

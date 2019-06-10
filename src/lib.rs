@@ -15,8 +15,8 @@
 //! [`TryFrom<Element>`]: ../try_from/trait.TryFrom.html
 //! [`Element`]: ../minidom/element/struct.Element.html
 
-// Copyright (c) 2017-2018 Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
-// Copyright (c) 2017 Maxime “pep” Buquet <pep+code@bouah.net>
+// Copyright (c) 2017-2019 Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
+// Copyright (c) 2017-2019 Maxime “pep” Buquet <pep@bouah.net>
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -25,7 +25,7 @@
 #![deny(missing_docs)]
 
 pub use minidom::Element;
-pub use jid::{Jid, JidParseError};
+pub use jid::{Jid, BareJid, FullJid, JidParseError};
 pub use std::convert::{TryFrom, TryInto};
 pub use crate::util::error::Error;
 
