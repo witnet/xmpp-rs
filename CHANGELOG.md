@@ -1,3 +1,7 @@
+Version 0.6.1, released 2019-06-10:
+  * Updates
+    - Change the license from LGPLv3 to MPL-2.0.
+
 Version 0.6.0, released 2019-06-10:
   * Updates
     - Jid is now an enum, with two variants, Bare(BareJid) and Full(FullJid).
