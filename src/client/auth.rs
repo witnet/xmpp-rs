@@ -16,12 +16,12 @@ use crate::{AuthError, Error, ProtocolError};
 const NS_XMPP_SASL: &str = "urn:ietf:params:xml:ns:xmpp-sasl";
 
 pub struct ClientAuth<S: AsyncRead + AsyncWrite> {
-    future: Box<Future<Item = XMPPStream<S>, Error = Error>>,
+    future: Box<dyn Future<Item = XMPPStream<S>, Error = Error>>,
 }
 
 impl<S: AsyncRead + AsyncWrite + 'static> ClientAuth<S> {
     pub fn new(stream: XMPPStream<S>, creds: Credentials) -> Result<Self, Error> {
-        let local_mechs: Vec<Box<Fn() -> Box<Mechanism>>> = vec![
+        let local_mechs: Vec<Box<dyn Fn() -> Box<dyn Mechanism>>> = vec![
             Box::new(|| Box::new(Scram::<Sha256>::from_credentials(creds.clone()).unwrap())),
             Box::new(|| Box::new(Scram::<Sha1>::from_credentials(creds.clone()).unwrap())),
             Box::new(|| Box::new(Plain::from_credentials(creds.clone()).unwrap())),
@@ -62,7 +62,7 @@ impl<S: AsyncRead + AsyncWrite + 'static> ClientAuth<S> {
         Err(AuthError::NoMechanism)?
     }
 
-    fn handle_challenge(stream: XMPPStream<S>, mut mechanism: Box<Mechanism>) -> Box<Future<Item = XMPPStream<S>, Error = Error>> {
+    fn handle_challenge(stream: XMPPStream<S>, mut mechanism: Box<dyn Mechanism>) -> Box<dyn Future<Item = XMPPStream<S>, Error = Error>> {
         Box::new(
             stream.into_future()
             .map_err(|(e, _stream)| e.into())

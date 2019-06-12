@@ -33,7 +33,7 @@ const NS_JABBER_CLIENT: &str = "jabber:client";
 enum ClientState {
     Invalid,
     Disconnected,
-    Connecting(Box<Future<Item = XMPPStream, Error = Error>>),
+    Connecting(Box<dyn Future<Item = XMPPStream, Error = Error>>),
     Connected(XMPPStream),
 }
 

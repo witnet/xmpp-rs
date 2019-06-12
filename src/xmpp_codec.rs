@@ -219,7 +219,7 @@ impl Decoder for XMPPCodec {
     type Error = ParserError;
 
     fn decode(&mut self, buf: &mut BytesMut) -> Result<Option<Self::Item>, Self::Error> {
-        let buf1: Box<AsRef<[u8]>> = if !self.buf.is_empty() && !buf.is_empty() {
+        let buf1: Box<dyn AsRef<[u8]>> = if !self.buf.is_empty() && !buf.is_empty() {
             let mut prefix = std::mem::replace(&mut self.buf, vec![]);
             prefix.extend_from_slice(buf.take().as_ref());
             Box::new(prefix)
