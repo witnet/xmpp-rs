@@ -1,3 +1,12 @@
+Version 0.11.0, released 2019-06-14:
+  * Breaking
+    * Get rid of IntoElements, replace with `Into<Node>` and `<T: Into<Node> IntoIterator<Item = T>>`
+  * Fixes
+    * Remote unused `mut` attribute on variable
+  * Changes
+    * Update quick-xml to 0.14
+    * Split Node into its own module
+    * Nicer Debug implementation for NamespaceSet
 Version 0.10.0, released 2018-10-21:
   * Changes
     * Update quick-xml to 0.13
