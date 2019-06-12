@@ -1,3 +1,7 @@
+Version 0.10.0, released 2018-10-21:
+  * Changes
+    * Update quick-xml to 0.13
+    * Update doc to reflect switch from xml-rs to quick-xml.
 Version 0.9.1, released 2018-05-29:
   * Fixes
     * Lumi fixed CDATA handling, minidom will not unescape CDATA bodies anymore.
