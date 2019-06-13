@@ -183,6 +183,7 @@ impl ClientBuilder<'_> {
                         sender_tx.unbounded_send(packet)
                             .unwrap();
                         events.push(Event::Online);
+                        // TODO: only send this when the ContactList feature is enabled.
                         let iq = Iq::from_get("roster", Roster { ver: None, items: vec![] })
                             .into();
                         sender_tx.unbounded_send(Packet::Stanza(iq)).unwrap();
@@ -214,7 +215,9 @@ impl ClientBuilder<'_> {
                                     send_error(iq.from.unwrap(), iq.id, ErrorType::Cancel, DefinedCondition::ServiceUnavailable, "No handler defined for this kind of iq.");
                                 }
                             } else if let IqType::Result(Some(payload)) = iq.payload {
-                                if payload.is("query", ns::ROSTER) {
+                                // TODO: move private iqs like this one somewhere else, for
+                                // security reasons.
+                                if payload.is("query", ns::ROSTER) && iq.from.is_none() {
                                     let roster = Roster::try_from(payload).unwrap();
                                     for item in roster.items.into_iter() {
                                         events.push(Event::ContactAdded(item));
