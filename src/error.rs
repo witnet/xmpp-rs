@@ -59,7 +59,7 @@ impl StdError for ParseError {
     fn description(&self) -> &str {
         self.0.as_ref()
     }
-    fn cause(&self) -> Option<&StdError> {
+    fn cause(&self) -> Option<&dyn StdError> {
         None
     }
 }

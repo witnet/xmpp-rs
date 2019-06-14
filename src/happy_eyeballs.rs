@@ -79,7 +79,7 @@ impl Connecter {
         // Initialize state
         match &self_.srv_domain {
             &Some(ref srv_domain) => {
-                let srv_lookup = resolver.lookup_srv(srv_domain);
+                let srv_lookup = resolver.lookup_srv(srv_domain.clone());
                 self_.state = State::ResolveSrv(resolver, srv_lookup);
             }
             None => {

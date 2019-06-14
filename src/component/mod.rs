@@ -30,7 +30,7 @@ const NS_JABBER_COMPONENT_ACCEPT: &str = "jabber:component:accept";
 enum ComponentState {
     Invalid,
     Disconnected,
-    Connecting(Box<Future<Item = XMPPStream, Error = Error>>),
+    Connecting(Box<dyn Future<Item = XMPPStream, Error = Error>>),
     Connected(XMPPStream),
 }
 

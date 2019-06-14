@@ -1,4 +1,4 @@
-#![deny(unsafe_code, unused, missing_docs)]
+#![deny(unsafe_code, unused, missing_docs, bare_trait_objects)]
 
 //! XMPP implementation with asynchronous I/O using Tokio.
 

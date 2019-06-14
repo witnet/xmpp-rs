@@ -18,6 +18,7 @@ use std::borrow::Cow;
 use tokio_codec::{Decoder, Encoder};
 use xml5ever::interface::Attribute;
 use xml5ever::tokenizer::{Tag, TagKind, Token, TokenSink, XmlTokenizer};
+use xml5ever::buffer_queue::BufferQueue;
 
 /// Anything that can be sent or received on an XMPP/XML stream
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -219,7 +220,7 @@ impl Decoder for XMPPCodec {
     type Error = ParserError;
 
     fn decode(&mut self, buf: &mut BytesMut) -> Result<Option<Self::Item>, Self::Error> {
-        let buf1: Box<AsRef<[u8]>> = if !self.buf.is_empty() && !buf.is_empty() {
+        let buf1: Box<dyn AsRef<[u8]>> = if !self.buf.is_empty() && !buf.is_empty() {
             let mut prefix = std::mem::replace(&mut self.buf, vec![]);
             prefix.extend_from_slice(buf.take().as_ref());
             Box::new(prefix)
@@ -231,8 +232,10 @@ impl Decoder for XMPPCodec {
             Ok(s) => {
                 if !s.is_empty() {
                     // println!("<< {}", s);
+                    let mut buffer_queue = BufferQueue::new();
                     let tendril = FromIterator::from_iter(s.chars());
-                    self.parser.feed(tendril);
+                    buffer_queue.push_back(tendril);
+                    self.parser.feed(&mut buffer_queue);
                 }
             }
             // Remedies for truncated utf8
