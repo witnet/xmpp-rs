@@ -19,9 +19,6 @@ pub trait PresencePayload: TryFrom<Element> + Into<Element> {}
 /// Specifies the availability of an entity or resource.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Show {
-    /// Not an actual show value, but an indication there is no show set.
-    None,
-
     /// The entity or resource is temporarily away.
     Away,
 
@@ -34,12 +31,6 @@ pub enum Show {
     /// The entity or resource is away for an extended period (xa = "eXtended
     /// Away").
     Xa,
-}
-
-impl Default for Show {
-    fn default() -> Show {
-        Show::None
-    }
 }
 
 impl FromStr for Show {
@@ -59,13 +50,9 @@ impl FromStr for Show {
 
 impl IntoElements for Show {
     fn into_elements(self, emitter: &mut ElementEmitter) {
-        if self == Show::None {
-            return;
-        }
         emitter.append_child(
             Element::builder("show")
                 .append(match self {
-                    Show::None => unreachable!(),
                     Show::Away => Some("away"),
                     Show::Chat => Some("chat"),
                     Show::Dnd => Some("dnd"),
@@ -177,7 +164,7 @@ pub struct Presence {
     pub type_: Type,
 
     /// The availability of the sender of this presence.
-    pub show: Show,
+    pub show: Option<Show>,
 
     /// A localised list of statuses defined in this presence.
     pub statuses: BTreeMap<Lang, Status>,
@@ -198,7 +185,7 @@ impl Presence {
             to: None,
             id: None,
             type_,
-            show: Show::None,
+            show: None,
             statuses: BTreeMap::new(),
             priority: 0i8,
             payloads: vec![],
@@ -228,7 +215,7 @@ impl Presence {
 
     /// Set the availability information of this presence.
     pub fn with_show(mut self, show: Show) -> Presence {
-        self.show = show;
+        self.show = Some(show);
         self
     }
 
@@ -270,7 +257,7 @@ impl TryFrom<Element> for Presence {
             to: get_attr!(root, "to", Option),
             id: get_attr!(root, "id", Option),
             type_: get_attr!(root, "type", Default),
-            show: Show::None,
+            show: None,
             statuses: BTreeMap::new(),
             priority: 0i8,
             payloads: vec![],
@@ -307,9 +294,7 @@ impl TryFrom<Element> for Presence {
                 presence.payloads.push(elem.clone());
             }
         }
-        if let Some(show) = show {
-            presence.show = show;
-        }
+        presence.show = show;
         if let Some(priority) = priority {
             presence.priority = priority;
         }
@@ -423,7 +408,21 @@ mod tests {
                 .unwrap();
         let presence = Presence::try_from(elem).unwrap();
         assert_eq!(presence.payloads.len(), 0);
-        assert_eq!(presence.show, Show::Chat);
+        assert_eq!(presence.show, Some(Show::Chat));
+    }
+
+    #[test]
+    fn test_empty_show_value() {
+        #[cfg(not(feature = "component"))]
+        let elem: Element = "<presence xmlns='jabber:client'/>"
+            .parse()
+            .unwrap();
+        #[cfg(feature = "component")]
+        let elem: Element = "<presence xmlns='jabber:component:accept'/>"
+            .parse()
+            .unwrap();
+        let presence = Presence::try_from(elem).unwrap();
+        assert_eq!(presence.show, None);
     }
 
     #[test]
