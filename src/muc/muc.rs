@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Maxime “pep” Buquet <pep+code@bouah.net>
+// Copyright (c) 2017 Maxime “pep” Buquet <pep@bouah.net>
 // Copyright (c) 2017 Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
