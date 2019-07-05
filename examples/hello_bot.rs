@@ -4,7 +4,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use futures::{Future, Stream, sync::mpsc};
+use futures::prelude::*;
 use std::env::args;
 use std::process::exit;
 use std::str::FromStr;
@@ -26,18 +26,19 @@ fn main() {
     // tokio_core context
     let mut rt = Runtime::new().unwrap();
 
-    let (value_tx, value_rx) = mpsc::unbounded();
 
     // Client instance
-    let (client, mut agent) = ClientBuilder::new(jid, password)
+    let (mut agent, stream) = ClientBuilder::new(jid, password)
         .set_client(ClientType::Bot, "xmpp-rs")
         .set_website("https://gitlab.com/xmpp-rs/xmpp-rs")
         .enable_feature(ClientFeature::Avatars)
         .enable_feature(ClientFeature::ContactList)
-        .build(value_tx)
+        .build()
         .unwrap();
 
-    let forwarder = value_rx.for_each(|evt: Event| {
+    // We return either Some(Error) if an error was encountered
+    // or None, if we were simply disconnected
+    let handler = stream.map_err(Some).for_each(|evt: Event| {
         match evt {
             Event::Online => {
                 println!("Online.");
@@ -46,7 +47,7 @@ fn main() {
             },
             Event::Disconnected => {
                 println!("Disconnected.");
-                return Err(());
+                return Err(None);
             },
             Event::ContactAdded(contact) => {
                 println!("Contact {:?} added.", contact);
@@ -66,19 +67,10 @@ fn main() {
             },
         }
         Ok(())
-    })
-        .map_err(|e| println!("{:?}", e));
+    });
 
-    // Start polling
-    match rt.block_on(client
-        .select2(forwarder)
-        .map(|_| ())
-        .map_err(|_| ())
-    ) {
-        Ok(_) => (),
-        Err(e) => {
-            println!("Fatal: {:?}", e);
-            ()
-        }
-    }
+    rt.block_on(handler).unwrap_or_else(|e| match e {
+        Some(e) => println!("Error: {:?}", e),
+        None => println!("Disconnected."),
+    });
 }
