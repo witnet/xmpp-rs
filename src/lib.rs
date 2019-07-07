@@ -80,6 +80,18 @@ impl From<Jid> for String {
     }
 }
 
+impl From<BareJid> for Jid {
+    fn from(bare_jid: BareJid) -> Jid {
+        Jid::Bare(bare_jid)
+    }
+}
+
+impl From<FullJid> for Jid {
+    fn from(full_jid: FullJid) -> Jid {
+        Jid::Full(full_jid)
+    }
+}
+
 /// A struct representing a full Jabber ID.
 ///
 /// A full Jabber ID is composed of 3 components, of which one is optional:
