@@ -1,7 +1,15 @@
-Version TODO:
-TODO  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
+Version 0.14.0:
+2019-07-13  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>, Maxime “pep” Buquet <pep@bouah.net>
     * New parsers/serialisers:
         - Entity Time (XEP-0202).
+    * Improvements:
+        - Microblog NS (XEP-0227).
+        - Update jid-rs dependency with jid split change (Jid, FullJid,
+          BareJid) and reexport them.
+        - Fix rustdoc options in Cargo.toml for docs.rs
+    * Breaking changes:
+        - Presence's show attribute is now Option<Show> and Show::None is no
+          more.
 
 Version 0.13.1:
 2019-04-12  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
