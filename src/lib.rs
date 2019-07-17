@@ -149,6 +149,9 @@ pub mod jingle_s5b;
 /// XEP-0261: Jingle In-Band Bytestreams Transport Method
 pub mod jingle_ibb;
 
+/// XEP-0280: Message Carbons
+pub mod carbons;
+
 /// XEP-0297: Stanza Forwarding
 pub mod forwarding;
 

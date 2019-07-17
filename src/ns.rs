@@ -138,6 +138,9 @@ pub const JINGLE_IBB: &str = "urn:xmpp:jingle:transports:ibb:1";
 /// XEP-0277: Microblogging over XMPP
 pub const MICROBLOG: &str = "urn:xmpp:microblog:0";
 
+/// XEP-0280: Message Carbons
+pub const CARBONS: &str = "urn:xmpp:carbons:2";
+
 /// XEP-0297: Stanza Forwarding
 pub const FORWARD: &str = "urn:xmpp:forward:0";
 
