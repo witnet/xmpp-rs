@@ -1,6 +1,6 @@
 //! A crate parsing common XMPP elements into Rust structures.
 //!
-//! Each module implements the [`TryFrom<Element>`] trait, which takes a
+//! Each module implements the `TryFrom<Element>` trait, which takes a
 //! minidom [`Element`] and returns a `Result` whose value is `Ok` if the
 //! element parsed correctly, `Err(error::Error)` otherwise.
 //!
@@ -12,7 +12,6 @@
 //! [`Element`], using either `From` or `Into<Element>`, which give you what
 //! you want to be sending on the wire.
 //!
-//! [`TryFrom<Element>`]: ../try_from/trait.TryFrom.html
 //! [`Element`]: ../minidom/element/struct.Element.html
 
 // Copyright (c) 2017-2019 Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
@@ -25,8 +24,7 @@
 #![deny(missing_docs)]
 
 pub use minidom::Element;
-pub use jid::{Jid, BareJid, FullJid, JidParseError};
-pub use std::convert::{TryFrom, TryInto};
+pub use jid::{BareJid, FullJid, Jid, JidParseError};
 pub use crate::util::error::Error;
 
 /// XML namespace definitions used through XMPP.

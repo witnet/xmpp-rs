@@ -2,6 +2,9 @@ Version NEXT:
 DATE  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
     * New parsers/serialisers:
         - Message Carbons (XEP-0280)
+    * Breaking changes:
+        - Stop reexporting TryFrom and TryInto, they are available in
+          std::convert nowadays.
     * Improvements:
         - New DOAP file for a machine-readable description of the features.
 
