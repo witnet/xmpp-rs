@@ -204,6 +204,9 @@ pub const ECAPS2: &str = "urn:xmpp:caps";
 /// XEP-0390: Entity Capabilities 2.0
 pub const ECAPS2_OPTIMIZE: &str = "urn:xmpp:caps:optimize";
 
+/// XEP-0421: Anonymous unique occupant identifiers for MUCs
+pub const OID: &str = "urn:xmpp:occupant-id:0";
+
 /// Alias for the main namespace of the stream, that is "jabber:client" when
 /// the component feature isn’t enabled.
 #[cfg(not(feature = "component"))]

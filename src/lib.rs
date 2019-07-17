@@ -194,3 +194,6 @@ pub mod eme;
 
 /// XEP-0390: Entity Capabilities 2.0
 pub mod ecaps2;
+
+/// XEP-0421: Anonymous unique occupant identifiers for MUCs
+pub mod occupant_id;
