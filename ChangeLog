@@ -1,3 +1,10 @@
+Version NEXT:
+DATE  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
+    * New parsers/serialisers:
+        - Message Carbons (XEP-0280)
+    * Improvements:
+        - New DOAP file for a machine-readable description of the features.
+
 Version 0.14.0:
 2019-07-13  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>, Maxime “pep” Buquet <pep@bouah.net>
     * New parsers/serialisers:
