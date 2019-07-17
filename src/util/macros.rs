@@ -661,7 +661,7 @@ macro_rules! assert_size (
 // TODO: move that to src/pubsub/mod.rs, once we figure out how to use macros from there.
 macro_rules! impl_pubsub_item {
     ($item:ident, $ns:ident) => {
-        impl crate::TryFrom<crate::Element> for $item {
+        impl ::std::convert::TryFrom<crate::Element> for $item {
             type Error = Error;
 
             fn try_from(elem: crate::Element) -> Result<$item, Error> {

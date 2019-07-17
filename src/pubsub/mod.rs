@@ -73,4 +73,4 @@ impl Item {
 }
 
 /// This trait should be implemented on any element which can be included as a PubSub payload.
-pub trait PubSubPayload: crate::TryFrom<crate::Element> + Into<crate::Element> {}
+pub trait PubSubPayload: ::std::convert::TryFrom<crate::Element> + Into<crate::Element> {}
