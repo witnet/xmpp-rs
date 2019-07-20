@@ -1,3 +1,8 @@
+Version 0.6.2, released 2019-07-20:
+  * Updates
+    - Implement From<BareJid> and From<FullJid> for Jid
+    - Add node and domain getters on Jid
+
 Version 0.6.1, released 2019-06-10:
   * Updates
     - Change the license from LGPLv3 to MPL-2.0.
