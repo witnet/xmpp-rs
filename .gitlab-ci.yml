@@ -5,12 +5,12 @@ rust-latest:
   stage: build
   image: rust:latest
   script:
-    - cargo build --verbose
+    - cargo build --verbose --features=minidom
     - cargo test --lib --verbose --features=minidom
 
 rust-nightly:
   stage: build
   image: rustlang/rust:nightly
   script:
-    - cargo build --verbose
+    - cargo build --verbose --features=minidom
     - cargo test --lib --verbose --features=minidom
