@@ -92,6 +92,22 @@ impl From<FullJid> for Jid {
     }
 }
 
+impl Jid {
+    /// The node part of the Jabber ID, if it exists, else None.
+    pub fn node(self) -> Option<String> {
+        match self {
+            Jid::Bare(BareJid { node, .. }) | Jid::Full(FullJid { node, .. }) => node,
+        }
+    }
+
+    /// The domain of the Jabber ID.
+    pub fn domain(self) -> String {
+        match self {
+            Jid::Bare(BareJid { domain, .. }) | Jid::Full(FullJid { domain, .. }) => domain,
+        }
+    }
+}
+
 /// A struct representing a full Jabber ID.
 ///
 /// A full Jabber ID is composed of 3 components, of which one is optional:
@@ -636,6 +652,22 @@ mod tests {
         assert_eq!(
             BareJid::new("a", "b.c").with_resource("d"),
             FullJid::new("a", "b.c", "d")
+        );
+    }
+
+    #[test]
+    fn node_from_jid() {
+        assert_eq!(
+            Jid::Full(FullJid::new("a", "b.c", "d")).node(),
+            Some(String::from("a")),
+        );
+    }
+
+    #[test]
+    fn domain_from_jid() {
+        assert_eq!(
+            Jid::Bare(BareJid::new("a", "b.c")).domain(),
+            String::from("b.c"),
         );
     }
 
