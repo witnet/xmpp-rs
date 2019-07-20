@@ -542,7 +542,7 @@ impl BareJid {
 }
 
 #[cfg(feature = "minidom")]
-use minidom::{ElementEmitter, IntoAttributeValue, IntoElements};
+use minidom::{IntoAttributeValue, Node};
 
 #[cfg(feature = "minidom")]
 impl IntoAttributeValue for Jid {
@@ -552,9 +552,9 @@ impl IntoAttributeValue for Jid {
 }
 
 #[cfg(feature = "minidom")]
-impl IntoElements for Jid {
-    fn into_elements(self, emitter: &mut ElementEmitter) {
-        emitter.append_text_node(String::from(self))
+impl Into<Node> for Jid {
+    fn into(self) -> Node {
+        Node::Text(String::from(self))
     }
 }
 
@@ -566,9 +566,9 @@ impl IntoAttributeValue for FullJid {
 }
 
 #[cfg(feature = "minidom")]
-impl IntoElements for FullJid {
-    fn into_elements(self, emitter: &mut ElementEmitter) {
-        emitter.append_text_node(String::from(self))
+impl Into<Node> for FullJid {
+    fn into(self) -> Node {
+        Node::Text(String::from(self))
     }
 }
 
@@ -580,9 +580,9 @@ impl IntoAttributeValue for BareJid {
 }
 
 #[cfg(feature = "minidom")]
-impl IntoElements for BareJid {
-    fn into_elements(self, emitter: &mut ElementEmitter) {
-        emitter.append_text_node(String::from(self))
+impl Into<Node> for BareJid {
+    fn into(self) -> Node {
+        Node::Text(String::from(self))
     }
 }
 
