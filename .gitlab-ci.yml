@@ -6,11 +6,11 @@ rust-latest:
   image: rust:latest
   script:
     - cargo build --verbose
-    - cargo test --verbose
+    - cargo test --lib --verbose --features=minidom
 
 rust-nightly:
   stage: build
   image: rustlang/rust:nightly
   script:
     - cargo build --verbose
-    - cargo test --verbose
+    - cargo test --lib --verbose --features=minidom
