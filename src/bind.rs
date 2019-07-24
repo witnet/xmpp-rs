@@ -63,13 +63,13 @@ impl From<BindQuery> for Element {
     fn from(bind: BindQuery) -> Element {
         Element::builder("bind")
             .ns(ns::BIND)
-            .append(match bind.resource {
+            .append_all((match bind.resource {
                 None => vec![],
                 Some(resource) => vec![Element::builder("resource")
                     .ns(ns::BIND)
                     .append(resource)
                     .build()],
-            })
+            }).into_iter())
             .build()
     }
 }

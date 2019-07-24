@@ -149,13 +149,13 @@ impl From<Tune> for Element {
     fn from(tune: Tune) -> Element {
         Element::builder("tune")
             .ns(ns::TUNE)
-            .append(tune.artist)
-            .append(tune.length)
-            .append(tune.rating)
-            .append(tune.source)
-            .append(tune.title)
-            .append(tune.track)
-            .append(tune.uri)
+            .append_all(tune.artist)
+            .append_all(tune.length)
+            .append_all(tune.rating)
+            .append_all(tune.source)
+            .append_all(tune.title)
+            .append_all(tune.track)
+            .append_all(tune.uri)
             .build()
     }
 }

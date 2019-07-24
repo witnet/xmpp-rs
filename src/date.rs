@@ -6,7 +6,7 @@
 
 use crate::util::error::Error;
 use chrono::{DateTime as ChronoDateTime, FixedOffset};
-use minidom::{ElementEmitter, IntoAttributeValue, IntoElements};
+use minidom::{IntoAttributeValue, Node};
 use std::str::FromStr;
 
 /// Implements the DateTime profile of XEP-0082, which represents a
@@ -46,9 +46,9 @@ impl IntoAttributeValue for DateTime {
     }
 }
 
-impl IntoElements for DateTime {
-    fn into_elements(self, emitter: &mut ElementEmitter) {
-        emitter.append_text_node(self.0.to_rfc3339())
+impl Into<Node> for DateTime {
+    fn into(self) -> Node {
+        Node::Text(self.0.to_rfc3339())
     }
 }
 

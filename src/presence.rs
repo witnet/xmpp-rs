@@ -8,7 +8,7 @@
 use crate::util::error::Error;
 use crate::ns;
 use jid::Jid;
-use minidom::{Element, ElementEmitter, IntoAttributeValue, IntoElements};
+use minidom::{Element, IntoAttributeValue, Node};
 use std::collections::BTreeMap;
 use std::str::FromStr;
 use std::convert::TryFrom;
@@ -48,18 +48,17 @@ impl FromStr for Show {
     }
 }
 
-impl IntoElements for Show {
-    fn into_elements(self, emitter: &mut ElementEmitter) {
-        emitter.append_child(
-            Element::builder("show")
-                .append(match self {
-                    Show::Away => Some("away"),
-                    Show::Chat => Some("chat"),
-                    Show::Dnd => Some("dnd"),
-                    Show::Xa => Some("xa"),
-                })
-                .build(),
-        )
+impl Into<Node> for Show {
+    fn into(self) -> Node {
+        Element::builder("show")
+            .append(match self {
+                Show::Away => "away",
+                Show::Chat => "chat",
+                Show::Dnd => "dnd",
+                Show::Xa => "xa",
+            })
+            .build()
+            .into()
     }
 }
 
@@ -310,8 +309,8 @@ impl From<Presence> for Element {
             .attr("to", presence.to)
             .attr("id", presence.id)
             .attr("type", presence.type_)
-            .append(presence.show)
-            .append(
+            .append_all(presence.show.into_iter())
+            .append_all(
                 presence
                     .statuses
                     .into_iter()
@@ -327,9 +326,8 @@ impl From<Presence> for Element {
                             .append(status)
                             .build()
                     })
-                    .collect::<Vec<_>>(),
             )
-            .append(if presence.priority == 0 {
+            .append_all((if presence.priority == 0 {
                 None
             } else {
                 Some(
@@ -337,8 +335,8 @@ impl From<Presence> for Element {
                         .append(format!("{}", presence.priority))
                         .build()
                 )
-            })
-            .append(presence.payloads)
+            }).into_iter())
+            .append_all(presence.payloads.into_iter())
             .build()
     }
 }

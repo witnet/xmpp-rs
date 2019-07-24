@@ -10,7 +10,7 @@ use crate::util::error::Error;
 use crate::ns;
 use crate::pubsub::{ItemId, NodeName, Subscription, SubscriptionId, Item as PubSubItem};
 use jid::Jid;
-use minidom::Element;
+use minidom::{Element, Node};
 use std::convert::TryFrom;
 
 /// Event wrapper for a PubSub `<item/>`.
@@ -198,12 +198,12 @@ impl From<PubSubEvent> for Element {
             PubSubEvent::Configuration { node, form } => Element::builder("configuration")
                 .ns(ns::PUBSUB_EVENT)
                 .attr("node", node)
-                .append(form)
+                .append_all(form.map(Element::from).map(Node::Element).into_iter())
                 .build(),
             PubSubEvent::Delete { node, redirect } => Element::builder("purge")
                 .ns(ns::PUBSUB_EVENT)
                 .attr("node", node)
-                .append(redirect.map(|redirect| {
+                .append_all(redirect.map(|redirect| {
                     Element::builder("redirect")
                         .ns(ns::PUBSUB_EVENT)
                         .attr("uri", redirect)
@@ -213,12 +213,12 @@ impl From<PubSubEvent> for Element {
             PubSubEvent::PublishedItems { node, items } => Element::builder("items")
                 .ns(ns::PUBSUB_EVENT)
                 .attr("node", node)
-                .append(items)
+                .append_all(items.into_iter())
                 .build(),
             PubSubEvent::RetractedItems { node, items } => Element::builder("items")
                 .ns(ns::PUBSUB_EVENT)
                 .attr("node", node)
-                .append(
+                .append_all(
                     items
                         .into_iter()
                         .map(|id| {
@@ -227,7 +227,6 @@ impl From<PubSubEvent> for Element {
                                 .attr("id", id)
                                 .build()
                         })
-                        .collect::<Vec<_>>(),
                 )
                 .build(),
             PubSubEvent::Purge { node } => Element::builder("purge")

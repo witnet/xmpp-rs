@@ -98,14 +98,14 @@ impl From<XhtmlIm> for Element {
     fn from(wrapper: XhtmlIm) -> Element {
         Element::builder("html")
             .ns(ns::XHTML_IM)
-            .append(wrapper.bodies.into_iter().map(|(ref lang, ref body)| {
+            .append_all(wrapper.bodies.into_iter().map(|(ref lang, ref body)| {
                 if lang.is_empty() {
                     assert!(body.xml_lang.is_none());
                 } else {
                     assert_eq!(Some(lang), body.xml_lang.as_ref());
                 }
                 Element::from(body.clone())
-            }).collect::<Vec<_>>())
+            }))
             .build()
     }
 }
@@ -174,7 +174,7 @@ impl From<Body> for Element {
             .ns(ns::XHTML)
             .attr("style", get_style_string(body.style))
             .attr("xml:lang", body.xml_lang)
-            .append(children_to_nodes(body.children))
+            .append_all(children_to_nodes(body.children))
             .build()
     }
 }
@@ -338,7 +338,7 @@ impl From<Tag> for Element {
         };
         let mut builder = Element::builder(name)
             .ns(ns::XHTML)
-            .append(children_to_nodes(children));
+            .append_all(children_to_nodes(children));
         for (key, value) in attrs {
             builder = builder.attr(key, value);
         }

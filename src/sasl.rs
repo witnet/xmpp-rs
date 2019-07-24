@@ -203,7 +203,7 @@ impl From<Failure> for Element {
         Element::builder("failure")
             .ns(ns::SASL)
             .append(failure.defined_condition)
-            .append(
+            .append_all(
                 failure
                     .texts
                     .into_iter()
@@ -214,7 +214,6 @@ impl From<Failure> for Element {
                             .append(text)
                             .build()
                     })
-                    .collect::<Vec<_>>(),
             )
             .build()
     }

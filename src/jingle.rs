@@ -8,7 +8,7 @@ use crate::util::error::Error;
 use crate::iq::IqSetPayload;
 use crate::ns;
 use jid::Jid;
-use minidom::Element;
+use minidom::{Element, Node};
 use std::collections::BTreeMap;
 use std::str::FromStr;
 use std::convert::TryFrom;
@@ -413,14 +413,14 @@ impl From<ReasonElement> for Element {
         Element::builder("reason")
             .ns(ns::JINGLE)
             .append(Element::from(reason.reason))
-            .append(
+            .append_all(
                 reason.texts.into_iter().map(|(lang, text)| {
                     Element::builder("text")
                         .ns(ns::JINGLE)
                         .attr("xml:lang", lang)
                         .append(text)
                         .build()
-                }).collect::<Vec<_>>())
+                }))
             .build()
     }
 }
@@ -542,8 +542,8 @@ impl From<Jingle> for Element {
             .attr("initiator", jingle.initiator)
             .attr("responder", jingle.responder)
             .attr("sid", jingle.sid)
-            .append(jingle.contents)
-            .append(jingle.reason)
+            .append_all(jingle.contents.into_iter())
+            .append_all(jingle.reason.map(Element::from).map(Node::Element).into_iter())
             .build()
     }
 }

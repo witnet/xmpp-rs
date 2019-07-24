@@ -6,7 +6,7 @@
 
 use crate::util::error::Error;
 use crate::ns;
-use minidom::Element;
+use minidom::{Element, Node};
 use std::convert::TryFrom;
 
 /// Requests paging through a potentially big set of items (represented by an
@@ -72,23 +72,23 @@ impl From<SetQuery> for Element {
     fn from(set: SetQuery) -> Element {
         Element::builder("set")
             .ns(ns::RSM)
-            .append(set.max.map(|max| {
+            .append_all(set.max.map(|max| {
                 Element::builder("max")
                     .ns(ns::RSM)
                     .append(format!("{}", max))
                     .build()
             }))
-            .append(
+            .append_all(
                 set.after
                     .map(|after| Element::builder("after").ns(ns::RSM).append(after).build()),
             )
-            .append(set.before.map(|before| {
+            .append_all(set.before.map(|before| {
                 Element::builder("before")
                     .ns(ns::RSM)
                     .append(before)
                     .build()
             }))
-            .append(set.index.map(|index| {
+            .append_all(set.index.map(|index| {
                 Element::builder("index")
                     .ns(ns::RSM)
                     .append(format!("{}", index))
@@ -162,12 +162,12 @@ impl From<SetResult> for Element {
         });
         Element::builder("set")
             .ns(ns::RSM)
-            .append(first)
-            .append(
+            .append_all(first.map(Element::from).map(Node::Element).into_iter())
+            .append_all(
                 set.last
                     .map(|last| Element::builder("last").ns(ns::RSM).append(last).build()),
             )
-            .append(set.count.map(|count| {
+            .append_all(set.count.map(|count| {
                 Element::builder("count")
                     .ns(ns::RSM)
                     .append(format!("{}", count))

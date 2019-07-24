@@ -247,26 +247,31 @@ impl From<Transport> for Element {
             .attr("sid", transport.sid)
             .attr("dstaddr", transport.dstaddr)
             .attr("mode", transport.mode)
-            .append(match transport.payload {
+            .append_all(match transport.payload {
                 TransportPayload::Candidates(candidates) => candidates
                     .into_iter()
                     .map(Element::from)
-                    .collect::<Vec<_>>(),
+                    .collect::<Vec<_>>()
+                    .into_iter(),
                 TransportPayload::Activated(cid) => vec![Element::builder("activated")
                     .ns(ns::JINGLE_S5B)
                     .attr("cid", cid)
-                    .build()],
+                    .build()]
+                    .into_iter(),
                 TransportPayload::CandidateError => vec![Element::builder("candidate-error")
                     .ns(ns::JINGLE_S5B)
-                    .build()],
+                    .build()]
+                    .into_iter(),
                 TransportPayload::CandidateUsed(cid) => vec![Element::builder("candidate-used")
                     .ns(ns::JINGLE_S5B)
                     .attr("cid", cid)
-                    .build()],
-                TransportPayload::ProxyError => {
-                    vec![Element::builder("proxy-error").ns(ns::JINGLE_S5B).build()]
-                }
-                TransportPayload::None => vec![],
+                    .build()]
+                    .into_iter(),
+                TransportPayload::ProxyError => vec![Element::builder("proxy-error")
+                    .ns(ns::JINGLE_S5B)
+                    .build()]
+                    .into_iter(),
+                TransportPayload::None => vec![].into_iter(),
             })
             .build()
     }

@@ -34,8 +34,8 @@ impl TrimmedPlainText {
         })
     }
 
-    pub fn encode(string: &str) -> String {
-        string.to_owned()
+    pub fn encode(string: &str) -> Option<String> {
+        Some(string.to_owned())
     }
 }
 

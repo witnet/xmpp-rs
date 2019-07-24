@@ -9,7 +9,7 @@ use crate::util::error::Error;
 use crate::hashes::Hash;
 use crate::jingle::{ContentId, Creator};
 use crate::ns;
-use minidom::Element;
+use minidom::{Element, Node};
 use std::collections::BTreeMap;
 use std::str::FromStr;
 use std::convert::TryFrom;
@@ -196,43 +196,53 @@ impl From<File> for Element {
         let mut root = Element::builder("file").ns(ns::JINGLE_FT);
         if let Some(date) = file.date {
             root = root.append(
-                Element::builder("date")
-                    .ns(ns::JINGLE_FT)
-                    .append(date)
-                    .build(),
+                Node::Element(
+                    Element::builder("date")
+                        .ns(ns::JINGLE_FT)
+                        .append(date)
+                        .build()
+                )
             );
         }
         if let Some(media_type) = file.media_type {
             root = root.append(
-                Element::builder("media-type")
-                    .ns(ns::JINGLE_FT)
-                    .append(media_type)
-                    .build(),
+                Node::Element(
+                    Element::builder("media-type")
+                        .ns(ns::JINGLE_FT)
+                        .append(media_type)
+                        .build()
+                )
             );
         }
         if let Some(name) = file.name {
             root = root.append(
-                Element::builder("name")
-                    .ns(ns::JINGLE_FT)
-                    .append(name)
-                    .build(),
+                Node::Element(
+                    Element::builder("name")
+                        .ns(ns::JINGLE_FT)
+                        .append(name)
+                        .build()
+                )
             );
         }
         for (lang, desc) in file.descs.into_iter() {
             root = root.append(
-                Element::builder("desc")
-                    .ns(ns::JINGLE_FT)
-                    .attr("xml:lang", lang)
-                    .append(desc.0)
-                    .build(),
+                Node::Element(
+                    Element::builder("desc")
+                        .ns(ns::JINGLE_FT)
+                        .attr("xml:lang", lang)
+                        .append(desc.0)
+                        .build()
+                )
             );
         }
         if let Some(size) = file.size {
             root = root.append(
-                Element::builder("size")
-                    .ns(ns::JINGLE_FT)
-                    .append(format!("{}", size))
-                    .build(),
+                Node::Element(
+                    Element::builder("size")
+                        .ns(ns::JINGLE_FT)
+                        .append(format!("{}", size))
+                        .build()
+                )
             );
         }
         if let Some(range) = file.range {
@@ -282,7 +292,7 @@ impl From<Description> for Element {
     fn from(description: Description) -> Element {
         Element::builder("description")
             .ns(ns::JINGLE_FT)
-            .append(description.file)
+            .append(Node::Element(description.file.into()))
             .build()
     }
 }
@@ -334,7 +344,7 @@ impl From<Checksum> for Element {
             .ns(ns::JINGLE_FT)
             .attr("name", checksum.name)
             .attr("creator", checksum.creator)
-            .append(checksum.file)
+            .append(Node::Element(checksum.file.into()))
             .build()
     }
 }

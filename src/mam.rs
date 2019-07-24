@@ -13,7 +13,7 @@ use crate::ns;
 use crate::pubsub::NodeName;
 use crate::rsm::{SetQuery, SetResult};
 use jid::Jid;
-use minidom::Element;
+use minidom::{Element, Node};
 use std::convert::TryFrom;
 
 generate_id!(
@@ -161,20 +161,29 @@ impl TryFrom<Element> for Prefs {
     }
 }
 
-fn serialise_jid_list(name: &str, jids: Vec<Jid>) -> Option<Element> {
+fn serialise_jid_list(name: &str, jids: Vec<Jid>) -> ::std::option::IntoIter<Node> {
     if jids.is_empty() {
-        None
+        None.into_iter()
     } else {
         Some(
             Element::builder(name)
                 .ns(ns::MAM)
-                .append(
+                .append_all(
                     jids.into_iter()
-                        .map(|jid| Element::builder("jid").ns(ns::MAM).append(jid).build())
-                        .collect::<Vec<_>>(),
+                        .map(|jid|
+                            Node::Element(
+                                Element::builder("jid")
+                                    .ns(ns::MAM)
+                                    .append(Node::Text(String::from(jid)))
+                                    .build()
+                                    .into()
+                            )
+                        )
+                        .into_iter(),
                 )
-                .build(),
-        )
+                .build()
+                .into(),
+        ).into_iter()
     }
 }
 
@@ -183,8 +192,8 @@ impl From<Prefs> for Element {
         Element::builder("prefs")
             .ns(ns::MAM)
             .attr("default", prefs.default_)
-            .append(serialise_jid_list("always", prefs.always))
-            .append(serialise_jid_list("never", prefs.never))
+            .append_all(serialise_jid_list("always", prefs.always))
+            .append_all(serialise_jid_list("never", prefs.never))
             .build()
     }
 }

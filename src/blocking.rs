@@ -51,12 +51,12 @@ macro_rules! generate_blocking_element {
             fn from(elem: $elem) -> Element {
                 Element::builder($name)
                         .ns(ns::BLOCKING)
-                        .append(elem.items.into_iter().map(|jid| {
+                        .append_all(elem.items.into_iter().map(|jid| {
                              Element::builder("item")
                                      .ns(ns::BLOCKING)
                                      .attr("jid", jid)
                                      .build()
-                         }).collect::<Vec<_>>())
+                         }))
                         .build()
             }
         }

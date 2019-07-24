@@ -212,7 +212,7 @@ impl From<Message> for Element {
             .attr("to", message.to)
             .attr("id", message.id)
             .attr("type", message.type_)
-            .append(
+            .append_all(
                 message
                     .subjects
                     .into_iter()
@@ -227,9 +227,8 @@ impl From<Message> for Element {
                         );
                         subject
                     })
-                    .collect::<Vec<_>>(),
             )
-            .append(
+            .append_all(
                 message
                     .bodies
                     .into_iter()
@@ -244,9 +243,8 @@ impl From<Message> for Element {
                         );
                         body
                     })
-                    .collect::<Vec<_>>(),
             )
-            .append(message.payloads)
+            .append_all(message.payloads.into_iter())
             .build()
     }
 }

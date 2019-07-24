@@ -253,6 +253,11 @@ macro_rules! generate_element_enum {
                     .build()
             }
         }
+        impl From<$elem> for ::minidom::Node {
+            fn from(elem: $elem) -> ::minidom::Node {
+                ::minidom::Node::Element(elem.into())
+            }
+        }
     );
 }
 
@@ -289,6 +294,11 @@ macro_rules! generate_attribute_enum {
                          $($elem::$enum => $enum_name,)+
                      })
                      .build()
+            }
+        }
+        impl From<$elem> for ::minidom::Node {
+            fn from(elem: $elem) -> ::minidom::Node {
+                ::minidom::Node::Element(elem.into())
             }
         }
     );
@@ -385,6 +395,12 @@ macro_rules! generate_empty_element {
                     .build()
             }
         }
+
+        impl From<$elem> for ::minidom::Node {
+            fn from(elem: $elem) -> ::minidom::Node {
+                ::minidom::Node::Element(elem.into())
+            }
+        }
     );
 }
 
@@ -439,6 +455,12 @@ macro_rules! generate_elem_id {
                     .ns(crate::ns::$ns)
                     .append(elem.0.to_string())
                     .build()
+            }
+        }
+
+        impl From<$elem> for ::minidom::Node {
+            fn from(elem: $elem) -> ::minidom::Node {
+                ::minidom::Node::Element(elem.into())
             }
         }
     );
@@ -547,22 +569,38 @@ macro_rules! finish_parse_elem {
 }
 
 macro_rules! generate_serialiser {
-    ($parent:ident, $elem:ident, Required, String, ($name:tt, $ns:ident)) => {
-        ::minidom::Element::builder($name)
-            .ns(crate::ns::$ns)
-            .append($parent.$elem)
-            .build()
-    };
-    ($parent:ident, $elem:ident, Option, String, ($name:tt, $ns:ident)) => {
-        $parent.$elem.map(|elem| {
+    ($builder:ident, $parent:ident, $elem:ident, Required, String, ($name:tt, $ns:ident)) => {
+        $builder.append(::minidom::Node::Element(
             ::minidom::Element::builder($name)
                 .ns(crate::ns::$ns)
-                .append(elem)
+                .append(::minidom::Node::Text($parent.$elem))
                 .build()
-        })
+            )
+        )
     };
-    ($parent:ident, $elem:ident, $_:ident, $constructor:ident, ($name:tt, $ns:ident)) => {
-        $parent.$elem
+    ($builder:ident, $parent:ident, $elem:ident, Option, String, ($name:tt, $ns:ident)) => {
+        $builder.append_all($parent.$elem.map(|elem| {
+                ::minidom::Element::builder($name)
+                    .ns(crate::ns::$ns)
+                    .append(::minidom::Node::Text(elem))
+                    .build()
+            }).into_iter()
+        )
+    };
+    ($builder:ident, $parent:ident, $elem:ident, Option, $constructor:ident, ($name:tt, $ns:ident)) => {
+        $builder.append_all($parent.$elem.map(|elem| {
+                ::minidom::Element::builder($name)
+                    .ns(crate::ns::$ns)
+                    .append(::minidom::Node::Element(::minidom::Element::from(elem)))
+                    .build()
+            }).into_iter()
+        )
+    };
+    ($builder:ident, $parent:ident, $elem:ident, Vec, $constructor:ident, ($name:tt, $ns:ident)) => {
+        $builder.append_all($parent.$elem.into_iter())
+    };
+    ($builder:ident, $parent:ident, $elem:ident, $_:ident, $constructor:ident, ($name:tt, $ns:ident)) => {
+        $builder.append(::minidom::Node::Element(::minidom::Element::from($parent.$elem)))
     };
 }
 
@@ -637,18 +675,25 @@ macro_rules! generate_element {
 
         impl From<$elem> for ::minidom::Element {
             fn from(elem: $elem) -> ::minidom::Element {
-                ::minidom::Element::builder($name)
-                    .ns(crate::ns::$ns)
-                    $(
-                        .attr($attr_name, elem.$attr)
-                    )*
-                    $(
-                        .append(generate_serialiser!(elem, $child_ident, $coucou, $child_constructor, ($child_name, $child_ns)))
-                    )*
-                    $(
-                        .append($codec::encode(&elem.$text_ident))
-                    )*
-                    .build()
+                let mut builder = ::minidom::Element::builder($name)
+                    .ns(crate::ns::$ns);
+                $(
+                    builder = builder.attr($attr_name, elem.$attr);
+                )*
+                $(
+                    builder = generate_serialiser!(builder, elem, $child_ident, $coucou, $child_constructor, ($child_name, $child_ns));
+                )*
+                $(
+                    builder = builder.append_all($codec::encode(&elem.$text_ident).map(::minidom::Node::Text).into_iter());
+                )*
+
+                builder.build()
+            }
+        }
+
+        impl From<$elem> for ::minidom::Node {
+            fn from(elem: $elem) -> ::minidom::Node {
+                ::minidom::Node::Element(elem.into())
             }
         }
     );
@@ -691,8 +736,14 @@ macro_rules! impl_pubsub_item {
                     .ns(ns::$ns)
                     .attr("id", item.0.id)
                     .attr("publisher", item.0.publisher)
-                    .append(item.0.payload)
+                    .append_all(item.0.payload.map(::minidom::Node::Element).into_iter())
                     .build()
+            }
+        }
+
+        impl From<$item> for ::minidom::Node {
+            fn from(item: $item) -> ::minidom::Node {
+                ::minidom::Node::Element(item.into())
             }
         }
 
