@@ -67,7 +67,7 @@ impl TryFrom<Element> for TimeResult {
 
         let tzo = tzo.ok_or(Error::ParseError("Missing tzo child in time element."))?;
         let utc = utc.ok_or(Error::ParseError("Missing utc child in time element."))?;
-        let date = utc.with_timezone(&tzo);
+        let date = utc.with_timezone(tzo);
 
         Ok(TimeResult(date))
     }
@@ -81,7 +81,7 @@ impl From<TimeResult> for Element {
                     .append(format!("{}", time.0.timezone()))
                     .build())
             .append(Element::builder("utc")
-                    .append(time.0.with_timezone(&FixedOffset::east(0)).format("%FT%TZ"))
+                    .append(time.0.with_timezone(FixedOffset::east(0)).format("%FT%TZ"))
                     .build())
             .build()
     }

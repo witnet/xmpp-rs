@@ -22,8 +22,8 @@ impl DateTime {
     }
 
     /// Returns a new `DateTime` with a different timezone.
-    pub fn with_timezone(&self, tz: &FixedOffset) -> DateTime {
-        DateTime(self.0.with_timezone(tz))
+    pub fn with_timezone(&self, tz: FixedOffset) -> DateTime {
+        DateTime(self.0.with_timezone(&tz))
     }
 
     /// Formats this `DateTime` with the specified format string.
