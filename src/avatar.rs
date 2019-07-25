@@ -6,7 +6,7 @@
 
 use crate::Event;
 use futures::{sync::mpsc, Sink};
-use std::fs::{create_dir_all, File};
+use std::fs::{self, File};
 use std::io::{self, Write};
 use tokio_xmpp::Packet;
 use xmpp_parsers::{
@@ -18,19 +18,39 @@ use xmpp_parsers::{
         pubsub::{Items, PubSub},
         NodeName,
     },
+    hashes::Hash,
     Jid, TryFrom,
 };
 
-pub(crate) fn handle_metadata_pubsub_event(from: &Jid, tx: &mut mpsc::UnboundedSender<Packet>, items: Vec<Item>) {
+// TODO: Update xmpp-parsers to get this function for free on Hash.
+fn hash_to_hex(hash: &Hash) -> String {
+    let mut bytes = vec![];
+    for byte in hash.hash.iter() {
+        bytes.push(format!("{:02x}", byte));
+    }
+    bytes.join("")
+}
+
+pub(crate) fn handle_metadata_pubsub_event(from: &Jid, tx: &mut mpsc::UnboundedSender<Packet>, items: Vec<Item>) -> impl IntoIterator<Item = Event> {
+    let mut events = Vec::new();
     for item in items {
         let payload = item.payload.clone().unwrap();
         if payload.is("metadata", ns::AVATAR_METADATA) {
-            // TODO: do something with these metadata.
-            let _metadata = Metadata::try_from(payload).unwrap();
-            let iq = download_avatar(from);
-            tx.start_send(Packet::Stanza(iq.into())).unwrap();
+            let metadata = Metadata::try_from(payload).unwrap();
+            for info in metadata.infos {
+                let filename = format!("data/{}/{}", from, hash_to_hex(&*info.id));
+                let metadata = fs::metadata(filename.clone()).unwrap();
+                // TODO: Also check the hash.
+                if info.bytes as u64 == metadata.len() {
+                    events.push(Event::AvatarRetrieved(from.clone(), filename));
+                } else {
+                    let iq = download_avatar(from);
+                    tx.start_send(Packet::Stanza(iq.into())).unwrap();
+                }
+            }
         }
     }
+    events
 }
 
 fn download_avatar(from: &Jid) -> Iq {
@@ -66,7 +86,7 @@ pub(crate) fn handle_data_pubsub_iq<'a>(
 fn save_avatar(from: &Jid, id: String, data: &[u8]) -> io::Result<String> {
     let directory = format!("data/{}", from);
     let filename = format!("data/{}/{}", from, id);
-    create_dir_all(directory)?;
+    fs::create_dir_all(directory)?;
     let mut file = File::create(&filename)?;
     file.write_all(data)?;
     Ok(filename)

@@ -266,7 +266,8 @@ impl ClientBuilder<'_> {
                                     let event = PubSubEvent::try_from(child).unwrap();
                                     if let PubSubEvent::PublishedItems { node, items } = event {
                                         if node.0 == ns::AVATAR_METADATA {
-                                            avatar::handle_metadata_pubsub_event(&from, &mut sender_tx, items);
+                                            let new_events = avatar::handle_metadata_pubsub_event(&from, &mut sender_tx, items);
+                                            events.extend(new_events);
                                         } else if node.0 == ns::BOOKMARKS {
                                             // TODO: Check that our bare JID is the sender.
                                             assert_eq!(items.len(), 1);
