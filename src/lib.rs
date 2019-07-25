@@ -7,6 +7,8 @@
 #![deny(bare_trait_objects)]
 
 use std::str::FromStr;
+use std::rc::Rc;
+use std::cell::RefCell;
 use futures::{Future,Stream, Sink, sync::mpsc};
 use tokio_xmpp::{
     Client as TokioXmppClient,
@@ -14,6 +16,11 @@ use tokio_xmpp::{
     Packet,
 };
 use xmpp_parsers::{
+    bookmarks::{
+        Autojoin,
+        Conference as ConferenceBookmark,
+        Storage as Bookmarks,
+    },
     caps::{compute_disco, hash_caps, Caps},
     disco::{DiscoInfoQuery, DiscoInfoResult, Feature, Identity},
     hashes::Algo,
@@ -65,8 +72,10 @@ impl ToString for ClientType {
 pub enum ClientFeature {
     Avatars,
     ContactList,
+    JoinRooms,
 }
 
+#[derive(Debug)]
 pub enum Event {
     Online,
     Disconnected,
@@ -74,7 +83,9 @@ pub enum Event {
     ContactRemoved(RosterItem),
     ContactChanged(RosterItem),
     AvatarRetrieved(Jid, String),
+    OpenRoomBookmark(ConferenceBookmark),
     RoomJoined(Jid),
+    RoomLeft(Jid),
 }
 
 #[derive(Default)]
@@ -82,6 +93,7 @@ pub struct ClientBuilder<'a> {
     jid: &'a str,
     password: &'a str,
     website: String,
+    default_nick: String,
     disco: (ClientType, String),
     features: Vec<ClientFeature>,
 }
@@ -92,6 +104,7 @@ impl ClientBuilder<'_> {
             jid,
             password,
             website: String::from("https://gitlab.com/xmpp-rs/tokio-xmpp"),
+            default_nick: String::from("xmpp-rs"),
             disco: (ClientType::default(), String::from("tokio-xmpp")),
             features: vec![],
         }
@@ -104,6 +117,11 @@ impl ClientBuilder<'_> {
 
     pub fn set_website(mut self, url: &str) -> Self {
         self.website = String::from(url);
+        self
+    }
+
+    pub fn set_default_nick(mut self, nick: &str) -> Self {
+        self.default_nick = String::from(nick);
         self
     }
 
@@ -120,6 +138,9 @@ impl ClientBuilder<'_> {
         ];
         if self.features.contains(&ClientFeature::Avatars) {
             features.push(Feature::new(format!("{}+notify", ns::AVATAR_METADATA)));
+        }
+        if self.features.contains(&ClientFeature::JoinRooms) {
+            features.push(Feature::new(format!("{}+notify", ns::BOOKMARKS)));
         }
         DiscoInfoResult {
             node: None,
@@ -225,7 +246,7 @@ impl ClientBuilder<'_> {
                                 } else if payload.is("pubsub", ns::PUBSUB) {
                                     let pubsub = PubSub::try_from(payload).unwrap();
                                     let from =
-                                        iq.from.clone().unwrap_or(Jid::from_str(&jid).unwrap());
+                                        iq.from.clone().unwrap_or_else(|| Jid::from_str(&jid).unwrap());
                                     if let PubSub::Items(items) = pubsub {
                                         if items.node.0 == ns::AVATAR_DATA {
                                             let new_events = avatar::handle_data_pubsub_iq(&from, &items);
@@ -246,6 +267,21 @@ impl ClientBuilder<'_> {
                                     if let PubSubEvent::PublishedItems { node, items } = event {
                                         if node.0 == ns::AVATAR_METADATA {
                                             avatar::handle_metadata_pubsub_event(&from, &mut sender_tx, items);
+                                        } else if node.0 == ns::BOOKMARKS {
+                                            // TODO: Check that our bare JID is the sender.
+                                            assert_eq!(items.len(), 1);
+                                            let item = items.clone().pop().unwrap();
+                                            let payload = item.payload.clone().unwrap();
+                                            let bookmarks = match Bookmarks::try_from(payload) {
+                                                Ok(bookmarks) => bookmarks,
+                                                // XXX: Don’t panic…
+                                                Err(err) => panic!("… {}", err),
+                                            };
+                                            for bookmark in bookmarks.conferences {
+                                                if bookmark.autojoin == Autojoin::True {
+                                                    events.push(Event::OpenRoomBookmark(bookmark));
+                                                }
+                                            }
                                         }
                                     }
                                 }
@@ -295,38 +331,36 @@ impl ClientBuilder<'_> {
             .select(sender.into_stream())
             .filter_map(|x| x);
 
-        let agent = Agent { sender_tx };
+        let agent = Agent {
+            sender_tx,
+            default_nick: Rc::new(RefCell::new(self.default_nick)),
+        };
 
         (agent, future)
     }
 }
 
-pub struct Client {
-    sender_tx: mpsc::UnboundedSender<Packet>,
-    stream: Box<dyn Stream<Item = Event, Error = Error>>,
-}
-
-impl Client {
-    pub fn get_agent(&self) -> Agent {
-        Agent {
-            sender_tx: self.sender_tx.clone(),
-        }
-    }
-
-    pub fn listen(self) -> Box<dyn Stream<Item = Event, Error = Error>> {
-        self.stream
-    }
-}
-
 pub struct Agent {
     sender_tx: mpsc::UnboundedSender<Packet>,
+    default_nick: Rc<RefCell<String>>,
 }
 
 impl Agent {
-    pub fn join_room(&mut self, room: Jid, lang: &str, status: &str) {
+    pub fn join_room(&mut self, room: Jid, nick: Option<String>, password: Option<String>,
+                     lang: &str, status: &str) {
+        let mut muc = Muc::new();
+        if let Some(password) = password {
+            muc = muc.with_password(password);
+        }
+        // TODO: change room into a BareJid, which requires an update of jid, which requires an
+        // update of xmpp-parsers, which requires an update of tokio-xmpp…
+        assert_eq!(room.resource, None);
+
+        let nick = nick.unwrap_or_else(|| self.default_nick.borrow().clone());
+        let room_jid = room.with_resource(nick);
         let mut presence = Presence::new(PresenceType::None)
-            .with_to(Some(room))
-            .with_payloads(vec![Muc::new().into()]);
+            .with_to(Some(room_jid));
+        presence.add_payload(muc);
         presence.set_status(String::from(lang), String::from(status));
         let presence = presence.into();
         self.sender_tx.unbounded_send(Packet::Stanza(presence))

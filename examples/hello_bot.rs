@@ -7,32 +7,30 @@
 use futures::prelude::*;
 use std::env::args;
 use std::process::exit;
-use std::str::FromStr;
 use tokio::runtime::current_thread::Runtime;
-use xmpp_parsers::{Jid, message::MessageType};
+use xmpp_parsers::message::MessageType;
 use xmpp::{ClientBuilder, ClientType, ClientFeature, Event};
 
 fn main() {
     let args: Vec<String> = args().collect();
-    if args.len() != 5 {
-        println!("Usage: {} <jid> <password> <room JID> <nick>", args[0]);
+    if args.len() != 3 {
+        println!("Usage: {} <jid> <password>", args[0]);
         exit(1);
     }
     let jid = &args[1];
     let password = &args[2];
-    let room_jid = &args[3];
-    let nick: &str = &args[4];
 
     // tokio_core context
     let mut rt = Runtime::new().unwrap();
-
 
     // Client instance
     let (mut agent, stream) = ClientBuilder::new(jid, password)
         .set_client(ClientType::Bot, "xmpp-rs")
         .set_website("https://gitlab.com/xmpp-rs/xmpp-rs")
+        .set_default_nick("bot")
         .enable_feature(ClientFeature::Avatars)
         .enable_feature(ClientFeature::ContactList)
+        .enable_feature(ClientFeature::JoinRooms)
         .build()
         .unwrap();
 
@@ -42,25 +40,30 @@ fn main() {
         match evt {
             Event::Online => {
                 println!("Online.");
-                let room_jid = Jid::from_str(room_jid).unwrap().with_resource(nick);
-                agent.join_room(room_jid, "en", "Yet another bot!");
             },
             Event::Disconnected => {
                 println!("Disconnected.");
                 return Err(None);
             },
             Event::ContactAdded(contact) => {
-                println!("Contact {:?} added.", contact);
+                println!("Contact {} added.", contact.jid);
             },
             Event::ContactRemoved(contact) => {
-                println!("Contact {:?} removed.", contact);
+                println!("Contact {} removed.", contact.jid);
             },
             Event::ContactChanged(contact) => {
-                println!("Contact {:?} changed.", contact);
+                println!("Contact {} changed.", contact.jid);
+            },
+            Event::OpenRoomBookmark(bookmark) => {
+                println!("Joining room “{}” ({})…", bookmark.name, bookmark.jid);
+                agent.join_room(bookmark.jid, bookmark.nick, bookmark.password, "en", "Yet another bot!");
             },
             Event::RoomJoined(jid) => {
                 println!("Joined room {}.", jid);
                 agent.send_message(jid.into_bare_jid(), MessageType::Groupchat, "en", "Hello world!");
+            },
+            Event::RoomLeft(jid) => {
+                println!("Left room {}.", jid);
             },
             Event::AvatarRetrieved(jid, path) => {
                 println!("Received avatar for {} in {}.", jid, path);
