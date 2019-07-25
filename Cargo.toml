@@ -2,6 +2,7 @@
 name = "xmpp"
 version = "0.3.0"
 authors = ["Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>"]
+license = "MPL-2.0"
 edition = "2018"
 
 [dependencies]
