@@ -4,7 +4,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use futures::{Sink, sync::mpsc};
+use crate::Event;
+use futures::{sync::mpsc, Sink};
 use std::fs::{create_dir_all, File};
 use std::io::{self, Write};
 use tokio_xmpp::Packet;
@@ -19,7 +20,6 @@ use xmpp_parsers::{
     },
     Jid, TryFrom,
 };
-use crate::Event;
 
 pub(crate) fn handle_metadata_pubsub_event(from: &Jid, tx: &mut mpsc::UnboundedSender<Packet>, items: Vec<Item>) {
     for item in items {
@@ -43,16 +43,24 @@ fn download_avatar(from: &Jid) -> Iq {
     .with_to(from.clone())
 }
 
-pub(crate) fn handle_data_pubsub_iq(from: &Jid, tx: &mut mpsc::UnboundedSender<Event>, items: Items) {
-    for item in items.items {
-        if let Some(id) = item.id.clone() {
-            if let Some(payload) = &item.payload {
+// The return value of this function will be simply pushed to a Vec in the caller function,
+// so it makes no sense to allocate a Vec here - we're lazy instead
+pub(crate) fn handle_data_pubsub_iq<'a>(
+    from: &'a Jid,
+    items: &'a Items,
+) -> impl IntoIterator<Item = Event> + 'a {
+    let from = from.clone();
+    items
+        .items
+        .iter()
+        .filter_map(move |item| match (&item.id, &item.payload) {
+            (Some(id), Some(payload)) => {
                 let data = Data::try_from(payload.clone()).unwrap();
-                let filename = save_avatar(from, id.0, &data.data).unwrap();
-                tx.unbounded_send(Event::AvatarRetrieved(from.clone(), filename)).unwrap();
+                let filename = save_avatar(&from, id.0.clone(), &data.data).unwrap();
+                Some(Event::AvatarRetrieved(from.clone(), filename))
             }
-        }
-    }
+            _ => None,
+        })
 }
 
 fn save_avatar(from: &Jid, id: String, data: &[u8]) -> io::Result<String> {
