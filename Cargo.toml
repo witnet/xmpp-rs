@@ -2,6 +2,11 @@
 name = "xmpp"
 version = "0.3.0"
 authors = ["Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>"]
+description = "High-level XMPP library"
+homepage = "https://gitlab.com/linkmauve/xmpp-rs"
+repository = "https://gitlab.com/linkmauve/xmpp-rs"
+keywords = ["xmpp", "jabber", "chat", "messaging", "bot"]
+categories = ["network-programming"]
 license = "MPL-2.0"
 edition = "2018"
 
