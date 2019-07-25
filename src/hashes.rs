@@ -121,6 +121,29 @@ impl Hash {
     pub fn from_base64(algo: Algo, hash: &str) -> Result<Hash, Error> {
         Ok(Hash::new(algo, base64::decode(hash)?))
     }
+
+    /// Formats this hash into base64.
+    pub fn to_base64(&self) -> String {
+        base64::encode(&self.hash[..])
+    }
+
+    /// Formats this hash into hexadecimal.
+    pub fn to_hex(&self) -> String {
+        let mut bytes = vec![];
+        for byte in self.hash.iter() {
+            bytes.push(format!("{:02x}", byte));
+        }
+        bytes.join("")
+    }
+
+    /// Formats this hash into colon-separated hexadecimal.
+    pub fn to_colon_hex(&self) -> String {
+        let mut bytes = vec![];
+        for byte in self.hash.iter() {
+            bytes.push(format!("{:02x}", byte));
+        }
+        bytes.join(":")
+    }
 }
 
 /// Helper for parsing and serialising a SHA-1 attribute.
@@ -142,11 +165,7 @@ impl FromStr for Sha1HexAttribute {
 
 impl IntoAttributeValue for Sha1HexAttribute {
     fn into_attribute_value(self) -> Option<String> {
-        let mut bytes = vec![];
-        for byte in self.0.hash {
-            bytes.push(format!("{:02x}", byte));
-        }
-        Some(bytes.join(""))
+        Some(self.to_hex())
     }
 }
 
@@ -193,6 +212,15 @@ mod tests {
             hash.hash,
             base64::decode("2XarmwTlNxDAMkvymloX3S5+VbylNrJt/l5QyPa+YoU=").unwrap()
         );
+    }
+
+    #[test]
+    fn value_serialisation() {
+        let elem: Element = "<hash xmlns='urn:xmpp:hashes:2' algo='sha-256'>2XarmwTlNxDAMkvymloX3S5+VbylNrJt/l5QyPa+YoU=</hash>".parse().unwrap();
+        let hash = Hash::try_from(elem).unwrap();
+        assert_eq!(hash.to_base64(), "2XarmwTlNxDAMkvymloX3S5+VbylNrJt/l5QyPa+YoU=");
+        assert_eq!(hash.to_hex(), "d976ab9b04e53710c0324bf29a5a17dd2e7e55bca536b26dfe5e50c8f6be6285");
+        assert_eq!(hash.to_colon_hex(), "d9:76:ab:9b:04:e5:37:10:c0:32:4b:f2:9a:5a:17:dd:2e:7e:55:bc:a5:36:b2:6d:fe:5e:50:c8:f6:be:62:85");
     }
 
     #[test]
