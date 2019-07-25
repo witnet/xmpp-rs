@@ -4,6 +4,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#![deny(bare_trait_objects)]
+
 use std::str::FromStr;
 use futures::{Future,Stream, Sink, sync::mpsc};
 use tokio_xmpp::{
@@ -298,7 +300,7 @@ impl ClientBuilder<'_> {
 
 pub struct Client {
     sender_tx: mpsc::UnboundedSender<Packet>,
-    stream: Box<Stream<Item = Event, Error = Error>>,
+    stream: Box<dyn Stream<Item = Event, Error = Error>>,
 }
 
 impl Client {
@@ -308,7 +310,7 @@ impl Client {
         }
     }
 
-    pub fn listen(self) -> Box<Stream<Item = Event, Error = Error>> {
+    pub fn listen(self) -> Box<dyn Stream<Item = Event, Error = Error>> {
         self.stream
     }
 }
