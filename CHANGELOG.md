@@ -1,3 +1,7 @@
+Version 0.7.0, released 2019-07-26:
+  * Breaking
+    - Update minidom dependency to 0.11
+
 Version 0.6.2, released 2019-07-20:
   * Updates
     - Implement From<BareJid> and From<FullJid> for Jid
