@@ -36,7 +36,7 @@ impl NamespaceSet {
     pub fn declared_ns(&self) -> &BTreeMap<Option<String>, String> {
         &self.namespaces
     }
-    
+
     pub fn get(&self, prefix: &Option<String>) -> Option<String> {
         match self.namespaces.get(prefix) {
             Some(ns) => Some(ns.clone()),
