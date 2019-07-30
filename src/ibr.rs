@@ -120,23 +120,16 @@ mod tests {
     use super::*;
     use crate::util::compare_elements::NamespaceAwareCompare;
 
-    // TODO: These size tests are sensible to the size of HashMap, which recently grew of two
-    // pointers and is thus different on stable and nightly.  Let’s wait for this issue before
-    // attempting a fix:
-    // https://github.com/rust-lang/hashbrown/issues/69
-
     #[cfg(target_pointer_width = "32")]
     #[test]
-    #[ignore]
     fn test_size() {
-        assert_size!(Query, 88);
+        assert_size!(Query, 96);
     }
 
     #[cfg(target_pointer_width = "64")]
     #[test]
-    #[ignore]
     fn test_size() {
-        assert_size!(Query, 152);
+        assert_size!(Query, 168);
     }
 
     #[test]
