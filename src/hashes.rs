@@ -122,6 +122,16 @@ impl Hash {
         Ok(Hash::new(algo, base64::decode(hash)?))
     }
 
+    /// Like [new](#method.new) but takes hex-encoded data before decoding it.
+    pub fn from_hex(algo: Algo, hex: &str) -> Result<Hash, ParseIntError> {
+        let mut bytes = vec![];
+        for i in 0..hex.len() / 2 {
+            let byte = u8::from_str_radix(&hex[2 * i..2 * i + 2], 16)?;
+            bytes.push(byte);
+        }
+        Ok(Hash::new(algo, bytes))
+    }
+
     /// Formats this hash into base64.
     pub fn to_base64(&self) -> String {
         base64::encode(&self.hash[..])
@@ -154,12 +164,8 @@ impl FromStr for Sha1HexAttribute {
     type Err = ParseIntError;
 
     fn from_str(hex: &str) -> Result<Self, Self::Err> {
-        let mut bytes = vec![];
-        for i in 0..hex.len() / 2 {
-            let byte = u8::from_str_radix(&hex[2 * i..2 * i + 2], 16)?;
-            bytes.push(byte);
-        }
-        Ok(Sha1HexAttribute(Hash::new(Algo::Sha_1, bytes)))
+        let hash = Hash::from_hex(Algo::Sha_1, hex)?;
+        Ok(Sha1HexAttribute(hash))
     }
 }
 
