@@ -6,6 +6,7 @@ DATE  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
     * Breaking changes:
         - Stop reexporting TryFrom and TryInto, they are available in
           std::convert nowadays.
+        - Bind has been split into BindQuery and BindResponse.
     * Improvements:
         - New DOAP file for a machine-readable description of the features.
 

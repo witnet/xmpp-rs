@@ -17,7 +17,7 @@ use std::convert::TryFrom;
 ///
 /// See https://xmpp.org/rfcs/rfc6120.html#bind
 #[derive(Debug, Clone, PartialEq)]
-pub struct BindRequest {
+pub struct BindQuery {
     /// Requests this resource, the server may associate another one though.
     ///
     /// If this is None, we request no particular resource, and a random one
@@ -25,19 +25,19 @@ pub struct BindRequest {
     resource: Option<String>,
 }
 
-impl BindRequest {
+impl BindQuery {
     /// Creates a resource binding request.
-    pub fn new(resource: Option<String>) -> BindRequest {
-        BindRequest { resource }
+    pub fn new(resource: Option<String>) -> BindQuery {
+        BindQuery { resource }
     }
 }
 
-impl IqSetPayload for BindRequest {}
+impl IqSetPayload for BindQuery {}
 
-impl TryFrom<Element> for BindRequest {
+impl TryFrom<Element> for BindQuery {
     type Error = Error;
 
-    fn try_from(elem: Element) -> Result<BindRequest, Error> {
+    fn try_from(elem: Element) -> Result<BindQuery, Error> {
         check_self!(elem, "bind", BIND);
         check_no_attributes!(elem, "bind");
 
@@ -55,12 +55,12 @@ impl TryFrom<Element> for BindRequest {
             }
         }
 
-        Ok(BindRequest { resource })
+        Ok(BindQuery { resource })
     }
 }
 
-impl From<BindRequest> for Element {
-    fn from(bind: BindRequest) -> Element {
+impl From<BindQuery> for Element {
+    fn from(bind: BindQuery) -> Element {
         Element::builder("bind")
             .ns(ns::BIND)
             .append(match bind.resource {
@@ -129,14 +129,14 @@ mod tests {
     #[cfg(target_pointer_width = "32")]
     #[test]
     fn test_size() {
-        assert_size!(BindRequest, 12);
+        assert_size!(BindQuery, 12);
         assert_size!(BindResponse, 36);
     }
 
     #[cfg(target_pointer_width = "64")]
     #[test]
     fn test_size() {
-        assert_size!(BindRequest, 24);
+        assert_size!(BindQuery, 24);
         assert_size!(BindResponse, 72);
     }
 
@@ -145,13 +145,13 @@ mod tests {
         let elem: Element = "<bind xmlns='urn:ietf:params:xml:ns:xmpp-bind'/>"
             .parse()
             .unwrap();
-        let bind = BindRequest::try_from(elem).unwrap();
+        let bind = BindQuery::try_from(elem).unwrap();
         assert_eq!(bind.resource, None);
 
         let elem: Element = "<bind xmlns='urn:ietf:params:xml:ns:xmpp-bind'><resource>Hello™</resource></bind>"
             .parse()
             .unwrap();
-        let bind = BindRequest::try_from(elem).unwrap();
+        let bind = BindQuery::try_from(elem).unwrap();
         // FIXME: “™” should be resourceprep’d into “TM” here…
         //assert_eq!(bind.resource.unwrap(), "HelloTM");
         assert_eq!(bind.resource.unwrap(), "Hello™");
@@ -169,7 +169,7 @@ mod tests {
         let elem: Element = "<bind xmlns='urn:ietf:params:xml:ns:xmpp-bind'><resource attr='coucou'>resource</resource></bind>"
             .parse()
             .unwrap();
-        let error = BindRequest::try_from(elem).unwrap_err();
+        let error = BindQuery::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
@@ -179,7 +179,7 @@ mod tests {
         let elem: Element = "<bind xmlns='urn:ietf:params:xml:ns:xmpp-bind'><resource><hello-world/>resource</resource></bind>"
             .parse()
             .unwrap();
-        let error = BindRequest::try_from(elem).unwrap_err();
+        let error = BindQuery::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
             _ => panic!(),
