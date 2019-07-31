@@ -124,6 +124,9 @@ pub const MEDIA_ELEMENT: &str = "urn:xmpp:media-element";
 /// XEP-0224: Attention
 pub const ATTENTION: &str = "urn:xmpp:attention:0";
 
+/// XEP-0231: Bits of Binary
+pub const BOB: &str = "urn:xmpp:bob";
+
 /// XEP-0234: Jingle File Transfer
 pub const JINGLE_FT: &str = "urn:xmpp:jingle:apps:file-transfer:5";
 /// XEP-0234: Jingle File Transfer

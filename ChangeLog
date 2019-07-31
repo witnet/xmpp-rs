@@ -2,6 +2,7 @@ Version NEXT:
 DATE  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
     * New parsers/serialisers:
         - Message Carbons (XEP-0280)
+        - Bits of Binary (XEP-0231)
     * Breaking changes:
         - Stop reexporting TryFrom and TryInto, they are available in
           std::convert nowadays.

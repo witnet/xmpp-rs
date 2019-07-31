@@ -138,6 +138,9 @@ pub mod media_element;
 /// XEP-0224: Attention
 pub mod attention;
 
+/// XEP-0231: Bits of Binary
+pub mod bob;
+
 /// XEP-0234: Jingle File Transfer
 pub mod jingle_ft;
 
