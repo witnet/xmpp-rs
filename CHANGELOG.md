@@ -1,3 +1,6 @@
+Version XXX, released YYY:
+  * Changes
+    * Update to quick-xml 0.15
 Version 0.11.0, released 2019-06-14:
   * Breaking
     * Get rid of IntoElements, replace with `Into<Node>` and `<T: Into<Node> IntoIterator<Item = T>>`
