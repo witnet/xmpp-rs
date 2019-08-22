@@ -27,8 +27,10 @@ fn build_test_tree() -> Element {
     root
 }
 
+#[cfg(feature = "comments")]
 const COMMENT_TEST_STRING: &'static str = r#"<?xml version="1.0" encoding="utf-8"?><root><!--This is a child.--><child attr="val"><!--This is a grandchild.--><grandchild/></child></root>"#;
 
+#[cfg(feature = "comments")]
 fn build_comment_test_tree() -> Element {
     let mut root = Element::builder("root").build();
     root.append_comment_node("This is a child.");
@@ -211,12 +213,14 @@ fn namespace_inherited_prefixed2() {
     assert_eq!(child.ns(), Some("jabber:client".to_owned()));
 }
 
+#[cfg(feature = "comments")]
 #[test]
 fn read_comments() {
     let mut reader = Reader::from_str(COMMENT_TEST_STRING);
     assert_eq!(Element::from_reader(&mut reader).unwrap(), build_comment_test_tree());
 }
 
+#[cfg(feature = "comments")]
 #[test]
 fn write_comments() {
     let root = build_comment_test_tree();

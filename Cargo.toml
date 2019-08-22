@@ -23,3 +23,7 @@ gitlab = { repository = "lumi/minidom-rs" }
 quick-xml = "0.15"
 failure = "0.1.1"
 failure_derive = "0.1.1"
+
+[features]
+default = ["comments"]
+comments = []

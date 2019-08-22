@@ -283,9 +283,14 @@ impl Element {
                 Event::Eof => {
                     return Err(Error::EndOfDocument);
                 },
+                #[cfg(not(feature = "comments"))]
+                Event::Comment { .. } => {
+                    return Err(Error::CommentsDisabled);
+                }
+                #[cfg(feature = "comments")]
+                Event::Comment { .. } => (),
                 Event::Text { .. } |
                 Event::End { .. } |
-                Event::Comment { .. } |
                 Event::CData { .. } |
                 Event::Decl { .. } |
                 Event::PI { .. } |
@@ -361,6 +366,9 @@ impl Element {
                 Event::Eof => {
                     break;
                 },
+                #[cfg(not(feature = "comments"))]
+                Event::Comment(_) => return Err(Error::CommentsDisabled),
+                #[cfg(feature = "comments")]
                 Event::Comment(s) => {
                     let comment = reader.decode(&s).into_owned();
                     if comment != "" {
@@ -569,6 +577,7 @@ impl Element {
     ///
     /// elem.append_comment_node("comment");
     /// ```
+    #[cfg(feature = "comments")]
     pub fn append_comment_node<S: Into<String>>(&mut self, child: S) {
         self.children.push(Node::Comment(child.into()));
     }
