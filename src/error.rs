@@ -28,6 +28,11 @@ pub enum Error {
     /// An error which is returned when an elemet's name contains more than one colon
     #[fail(display = "the XML element is invalid")]
     InvalidElement,
+
+    /// An error which is returned when a comment is to be parsed by minidom
+    #[cfg(not(comments))]
+    #[fail(display = "a comment has been found even though comments are disabled by feature")]
+    CommentsDisabled,
 }
 
 impl From<::quick_xml::Error> for Error {

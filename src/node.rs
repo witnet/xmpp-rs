@@ -16,6 +16,7 @@ pub enum Node {
     Element(Element),
     /// A text node.
     Text(String),
+    #[cfg(feature = "comments")]
     /// A comment node.
     Comment(String),
 }
@@ -39,6 +40,7 @@ impl Node {
         match *self {
             Node::Element(ref e) => Some(e),
             Node::Text(_) => None,
+            #[cfg(feature = "comments")]
             Node::Comment(_) => None,
         }
     }
@@ -61,6 +63,7 @@ impl Node {
         match *self {
             Node::Element(ref mut e) => Some(e),
             Node::Text(_) => None,
+            #[cfg(feature = "comments")]
             Node::Comment(_) => None,
         }
     }
@@ -83,6 +86,7 @@ impl Node {
         match self {
             Node::Element(e) => Some(e),
             Node::Text(_) => None,
+            #[cfg(feature = "comments")]
             Node::Comment(_) => None,
         }
     }
@@ -105,6 +109,7 @@ impl Node {
         match *self {
             Node::Element(_) => None,
             Node::Text(ref s) => Some(s),
+            #[cfg(feature = "comments")]
             Node::Comment(_) => None,
         }
     }
@@ -133,6 +138,7 @@ impl Node {
         match *self {
             Node::Element(_) => None,
             Node::Text(ref mut s) => Some(s),
+            #[cfg(feature = "comments")]
             Node::Comment(_) => None,
         }
     }
@@ -155,6 +161,7 @@ impl Node {
         match self {
             Node::Element(_) => None,
             Node::Text(s) => Some(s),
+            #[cfg(feature = "comments")]
             Node::Comment(_) => None,
         }
     }
@@ -166,6 +173,7 @@ impl Node {
             Node::Text(ref s) => {
                 writer.write_event(Event::Text(BytesText::from_plain_str(s)))?;
             },
+            #[cfg(feature = "comments")]
             Node::Comment(ref s) => {
                 writer.write_event(Event::Comment(BytesText::from_plain_str(s)))?;
             },
