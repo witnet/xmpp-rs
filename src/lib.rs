@@ -75,6 +75,9 @@ pub mod rsm;
 /// XEP-0060: Publish-Subscribe
 pub mod pubsub;
 
+/// XEP-0071: XHTML-IM
+pub mod xhtml;
+
 /// XEP-0077: In-Band Registration
 pub mod ibr;
 

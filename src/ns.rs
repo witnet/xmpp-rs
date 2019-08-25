@@ -53,6 +53,11 @@ pub const PUBSUB_EVENT: &str = "http://jabber.org/protocol/pubsub#event";
 /// XEP-0060: Publish-Subscribe
 pub const PUBSUB_OWNER: &str = "http://jabber.org/protocol/pubsub#owner";
 
+/// XEP-0071: XHTML-IM
+pub const XHTML_IM: &str = "http://jabber.org/protocol/xhtml-im";
+/// XEP-0071: XHTML-IM
+pub const XHTML: &str = "http://www.w3.org/1999/xhtml";
+
 /// XEP-0077: In-Band Registration
 pub const REGISTER: &str = "jabber:iq:register";
 
