@@ -469,4 +469,19 @@ mod tests {
         let html = xhtml_im.to_html();
         assert_eq!(html, "<p>Hello <strong>world</strong>!</p>");
     }
+
+    #[test]
+    fn generate_tree() {
+        let world = "world".to_string();
+
+        Body { style: vec![], xml_lang: Some("en".to_string()), children: vec![
+            Child::Tag(Tag::P { style: vec![], children: vec![
+                Child::Text("Hello ".to_string()),
+                Child::Tag(Tag::Strong { children: vec![
+                    Child::Text(world),
+                ] }),
+                Child::Text("!".to_string()),
+            ] }),
+        ] };
+    }
 }
