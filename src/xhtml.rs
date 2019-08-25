@@ -18,7 +18,7 @@ type Lang = String;
 #[derive(Debug, Clone)]
 pub struct XhtmlIm {
     /// Map of language to body element.
-    bodies: HashMap<Lang, Tag>,
+    bodies: HashMap<Lang, Body>,
 }
 
 impl XhtmlIm {
@@ -27,21 +27,40 @@ impl XhtmlIm {
         let mut html = Vec::new();
         // TODO: use the best language instead.
         for (lang, body) in self.bodies {
-            if let Tag::Body { style: _, xml_lang, children } = body {
-                if lang.is_empty() {
-                    assert!(xml_lang.is_none());
-                } else {
-                    assert_eq!(Some(lang), xml_lang);
-                }
-                for tag in children {
-                    html.push(tag.to_html());
-                }
-                break;
+            if lang.is_empty() {
+                assert!(body.xml_lang.is_none());
             } else {
-                unreachable!();
+                assert_eq!(Some(lang), body.xml_lang);
             }
+            for tag in body.children {
+                html.push(tag.to_html());
+            }
+            break;
         }
         html.concat()
+    }
+
+    /// Removes all unknown elements.
+    pub fn flatten(self) -> XhtmlIm {
+        let mut bodies = HashMap::new();
+        for (lang, body) in self.bodies {
+            let children = body.children.into_iter().fold(vec![], |mut acc, child| {
+                match child {
+                    Child::Tag(Tag::Unknown(children)) => acc.extend(children),
+                    any => acc.push(any),
+                }
+                acc
+            });
+            let body = Body {
+                style: body.style,
+                xml_lang: body.xml_lang,
+                children,
+            };
+            bodies.insert(lang, body);
+        }
+        XhtmlIm {
+            bodies,
+        }
     }
 }
 
@@ -62,7 +81,7 @@ impl TryFrom<Element> for XhtmlIm {
                     Some(lang) => lang,
                     None => "",
                 }.to_string();
-                let body = Tag::try_from(child)?;
+                let body = Body::try_from(child)?;
                 match bodies.insert(lang, body) {
                     None => (),
                     Some(_) => return Err(Error::ParseError("Two identical language bodies found in XHTML-IM."))
@@ -81,16 +100,12 @@ impl From<XhtmlIm> for Element {
         Element::builder("html")
             .ns(ns::XHTML_IM)
             .append(wrapper.bodies.into_iter().map(|(ref lang, ref body)| {
-                if let Tag::Body { style, xml_lang, children } = body {
-                    assert_eq!(Some(lang), xml_lang.as_ref());
-                    Element::builder("body")
-                        .ns(ns::XHTML_IM)
-                        .attr("style", get_style_string(style.clone()))
-                        .attr("xml:lang", xml_lang.clone())
-                        .append(children_to_nodes(children.clone()))
-                } else {
-                    unreachable!();
-                }
+                assert_eq!(Some(lang), body.xml_lang.as_ref());
+                Element::builder("body")
+                    .ns(ns::XHTML_IM)
+                    .attr("style", get_style_string(body.style.clone()))
+                    .attr("xml:lang", body.xml_lang.clone())
+                    .append(children_to_nodes(body.children.clone()))
             }).collect::<Vec<_>>())
             .build()
     }
@@ -131,10 +146,44 @@ fn get_style_string(style: Css) -> Option<String> {
 }
 
 #[derive(Debug, Clone)]
+struct Body {
+    style: Css,
+    xml_lang: Option<String>,
+    children: Vec<Child>,
+}
+
+impl TryFrom<Element> for Body {
+    type Error = Error;
+
+    fn try_from(elem: Element) -> Result<Body, Error> {
+        let mut children = vec![];
+        for child in elem.nodes() {
+            match child {
+                Node::Element(child) => children.push(Child::Tag(Tag::try_from(child.clone())?)),
+                Node::Text(text) => children.push(Child::Text(text.clone())),
+                Node::Comment(_) => unimplemented!() // XXX: remove!
+            }
+        }
+
+        Ok(Body { style: parse_css(elem.attr("style")), xml_lang: elem.attr("xml:lang").map(|xml_lang| xml_lang.to_string()), children })
+    }
+}
+
+impl From<Body> for Element {
+    fn from(body: Body) -> Element {
+        Element::builder("body")
+            .ns(ns::XHTML)
+            .attr("style", get_style_string(body.style))
+            .attr("xml:lang", body.xml_lang)
+            .append(children_to_nodes(body.children))
+            .build()
+    }
+}
+
+#[derive(Debug, Clone)]
 enum Tag {
     A { href: Option<String>, style: Css, type_: Option<String>, children: Vec<Child> },
     Blockquote { style: Css, children: Vec<Child> },
-    Body { style: Css, xml_lang: Option<String>, children: Vec<Child> },
     Br,
     Cite { style: Css, children: Vec<Child> },
     Em { children: Vec<Child> },
@@ -160,10 +209,6 @@ impl Tag {
             Tag::Blockquote { style, children } => {
                 let style = write_attr(get_style_string(style), "style");
                 format!("<blockquote{}>{}</blockquote>", style, children_to_html(children))
-            },
-            Tag::Body { style, xml_lang: _, children } => {
-                let style = write_attr(get_style_string(style), "style");
-                format!("<body{}>{}</body>", style, children_to_html(children))
             },
             Tag::Br => String::from("<br>"),
             Tag::Cite { style, children } => {
@@ -218,7 +263,6 @@ impl TryFrom<Element> for Tag {
         Ok(match elem.name() {
             "a" => Tag::A { href: elem.attr("href").map(|href| href.to_string()), style: parse_css(elem.attr("style")), type_: elem.attr("type").map(|type_| type_.to_string()), children },
             "blockquote" => Tag::Blockquote { style: parse_css(elem.attr("style")), children },
-            "body" => Tag::Body { style: parse_css(elem.attr("style")), xml_lang: elem.attr("xml:lang").map(|xml_lang| xml_lang.to_string()), children },
             "br" => Tag::Br,
             "cite" => Tag::Cite { style: parse_css(elem.attr("style")), children },
             "em" => Tag::Em { children },
@@ -253,16 +297,6 @@ impl From<Tag> for Element {
             Tag::Blockquote { style, children } => ("blockquote", match get_style_string(style) {
                 Some(style) => vec![("style", style)],
                 None => vec![],
-            }, children),
-            Tag::Body { style, xml_lang, children } => ("body", {
-                let mut attrs = vec![];
-                if let Some(style) = get_style_string(style) {
-                    attrs.push(("style", style));
-                }
-                if let Some(xml_lang) = xml_lang {
-                    attrs.push(("xml:lang", xml_lang));
-                }
-                attrs
             }, children),
             Tag::Br => ("br", vec![], vec![]),
             Tag::Cite { style, children } => ("cite", match get_style_string(style) {
@@ -405,26 +439,17 @@ mod tests {
         let elem: Element = "<body xmlns='http://www.w3.org/1999/xhtml'/>"
             .parse()
             .unwrap();
-        let body = Tag::try_from(elem).unwrap();
-        match body {
-            Tag::Body { style: _, xml_lang: _, children } => assert_eq!(children.len(), 0),
-            _ => panic!(),
-        }
+        let body = Body::try_from(elem).unwrap();
+        assert_eq!(body.children.len(), 0);
 
         let elem: Element = "<body xmlns='http://www.w3.org/1999/xhtml'><p>Hello world!</p></body>"
             .parse()
             .unwrap();
-        let body = Tag::try_from(elem).unwrap();
-        let mut children = match body {
-            Tag::Body { style, xml_lang, children } => {
-                assert_eq!(style.len(), 0);
-                assert_eq!(xml_lang, None);
-                assert_eq!(children.len(), 1);
-                children
-            },
-            _ => panic!(),
-        };
-        let p = match children.pop() {
+        let mut body = Body::try_from(elem).unwrap();
+        assert_eq!(body.style.len(), 0);
+        assert_eq!(body.xml_lang, None);
+        assert_eq!(body.children.len(), 1);
+        let p = match body.children.pop() {
             Some(Child::Tag(tag)) => tag,
             _ => panic!(),
         };
