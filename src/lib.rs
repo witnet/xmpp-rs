@@ -92,6 +92,12 @@ impl From<FullJid> for Jid {
     }
 }
 
+impl fmt::Display for Jid {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        fmt.write_str(String::from(self.clone()).as_ref())
+    }
+}
+
 impl Jid {
     /// The node part of the Jabber ID, if it exists, else None.
     pub fn node(self) -> Option<String> {
@@ -694,6 +700,14 @@ mod tests {
         assert_eq!(FullJid::from_str("@b"), Err(JidParseError::EmptyNode));
         assert_eq!(FullJid::from_str("b/"), Err(JidParseError::EmptyResource));
         assert_eq!(FullJid::from_str("a@b"), Err(JidParseError::NoResource));
+    }
+
+    #[test]
+    fn display_jids() {
+      assert_eq!(format!("{}", FullJid::new("a", "b", "c")), String::from("a@b/c"));
+      assert_eq!(format!("{}", BareJid::new("a", "b")), String::from("a@b"));
+      assert_eq!(format!("{}", Jid::Full(FullJid::new("a", "b", "c"))), String::from("a@b/c"));
+      assert_eq!(format!("{}", Jid::Bare(BareJid::new("a", "b"))), String::from("a@b"));
     }
 
     #[cfg(feature = "minidom")]
