@@ -11,7 +11,7 @@ Contact
 
 There is an XMPP MUC for the discussion of this library, feel free to join! :)
 
-[xmpp-rs@muc.linkmauve.fr](xmpp:xmpp-rs@muc.linkmauve.fr?join)
+[chat@xmpp.rs](xmpp:chat@xmpp.rs?join)
 
 Can I use it yet?
 -----------------
