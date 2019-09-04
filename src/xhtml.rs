@@ -41,7 +41,7 @@ impl XhtmlIm {
     }
 
     /// Removes all unknown elements.
-    pub fn flatten(self) -> XhtmlIm {
+    fn flatten(self) -> XhtmlIm {
         let mut bodies = HashMap::new();
         for (lang, body) in self.bodies {
             let children = body.children.into_iter().fold(vec![], |mut acc, child| {
@@ -91,7 +91,7 @@ impl TryFrom<Element> for XhtmlIm {
             }
         }
 
-        Ok(XhtmlIm { bodies })
+        Ok(XhtmlIm { bodies }.flatten())
     }
 }
 
@@ -237,7 +237,7 @@ impl Tag {
                 let style = write_attr(get_style_string(style), "style");
                 format!("<span{}>{}</span>", style, children_to_html(children))
             }
-            Tag::Strong { children } => format!("<strong>{}</strong>", children.into_iter().map(|child| child.to_html()).collect::<Vec<_>>().join("")),
+            Tag::Strong { children } => format!("<strong>{}</strong>", children_to_html(children)),
             Tag::Ul { style, children } => {
                 let style = write_attr(get_style_string(style), "style");
                 format!("<ul{}>{}</ul>", style, children_to_html(children))
