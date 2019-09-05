@@ -102,6 +102,9 @@ pub mod component;
 /// XEP-0115: Entity Capabilities
 pub mod caps;
 
+/// XEP-0118: User Tune
+pub mod tune;
+
 /// XEP-0157: Contact Addresses for XMPP Services
 pub mod server_info;
 

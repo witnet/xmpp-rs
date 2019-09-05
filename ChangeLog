@@ -2,6 +2,7 @@ Version NEXT:
 DATE  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
     * New parsers/serialisers:
         - XHTML-IM (XEP-0071)
+        - User Tune (XEP-0118)
         - Bits of Binary (XEP-0231)
         - Message Carbons (XEP-0280)
     * Breaking changes:

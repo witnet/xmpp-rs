@@ -84,6 +84,9 @@ pub const COMPONENT: &str = "jabber:component:accept";
 /// XEP-0115: Entity Capabilities
 pub const CAPS: &str = "http://jabber.org/protocol/caps";
 
+/// XEP-0118: User Tune
+pub const TUNE: &str = "http://jabber.org/protocol/tune";
+
 /// XEP-0157: Contact Addresses for XMPP Services
 pub const SERVER_INFO: &str = "http://jabber.org/network/serverinfo";
 
