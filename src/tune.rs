@@ -169,13 +169,27 @@ mod tests {
     #[test]
     #[ignore]
     fn test_size() {
-        assert_size!(Tune, 0);
+        assert_size!(Tune, 64);
+        assert_size!(Artist, 12);
+        assert_size!(Length, 2);
+        assert_size!(Rating, 1);
+        assert_size!(Source, 12);
+        assert_size!(Title, 12);
+        assert_size!(Track, 12);
+        assert_size!(Uri, 12);
     }
 
     #[cfg(target_pointer_width = "64")]
     #[test]
     fn test_size() {
         assert_size!(Tune, 128);
+        assert_size!(Artist, 24);
+        assert_size!(Length, 2);
+        assert_size!(Rating, 1);
+        assert_size!(Source, 24);
+        assert_size!(Title, 24);
+        assert_size!(Track, 24);
+        assert_size!(Uri, 24);
     }
 
     #[test]
