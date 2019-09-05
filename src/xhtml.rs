@@ -241,7 +241,7 @@ impl Tag {
                 let style = write_attr(get_style_string(style), "style");
                 format!("<ul{}>{}</ul>", style, children_to_html(children))
             }
-            Tag::Unknown(children) => panic!("No unknown element should be present in XHTML-IM after parsing."),
+            Tag::Unknown(_) => panic!("No unknown element should be present in XHTML-IM after parsing."),
         }
     }
 }
@@ -334,7 +334,7 @@ impl From<Tag> for Element {
                 Some(style) => vec![("style", style)],
                 None => vec![],
             }, children),
-            Tag::Unknown(children) => panic!("No unknown element should be present in XHTML-IM after parsing."),
+            Tag::Unknown(_) => panic!("No unknown element should be present in XHTML-IM after parsing."),
         };
         let mut builder = Element::builder(name)
             .ns(ns::XHTML)
