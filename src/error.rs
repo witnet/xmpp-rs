@@ -3,36 +3,44 @@
 use std::convert::From;
 
 /// Our main error type.
-#[derive(Debug, Fail)]
+#[derive(Debug)]
 pub enum Error {
     /// An error from quick_xml.
-    #[fail(display = "XML error: {}", _0)]
-    XmlError(#[cause] ::quick_xml::Error),
+    XmlError(::quick_xml::Error),
 
     /// An UTF-8 conversion error.
-    #[fail(display = "UTF-8 error: {}", _0)]
-    Utf8Error(#[cause] ::std::str::Utf8Error),
+    Utf8Error(::std::str::Utf8Error),
 
     /// An I/O error, from std::io.
-    #[fail(display = "IO error: {}", _0)]
-    IoError(#[cause] ::std::io::Error),
+    IoError(::std::io::Error),
 
     /// An error which is returned when the end of the document was reached prematurely.
-    #[fail(display = "the end of the document has been reached prematurely")]
     EndOfDocument,
 
     /// An error which is returned when an element is closed when it shouldn't be
-    #[fail(display = "the XML is invalid, an element was wrongly closed")]
     InvalidElementClosed,
 
     /// An error which is returned when an elemet's name contains more than one colon
-    #[fail(display = "the XML element is invalid")]
     InvalidElement,
 
     /// An error which is returned when a comment is to be parsed by minidom
     #[cfg(not(comments))]
-    #[fail(display = "a comment has been found even though comments are disabled by feature")]
     CommentsDisabled,
+}
+
+impl std::fmt::Display for Error {
+    fn fmt(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            Error::XmlError(e) => write!(fmt, "XML error: {}", e),
+            Error::Utf8Error(e) => write!(fmt, "UTF-8 error: {}", e),
+            Error::IoError(e) => write!(fmt, "IO error: {}", e),
+            Error::EndOfDocument => write!(fmt, "the end of the document has been reached prematurely"),
+            Error::InvalidElementClosed => write!(fmt, "the XML is invalid, an element was wrongly closed"),
+            Error::InvalidElement => write!(fmt, "the XML element is invalid"),
+            #[cfg(not(comments))]
+            Error::CommentsDisabled => write!(fmt, "a comment has been found even though comments are disabled by feature"),
+        }
+    }
 }
 
 impl From<::quick_xml::Error> for Error {
