@@ -52,9 +52,8 @@ impl XhtmlIm {
                 acc
             });
             let body = Body {
-                style: body.style,
-                xml_lang: body.xml_lang,
                 children,
+                ..body
             };
             bodies.insert(lang, body);
         }
@@ -100,12 +99,12 @@ impl From<XhtmlIm> for Element {
         Element::builder("html")
             .ns(ns::XHTML_IM)
             .append(wrapper.bodies.into_iter().map(|(ref lang, ref body)| {
-                assert_eq!(Some(lang), body.xml_lang.as_ref());
-                Element::builder("body")
-                    .ns(ns::XHTML_IM)
-                    .attr("style", get_style_string(body.style.clone()))
-                    .attr("xml:lang", body.xml_lang.clone())
-                    .append(children_to_nodes(body.children.clone()))
+                if lang.is_empty() {
+                    assert!(body.xml_lang.is_none());
+                } else {
+                    assert_eq!(Some(lang), body.xml_lang.as_ref());
+                }
+                Element::from(body.clone())
             }).collect::<Vec<_>>())
             .build()
     }
@@ -473,9 +472,13 @@ mod tests {
         let elem: Element = "<html xmlns='http://jabber.org/protocol/xhtml-im'><body xmlns='http://www.w3.org/1999/xhtml'><coucou>Hello world!</coucou></body></html>"
             .parse()
             .unwrap();
-        let xhtml_im = XhtmlIm::try_from(elem).unwrap();
-        let html = xhtml_im.to_html();
+        let parsed = XhtmlIm::try_from(elem).unwrap();
+        let parsed2 = parsed.clone();
+        let html = parsed.to_html();
         assert_eq!(html, "Hello world!");
+
+        let elem = Element::from(parsed2);
+        assert_eq!(String::from(&elem), "<?xml version=\"1.0\" encoding=\"utf-8\"?><html xmlns=\"http://jabber.org/protocol/xhtml-im\"><body xmlns=\"http://www.w3.org/1999/xhtml\">Hello world!</body></html>");
     }
 
     #[test]
