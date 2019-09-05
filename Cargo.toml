@@ -20,7 +20,7 @@ license = "MIT"
 gitlab = { repository = "lumi/minidom-rs" }
 
 [dependencies]
-quick-xml = "0.15"
+quick-xml = "0.16"
 
 [features]
 default = ["comments"]

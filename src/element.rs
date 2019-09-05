@@ -357,7 +357,7 @@ impl Element {
                     }
                 },
                 Event::CData(s) => {
-                    let text = reader.decode(&s).into_owned();
+                    let text = reader.decode(&s)?.to_owned();
                     if text != "" {
                         let current_elem = stack.last_mut().unwrap();
                         current_elem.append_text_node(text);
@@ -370,7 +370,7 @@ impl Element {
                 Event::Comment(_) => return Err(Error::CommentsDisabled),
                 #[cfg(feature = "comments")]
                 Event::Comment(s) => {
-                    let comment = reader.decode(&s).into_owned();
+                    let comment = reader.decode(&s)?.to_owned();
                     if comment != "" {
                         let current_elem = stack.last_mut().unwrap();
                         current_elem.append_comment_node(comment);
