@@ -302,7 +302,11 @@ mod tests {
         let elem: Element = "<text xmlns='http://jabber.org/protocol/mood'>Yay!</text>"
             .parse()
             .unwrap();
+        let elem2 = elem.clone();
         let text = Text::try_from(elem).unwrap();
         assert_eq!(text.0, String::from("Yay!"));
+
+        let elem3 = text.into();
+        assert_eq!(elem2, elem3);
     }
 }

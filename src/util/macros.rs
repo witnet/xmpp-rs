@@ -410,9 +410,7 @@ macro_rules! generate_id {
 
 macro_rules! generate_elem_id {
     ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident) => (
-        $(#[$meta])*
-        #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-        pub struct $elem(pub String);
+        generate_elem_id!($(#[$meta])* $elem, $name, $ns, String);
         impl ::std::str::FromStr for $elem {
             type Err = crate::util::error::Error;
             fn from_str(s: &str) -> Result<$elem, crate::util::error::Error> {
@@ -420,6 +418,11 @@ macro_rules! generate_elem_id {
                 Ok($elem(String::from(s)))
             }
         }
+    );
+    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident, $type:ty) => (
+        $(#[$meta])*
+        #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+        pub struct $elem(pub $type);
         impl ::std::convert::TryFrom<::minidom::Element> for $elem {
             type Error = crate::util::error::Error;
             fn try_from(elem: ::minidom::Element) -> Result<$elem, crate::util::error::Error> {
@@ -427,14 +430,14 @@ macro_rules! generate_elem_id {
                 check_no_children!(elem, $name);
                 check_no_attributes!(elem, $name);
                 // TODO: add a way to parse that differently when needed.
-                Ok($elem(elem.text()))
+                Ok($elem(elem.text().parse()?))
             }
         }
         impl From<$elem> for ::minidom::Element {
             fn from(elem: $elem) -> ::minidom::Element {
                 ::minidom::Element::builder($name)
                     .ns(crate::ns::$ns)
-                    .append(elem.0)
+                    .append(elem.0.to_string())
                     .build()
             }
         }

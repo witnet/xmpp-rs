@@ -511,8 +511,12 @@ mod tests {
             <reason xmlns='http://jabber.org/protocol/muc#user'>Reason</reason>"
             .parse()
             .unwrap();
+        let elem2 = elem.clone();
         let reason = Reason::try_from(elem).unwrap();
         assert_eq!(reason.0, "Reason".to_owned());
+
+        let elem3 = reason.into();
+        assert_eq!(elem2, elem3);
     }
 
     #[cfg(not(feature = "disable-validation"))]
