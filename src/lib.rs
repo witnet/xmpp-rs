@@ -14,32 +14,36 @@
 //!
 //! For usage, check the documentation on the `Jid` struct.
 
-#[macro_use]
-extern crate failure_derive;
-
 use std::convert::Into;
 use std::fmt;
 use std::str::FromStr;
 
 /// An error that signifies that a `Jid` cannot be parsed from a string.
-#[derive(Debug, Clone, PartialEq, Eq, Fail)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum JidParseError {
     /// Happens when there is no domain, that is either the string is empty,
     /// starts with a /, or contains the @/ sequence.
-    #[fail(display = "no domain found in this JID")]
     NoDomain,
 
     /// Happens when there is no resource, that is string contains no /.
-    #[fail(display = "no resource found in this full JID")]
     NoResource,
 
     /// Happens when the node is empty, that is the string starts with a @.
-    #[fail(display = "nodepart empty despite the presence of a @")]
     EmptyNode,
 
     /// Happens when the resource is empty, that is the string ends with a /.
-    #[fail(display = "resource empty despite the presence of a /")]
     EmptyResource,
+}
+
+impl fmt::Display for JidParseError {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        write!(fmt, "{}", match self {
+            JidParseError::NoDomain => "no domain found in this JID",
+            JidParseError::NoResource => "no resource found in this full JID",
+            JidParseError::EmptyNode => "nodepart empty despite the presence of a @",
+            JidParseError::EmptyResource => "resource empty despite the presence of a /",
+        })
+    }
 }
 
 /// An enum representing a Jabber ID. It can be either a `FullJid` or a `BareJid`.
