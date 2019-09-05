@@ -11,7 +11,7 @@ use xmpp_parsers::Error as ParsersError;
 use xmpp_parsers::sasl::DefinedCondition as SaslDefinedCondition;
 
 /// Top-level error type
-#[derive(Debug, Error)]
+#[derive(Debug)]
 pub enum Error {
     /// I/O error
     Io(IoError),
@@ -32,8 +32,53 @@ pub enum Error {
     InvalidState,
 }
 
+impl fmt::Display for Error {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Error::Io(e) => write!(fmt, "IO error: {}", e),
+            Error::Connection(e) => write!(fmt, "connection error: {}", e),
+            Error::Idna => write!(fmt, "IDNA error"),
+            Error::Protocol(e) => write!(fmt, "protocol error: {}", e),
+            Error::Auth(e) => write!(fmt, "authentication error: {}", e),
+            Error::Tls(e) => write!(fmt, "TLS error: {}", e),
+            Error::Disconnected => write!(fmt, "disconnected"),
+            Error::InvalidState => write!(fmt, "invalid state"),
+        }
+    }
+}
+
+impl From<IoError> for Error {
+    fn from(e: IoError) -> Self {
+        Error::Io(e)
+    }
+}
+
+impl From<ConnecterError> for Error {
+    fn from(e: ConnecterError) -> Self {
+        Error::Connection(e)
+    }
+}
+
+impl From<ProtocolError> for Error {
+    fn from(e: ProtocolError) -> Self {
+        Error::Protocol(e)
+    }
+}
+
+impl From<AuthError> for Error {
+    fn from(e: AuthError) -> Self {
+        Error::Auth(e)
+    }
+}
+
+impl From<TlsError> for Error {
+    fn from(e: TlsError) -> Self {
+        Error::Tls(e)
+    }
+}
+
 /// Causes for stream parsing errors
-#[derive(Debug, Error)]
+#[derive(Debug)]
 pub enum ParserError {
     /// Encoding error
     Utf8(Utf8Error),
@@ -42,7 +87,24 @@ pub enum ParserError {
     /// Illegal `</>`
     ShortTag,
     /// Required by `impl Decoder`
-    IO(IoError),
+    Io(IoError),
+}
+
+impl fmt::Display for ParserError {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            ParserError::Utf8(e) => write!(fmt, "UTF-8 error: {}", e),
+            ParserError::Parse(e) => write!(fmt, "parse error: {}", e),
+            ParserError::ShortTag => write!(fmt, "short tag"),
+            ParserError::Io(e) => write!(fmt, "IO error: {}", e),
+        }
+    }
+}
+
+impl From<IoError> for ParserError {
+    fn from(e: IoError) -> Self {
+        ParserError::Io(e)
+    }
 }
 
 impl From<ParserError> for Error {
@@ -71,12 +133,11 @@ impl fmt::Display for ParseError {
 }
 
 /// XMPP protocol-level error
-#[derive(Debug, Error)]
+#[derive(Debug)]
 pub enum ProtocolError {
     /// XML parser error
     Parser(ParserError),
     /// Error with expected stanza schema
-    #[error(non_std)]
     Parsers(ParsersError),
     /// No TLS available
     NoTls,
@@ -92,20 +153,55 @@ pub enum ProtocolError {
     InvalidStreamStart,
 }
 
+impl fmt::Display for ProtocolError {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            ProtocolError::Parser(e) => write!(fmt, "XML parser error: {}", e),
+            ProtocolError::Parsers(e) => write!(fmt, "error with expected stanza schema: {}", e),
+            ProtocolError::NoTls => write!(fmt, "no TLS available"),
+            ProtocolError::InvalidBindResponse => write!(fmt, "invalid response to resource binding"),
+            ProtocolError::NoStreamNamespace => write!(fmt, "no xmlns attribute in <stream:stream>"),
+            ProtocolError::NoStreamId => write!(fmt, "no id attribute in <stream:stream>"),
+            ProtocolError::InvalidToken => write!(fmt, "encountered an unexpected XML token"),
+            ProtocolError::InvalidStreamStart => write!(fmt, "unexpected <stream:stream>"),
+        }
+    }
+}
+
+impl From<ParserError> for ProtocolError {
+    fn from(e: ParserError) -> Self {
+        ProtocolError::Parser(e)
+    }
+}
+
+impl From<ParsersError> for ProtocolError {
+    fn from(e: ParsersError) -> Self {
+        ProtocolError::Parsers(e)
+    }
+}
+
 /// Authentication error
-#[derive(Debug, Error)]
+#[derive(Debug)]
 pub enum AuthError {
     /// No matching SASL mechanism available
     NoMechanism,
     /// Local SASL implementation error
-    #[error(no_from, non_std, msg_embedded)]
     Sasl(String),
     /// Failure from server
-    #[error(non_std)]
     Fail(SaslDefinedCondition),
     /// Component authentication failure
-    #[error(no_from)]
     ComponentFail,
+}
+
+impl fmt::Display for AuthError {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            AuthError::NoMechanism => write!(fmt, "no matching SASL mechanism available"),
+            AuthError::Sasl(s) => write!(fmt, "local SASL implementation error: {}", s),
+            AuthError::Fail(c) => write!(fmt, "failure from the server: {:?}", c),
+            AuthError::ComponentFail => write!(fmt, "component authentication failure"),
+        }
+    }
 }
 
 /// Error establishing connection
