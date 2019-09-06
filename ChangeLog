@@ -1,5 +1,5 @@
-Version NEXT:
-DATE  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
+Version 0.15.0:
+2019-09-06  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
     * New parsers/serialisers:
         - XHTML-IM (XEP-0071)
         - User Tune (XEP-0118)
@@ -11,6 +11,7 @@ DATE  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
         - Bind has been split into BindQuery and BindResponse.
     * Improvements:
         - New DOAP file for a machine-readable description of the features.
+        - Add various parser and formatter helpers on Hash.
 
 Version 0.14.0:
 2019-07-13  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>, Maxime “pep” Buquet <pep@bouah.net>
