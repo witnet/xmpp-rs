@@ -116,7 +116,7 @@
             <xmpp:xep rdf:resource="https://xmpp.org/extensions/xep-0071.html"/>
             <xmpp:status>complete</xmpp:status>
             <xmpp:version>1.5.4</xmpp:version>
-            <xmpp:since>NEXT</xmpp:since>
+            <xmpp:since>0.15.0</xmpp:since>
         </xmpp:SupportedXep>
     </implements>
     <implements>
@@ -188,7 +188,7 @@
             <xmpp:xep rdf:resource="https://xmpp.org/extensions/xep-0118.html"/>
             <xmpp:status>complete</xmpp:status>
             <xmpp:version>1.2</xmpp:version>
-            <xmpp:since>NEXT</xmpp:since>
+            <xmpp:since>0.15.0</xmpp:since>
         </xmpp:SupportedXep>
     </implements>
     <implements>
@@ -300,7 +300,7 @@
             <xmpp:xep rdf:resource="https://xmpp.org/extensions/xep-0231.html"/>
             <xmpp:status>complete</xmpp:status>
             <xmpp:version>1.0</xmpp:version>
-            <xmpp:since>NEXT</xmpp:since>
+            <xmpp:since>0.15.0</xmpp:since>
         </xmpp:SupportedXep>
     </implements>
     <implements>
@@ -341,7 +341,7 @@
             <xmpp:xep rdf:resource="https://xmpp.org/extensions/xep-0280.html"/>
             <xmpp:status>complete</xmpp:status>
             <xmpp:version>0.13.0</xmpp:version>
-            <xmpp:since>NEXT</xmpp:since>
+            <xmpp:since>0.15.0</xmpp:since>
         </xmpp:SupportedXep>
     </implements>
     <implements>
@@ -427,12 +427,18 @@
 
     <release>
         <Version>
+            <revision>0.15.0</revision>
+            <created>2019-09-06</created>
+            <file-release rdf:resource="https://crates.io/api/v1/crates/xmpp-parsers/0.15.0/download"/>
+        </Version>
+    </release>
+    <release>
+        <Version>
             <revision>0.14.0</revision>
             <created>2019-07-13</created>
             <file-release rdf:resource="https://crates.io/api/v1/crates/xmpp-parsers/0.14.0/download"/>
         </Version>
     </release>
-    <!-- TODO: https://github.com/ewilderj/doap/issues/52 -->
     <release>
         <Version>
             <revision>0.13.1</revision>
