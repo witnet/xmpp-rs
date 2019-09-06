@@ -1,3 +1,8 @@
+Version 0.7.1, released 2019-09-06:
+  * Updates
+    - Remove failure dependency, to keep compilation times in check
+    - Impl Display for Jid
+
 Version 0.7.0, released 2019-07-26:
   * Breaking
     - Update minidom dependency to 0.11
