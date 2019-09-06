@@ -78,11 +78,9 @@ impl From<TimeResult> for Element {
         Element::builder("time")
             .ns(ns::TIME)
             .append(Element::builder("tzo")
-                    .append(format!("{}", time.0.timezone()))
-                    .build())
+                    .append(format!("{}", time.0.timezone())))
             .append(Element::builder("utc")
-                    .append(time.0.with_timezone(FixedOffset::east(0)).format("%FT%TZ"))
-                    .build())
+                    .append(time.0.with_timezone(FixedOffset::east(0)).format("%FT%TZ")))
             .build()
     }
 }

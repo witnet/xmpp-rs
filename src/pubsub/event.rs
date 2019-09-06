@@ -10,7 +10,7 @@ use crate::util::error::Error;
 use crate::ns;
 use crate::pubsub::{ItemId, NodeName, Subscription, SubscriptionId, Item as PubSubItem};
 use jid::Jid;
-use minidom::{Element, Node};
+use minidom::Element;
 use std::convert::TryFrom;
 
 /// Event wrapper for a PubSub `<item/>`.
@@ -198,8 +198,7 @@ impl From<PubSubEvent> for Element {
             PubSubEvent::Configuration { node, form } => Element::builder("configuration")
                 .ns(ns::PUBSUB_EVENT)
                 .attr("node", node)
-                .append_all(form.map(Element::from).map(Node::Element).into_iter())
-                .build(),
+                .append_all(form.map(Element::from)),
             PubSubEvent::Delete { node, redirect } => Element::builder("purge")
                 .ns(ns::PUBSUB_EVENT)
                 .attr("node", node)
@@ -207,14 +206,11 @@ impl From<PubSubEvent> for Element {
                     Element::builder("redirect")
                         .ns(ns::PUBSUB_EVENT)
                         .attr("uri", redirect)
-                        .build()
-                }))
-                .build(),
+                })),
             PubSubEvent::PublishedItems { node, items } => Element::builder("items")
                 .ns(ns::PUBSUB_EVENT)
                 .attr("node", node)
-                .append_all(items.into_iter())
-                .build(),
+                .append_all(items.into_iter()),
             PubSubEvent::RetractedItems { node, items } => Element::builder("items")
                 .ns(ns::PUBSUB_EVENT)
                 .attr("node", node)
@@ -225,14 +221,11 @@ impl From<PubSubEvent> for Element {
                             Element::builder("retract")
                                 .ns(ns::PUBSUB_EVENT)
                                 .attr("id", id)
-                                .build()
                         })
-                )
-                .build(),
+                ),
             PubSubEvent::Purge { node } => Element::builder("purge")
                 .ns(ns::PUBSUB_EVENT)
-                .attr("node", node)
-                .build(),
+                .attr("node", node),
             PubSubEvent::Subscription {
                 node,
                 expiry,
@@ -245,8 +238,7 @@ impl From<PubSubEvent> for Element {
                 .attr("expiry", expiry)
                 .attr("jid", jid)
                 .attr("subid", subid)
-                .attr("subscription", subscription)
-                .build(),
+                .attr("subscription", subscription),
         };
         Element::builder("event")
             .ns(ns::PUBSUB_EVENT)

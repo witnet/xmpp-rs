@@ -9,7 +9,7 @@ use crate::message::MessagePayload;
 use crate::ns;
 use crate::presence::PresencePayload;
 use jid::Jid;
-use minidom::{Element, Node};
+use minidom::Element;
 use std::collections::BTreeMap;
 use std::convert::TryFrom;
 
@@ -300,10 +300,9 @@ impl From<StanzaError> for Element {
                         .ns(ns::XMPP_STANZAS)
                         .attr("xml:lang", lang)
                         .append(text)
-                        .build()
                 })
             )
-            .append_all(err.other.map(Element::from).map(Node::Element).into_iter())
+            .append_all(err.other)
             .build()
     }
 }

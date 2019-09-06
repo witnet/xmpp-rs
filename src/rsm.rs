@@ -6,7 +6,7 @@
 
 use crate::util::error::Error;
 use crate::ns;
-use minidom::{Element, Node};
+use minidom::Element;
 use std::convert::TryFrom;
 
 /// Requests paging through a potentially big set of items (represented by an
@@ -76,23 +76,20 @@ impl From<SetQuery> for Element {
                 Element::builder("max")
                     .ns(ns::RSM)
                     .append(format!("{}", max))
-                    .build()
             }))
             .append_all(
                 set.after
-                    .map(|after| Element::builder("after").ns(ns::RSM).append(after).build()),
+                    .map(|after| Element::builder("after").ns(ns::RSM).append(after))
             )
             .append_all(set.before.map(|before| {
                 Element::builder("before")
                     .ns(ns::RSM)
                     .append(before)
-                    .build()
             }))
             .append_all(set.index.map(|index| {
                 Element::builder("index")
                     .ns(ns::RSM)
                     .append(format!("{}", index))
-                    .build()
             }))
             .build()
     }
@@ -158,20 +155,18 @@ impl From<SetResult> for Element {
                 .ns(ns::RSM)
                 .attr("index", set.first_index)
                 .append(first)
-                .build()
         });
         Element::builder("set")
             .ns(ns::RSM)
-            .append_all(first.map(Element::from).map(Node::Element).into_iter())
+            .append_all(first)
             .append_all(
                 set.last
-                    .map(|last| Element::builder("last").ns(ns::RSM).append(last).build()),
+                    .map(|last| Element::builder("last").ns(ns::RSM).append(last)),
             )
             .append_all(set.count.map(|count| {
                 Element::builder("count")
                     .ns(ns::RSM)
                     .append(format!("{}", count))
-                    .build()
             }))
             .build()
     }

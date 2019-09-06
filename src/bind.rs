@@ -63,13 +63,10 @@ impl From<BindQuery> for Element {
     fn from(bind: BindQuery) -> Element {
         Element::builder("bind")
             .ns(ns::BIND)
-            .append_all((match bind.resource {
-                None => vec![],
-                Some(resource) => vec![Element::builder("resource")
+            .append_all(bind.resource.map(|resource|
+                Element::builder("resource")
                     .ns(ns::BIND)
-                    .append(resource)
-                    .build()],
-            }).into_iter())
+                    .append(resource)))
             .build()
     }
 }
@@ -129,7 +126,7 @@ impl From<BindResponse> for Element {
     fn from(bind: BindResponse) -> Element {
         Element::builder("bind")
             .ns(ns::BIND)
-            .append(Element::builder("jid").ns(ns::BIND).append(bind.jid).build())
+            .append(Element::builder("jid").ns(ns::BIND).append(bind.jid))
             .build()
     }
 }

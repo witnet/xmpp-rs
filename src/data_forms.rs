@@ -7,7 +7,7 @@
 use crate::util::error::Error;
 use crate::media_element::MediaElement;
 use crate::ns;
-use minidom::{Element, Node};
+use minidom::Element;
 use std::convert::TryFrom;
 
 generate_element!(
@@ -152,12 +152,12 @@ impl From<Field> for Element {
             .attr("var", field.var)
             .attr("type", field.type_)
             .attr("label", field.label)
-            .append_all((if field.required {
-                Some(Element::builder("required").ns(ns::DATA_FORMS).build())
+            .append_all(if field.required {
+                Some(Element::builder("required").ns(ns::DATA_FORMS))
             } else {
                 None
-            }).into_iter())
-            .append_all(field.options.iter().cloned().map(Element::from).map(Node::Element).into_iter())
+            })
+            .append_all(field.options.iter().cloned().map(Element::from))
             .append_all(
                 field
                     .values
@@ -166,10 +166,9 @@ impl From<Field> for Element {
                         Element::builder("value")
                             .ns(ns::DATA_FORMS)
                             .append(value)
-                            .build()
                     })
             )
-            .append_all(field.media.iter().cloned().map(Element::from).map(Node::Element))
+            .append_all(field.media.iter().cloned().map(Element::from))
             .build()
     }
 }
@@ -283,12 +282,16 @@ impl From<DataForm> for Element {
                     .ns(ns::DATA_FORMS)
                     .append(text)
             }))
-            .append_all((if let Some(form_type) = form.form_type {
-                vec![Element::builder("field").ns(ns::DATA_FORMS).attr("var", "FORM_TYPE").attr("type", "hidden").append(Element::builder("value").ns(ns::DATA_FORMS).append(form_type).build()).build()]
-            } else {
-                vec![]
-            }).into_iter())
-            .append_all(form.fields.iter().cloned().map(Element::from).map(Node::Element))
+            .append_all(form.form_type.map(|form_type| {
+                Element::builder("field")
+                    .ns(ns::DATA_FORMS)
+                    .attr("var", "FORM_TYPE")
+                    .attr("type", "hidden")
+                    .append(Element::builder("value")
+                        .ns(ns::DATA_FORMS)
+                        .append(form_type))
+            }))
+            .append_all(form.fields.iter().cloned().map(Element::from))
             .build()
     }
 }

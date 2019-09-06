@@ -212,7 +212,6 @@ impl From<Failure> for Element {
                             .ns(ns::SASL)
                             .attr("xml:lang", lang)
                             .append(text)
-                            .build()
                     })
             )
             .build()

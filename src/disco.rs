@@ -9,7 +9,7 @@ use crate::util::error::Error;
 use crate::iq::{IqGetPayload, IqResultPayload};
 use crate::ns;
 use jid::Jid;
-use minidom::{Element, Node};
+use minidom::Element;
 use std::convert::TryFrom;
 
 generate_element!(
@@ -180,7 +180,7 @@ impl From<DiscoInfoResult> for Element {
             .attr("node", disco.node)
             .append_all(disco.identities.into_iter())
             .append_all(disco.features.into_iter())
-            .append_all(disco.extensions.iter().cloned().map(Element::from).map(Node::Element))
+            .append_all(disco.extensions.iter().cloned().map(Element::from))
             .build()
     }
 }

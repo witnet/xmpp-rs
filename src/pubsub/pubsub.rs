@@ -219,11 +219,11 @@ impl From<SubscribeOptions> for Element {
     fn from(subscribe_options: SubscribeOptions) -> Element {
         Element::builder("subscribe-options")
             .ns(ns::PUBSUB)
-            .append_all((if subscribe_options.required {
-                vec![Element::builder("required").ns(ns::PUBSUB).build()]
+            .append_all(if subscribe_options.required {
+                Some(Element::builder("required").ns(ns::PUBSUB))
             } else {
-                vec![]
-            }).into_iter())
+                None
+            })
             .build()
     }
 }
@@ -473,7 +473,7 @@ impl From<PubSub> for Element {
     fn from(pubsub: PubSub) -> Element {
         Element::builder("pubsub")
             .ns(ns::PUBSUB)
-            .append_all((match pubsub {
+            .append_all(match pubsub {
                 PubSub::Create { create, configure } => {
                     let mut elems = vec![Element::from(create)];
                     if let Some(configure) = configure {
@@ -498,7 +498,7 @@ impl From<PubSub> for Element {
                 PubSub::Subscription(subscription) => vec![Element::from(subscription)],
                 PubSub::Subscriptions(subscriptions) => vec![Element::from(subscriptions)],
                 PubSub::Unsubscribe(unsubscribe) => vec![Element::from(unsubscribe)],
-            }).into_iter())
+            })
             .build()
     }
 }

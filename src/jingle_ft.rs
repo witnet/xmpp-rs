@@ -193,65 +193,27 @@ impl TryFrom<Element> for File {
 
 impl From<File> for Element {
     fn from(file: File) -> Element {
-        let mut root = Element::builder("file").ns(ns::JINGLE_FT);
-        if let Some(date) = file.date {
-            root = root.append(
-                Node::Element(
-                    Element::builder("date")
-                        .ns(ns::JINGLE_FT)
-                        .append(date)
-                        .build()
-                )
-            );
-        }
-        if let Some(media_type) = file.media_type {
-            root = root.append(
-                Node::Element(
-                    Element::builder("media-type")
-                        .ns(ns::JINGLE_FT)
-                        .append(media_type)
-                        .build()
-                )
-            );
-        }
-        if let Some(name) = file.name {
-            root = root.append(
-                Node::Element(
-                    Element::builder("name")
-                        .ns(ns::JINGLE_FT)
-                        .append(name)
-                        .build()
-                )
-            );
-        }
-        for (lang, desc) in file.descs.into_iter() {
-            root = root.append(
-                Node::Element(
-                    Element::builder("desc")
-                        .ns(ns::JINGLE_FT)
-                        .attr("xml:lang", lang)
-                        .append(desc.0)
-                        .build()
-                )
-            );
-        }
-        if let Some(size) = file.size {
-            root = root.append(
-                Node::Element(
-                    Element::builder("size")
-                        .ns(ns::JINGLE_FT)
-                        .append(format!("{}", size))
-                        .build()
-                )
-            );
-        }
-        if let Some(range) = file.range {
-            root = root.append(range);
-        }
-        for hash in file.hashes {
-            root = root.append(hash);
-        }
-        root.build()
+        Element::builder("file")
+            .ns(ns::JINGLE_FT)
+            .append_all(file.date.map(|date|
+                Element::builder("date")
+                    .append(date)))
+            .append_all(file.media_type.map(|media_type|
+                Element::builder("media-type")
+                    .append(media_type)))
+            .append_all(file.name.map(|name|
+                Element::builder("name")
+                    .append(name)))
+            .append_all(file.descs.into_iter().map(|(lang, desc)|
+                Element::builder("desc")
+                    .attr("xml:lang", lang)
+                    .append(desc.0)))
+            .append_all(file.size.map(|size|
+                Element::builder("size")
+                    .append(format!("{}", size))))
+            .append_all(file.range)
+            .append_all(file.hashes)
+            .build()
     }
 }
 

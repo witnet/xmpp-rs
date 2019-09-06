@@ -171,17 +171,9 @@ fn serialise_jid_list(name: &str, jids: Vec<Jid>) -> ::std::option::IntoIter<Nod
                 .append_all(
                     jids.into_iter()
                         .map(|jid|
-                            Node::Element(
-                                Element::builder("jid")
-                                    .ns(ns::MAM)
-                                    .append(Node::Text(String::from(jid)))
-                                    .build()
-                                    .into()
-                            )
-                        )
-                        .into_iter(),
-                )
-                .build()
+                            Element::builder("jid")
+                                .ns(ns::MAM)
+                                .append(String::from(jid))))
                 .into(),
         ).into_iter()
     }

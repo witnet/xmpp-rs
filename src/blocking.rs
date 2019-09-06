@@ -55,7 +55,6 @@ macro_rules! generate_blocking_element {
                              Element::builder("item")
                                      .ns(ns::BLOCKING)
                                      .attr("jid", jid)
-                                     .build()
                          }))
                         .build()
             }

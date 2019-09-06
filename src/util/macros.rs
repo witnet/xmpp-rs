@@ -570,12 +570,10 @@ macro_rules! finish_parse_elem {
 
 macro_rules! generate_serialiser {
     ($builder:ident, $parent:ident, $elem:ident, Required, String, ($name:tt, $ns:ident)) => {
-        $builder.append(::minidom::Node::Element(
+        $builder.append(
             ::minidom::Element::builder($name)
                 .ns(crate::ns::$ns)
                 .append(::minidom::Node::Text($parent.$elem))
-                .build()
-            )
         )
     };
     ($builder:ident, $parent:ident, $elem:ident, Option, String, ($name:tt, $ns:ident)) => {
@@ -583,8 +581,7 @@ macro_rules! generate_serialiser {
                 ::minidom::Element::builder($name)
                     .ns(crate::ns::$ns)
                     .append(::minidom::Node::Text(elem))
-                    .build()
-            }).into_iter()
+            })
         )
     };
     ($builder:ident, $parent:ident, $elem:ident, Option, $constructor:ident, ($name:tt, $ns:ident)) => {
@@ -592,8 +589,7 @@ macro_rules! generate_serialiser {
                 ::minidom::Element::builder($name)
                     .ns(crate::ns::$ns)
                     .append(::minidom::Node::Element(::minidom::Element::from(elem)))
-                    .build()
-            }).into_iter()
+            })
         )
     };
     ($builder:ident, $parent:ident, $elem:ident, Vec, $constructor:ident, ($name:tt, $ns:ident)) => {
@@ -736,7 +732,7 @@ macro_rules! impl_pubsub_item {
                     .ns(ns::$ns)
                     .attr("id", item.0.id)
                     .attr("publisher", item.0.publisher)
-                    .append_all(item.0.payload.map(::minidom::Node::Element).into_iter())
+                    .append_all(item.0.payload)
                     .build()
             }
         }

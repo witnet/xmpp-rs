@@ -98,13 +98,13 @@ impl From<XhtmlIm> for Element {
     fn from(wrapper: XhtmlIm) -> Element {
         Element::builder("html")
             .ns(ns::XHTML_IM)
-            .append_all(wrapper.bodies.into_iter().map(|(ref lang, ref body)| {
+            .append_all(wrapper.bodies.into_iter().map(|(lang, body)| {
                 if lang.is_empty() {
                     assert!(body.xml_lang.is_none());
                 } else {
-                    assert_eq!(Some(lang), body.xml_lang.as_ref());
+                    assert_eq!(Some(lang), body.xml_lang);
                 }
-                Element::from(body.clone())
+                Element::from(body)
             }))
             .build()
     }
@@ -346,11 +346,11 @@ impl From<Tag> for Element {
     }
 }
 
-fn children_to_nodes(children: Vec<Child>) -> Vec<Node> {
+fn children_to_nodes(children: Vec<Child>) -> impl IntoIterator<Item = Node> {
     children.into_iter().map(|child| match child {
         Child::Tag(tag) => Node::Element(Element::from(tag)),
         Child::Text(text) => Node::Text(text),
-    }).collect::<Vec<_>>()
+    })
 }
 
 fn children_to_html(children: Vec<Child>) -> String {

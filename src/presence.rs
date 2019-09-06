@@ -324,18 +324,14 @@ impl From<Presence> for Element {
                                 },
                             )
                             .append(status)
-                            .build()
                     })
             )
-            .append_all((if presence.priority == 0 {
+            .append_all(if presence.priority == 0 {
                 None
             } else {
-                Some(
-                    Element::builder("priority")
-                        .append(format!("{}", presence.priority))
-                        .build()
-                )
-            }).into_iter())
+                Some(Element::builder("priority")
+                    .append(format!("{}", presence.priority)))
+            })
             .append_all(presence.payloads.into_iter())
             .build()
     }

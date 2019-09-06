@@ -8,7 +8,7 @@ use crate::data_forms::DataForm;
 use crate::util::error::Error;
 use crate::iq::{IqGetPayload, IqResultPayload, IqSetPayload};
 use crate::ns;
-use minidom::{Element, Node};
+use minidom::Element;
 use std::collections::HashMap;
 use std::convert::TryFrom;
 
@@ -93,23 +93,23 @@ impl From<Query> for Element {
     fn from(query: Query) -> Element {
         Element::builder("query")
             .ns(ns::REGISTER)
-            .append_all((if query.registered {
+            .append_all(if query.registered {
                 Some(Element::builder("registered").ns(ns::REGISTER))
             } else {
                 None
-            }).into_iter())
+            })
             .append_all(
                 query
                     .fields
                     .into_iter()
                     .map(|(name, value)| Element::builder(name).ns(ns::REGISTER).append(value))
             )
-            .append_all((if query.remove {
+            .append_all(if query.remove {
                 Some(Element::builder("remove").ns(ns::REGISTER))
             } else {
                 None
-            }).into_iter())
-            .append_all(query.form.map(Element::from).map(Node::Element).into_iter())
+            })
+            .append_all(query.form.map(Element::from))
             .build()
     }
 }
