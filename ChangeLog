@@ -2,6 +2,8 @@ Version NEXT:
 DATE  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
     * New parsers/serialisers:
         - OpenPGP for XMPP (XEP-0373)
+    * Breaking changes:
+        - Presence constructors now take Into<Jid> and assume Some.
 
 Version 0.15.0:
 2019-09-06  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>

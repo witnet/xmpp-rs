@@ -194,21 +194,21 @@ impl Presence {
     /// Set the emitter of this presence, this should only be useful for
     /// servers and components, as clients can only send presences from their
     /// own resource (which is implicit).
-    pub fn with_from(mut self, from: Option<Jid>) -> Presence {
-        self.from = from;
+    pub fn with_from<J: Into<Jid>>(mut self, from: J) -> Presence {
+        self.from = Some(from.into());
         self
     }
 
     /// Set the recipient of this presence, this is only useful for directed
     /// presences.
-    pub fn with_to(mut self, to: Option<Jid>) -> Presence {
-        self.to = to;
+    pub fn with_to<J: Into<Jid>>(mut self, to: J) -> Presence {
+        self.to = Some(to.into());
         self
     }
 
     /// Set the identifier for this presence.
-    pub fn with_id(mut self, id: Option<String>) -> Presence {
-        self.id = id;
+    pub fn with_id(mut self, id: String) -> Presence {
+        self.id = Some(id);
         self
     }
 
@@ -345,6 +345,7 @@ impl From<Presence> for Element {
 mod tests {
     use super::*;
     use crate::util::compare_elements::NamespaceAwareCompare;
+    use jid::{BareJid, FullJid};
 
     #[cfg(target_pointer_width = "32")]
     #[test]
@@ -633,5 +634,32 @@ mod tests {
         let priority = elem.children().next().unwrap();
         assert!(priority.is("priority", ns::DEFAULT_NS));
         assert_eq!(priority.text(), "42");
+    }
+
+    #[test]
+    fn presence_with_to() {
+        let presence = Presence::new(Type::None);
+        let elem: Element = presence.into();
+        assert_eq!(elem.attr("to"), None);
+
+        let presence = Presence::new(Type::None)
+            .with_to(Jid::Bare(BareJid::domain("localhost")));
+        let elem: Element = presence.into();
+        assert_eq!(elem.attr("to"), Some("localhost"));
+
+        let presence = Presence::new(Type::None)
+            .with_to(BareJid::domain("localhost"));
+        let elem: Element = presence.into();
+        assert_eq!(elem.attr("to"), Some("localhost"));
+
+        let presence = Presence::new(Type::None)
+            .with_to(Jid::Full(FullJid::new("test", "localhost", "coucou")));
+        let elem: Element = presence.into();
+        assert_eq!(elem.attr("to"), Some("test@localhost/coucou"));
+
+        let presence = Presence::new(Type::None)
+            .with_to(FullJid::new("test", "localhost", "coucou"));
+        let elem: Element = presence.into();
+        assert_eq!(elem.attr("to"), Some("test@localhost/coucou"));
     }
 }
