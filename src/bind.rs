@@ -7,7 +7,7 @@
 use crate::util::error::Error;
 use crate::iq::{IqResultPayload, IqSetPayload};
 use crate::ns;
-use jid::FullJid;
+use jid::{FullJid, Jid};
 use minidom::Element;
 use std::str::FromStr;
 use std::convert::TryFrom;
@@ -84,6 +84,18 @@ pub struct BindResponse {
 }
 
 impl IqResultPayload for BindResponse {}
+
+impl From<BindResponse> for FullJid {
+    fn from(bind: BindResponse) -> FullJid {
+        bind.jid
+    }
+}
+
+impl From<BindResponse> for Jid {
+    fn from(bind: BindResponse) -> Jid {
+        Jid::Full(bind.jid)
+    }
+}
 
 impl TryFrom<Element> for BindResponse {
     type Error = Error;
