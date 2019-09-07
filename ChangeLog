@@ -1,6 +1,7 @@
 Version NEXT:
 DATE  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
     * New parsers/serialisers:
+        - Client State Indication (XEP-0352)
         - OpenPGP for XMPP (XEP-0373)
     * Breaking changes:
         - Presence constructors now take Into<Jid> and assume Some.

@@ -182,6 +182,9 @@ pub const IDLE: &str = "urn:xmpp:idle:1";
 /// XEP-0320: Use of DTLS-SRTP in Jingle Sessions
 pub const JINGLE_DTLS: &str = "urn:xmpp:jingle:apps:dtls:0";
 
+/// XEP-0352: Client State Indication
+pub const CSI: &str = "urn:xmpp:csi:0";
+
 /// XEP-0353: Jingle Message Initiation
 pub const JINGLE_MESSAGE: &str = "urn:xmpp:jingle-message:0";
 
