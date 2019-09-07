@@ -9,7 +9,6 @@ use crate::disco::{DiscoInfoQuery, DiscoInfoResult, Feature, Identity};
 use crate::hashes::{Algo, Hash};
 use crate::ns;
 use crate::presence::PresencePayload;
-use base64;
 use blake2::VarBlake2b;
 use digest::{Digest, Input, VariableOutput};
 use sha2::{Sha256, Sha512};

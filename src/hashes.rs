@@ -6,7 +6,6 @@
 
 use crate::util::error::Error;
 use crate::util::helpers::Base64;
-use base64;
 use minidom::IntoAttributeValue;
 use std::num::ParseIntError;
 use std::ops::{Deref, DerefMut};

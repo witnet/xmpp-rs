@@ -327,7 +327,6 @@ generate_element!(
 mod tests {
     use super::*;
     use crate::hashes::Algo;
-    use base64;
 
     #[cfg(target_pointer_width = "32")]
     #[test]

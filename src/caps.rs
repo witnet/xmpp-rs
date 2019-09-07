@@ -10,7 +10,6 @@ use crate::util::error::Error;
 use crate::hashes::{Algo, Hash};
 use crate::ns;
 use crate::presence::PresencePayload;
-use base64;
 use blake2::VarBlake2b;
 use digest::{Digest, Input, VariableOutput};
 use minidom::Element;
@@ -218,7 +217,6 @@ pub fn query_caps(caps: Caps) -> DiscoInfoQuery {
 mod tests {
     use super::*;
     use crate::caps;
-    use base64;
 
     #[cfg(target_pointer_width = "32")]
     #[test]
