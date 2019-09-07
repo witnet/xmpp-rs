@@ -8,6 +8,7 @@ use base64;
 use chrono;
 use jid;
 use std::convert::From;
+use std::error::Error as StdError;
 use std::fmt;
 use std::net;
 use std::num;
@@ -44,6 +45,20 @@ pub enum Error {
     /// Generated when text which should be a
     /// [DateTime](../date/struct.DateTime.html) fails to parse.
     ChronoParseError(chrono::ParseError),
+}
+
+impl StdError for Error {
+    fn cause(&self) -> Option<&dyn StdError> {
+        match self {
+            Error::ParseError(_) => None,
+            Error::Base64Error(e) => Some(e),
+            Error::ParseIntError(e) => Some(e),
+            Error::ParseStringError(e) => Some(e),
+            Error::ParseAddrError(e) => Some(e),
+            Error::JidParseError(e) => Some(e),
+            Error::ChronoParseError(e) => Some(e),
+        }
+    }
 }
 
 impl fmt::Display for Error {
