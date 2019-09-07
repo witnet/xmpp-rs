@@ -1,6 +1,7 @@
 //! Provides an error type for this crate.
 
 use std::convert::From;
+use std::error::Error as StdError;
 
 /// Our main error type.
 #[derive(Debug)]
@@ -26,6 +27,23 @@ pub enum Error {
     /// An error which is returned when a comment is to be parsed by minidom
     #[cfg(not(comments))]
     CommentsDisabled,
+}
+
+impl StdError for Error {
+    fn cause(&self) -> Option<&dyn StdError> {
+        match self {
+            // TODO: return Some(e) for this case after the merge of
+            // https://github.com/tafia/quick-xml/pull/170
+            Error::XmlError(_e) => None,
+            Error::Utf8Error(e) => Some(e),
+            Error::IoError(e) => Some(e),
+            Error::EndOfDocument => None,
+            Error::InvalidElementClosed => None,
+            Error::InvalidElement => None,
+            #[cfg(not(comments))]
+            Error::CommentsDisabled => None,
+        }
+    }
 }
 
 impl std::fmt::Display for Error {
