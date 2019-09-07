@@ -15,6 +15,7 @@
 //! For usage, check the documentation on the `Jid` struct.
 
 use std::convert::Into;
+use std::error::Error as StdError;
 use std::fmt;
 use std::str::FromStr;
 
@@ -34,6 +35,8 @@ pub enum JidParseError {
     /// Happens when the resource is empty, that is the string ends with a /.
     EmptyResource,
 }
+
+impl StdError for JidParseError {}
 
 impl fmt::Display for JidParseError {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
