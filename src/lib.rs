@@ -177,6 +177,9 @@ pub mod idle;
 /// XEP-0320: Use of DTLS-SRTP in Jingle Sessions
 pub mod jingle_dtls_srtp;
 
+/// XEP-0352: Client State Indication
+pub mod csi;
+
 /// XEP-0353: Jingle Message Initiation
 pub mod jingle_message;
 
