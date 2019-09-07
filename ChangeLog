@@ -3,6 +3,7 @@ DATE  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
     * New parsers/serialisers:
         - Client State Indication (XEP-0352)
         - OpenPGP for XMPP (XEP-0373)
+        - Anonymous unique occupant identifiers for MUCs (XEP-0421)
     * Breaking changes:
         - Presence constructors now take Into<Jid> and assume Some.
 
