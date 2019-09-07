@@ -48,14 +48,14 @@ pub enum Error {
 
 impl fmt::Display for Error {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            Error::ParseError(s) => write!(fmt, "{}", s),
-            Error::Base64Error(ref e) => write!(fmt, "{}", e),
-            Error::ParseIntError(ref e) => write!(fmt, "{}", e),
-            Error::ParseStringError(ref e) => write!(fmt, "{}", e),
-            Error::ParseAddrError(ref e) => write!(fmt, "{}", e),
-            Error::JidParseError(_) => write!(fmt, "JID parse error"),
-            Error::ChronoParseError(ref e) => write!(fmt, "{}", e),
+        match self {
+            Error::ParseError(s) => write!(fmt, "parse error: {}", s),
+            Error::Base64Error(e) => write!(fmt, "base64 error: {}", e),
+            Error::ParseIntError(e) => write!(fmt, "integer parsing error: {}", e),
+            Error::ParseStringError(e) => write!(fmt, "string parsing error: {}", e),
+            Error::ParseAddrError(e) => write!(fmt, "IP address parsing error: {}", e),
+            Error::JidParseError(e) => write!(fmt, "JID parsing error: {}", e),
+            Error::ChronoParseError(e) => write!(fmt, "time parsing error: {}", e),
         }
     }
 }
