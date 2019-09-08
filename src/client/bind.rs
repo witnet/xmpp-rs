@@ -1,8 +1,9 @@
 use futures::{sink, Async, Future, Poll, Stream};
+use std::convert::TryFrom;
 use std::mem::replace;
 use tokio_io::{AsyncRead, AsyncWrite};
-use xmpp_parsers::TryFrom;
-use xmpp_parsers::bind::Bind;
+use xmpp_parsers::Jid;
+use xmpp_parsers::bind::{BindQuery, BindResponse};
 use xmpp_parsers::iq::{Iq, IqType};
 
 use crate::xmpp_codec::Packet;
@@ -32,8 +33,13 @@ impl<S: AsyncWrite> ClientBind<S> {
                 ClientBind::Unsupported(stream)
             }
             Some(_) => {
-                let resource = stream.jid.resource.clone();
-                let iq = Iq::from_set(BIND_REQ_ID, Bind::new(resource));
+                let resource;
+                if let Jid::Full(jid) = stream.jid.clone() {
+                    resource = Some(jid.resource);
+                } else {
+                    resource = None;
+                }
+                let iq = Iq::from_set(BIND_REQ_ID, BindQuery::new(resource));
                 let send = stream.send_stanza(iq);
                 ClientBind::WaitSend(send)
             }
@@ -68,11 +74,8 @@ impl<S: AsyncRead + AsyncWrite> Future for ClientBind<S> {
                             match iq.payload {
                                 IqType::Result(payload) => {
                                     payload
-                                        .and_then(|payload| Bind::try_from(payload).ok())
-                                        .map(|bind| match bind {
-                                            Bind::Jid(jid) => stream.jid = jid,
-                                            _ => {}
-                                        });
+                                        .and_then(|payload| BindResponse::try_from(payload).ok())
+                                        .map(|bind| stream.jid = bind.into());
                                     Ok(Async::Ready(stream))
                                 }
                                 _ => Err(ProtocolError::InvalidBindResponse)?,

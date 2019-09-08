@@ -1,4 +1,5 @@
 use futures::{future, Future, Sink, Stream};
+use std::convert::TryFrom;
 use std::env::args;
 use std::fs::{create_dir_all, File};
 use std::io::{self, Write};
@@ -21,7 +22,7 @@ use xmpp_parsers::{
         NodeName,
     },
     stanza_error::{StanzaError, ErrorType, DefinedCondition},
-    Jid, TryFrom,
+    Jid,
 };
 
 fn main() {
@@ -116,7 +117,7 @@ fn main() {
                 let from = message.from.clone().unwrap();
                 if let Some(body) = message.get_best_body(vec!["en"]) {
                     if body.1 .0 == "die" {
-                        println!("Secret die command triggered by {}", from);
+                        println!("Secret die command triggered by {}", from.clone());
                         wait_for_stream_end = true;
                         tx.start_send(Packet::StreamEnd).unwrap();
                     }
@@ -133,7 +134,7 @@ fn main() {
                                         let _metadata = AvatarMetadata::try_from(payload).unwrap();
                                         println!(
                                             "[1m{}[0m has published an avatar, downloading...",
-                                            from
+                                            from.clone()
                                         );
                                         let iq = download_avatar(&from);
                                         tx.start_send(Packet::Stanza(iq.into())).unwrap();
@@ -218,11 +219,11 @@ fn handle_iq_result(pubsub: PubSub, from: &Jid) {
 }
 
 fn save_avatar(from: &Jid, id: String, data: &[u8]) -> io::Result<()> {
-    let directory = format!("data/{}", from);
-    let filename = format!("data/{}/{}", from, id);
+    let directory = format!("data/{}", from.clone());
+    let filename = format!("data/{}/{}", from.clone(), id);
     println!(
         "Saving avatar from [1m{}[0m to [4m{}[0m.",
-        from, filename
+        from.clone(), filename
     );
     create_dir_all(directory)?;
     let mut file = File::create(filename)?;

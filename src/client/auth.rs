@@ -1,12 +1,12 @@
 use std::str::FromStr;
 use std::collections::HashSet;
+use std::convert::TryFrom;
 use futures::{Future, Poll, Stream, future::{ok, err, IntoFuture}};
 use sasl::client::mechanisms::{Anonymous, Plain, Scram};
 use sasl::client::Mechanism;
 use sasl::common::scram::{Sha1, Sha256};
 use sasl::common::Credentials;
 use tokio_io::{AsyncRead, AsyncWrite};
-use xmpp_parsers::TryFrom;
 use xmpp_parsers::sasl::{Auth, Challenge, Failure, Mechanism as XMPPMechanism, Response, Success};
 
 use crate::xmpp_codec::Packet;

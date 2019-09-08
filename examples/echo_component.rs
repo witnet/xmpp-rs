@@ -1,10 +1,11 @@
 use futures::{future, Sink, Stream};
+use std::convert::TryFrom;
 use std::env::args;
 use std::process::exit;
 use std::str::FromStr;
 use tokio::runtime::current_thread::Runtime;
 use tokio_xmpp::Component;
-use xmpp_parsers::{Jid, Element, TryFrom};
+use xmpp_parsers::{Jid, Element};
 use xmpp_parsers::message::{Body, Message, MessageType};
 use xmpp_parsers::presence::{Presence, Show as PresenceShow, Type as PresenceType};
 
@@ -31,7 +32,7 @@ fn main() {
 
     // Make the two interfaces for sending and receiving independent
     // of each other so we can move one into a closure.
-    println!("Got it: {}", component.jid);
+    println!("Got it: {}", component.jid.clone());
     let (mut sink, stream) = component.split();
     // Wrap sink in Option so that we can take() it for the send(self)
     // to consume and return it back when ready.
@@ -83,7 +84,7 @@ fn make_presence(from: Jid, to: Jid) -> Element {
     let mut presence = Presence::new(PresenceType::None);
     presence.from = Some(from);
     presence.to = Some(to);
-    presence.show = PresenceShow::Chat;
+    presence.show = Some(PresenceShow::Chat);
     presence
         .statuses
         .insert(String::from("en"), String::from("Echoing messages."));

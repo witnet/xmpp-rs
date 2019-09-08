@@ -70,7 +70,7 @@ impl<S: AsyncRead + AsyncWrite> Future for StartTlsClient<S> {
                     let stream = xmpp_stream.stream.into_inner();
                     let connect =
                         TlsConnector::from(NativeTlsConnector::builder().build().unwrap())
-                            .connect(&self.jid.domain, stream);
+                            .connect(&self.jid.clone().domain(), stream);
                     let new_state = StartTlsClientState::StartingTls(connect);
                     retry = true;
                     (new_state, Ok(Async::NotReady))

@@ -60,11 +60,11 @@ impl Client {
     }
 
     fn make_connect(jid: Jid, password: String) -> impl Future<Item = XMPPStream, Error = Error> {
-        let username = jid.node.as_ref().unwrap().to_owned();
+        let username = jid.clone().node().unwrap();
         let jid1 = jid.clone();
         let jid2 = jid.clone();
         let password = password;
-        done(idna::domain_to_ascii(&jid.domain))
+        done(idna::domain_to_ascii(&jid.domain()))
             .map_err(|_| Error::Idna)
             .and_then(|domain| {
                 done(Connecter::from_lookup(
