@@ -5,6 +5,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use crate::util::error::Error;
+use jid::Jid;
+use std::str::FromStr;
 
 /// Codec for plain text content.
 pub struct PlainText;
@@ -87,5 +89,18 @@ impl ColonSeparatedHex {
             bytes.push(format!("{:02X}", byte));
         }
         Some(bytes.join(":"))
+    }
+}
+
+/// Codec for a JID.
+pub struct JidCodec;
+
+impl JidCodec {
+    pub fn decode(s: &str) -> Result<Jid, Error> {
+        Ok(Jid::from_str(s)?)
+    }
+
+    pub fn encode(jid: &Jid) -> Option<String> {
+        Some(jid.to_string())
     }
 }

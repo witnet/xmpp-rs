@@ -180,6 +180,9 @@ pub mod idle;
 /// XEP-0320: Use of DTLS-SRTP in Jingle Sessions
 pub mod jingle_dtls_srtp;
 
+/// XEP-0328: JID Prep
+pub mod jid_prep;
+
 /// XEP-0352: Client State Indication
 pub mod csi;
 
