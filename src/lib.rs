@@ -14,7 +14,7 @@
 //!
 //! For usage, check the documentation on the `Jid` struct.
 
-use std::convert::Into;
+use std::convert::{Into, TryFrom};
 use std::error::Error as StdError;
 use std::fmt;
 use std::str::FromStr;
@@ -117,6 +117,26 @@ impl Jid {
     pub fn domain(self) -> String {
         match self {
             Jid::Bare(BareJid { domain, .. }) | Jid::Full(FullJid { domain, .. }) => domain,
+        }
+    }
+}
+
+impl From<Jid> for BareJid {
+    fn from(jid: Jid) -> BareJid {
+        match jid {
+            Jid::Full(full) => full.into(),
+            Jid::Bare(bare) => bare,
+        }
+    }
+}
+
+impl TryFrom<Jid> for FullJid {
+    type Error = JidParseError;
+
+    fn try_from(jid: Jid) -> Result<Self, Self::Error> {
+        match jid {
+            Jid::Full(full) => Ok(full),
+            Jid::Bare(_) => Err(JidParseError::NoResource),
         }
     }
 }
@@ -681,6 +701,29 @@ mod tests {
         assert_eq!(
             Jid::Bare(BareJid::new("a", "b.c")).domain(),
             String::from("b.c"),
+        );
+    }
+
+    #[test]
+    fn jid_to_full_bare() {
+        let full = FullJid::new("a", "b.c", "d");
+        let bare = BareJid::new("a", "b.c");
+
+        assert_eq!(
+            FullJid::try_from(Jid::Full(full.clone())),
+            Ok(full.clone()),
+        );
+        assert_eq!(
+            FullJid::try_from(Jid::Bare(bare.clone())),
+            Err(JidParseError::NoResource),
+        );
+        assert_eq!(
+            BareJid::from(Jid::Full(full.clone())),
+            bare.clone(),
+        );
+        assert_eq!(
+            BareJid::from(Jid::Bare(bare.clone())),
+            bare,
         );
     }
 
