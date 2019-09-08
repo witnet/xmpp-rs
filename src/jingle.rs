@@ -445,7 +445,7 @@ pub struct Jingle {
     /// Unique session identifier between two entities.
     pub sid: SessionId,
 
-    /// A list of contents to be negociated in this session.
+    /// A list of contents to be negotiated in this session.
     pub contents: Vec<Content>,
 
     /// An optional reason.

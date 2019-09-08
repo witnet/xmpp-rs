@@ -46,7 +46,7 @@ generate_attribute!(
         /// You are a publisher on this node, you can publish and retract items to it.
         Publisher => "publisher",
 
-        /// You can publish and retract items on this node, but not subscribe or retrive items.
+        /// You can publish and retract items on this node, but not subscribe or retrieve items.
         PublishOnly => "publish-only",
     }
 );
@@ -85,7 +85,7 @@ generate_element!(
     /// Request for a default node configuration.
     Default, "default", PUBSUB,
     attributes: [
-        /// The node targetted by this request, otherwise the entire service.
+        /// The node targeted by this request, otherwise the entire service.
         node: Option<NodeName> = "node",
 
         // TODO: do we really want to support collection nodes?
