@@ -8,6 +8,19 @@ use crate::util::error::Error;
 use jid::Jid;
 use std::str::FromStr;
 
+/// Codec for text content.
+pub struct Text;
+
+impl Text {
+    pub fn decode(s: &str) -> Result<String, Error> {
+        Ok(s.to_owned())
+    }
+
+    pub fn encode(string: &str) -> Option<String> {
+        Some(string.to_owned())
+    }
+}
+
 /// Codec for plain text content.
 pub struct PlainText;
 

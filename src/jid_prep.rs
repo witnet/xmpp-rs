@@ -5,25 +5,34 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use crate::iq::{IqGetPayload, IqResultPayload};
-use crate::util::helpers::{PlainText, JidCodec};
+use crate::util::helpers::{Text, JidCodec};
 use jid::Jid;
 
 generate_element!(
-    /// TODO
+    /// Request from a client to stringprep/PRECIS a string into a JID.
     JidPrepQuery, "jid", JID_PREP,
     text: (
-        /// TODO
-        data: PlainText<Option<String>>
+        /// The potential JID.
+        data: Text<String>
     )
 );
 
 impl IqGetPayload for JidPrepQuery {}
 
+impl JidPrepQuery {
+    /// Create a new JID Prep query.
+    pub fn new<J: Into<String>>(jid: J) -> JidPrepQuery {
+        JidPrepQuery {
+            data: jid.into(),
+        }
+    }
+}
+
 generate_element!(
-    /// TODO
+    /// Response from the server with the stringprep’d/PRECIS’d JID.
     JidPrepResponse, "jid", JID_PREP,
     text: (
-        /// TODO
+        /// The JID.
         jid: JidCodec<Jid>
     )
 );
@@ -47,7 +56,7 @@ mod tests {
     fn simple() {
         let elem: Element = "<jid xmlns='urn:xmpp:jidprep:0'>ROMeo@montague.lit/orchard</jid>".parse().unwrap();
         let query = JidPrepQuery::try_from(elem).unwrap();
-        assert_eq!(query.data.unwrap(), "ROMeo@montague.lit/orchard");
+        assert_eq!(query.data, "ROMeo@montague.lit/orchard");
 
         let elem: Element = "<jid xmlns='urn:xmpp:jidprep:0'>romeo@montague.lit/orchard</jid>".parse().unwrap();
         let response = JidPrepResponse::try_from(elem).unwrap();
