@@ -229,7 +229,8 @@ impl Decoder for XMPPCodec {
         };
         let buf1 = buf1.as_ref().as_ref();
         match from_utf8(buf1) {
-            Ok(s) => {
+            Ok(mut s) => {
+                s = s.trim();
                 if !s.is_empty() {
                     // println!("<< {}", s);
                     let mut buffer_queue = BufferQueue::new();
@@ -507,5 +508,25 @@ mod tests {
             framed.get_ref().get_ref(),
             &("<message><body>".to_owned() + &text + "</body></message>").as_bytes()
         );
+    }
+
+    #[test]
+    fn test_lone_whitespace() {
+        let mut c = XMPPCodec::new();
+        let mut b = BytesMut::with_capacity(1024);
+        b.put(r"<?xml version='1.0'?><stream:stream xmlns:stream='http://etherx.jabber.org/streams' version='1.0' xmlns='jabber:client'>");
+        let r = c.decode(&mut b);
+        assert!(match r {
+            Ok(Some(Packet::StreamStart(_))) => true,
+            _ => false,
+        });
+
+        b.clear();
+        b.put(r" ");
+        let r = c.decode(&mut b);
+        assert!(match r {
+            Ok(None) => true,
+            _ => false,
+        });
     }
 }
