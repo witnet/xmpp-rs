@@ -494,6 +494,9 @@ macro_rules! start_decl {
     (Required, $type:ty) => (
         $type
     );
+    (Present, $type:ty) => (
+        bool
+    );
 }
 
 macro_rules! start_parse_elem {
@@ -505,6 +508,9 @@ macro_rules! start_parse_elem {
     };
     ($temp:ident: Required) => {
         let mut $temp = None;
+    };
+    ($temp:ident: Present) => {
+        let mut $temp = false;
     };
 }
 
@@ -548,6 +554,18 @@ macro_rules! do_parse_elem {
         }
         $temp = Some(do_parse!($elem, $constructor));
     };
+    ($temp:ident: Present = $constructor:ident => $elem:ident, $name:tt, $parent_name:tt) => {
+        if $temp {
+            return Err(crate::util::error::Error::ParseError(concat!(
+                "Element ",
+                $parent_name,
+                " must not have more than one ",
+                $name,
+                " child."
+            )));
+        }
+        $temp = true;
+    };
 }
 
 macro_rules! finish_parse_elem {
@@ -565,6 +583,9 @@ macro_rules! finish_parse_elem {
             $parent_name,
             " element."
         )))?
+    };
+    ($temp:ident: Present = $name:tt, $parent_name:tt) => {
+        $temp
     };
 }
 
@@ -594,6 +615,9 @@ macro_rules! generate_serialiser {
     };
     ($builder:ident, $parent:ident, $elem:ident, Vec, $constructor:ident, ($name:tt, $ns:ident)) => {
         $builder.append_all($parent.$elem.into_iter())
+    };
+    ($builder:ident, $parent:ident, $elem:ident, Present, $constructor:ident, ($name:tt, $ns:ident)) => {
+        $builder.append(::minidom::Node::Element(::minidom::Element::builder($name).ns(crate::ns::$ns).build()))
     };
     ($builder:ident, $parent:ident, $elem:ident, $_:ident, $constructor:ident, ($name:tt, $ns:ident)) => {
         $builder.append(::minidom::Node::Element(::minidom::Element::from($parent.$elem)))

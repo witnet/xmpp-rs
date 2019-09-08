@@ -1,6 +1,7 @@
 Version NEXT:
 DATE  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
     * New parsers/serialisers:
+        - Client Certificate Management for SASL EXTERNAL (XEP-0257)
         - Client State Indication (XEP-0352)
         - OpenPGP for XMPP (XEP-0373)
         - Anonymous unique occupant identifiers for MUCs (XEP-0421)

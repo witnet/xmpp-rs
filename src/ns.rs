@@ -140,6 +140,9 @@ pub const JINGLE_FT: &str = "urn:xmpp:jingle:apps:file-transfer:5";
 /// XEP-0234: Jingle File Transfer
 pub const JINGLE_FT_ERROR: &str = "urn:xmpp:jingle:apps:file-transfer:errors:0";
 
+/// XEP-0257: Client Certificate Management for SASL EXTERNAL
+pub const SASL_CERT: &str = "urn:xmpp:saslcert:1";
+
 /// XEP-0260: Jingle SOCKS5 Bytestreams Transport Method
 pub const JINGLE_S5B: &str = "urn:xmpp:jingle:transports:s5b:1";
 
