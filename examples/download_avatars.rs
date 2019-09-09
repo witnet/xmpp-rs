@@ -117,7 +117,7 @@ fn main() {
                 let from = message.from.clone().unwrap();
                 if let Some(body) = message.get_best_body(vec!["en"]) {
                     if body.1 .0 == "die" {
-                        println!("Secret die command triggered by {}", from.clone());
+                        println!("Secret die command triggered by {}", from);
                         wait_for_stream_end = true;
                         tx.start_send(Packet::StreamEnd).unwrap();
                     }
@@ -127,7 +127,7 @@ fn main() {
                         let event = PubSubEvent::try_from(child).unwrap();
                         if let PubSubEvent::PublishedItems { node, items } = event {
                             if node.0 == ns::AVATAR_METADATA {
-                                for item in items {
+                                for item in items.into_iter() {
                                     let payload = item.payload.clone().unwrap();
                                     if payload.is("metadata", ns::AVATAR_METADATA) {
                                         // TODO: do something with these metadata.
@@ -136,7 +136,7 @@ fn main() {
                                             "[1m{}[0m has published an avatar, downloading...",
                                             from.clone()
                                         );
-                                        let iq = download_avatar(&from);
+                                        let iq = download_avatar(from.clone());
                                         tx.start_send(Packet::Stanza(iq.into())).unwrap();
                                     }
                                 }
@@ -193,25 +193,26 @@ fn make_presence(caps: Caps) -> Presence {
     presence
 }
 
-fn download_avatar(from: &Jid) -> Iq {
+fn download_avatar(from: Jid) -> Iq {
     Iq::from_get("coucou", PubSub::Items(Items {
         max_items: None,
         node: NodeName(String::from(ns::AVATAR_DATA)),
         subid: None,
         items: Vec::new(),
     }))
-    .with_to(from.clone())
+    .with_to(from)
 }
 
 fn handle_iq_result(pubsub: PubSub, from: &Jid) {
     if let PubSub::Items(items) = pubsub {
         if items.node.0 == ns::AVATAR_DATA {
             for item in items.items {
-                if let Some(id) = item.id.clone() {
-                    if let Some(payload) = &item.payload {
-                        let data = AvatarData::try_from(payload.clone()).unwrap();
+                match (item.id.clone(), item.payload.clone()) {
+                    (Some(id), Some(payload)) => {
+                        let data = AvatarData::try_from(payload).unwrap();
                         save_avatar(from, id.0, &data.data).unwrap();
                     }
+                    _ => {}
                 }
             }
         }
@@ -219,11 +220,11 @@ fn handle_iq_result(pubsub: PubSub, from: &Jid) {
 }
 
 fn save_avatar(from: &Jid, id: String, data: &[u8]) -> io::Result<()> {
-    let directory = format!("data/{}", from.clone());
-    let filename = format!("data/{}/{}", from.clone(), id);
+    let directory = format!("data/{}", from);
+    let filename = format!("data/{}/{}", from, id);
     println!(
         "Saving avatar from [1m{}[0m to [4m{}[0m.",
-        from.clone(), filename
+        from, filename
     );
     create_dir_all(directory)?;
     let mut file = File::create(filename)?;

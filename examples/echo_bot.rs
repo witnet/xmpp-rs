@@ -57,7 +57,7 @@ fn main() {
         {
             match (message.from, message.bodies.get("")) {
                 (Some(ref from), Some(ref body)) if body.0 == "die" => {
-                    println!("Secret die command triggered by {}", from.clone());
+                    println!("Secret die command triggered by {}", from);
                     wait_for_stream_end = true;
                     tx.start_send(Packet::StreamEnd).unwrap();
                 }
