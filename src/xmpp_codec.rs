@@ -501,7 +501,7 @@ mod tests {
             text = text + "A";
         }
         let stanza = Element::builder("message")
-            .append(Element::builder("body").append(&text).build())
+            .append(Element::builder("body").append(text.as_ref()).build())
             .build();
         let framed = framed.send(Packet::Stanza(stanza)).wait().expect("send");
         assert_eq!(

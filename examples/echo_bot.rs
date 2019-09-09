@@ -1,9 +1,10 @@
 use futures::{future, Future, Sink, Stream};
+use std::convert::TryFrom;
 use std::env::args;
 use std::process::exit;
 use tokio::runtime::current_thread::Runtime;
 use tokio_xmpp::{Client, Packet};
-use xmpp_parsers::{Jid, Element, TryFrom};
+use xmpp_parsers::{Jid, Element};
 use xmpp_parsers::message::{Body, Message, MessageType};
 use xmpp_parsers::presence::{Presence, Show as PresenceShow, Type as PresenceType};
 
@@ -56,7 +57,7 @@ fn main() {
         {
             match (message.from, message.bodies.get("")) {
                 (Some(ref from), Some(ref body)) if body.0 == "die" => {
-                    println!("Secret die command triggered by {}", from);
+                    println!("Secret die command triggered by {}", from.clone());
                     wait_for_stream_end = true;
                     tx.start_send(Packet::StreamEnd).unwrap();
                 }
@@ -87,7 +88,7 @@ fn main() {
 // Construct a <presence/>
 fn make_presence() -> Element {
     let mut presence = Presence::new(PresenceType::None);
-    presence.show = PresenceShow::Chat;
+    presence.show = Some(PresenceShow::Chat);
     presence
         .statuses
         .insert(String::from("en"), String::from("Echoing messages."));

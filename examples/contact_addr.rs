@@ -1,4 +1,5 @@
 use futures::{future, Sink, Stream};
+use std::convert::TryFrom;
 use std::env::args;
 use std::process::exit;
 use tokio::runtime::current_thread::Runtime;
@@ -6,7 +7,6 @@ use tokio_xmpp::{Client, xmpp_codec::Packet};
 use xmpp_parsers::{
     Element,
     Jid,
-    TryFrom,
     ns,
     iq::{
         Iq,

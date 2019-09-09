@@ -26,7 +26,7 @@ enum StreamStartState<S: AsyncWrite> {
 impl<S: AsyncWrite> StreamStart<S> {
     pub fn from_stream(stream: Framed<S, XMPPCodec>, jid: Jid, ns: String) -> Self {
         let attrs = [
-            ("to".to_owned(), jid.domain.clone()),
+            ("to".to_owned(), jid.clone().domain()),
             ("version".to_owned(), "1.0".to_owned()),
             ("xmlns".to_owned(), ns.clone()),
             ("xmlns:stream".to_owned(), NS_XMPP_STREAM.to_owned()),
