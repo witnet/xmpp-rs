@@ -345,6 +345,7 @@ impl ClientBuilder<'_> {
     }
 }
 
+#[derive(Clone)]
 pub struct Agent {
     sender_tx: mpsc::UnboundedSender<Packet>,
     default_nick: Rc<RefCell<String>>,
