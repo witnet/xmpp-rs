@@ -1,7 +1,10 @@
 [package]
 name = "xmpp"
 version = "0.3.0"
-authors = ["Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>"]
+authors = [
+  "Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>",
+  "Maxime “pep” Buquet <pep@bouah.net>",
+]
 description = "High-level XMPP library"
 homepage = "https://gitlab.com/linkmauve/xmpp-rs"
 repository = "https://gitlab.com/linkmauve/xmpp-rs"
