@@ -8,7 +8,7 @@ use futures::prelude::*;
 use std::env::args;
 use std::process::exit;
 use tokio::runtime::current_thread::Runtime;
-use xmpp_parsers::message::MessageType;
+use xmpp_parsers::{message::MessageType, Jid};
 use xmpp::{ClientBuilder, ClientType, ClientFeature, Event};
 
 fn main() {
@@ -60,7 +60,7 @@ fn main() {
             },
             Event::RoomJoined(jid) => {
                 println!("Joined room {}.", jid);
-                agent.send_message(jid.into_bare_jid(), MessageType::Groupchat, "en", "Hello world!");
+                agent.send_message(Jid::Bare(jid), MessageType::Groupchat, "en", "Hello world!");
             },
             Event::RoomLeft(jid) => {
                 println!("Left room {}.", jid);

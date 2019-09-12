@@ -6,6 +6,7 @@
 
 use crate::Event;
 use futures::{sync::mpsc, Sink};
+use std::convert::TryFrom;
 use std::fs::{self, File};
 use std::io::{self, Write};
 use tokio_xmpp::Packet;
@@ -19,7 +20,7 @@ use xmpp_parsers::{
         NodeName,
     },
     hashes::Hash,
-    Jid, TryFrom,
+    Jid,
 };
 
 // TODO: Update xmpp-parsers to get this function for free on Hash.

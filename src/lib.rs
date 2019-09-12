@@ -9,6 +9,7 @@
 use std::str::FromStr;
 use std::rc::Rc;
 use std::cell::RefCell;
+use std::convert::TryFrom;
 use futures::{Future,Stream, Sink, sync::mpsc};
 use tokio_xmpp::{
     Client as TokioXmppClient,
@@ -38,7 +39,7 @@ use xmpp_parsers::{
     },
     roster::{Roster, Item as RosterItem},
     stanza_error::{StanzaError, ErrorType, DefinedCondition},
-    Jid, JidParseError, TryFrom,
+    Jid, BareJid, FullJid, JidParseError,
 };
 
 mod avatar;
@@ -84,8 +85,8 @@ pub enum Event {
     ContactChanged(RosterItem),
     AvatarRetrieved(Jid, String),
     OpenRoomBookmark(ConferenceBookmark),
-    RoomJoined(Jid),
-    RoomLeft(Jid),
+    RoomJoined(BareJid),
+    RoomLeft(BareJid),
 }
 
 #[derive(Default)]
@@ -289,7 +290,10 @@ impl ClientBuilder<'_> {
                             }
                         } else if stanza.is("presence", "jabber:client") {
                             let presence = Presence::try_from(stanza).unwrap();
-                            let from = presence.from.clone().unwrap();
+                            let from: BareJid = match presence.from.clone().unwrap() {
+                                Jid::Full(FullJid { node, domain, .. }) => BareJid { node, domain },
+                                Jid::Bare(bare) => bare,
+                            };
                             for payload in presence.payloads.into_iter() {
                                 let muc_user = match MucUser::try_from(payload) {
                                     Ok(muc_user) => muc_user,
@@ -347,20 +351,17 @@ pub struct Agent {
 }
 
 impl Agent {
-    pub fn join_room(&mut self, room: Jid, nick: Option<String>, password: Option<String>,
+    pub fn join_room(&mut self, room: BareJid, nick: Option<String>, password: Option<String>,
                      lang: &str, status: &str) {
         let mut muc = Muc::new();
         if let Some(password) = password {
             muc = muc.with_password(password);
         }
-        // TODO: change room into a BareJid, which requires an update of jid, which requires an
-        // update of xmpp-parsers, which requires an update of tokio-xmpp…
-        assert_eq!(room.resource, None);
 
         let nick = nick.unwrap_or_else(|| self.default_nick.borrow().clone());
         let room_jid = room.with_resource(nick);
         let mut presence = Presence::new(PresenceType::None)
-            .with_to(Some(room_jid));
+            .with_to(Some(Jid::Full(room_jid)));
         presence.add_payload(muc);
         presence.set_status(String::from(lang), String::from(status));
         let presence = presence.into();
