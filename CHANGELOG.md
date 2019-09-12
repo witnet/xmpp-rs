@@ -1,3 +1,7 @@
+Version 0.7.2, released 2019-09-13:
+  * Updates
+    - Impl Error for JidParseError again, it got removed due to the failure removal but is still wanted.
+
 Version 0.7.1, released 2019-09-06:
   * Updates
     - Remove failure dependency, to keep compilation times in check
