@@ -1,0 +1,9 @@
+xmpp-rs (0.3.0)
+    [ Emmanuel Gil Peyrot <linkmauve@linkmauve.fr> ]
+    * Breaking changes:
+        - Complete change of API. We are not using plugins anymore. Please
+          have a look at ClientFeature(s) and Event(s).
+    * Improvements:
+        - Uses xmpp-parsers 0.15.0, and tokio-xmpp 1.0.1.
+
+    -- Maxime “pep” Buquet <pep@bouah.net> Fri, 13 Sep 2019 01:28:00 +0200
