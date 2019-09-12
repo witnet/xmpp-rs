@@ -40,9 +40,12 @@ pub(crate) fn handle_metadata_pubsub_event(from: &Jid, tx: &mut mpsc::UnboundedS
             let metadata = Metadata::try_from(payload).unwrap();
             for info in metadata.infos {
                 let filename = format!("data/{}/{}", from, hash_to_hex(&*info.id));
-                let metadata = fs::metadata(filename.clone()).unwrap();
+                let file_length = match fs::metadata(filename.clone()) {
+                    Ok(metadata) => metadata.len(),
+                    Err(_) => 0,
+                };
                 // TODO: Also check the hash.
-                if info.bytes as u64 == metadata.len() {
+                if info.bytes as u64 == file_length {
                     events.push(Event::AvatarRetrieved(from.clone(), filename));
                 } else {
                     let iq = download_avatar(from);
