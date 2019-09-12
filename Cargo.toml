@@ -1,30 +1,20 @@
 [package]
 name = "xmpp"
-version = "0.2.0"
-authors = ["lumi <lumi@pew.im>", "Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>"]
-description = "A type-safe rust XMPP library. Still under development."
-homepage = "https://gitlab.com/lumi/xmpp-rs"
-repository = "https://gitlab.com/lumi/xmpp-rs"
-documentation = "https://docs.rs/xmpp"
-readme = "README.md"
-keywords = ["xmpp", "xml"]
+version = "0.3.0"
+authors = [
+  "Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>",
+  "Maxime “pep” Buquet <pep@bouah.net>",
+]
+description = "High-level XMPP library"
+homepage = "https://gitlab.com/linkmauve/xmpp-rs"
+repository = "https://gitlab.com/linkmauve/xmpp-rs"
+keywords = ["xmpp", "jabber", "chat", "messaging", "bot"]
 categories = ["network-programming"]
-license = "LGPL-3.0+"
-
-[badges]
-gitlab = { repository = "lumi/xmpp-rs" }
+license = "MPL-2.0"
+edition = "2018"
 
 [dependencies]
-xml-rs = "0.4.1"
-xmpp-parsers = "0.7.0"
-openssl = "0.9.12"
-base64 = "0.6.0"
-minidom = "0.4.1"
-jid = "0.2.1"
-sasl = "0.4.0"
-sha-1 = "0.4"
-chrono = "0.4.0"
-try_from = "0.2.2"
-
-[features]
-insecure = []
+tokio-xmpp = "1.0.1"
+xmpp-parsers = "0.15"
+futures = "0.1"
+tokio = "0.1"
