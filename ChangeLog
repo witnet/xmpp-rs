@@ -8,6 +8,8 @@ DATE  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
         - Anonymous unique occupant identifiers for MUCs (XEP-0421)
     * Breaking changes:
         - Presence constructors now take Into<Jid> and assume Some.
+    * Improvements:
+        - CI: refactor, add caching
 
 Version 0.15.0:
 2019-09-06  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
