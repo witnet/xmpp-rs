@@ -1,3 +1,6 @@
+Version XXX, released YYY:
+  * Changes
+    * Update edition to 2018
 Version 0.11.1, released 2019-09-06:
   * Changes
     * Update to quick-xml 0.16

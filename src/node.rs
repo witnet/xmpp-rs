@@ -1,13 +1,12 @@
 //! Provides the `Node` struct, which represents a node in the DOM.
 
+use crate::element::{Element, ElementBuilder};
+use crate::error::Result;
+
 use std::io::Write;
 
 use quick_xml::Writer as EventWriter;
 use quick_xml::events::{Event, BytesText};
-
-use error::Result;
-
-use element::{Element, ElementBuilder};
 
 /// A node in an element tree.
 #[derive(Clone, Debug, PartialEq, Eq)]

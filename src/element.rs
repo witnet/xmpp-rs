@@ -1,13 +1,16 @@
 //! Provides an `Element` type, which represents DOM nodes, and a builder to create them with.
 
+use crate::convert::IntoAttributeValue;
+use crate::error::{Error, Result};
+use crate::namespace_set::NamespaceSet;
+use crate::node::Node;
+
 use std::io:: Write;
 use std::collections::{btree_map, BTreeMap};
 
 use std::str;
 use std::rc::Rc;
 use std::borrow::Cow;
-
-use error::{Error, Result};
 
 use quick_xml::Reader as EventReader;
 use quick_xml::Writer as EventWriter;
@@ -18,10 +21,6 @@ use std::io::BufRead;
 use std::str::FromStr;
 
 use std::slice;
-
-use convert::IntoAttributeValue;
-use namespace_set::NamespaceSet;
-use node::Node;
 
 /// helper function to escape a `&[u8]` and replace all
 /// xml special characters (<, >, &, ', ") with their corresponding

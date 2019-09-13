@@ -1,8 +1,6 @@
-use std::iter::Iterator;
+use crate::element::Element;
 
 use quick_xml::Reader;
-
-use element::Element;
 
 const TEST_STRING: &'static str = r#"<?xml version="1.0" encoding="utf-8"?><root xmlns="root_ns" a="b" xml:lang="en">meow<child c="d"/><child xmlns="child_ns" d="e" xml:lang="fr"/>nya</root>"#;
 
@@ -234,12 +232,12 @@ fn write_comments() {
 #[test]
 fn xml_error() {
     match "<a></b>".parse::<Element>() {
-        Err(::error::Error::XmlError(_)) => (),
+        Err(crate::error::Error::XmlError(_)) => (),
         err => panic!("No or wrong error: {:?}", err)
     }
 
     match "<a></".parse::<Element>() {
-        Err(::error::Error::XmlError(_)) => (),
+        Err(crate::error::Error::XmlError(_)) => (),
         err => panic!("No or wrong error: {:?}", err)
     }
 }
@@ -247,7 +245,7 @@ fn xml_error() {
 #[test]
 fn invalid_element_error() {
     match "<a:b:c>".parse::<Element>() {
-        Err(::error::Error::InvalidElement) => (),
+        Err(crate::error::Error::InvalidElement) => (),
         err => panic!("No or wrong error: {:?}", err)
     }
 }
