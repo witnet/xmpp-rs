@@ -5,26 +5,39 @@ stages:
 variables:
   FEATURES: ""
 
-rust-latest-build:
-  stage: build
+.stable:
   image: rust:latest
+
+.nightly:
+  image: rustlang/rust:nightly
+
+.build:
+  stage: build
   script:
     - cargo build --verbose --no-default-features --features=$FEATURES
+
+.test:
+  stage: test
+  script:
+    - cargo test --verbose --no-default-features --features=$FEATURES
+
+rust-latest-build:
+  extends:
+    - .build
+    - .stable
 
 rust-nightly-build:
-  stage: build
-  image: rustlang/rust:nightly
-  script:
-    - cargo build --verbose --no-default-features --features=$FEATURES
+  extends:
+    - .build
+    - .nightly
+
 
 rust-latest-test:
-  stage: test
-  image: rust:latest
-  script:
-    - cargo test --verbose --no-default-features --features=$FEATURES
+  extends:
+    - .test
+    - .stable
 
 rust-nightly-test:
-  stage: test
-  image: rustlang/rust:nightly
-  script:
-    - cargo test --verbose --no-default-features --features=$FEATURES
+  extends:
+    - .test
+    - .nightly
