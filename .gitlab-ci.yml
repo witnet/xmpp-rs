@@ -7,9 +7,17 @@ variables:
 
 .stable:
   image: rust:latest
+  cache:
+    key: stable
+    paths:
+      - target/
 
 .nightly:
   image: rustlang/rust:nightly
+  cache:
+    key: nightly
+    paths:
+      - target/
 
 .build:
   stage: build
