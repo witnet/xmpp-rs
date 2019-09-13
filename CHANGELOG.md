@@ -1,3 +1,7 @@
+Version XXX, released YYY:
+  * Updates
+    - CI: Split jobs, add tests, and caching
+
 Version 0.7.2, released 2019-09-13:
   * Updates
     - Impl Error for JidParseError again, it got removed due to the failure removal but is still wanted.
