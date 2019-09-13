@@ -4,6 +4,7 @@ stages:
 
 variables:
   FEATURES: ""
+  RUST_BACKTRACE: "full"
 
 .stable:
   image: rust:latest
