@@ -1,10 +1,30 @@
-image: "scorpil/rust:nightly"
+stages:
+  - build
+  - test
 
-before_script:
-- apt-get update -yqq
-- apt-get install -yqq --no-install-recommends build-essential libssl-dev pkg-config
+variables:
+  FEATURES: ""
 
-test:cargo:
+rust-latest-build:
+  stage: build
+  image: rust:latest
   script:
-  - rustc --version && cargo --version
-  - cargo test --verbose --jobs 1 --release
+    - cargo build --verbose --no-default-features --features=$FEATURES
+
+rust-nightly-build:
+  stage: build
+  image: rustlang/rust:nightly
+  script:
+    - cargo build --verbose --no-default-features --features=$FEATURES
+
+rust-latest-test:
+  stage: test
+  image: rust:latest
+  script:
+    - cargo test --verbose --no-default-features --features=$FEATURES
+
+rust-nightly-test:
+  stage: test
+  image: rustlang/rust:nightly
+  script:
+    - cargo test --verbose --no-default-features --features=$FEATURES
