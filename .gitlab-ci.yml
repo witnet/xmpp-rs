@@ -1,10 +1,52 @@
-image: "pitkley/rust:nightly"
+stages:
+  - build
+  - test
 
-before_script:
-- apt-get update -yqq
-- apt-get install -yqq --no-install-recommends build-essential
+variables:
+  FEATURES: ""
+  RUST_BACKTRACE: "full"
 
-test:cargo:
+.stable:
+  image: rust:latest
+  cache:
+    key: stable
+    paths:
+      - target/
+
+.nightly:
+  image: rustlang/rust:nightly
+  cache:
+    key: nightly
+    paths:
+      - target/
+
+.build:
+  stage: build
   script:
-  - rustc --version && cargo --version
-  - cargo test --verbose --jobs 1 --release
+    - cargo build --verbose --no-default-features --features=$FEATURES
+
+.test:
+  stage: test
+  script:
+    - cargo test --verbose --no-default-features --features=$FEATURES
+
+rust-latest-build:
+  extends:
+    - .build
+    - .stable
+
+rust-nightly-build:
+  extends:
+    - .build
+    - .nightly
+
+
+rust-latest-test:
+  extends:
+    - .test
+    - .stable
+
+rust-nightly-test:
+  extends:
+    - .test
+    - .nightly

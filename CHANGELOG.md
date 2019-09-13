@@ -1,11 +1,12 @@
 Version XXX, released YYY:
   * Changes
     * Update edition to 2018
+  * Fixes
+    * Update old CI configuration with newer Rust images
 Version 0.11.1, released 2019-09-06:
   * Changes
     * Update to quick-xml 0.16
     * Add a default "comments" feature to transform comments into errors when unset.
-    * Remove the mostly-unused failure dependency, to dramatically reduce compilation times.
 Version 0.11.0, released 2019-06-14:
   * Breaking
     * Get rid of IntoElements, replace with `Into<Node>` and `<T: Into<Node> IntoIterator<Item = T>>`
