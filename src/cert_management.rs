@@ -118,9 +118,32 @@ mod tests {
     use std::str::FromStr;
     use crate::ns;
 
+    #[cfg(target_pointer_width = "32")]
+    #[test]
+    fn test_size() {
+        assert_size!(Append, 28);
+        assert_size!(Disable, 12);
+        assert_size!(Revoke, 12);
+        assert_size!(ListCertsQuery, 0);
+        assert_size!(ListCertsResponse, 12);
+        assert_size!(Item, 40);
+        assert_size!(Resource, 12);
+        assert_size!(Users, 12);
+        assert_size!(Cert, 12);
+    }
+
+    #[cfg(target_pointer_width = "64")]
     #[test]
     fn test_size() {
         assert_size!(Append, 56);
+        assert_size!(Disable, 24);
+        assert_size!(Revoke, 24);
+        assert_size!(ListCertsQuery, 0);
+        assert_size!(ListCertsResponse, 24);
+        assert_size!(Item, 80);
+        assert_size!(Resource, 24);
+        assert_size!(Users, 24);
+        assert_size!(Cert, 24);
     }
 
     #[test]

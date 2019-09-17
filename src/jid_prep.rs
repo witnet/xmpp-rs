@@ -46,6 +46,14 @@ mod tests {
     use std::convert::TryFrom;
     use std::str::FromStr;
 
+    #[cfg(target_pointer_width = "32")]
+    #[test]
+    fn test_size() {
+        assert_size!(JidPrepQuery, 12);
+        assert_size!(JidPrepResponse, 40);
+    }
+
+    #[cfg(target_pointer_width = "64")]
     #[test]
     fn test_size() {
         assert_size!(JidPrepQuery, 24);
