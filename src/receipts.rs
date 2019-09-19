@@ -22,7 +22,7 @@ generate_element!(
     Received, "received", RECEIPTS,
     attributes: [
         /// The 'id' attribute of the received message.
-        id: Option<String> = "id",
+        id: Required<String> = "id",
     ]
 );
 
@@ -34,6 +34,7 @@ mod tests {
     use crate::ns;
     use minidom::Element;
     use std::convert::TryFrom;
+    use crate::util::error::Error;
 
     #[cfg(target_pointer_width = "32")]
     #[test]
@@ -54,13 +55,21 @@ mod tests {
         let elem: Element = "<request xmlns='urn:xmpp:receipts'/>".parse().unwrap();
         Request::try_from(elem).unwrap();
 
-        let elem: Element = "<received xmlns='urn:xmpp:receipts'/>".parse().unwrap();
-        Received::try_from(elem).unwrap();
-
         let elem: Element = "<received xmlns='urn:xmpp:receipts' id='coucou'/>"
             .parse()
             .unwrap();
         Received::try_from(elem).unwrap();
+    }
+
+    #[test]
+    fn test_missing_id() {
+        let elem: Element = "<received xmlns='urn:xmpp:receipts'/>".parse().unwrap();
+        let error = Received::try_from(elem).unwrap_err();
+        let message = match error {
+            Error::ParseError(string) => string,
+            _ => panic!(),
+        };
+        assert_eq!(message, "Required attribute 'id' missing.");
     }
 
     #[test]
@@ -71,7 +80,7 @@ mod tests {
         assert_eq!(elem.attrs().count(), 0);
 
         let receipt = Received {
-            id: Some(String::from("coucou")),
+            id: String::from("coucou"),
         };
         let elem: Element = receipt.into();
         assert!(elem.is("received", ns::RECEIPTS));

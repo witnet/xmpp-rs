@@ -58,6 +58,7 @@ impl PubSubPayload for Data {}
 mod tests {
     use super::*;
     use crate::hashes::Algo;
+    #[cfg(not(feature = "disable-validation"))]
     use crate::util::error::Error;
     use minidom::Element;
     use std::convert::TryFrom;
