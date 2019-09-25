@@ -10,7 +10,7 @@ use crate::iq::{IqGetPayload, IqResultPayload, IqSetPayload};
 use crate::ns;
 use crate::pubsub::{NodeName, Subscription, SubscriptionId, Item as PubSubItem};
 use jid::Jid;
-use minidom::Element;
+use crate::Element;
 use std::convert::TryFrom;
 
 // TODO: a better solution would be to split this into a query and a result elements, like for

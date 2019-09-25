@@ -7,7 +7,7 @@
 use crate::util::error::Error;
 use crate::util::helpers::Base64;
 use crate::ns;
-use minidom::Element;
+use crate::Element;
 use std::collections::BTreeMap;
 use std::convert::TryFrom;
 
@@ -221,7 +221,7 @@ impl From<Failure> for Element {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use minidom::Element;
+    use crate::Element;
     use std::convert::TryFrom;
 
     #[cfg(target_pointer_width = "32")]

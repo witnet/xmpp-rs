@@ -32,7 +32,7 @@ impl MessagePayload for Received {}
 mod tests {
     use super::*;
     use crate::ns;
-    use minidom::Element;
+    use crate::Element;
     use std::convert::TryFrom;
     use crate::util::error::Error;
 

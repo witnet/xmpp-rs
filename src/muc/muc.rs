@@ -96,7 +96,7 @@ mod tests {
     use super::*;
     use crate::util::compare_elements::NamespaceAwareCompare;
     use crate::util::error::Error;
-    use minidom::Element;
+    use crate::Element;
     use std::str::FromStr;
     use std::convert::TryFrom;
 

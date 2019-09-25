@@ -91,7 +91,7 @@ generate_element!(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use minidom::Element;
+    use crate::Element;
     use std::convert::TryFrom;
     use crate::hashes::Algo;
     use crate::jingle_dtls_srtp::Setup;

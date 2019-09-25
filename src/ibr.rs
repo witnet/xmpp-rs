@@ -8,7 +8,7 @@ use crate::data_forms::DataForm;
 use crate::util::error::Error;
 use crate::iq::{IqGetPayload, IqResultPayload, IqSetPayload};
 use crate::ns;
-use minidom::Element;
+use crate::Element;
 use std::collections::HashMap;
 use std::convert::TryFrom;
 

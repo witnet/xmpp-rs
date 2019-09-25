@@ -20,7 +20,7 @@ mod tests {
     use super::*;
     #[cfg(not(feature = "disable-validation"))]
     use crate::util::error::Error;
-    use minidom::Element;
+    use crate::Element;
     use std::convert::TryFrom;
 
     #[test]

@@ -6,7 +6,7 @@
 
 use crate::util::error::Error;
 use crate::ns;
-use minidom::Element;
+use crate::Element;
 use std::convert::TryFrom;
 
 /// Requests paging through a potentially big set of items (represented by an

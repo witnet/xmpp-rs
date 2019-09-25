@@ -230,9 +230,9 @@ macro_rules! generate_element_enum {
                 $enum
             ),+
         }
-        impl ::std::convert::TryFrom<::minidom::Element> for $elem {
+        impl ::std::convert::TryFrom<crate::Element> for $elem {
             type Error = crate::util::error::Error;
-            fn try_from(elem: ::minidom::Element) -> Result<$elem, crate::util::error::Error> {
+            fn try_from(elem: crate::Element) -> Result<$elem, crate::util::error::Error> {
                 check_ns_only!(elem, $name, $ns);
                 check_no_children!(elem, $name);
                 check_no_attributes!(elem, $name);
@@ -242,9 +242,9 @@ macro_rules! generate_element_enum {
                 })
             }
         }
-        impl From<$elem> for ::minidom::Element {
-            fn from(elem: $elem) -> ::minidom::Element {
-                ::minidom::Element::builder(
+        impl From<$elem> for crate::Element {
+            fn from(elem: $elem) -> crate::Element {
+                crate::Element::builder(
                     match elem {
                         $($elem::$enum => $enum_name,)+
                     }
@@ -274,9 +274,9 @@ macro_rules! generate_attribute_enum {
                 $enum
             ),+
         }
-        impl ::std::convert::TryFrom<::minidom::Element> for $elem {
+        impl ::std::convert::TryFrom<crate::Element> for $elem {
             type Error = crate::util::error::Error;
-            fn try_from(elem: ::minidom::Element) -> Result<$elem, crate::util::error::Error> {
+            fn try_from(elem: crate::Element) -> Result<$elem, crate::util::error::Error> {
                 check_ns_only!(elem, $name, $ns);
                 check_no_children!(elem, $name);
                 check_no_unknown_attributes!(elem, $name, [$attr]);
@@ -286,9 +286,9 @@ macro_rules! generate_attribute_enum {
                 })
             }
         }
-        impl From<$elem> for ::minidom::Element {
-            fn from(elem: $elem) -> ::minidom::Element {
-                ::minidom::Element::builder($name)
+        impl From<$elem> for crate::Element {
+            fn from(elem: $elem) -> crate::Element {
+                crate::Element::builder($name)
                     .ns(crate::ns::$ns)
                     .attr($attr, match elem {
                          $($elem::$enum => $enum_name,)+
@@ -377,10 +377,10 @@ macro_rules! generate_empty_element {
         #[derive(Debug, Clone)]
         pub struct $elem;
 
-        impl ::std::convert::TryFrom<::minidom::Element> for $elem {
+        impl ::std::convert::TryFrom<crate::Element> for $elem {
             type Error = crate::util::error::Error;
 
-            fn try_from(elem: ::minidom::Element) -> Result<$elem, crate::util::error::Error> {
+            fn try_from(elem: crate::Element) -> Result<$elem, crate::util::error::Error> {
                 check_self!(elem, $name, $ns);
                 check_no_children!(elem, $name);
                 check_no_attributes!(elem, $name);
@@ -388,9 +388,9 @@ macro_rules! generate_empty_element {
             }
         }
 
-        impl From<$elem> for ::minidom::Element {
-            fn from(_: $elem) -> ::minidom::Element {
-                ::minidom::Element::builder($name)
+        impl From<$elem> for crate::Element {
+            fn from(_: $elem) -> crate::Element {
+                crate::Element::builder($name)
                     .ns(crate::ns::$ns)
                     .build()
             }
@@ -439,9 +439,9 @@ macro_rules! generate_elem_id {
         $(#[$meta])*
         #[derive(Debug, Clone, PartialEq, Eq, Hash)]
         pub struct $elem(pub $type);
-        impl ::std::convert::TryFrom<::minidom::Element> for $elem {
+        impl ::std::convert::TryFrom<crate::Element> for $elem {
             type Error = crate::util::error::Error;
-            fn try_from(elem: ::minidom::Element) -> Result<$elem, crate::util::error::Error> {
+            fn try_from(elem: crate::Element) -> Result<$elem, crate::util::error::Error> {
                 check_self!(elem, $name, $ns);
                 check_no_children!(elem, $name);
                 check_no_attributes!(elem, $name);
@@ -449,9 +449,9 @@ macro_rules! generate_elem_id {
                 Ok($elem(elem.text().parse()?))
             }
         }
-        impl From<$elem> for ::minidom::Element {
-            fn from(elem: $elem) -> ::minidom::Element {
-                ::minidom::Element::builder($name)
+        impl From<$elem> for crate::Element {
+            fn from(elem: $elem) -> crate::Element {
+                crate::Element::builder($name)
                     .ns(crate::ns::$ns)
                     .append(elem.0.to_string())
                     .build()
@@ -592,14 +592,14 @@ macro_rules! finish_parse_elem {
 macro_rules! generate_serialiser {
     ($builder:ident, $parent:ident, $elem:ident, Required, String, ($name:tt, $ns:ident)) => {
         $builder.append(
-            ::minidom::Element::builder($name)
+            crate::Element::builder($name)
                 .ns(crate::ns::$ns)
                 .append(::minidom::Node::Text($parent.$elem))
         )
     };
     ($builder:ident, $parent:ident, $elem:ident, Option, String, ($name:tt, $ns:ident)) => {
         $builder.append_all($parent.$elem.map(|elem| {
-                ::minidom::Element::builder($name)
+                crate::Element::builder($name)
                     .ns(crate::ns::$ns)
                     .append(::minidom::Node::Text(elem))
             })
@@ -607,9 +607,9 @@ macro_rules! generate_serialiser {
     };
     ($builder:ident, $parent:ident, $elem:ident, Option, $constructor:ident, ($name:tt, $ns:ident)) => {
         $builder.append_all($parent.$elem.map(|elem| {
-                ::minidom::Element::builder($name)
+                crate::Element::builder($name)
                     .ns(crate::ns::$ns)
-                    .append(::minidom::Node::Element(::minidom::Element::from(elem)))
+                    .append(::minidom::Node::Element(crate::Element::from(elem)))
             })
         )
     };
@@ -617,10 +617,10 @@ macro_rules! generate_serialiser {
         $builder.append_all($parent.$elem.into_iter())
     };
     ($builder:ident, $parent:ident, $elem:ident, Present, $constructor:ident, ($name:tt, $ns:ident)) => {
-        $builder.append(::minidom::Node::Element(::minidom::Element::builder($name).ns(crate::ns::$ns).build()))
+        $builder.append(::minidom::Node::Element(crate::Element::builder($name).ns(crate::ns::$ns).build()))
     };
     ($builder:ident, $parent:ident, $elem:ident, $_:ident, $constructor:ident, ($name:tt, $ns:ident)) => {
-        $builder.append(::minidom::Node::Element(::minidom::Element::from($parent.$elem)))
+        $builder.append(::minidom::Node::Element(crate::Element::from($parent.$elem)))
     };
 }
 
@@ -661,10 +661,10 @@ macro_rules! generate_element {
             )*
         }
 
-        impl ::std::convert::TryFrom<::minidom::Element> for $elem {
+        impl ::std::convert::TryFrom<crate::Element> for $elem {
             type Error = crate::util::error::Error;
 
-            fn try_from(elem: ::minidom::Element) -> Result<$elem, crate::util::error::Error> {
+            fn try_from(elem: crate::Element) -> Result<$elem, crate::util::error::Error> {
                 check_self!(elem, $name, $ns);
                 check_no_unknown_attributes!(elem, $name, [$($attr_name),*]);
                 $(
@@ -693,9 +693,9 @@ macro_rules! generate_element {
             }
         }
 
-        impl From<$elem> for ::minidom::Element {
-            fn from(elem: $elem) -> ::minidom::Element {
-                let mut builder = ::minidom::Element::builder($name)
+        impl From<$elem> for crate::Element {
+            fn from(elem: $elem) -> crate::Element {
+                let mut builder = crate::Element::builder($name)
                     .ns(crate::ns::$ns);
                 $(
                     builder = builder.attr($attr_name, elem.$attr);

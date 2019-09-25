@@ -7,7 +7,7 @@
 use crate::util::error::Error;
 use crate::jingle::SessionId;
 use crate::ns;
-use minidom::Element;
+use crate::Element;
 use std::convert::TryFrom;
 
 /// Defines a protocol for broadcasting Jingle requests to all of the clients

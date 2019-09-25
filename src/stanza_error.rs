@@ -9,7 +9,7 @@ use crate::message::MessagePayload;
 use crate::ns;
 use crate::presence::PresencePayload;
 use jid::Jid;
-use minidom::Element;
+use crate::Element;
 use std::collections::BTreeMap;
 use std::convert::TryFrom;
 

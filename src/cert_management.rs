@@ -113,7 +113,7 @@ impl IqSetPayload for Revoke {}
 #[cfg(test)]
 mod tests {
     use super::*;
-    use minidom::Element;
+    use crate::Element;
     use std::convert::TryFrom;
     use std::str::FromStr;
     use crate::ns;

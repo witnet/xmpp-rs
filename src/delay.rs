@@ -33,7 +33,7 @@ impl PresencePayload for Delay {}
 mod tests {
     use super::*;
     use crate::util::error::Error;
-    use minidom::Element;
+    use crate::Element;
     use std::str::FromStr;
     use std::convert::TryFrom;
 

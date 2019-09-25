@@ -7,7 +7,7 @@
 use crate::util::error::Error;
 use crate::ns;
 use jid::Jid;
-use minidom::Element;
+use crate::Element;
 use std::net::IpAddr;
 use std::convert::TryFrom;
 

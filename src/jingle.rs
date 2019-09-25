@@ -8,7 +8,7 @@ use crate::util::error::Error;
 use crate::iq::IqSetPayload;
 use crate::ns;
 use jid::Jid;
-use minidom::Element;
+use crate::Element;
 use std::collections::BTreeMap;
 use std::str::FromStr;
 use std::convert::TryFrom;

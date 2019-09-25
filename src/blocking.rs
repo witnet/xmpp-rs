@@ -8,7 +8,7 @@ use crate::util::error::Error;
 use crate::iq::{IqGetPayload, IqResultPayload, IqSetPayload};
 use crate::ns;
 use jid::Jid;
-use minidom::Element;
+use crate::Element;
 use std::convert::TryFrom;
 
 generate_empty_element!(

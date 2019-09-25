@@ -9,7 +9,7 @@ use crate::util::error::Error;
 use crate::ns;
 use crate::stanza_error::StanzaError;
 use jid::Jid;
-use minidom::Element;
+use crate::Element;
 use minidom::IntoAttributeValue;
 use std::convert::TryFrom;
 

@@ -34,7 +34,7 @@ mod tests {
     use super::*;
     use crate::util::error::Error;
     use crate::ns;
-    use minidom::Element;
+    use crate::Element;
     use std::convert::TryFrom;
 
     #[test]

@@ -7,7 +7,7 @@
 use crate::util::error::Error;
 use crate::pubsub::PubSubPayload;
 use crate::ns;
-use minidom::Element;
+use crate::Element;
 use std::convert::TryFrom;
 
 generate_elem_id!(

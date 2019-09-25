@@ -8,7 +8,7 @@
 use crate::util::error::Error;
 use crate::ns;
 use jid::FullJid;
-use minidom::Element;
+use crate::Element;
 use std::convert::TryFrom;
 
 generate_attribute_enum!(

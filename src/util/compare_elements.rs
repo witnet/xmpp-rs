@@ -51,7 +51,7 @@ impl NamespaceAwareCompare for Element {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use minidom::Element;
+    use crate::Element;
 
     #[test]
     fn simple() {

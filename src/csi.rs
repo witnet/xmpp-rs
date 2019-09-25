@@ -22,7 +22,7 @@ generate_empty_element!(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use minidom::Element;
+    use crate::Element;
     use std::convert::TryFrom;
     use crate::ns;
 

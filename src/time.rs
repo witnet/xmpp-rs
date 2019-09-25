@@ -9,7 +9,7 @@ use crate::date::DateTime;
 use crate::iq::{IqGetPayload, IqResultPayload};
 use crate::ns;
 use crate::util::error::Error;
-use minidom::Element;
+use crate::Element;
 use std::convert::TryFrom;
 use std::str::FromStr;
 
