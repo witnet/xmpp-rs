@@ -210,6 +210,11 @@ pub const ECAPS2: &str = "urn:xmpp:caps";
 /// XEP-0390: Entity Capabilities 2.0
 pub const ECAPS2_OPTIMIZE: &str = "urn:xmpp:caps:optimize";
 
+/// XEP-0402: Bookmarks 2 (This Time it's Serious)
+pub const BOOKMARKS2: &str = "urn:xmpp:bookmarks:0";
+/// XEP-0402: Bookmarks 2 (This Time it's Serious)
+pub const BOOKMARKS2_COMPAT: &str = "urn:xmpp:bookmarks:0#compat";
+
 /// XEP-0421: Anonymous unique occupant identifiers for MUCs
 pub const OID: &str = "urn:xmpp:occupant-id:0";
 

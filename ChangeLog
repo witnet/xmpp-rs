@@ -5,6 +5,7 @@ DATE  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
         - JID Prep (XEP-0328)
         - Client State Indication (XEP-0352)
         - OpenPGP for XMPP (XEP-0373)
+        - Bookmarks 2 (This Time it's Serious) (XEP-0402)
         - Anonymous unique occupant identifiers for MUCs (XEP-0421)
     * Breaking changes:
         - Presence constructors now take Into<Jid> and assume Some.
