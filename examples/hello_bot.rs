@@ -54,9 +54,15 @@ fn main() {
             Event::ContactChanged(contact) => {
                 println!("Contact {} changed.", contact.jid);
             },
-            Event::OpenRoomBookmark(bookmark) => {
-                println!("Joining room “{}” ({})…", bookmark.name, bookmark.jid);
-                agent.join_room(bookmark.jid, bookmark.nick, bookmark.password, "en", "Yet another bot!");
+            Event::JoinRoom(jid, conference) => {
+                println!("Joining room {} ({:?})…", jid, conference.name);
+                agent.join_room(jid, conference.nick, conference.password, "en", "Yet another bot!");
+            },
+            Event::LeaveRoom(jid) => {
+                println!("Leaving room {}…", jid);
+            },
+            Event::LeaveAllRooms => {
+                println!("Leaving all rooms…");
             },
             Event::RoomJoined(jid) => {
                 println!("Joined room {}.", jid);

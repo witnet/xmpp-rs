@@ -17,11 +17,7 @@ use tokio_xmpp::{
     Packet,
 };
 use xmpp_parsers::{
-    bookmarks::{
-        Autojoin,
-        Conference as ConferenceBookmark,
-        Storage as Bookmarks,
-    },
+    bookmarks2::Conference,
     caps::{compute_disco, hash_caps, Caps},
     disco::{DiscoInfoQuery, DiscoInfoResult, Feature, Identity},
     hashes::Algo,
@@ -33,16 +29,13 @@ use xmpp_parsers::{
     },
     ns,
     presence::{Presence, Type as PresenceType},
-    pubsub::{
-        event::PubSubEvent,
-        pubsub::PubSub,
-    },
+    pubsub::pubsub::{PubSub, Items},
     roster::{Roster, Item as RosterItem},
     stanza_error::{StanzaError, ErrorType, DefinedCondition},
     Jid, BareJid, FullJid, JidParseError,
 };
 
-mod avatar;
+mod pubsub;
 
 pub type Error = tokio_xmpp::Error;
 
@@ -84,7 +77,9 @@ pub enum Event {
     ContactRemoved(RosterItem),
     ContactChanged(RosterItem),
     AvatarRetrieved(Jid, String),
-    OpenRoomBookmark(ConferenceBookmark),
+    JoinRoom(BareJid, Conference),
+    LeaveRoom(BareJid),
+    LeaveAllRooms,
     RoomJoined(BareJid),
     RoomLeft(BareJid),
 }
@@ -141,7 +136,7 @@ impl ClientBuilder<'_> {
             features.push(Feature::new(format!("{}+notify", ns::AVATAR_METADATA)));
         }
         if self.features.contains(&ClientFeature::JoinRooms) {
-            features.push(Feature::new(format!("{}+notify", ns::BOOKMARKS)));
+            features.push(Feature::new(format!("{}+notify", ns::BOOKMARKS2)));
         }
         DiscoInfoResult {
             node: None,
@@ -209,6 +204,10 @@ impl ClientBuilder<'_> {
                         let iq = Iq::from_get("roster", Roster { ver: None, items: vec![] })
                             .into();
                         sender_tx.unbounded_send(Packet::Stanza(iq)).unwrap();
+                        // TODO: only send this when the JoinRooms feature is enabled.
+                        let iq = Iq::from_get("bookmarks", PubSub::Items(Items::new(ns::BOOKMARKS2)))
+                            .into();
+                        sender_tx.unbounded_send(Packet::Stanza(iq)).unwrap();
                     }
                     TokioXmppEvent::Disconnected => {
                         events.push(Event::Disconnected);
@@ -216,6 +215,8 @@ impl ClientBuilder<'_> {
                     TokioXmppEvent::Stanza(stanza) => {
                         if stanza.is("iq", "jabber:client") {
                             let iq = Iq::try_from(stanza).unwrap();
+                            let from =
+                                iq.from.clone().unwrap_or_else(|| Jid::from_str(&jid).unwrap());
                             if let IqType::Get(payload) = iq.payload {
                                 if payload.is("query", ns::DISCO_INFO) {
                                     let query = DiscoInfoQuery::try_from(payload);
@@ -245,15 +246,8 @@ impl ClientBuilder<'_> {
                                         events.push(Event::ContactAdded(item));
                                     }
                                 } else if payload.is("pubsub", ns::PUBSUB) {
-                                    let pubsub = PubSub::try_from(payload).unwrap();
-                                    let from =
-                                        iq.from.clone().unwrap_or_else(|| Jid::from_str(&jid).unwrap());
-                                    if let PubSub::Items(items) = pubsub {
-                                        if items.node.0 == ns::AVATAR_DATA {
-                                            let new_events = avatar::handle_data_pubsub_iq(&from, &items);
-                                            events.extend(new_events);
-                                        }
-                                    }
+                                    let new_events = pubsub::handle_iq_result(&from, payload);
+                                    events.extend(new_events);
                                 }
                             } else if let IqType::Set(_) = iq.payload {
                                 // We MUST answer unhandled set iqs with a service-unavailable error.
@@ -264,28 +258,8 @@ impl ClientBuilder<'_> {
                             let from = message.from.clone().unwrap();
                             for child in message.payloads {
                                 if child.is("event", ns::PUBSUB_EVENT) {
-                                    let event = PubSubEvent::try_from(child).unwrap();
-                                    if let PubSubEvent::PublishedItems { node, items } = event {
-                                        if node.0 == ns::AVATAR_METADATA {
-                                            let new_events = avatar::handle_metadata_pubsub_event(&from, &mut sender_tx, items);
-                                            events.extend(new_events);
-                                        } else if node.0 == ns::BOOKMARKS {
-                                            // TODO: Check that our bare JID is the sender.
-                                            assert_eq!(items.len(), 1);
-                                            let item = items.clone().pop().unwrap();
-                                            let payload = item.payload.clone().unwrap();
-                                            let bookmarks = match Bookmarks::try_from(payload) {
-                                                Ok(bookmarks) => bookmarks,
-                                                // XXX: Don’t panic…
-                                                Err(err) => panic!("… {}", err),
-                                            };
-                                            for bookmark in bookmarks.conferences {
-                                                if bookmark.autojoin == Autojoin::True {
-                                                    events.push(Event::OpenRoomBookmark(bookmark));
-                                                }
-                                            }
-                                        }
-                                    }
+                                    let new_events = pubsub::handle_event(&from, child, &mut sender_tx);
+                                    events.extend(new_events);
                                 }
                             }
                         } else if stanza.is("presence", "jabber:client") {
@@ -362,7 +336,7 @@ impl Agent {
         let nick = nick.unwrap_or_else(|| self.default_nick.borrow().clone());
         let room_jid = room.with_resource(nick);
         let mut presence = Presence::new(PresenceType::None)
-            .with_to(Some(Jid::Full(room_jid)));
+            .with_to(Jid::Full(room_jid));
         presence.add_payload(muc);
         presence.set_status(String::from(lang), String::from(status));
         let presence = presence.into();
