@@ -64,6 +64,7 @@ impl ToString for ClientType {
 
 #[derive(PartialEq)]
 pub enum ClientFeature {
+    #[cfg(feature = "avatars")]
     Avatars,
     ContactList,
     JoinRooms,
@@ -76,6 +77,7 @@ pub enum Event {
     ContactAdded(RosterItem),
     ContactRemoved(RosterItem),
     ContactChanged(RosterItem),
+    #[cfg(feature = "avatars")]
     AvatarRetrieved(Jid, String),
     JoinRoom(BareJid, Conference),
     LeaveRoom(BareJid),
@@ -132,8 +134,11 @@ impl ClientBuilder<'_> {
         let mut features = vec![
             Feature::new(ns::DISCO_INFO),
         ];
-        if self.features.contains(&ClientFeature::Avatars) {
-            features.push(Feature::new(format!("{}+notify", ns::AVATAR_METADATA)));
+        #[cfg(feature = "avatars")]
+        {
+            if self.features.contains(&ClientFeature::Avatars) {
+                features.push(Feature::new(format!("{}+notify", ns::AVATAR_METADATA)));
+            }
         }
         if self.features.contains(&ClientFeature::JoinRooms) {
             features.push(Feature::new(format!("{}+notify", ns::BOOKMARKS2)));

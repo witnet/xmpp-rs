@@ -21,6 +21,7 @@ use xmpp_parsers::{
     pubsub::pubsub::PubSub,
 };
 
+#[cfg(feature = "avatars")]
 pub(crate) mod avatar;
 
 pub(crate) fn handle_event(from: &Jid, elem: Element, mut tx: &mut mpsc::UnboundedSender<Packet>) -> impl IntoIterator<Item = Event> {
@@ -28,6 +29,7 @@ pub(crate) fn handle_event(from: &Jid, elem: Element, mut tx: &mut mpsc::Unbound
     match PubSubEvent::try_from(elem) {
         Ok(PubSubEvent::PublishedItems { node, items }) => {
             match node.0 {
+                #[cfg(feature = "avatars")]
                 node if node == ns::AVATAR_METADATA => {
                     let new_events = avatar::handle_metadata_pubsub_event(&from, &mut tx, items);
                     events.extend(new_events);
@@ -82,24 +84,29 @@ pub(crate) fn handle_iq_result(from: &Jid, elem: Element) -> impl IntoIterator<I
     let mut events = Vec::new();
     let pubsub = PubSub::try_from(elem).unwrap();
     if let PubSub::Items(items) = pubsub {
-        if items.node.0 == ns::AVATAR_DATA {
-            let new_events = avatar::handle_data_pubsub_iq(&from, &items);
-            events.extend(new_events);
-        } else if items.node.0 == ns::BOOKMARKS2 {
-            events.push(Event::LeaveAllRooms);
-            for item in items.items {
-                let item = item.0;
-                let jid = BareJid::from_str(&item.id.clone().unwrap().0).unwrap();
-                let payload = item.payload.clone().unwrap();
-                match Conference::try_from(payload) {
-                    Ok(conference) => {
-                        if let Autojoin::True = conference.autojoin {
-                            events.push(Event::JoinRoom(jid, conference));
-                        }
-                    },
-                    Err(err) => panic!("Wrong payload type in bookmarks 2 item: {}", err),
+        match items.node.0.clone() {
+            #[cfg(feature = "avatars")]
+            node if node == ns::AVATAR_DATA => {
+                let new_events = avatar::handle_data_pubsub_iq(&from, &items);
+                events.extend(new_events);
+            },
+            node if node == ns::BOOKMARKS2 => {
+                events.push(Event::LeaveAllRooms);
+                for item in items.items {
+                    let item = item.0;
+                    let jid = BareJid::from_str(&item.id.clone().unwrap().0).unwrap();
+                    let payload = item.payload.clone().unwrap();
+                    match Conference::try_from(payload) {
+                        Ok(conference) => {
+                            if let Autojoin::True = conference.autojoin {
+                                events.push(Event::JoinRoom(jid, conference));
+                            }
+                        },
+                        Err(err) => panic!("Wrong payload type in bookmarks 2 item: {}", err),
+                    }
                 }
-            }
+            },
+            _ => unimplemented!()
         }
     }
     events
