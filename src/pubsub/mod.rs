@@ -26,7 +26,9 @@ pub(crate) mod avatar;
 
 pub(crate) fn handle_event(from: &Jid, elem: Element, mut tx: &mut mpsc::UnboundedSender<Packet>) -> impl IntoIterator<Item = Event> {
     let mut events = Vec::new();
-    match PubSubEvent::try_from(elem) {
+    let event = PubSubEvent::try_from(elem);
+    trace!("PubSub event: {:#?}", event);
+    match event {
         Ok(PubSubEvent::PublishedItems { node, items }) => {
             match node.0 {
                 #[cfg(feature = "avatars")]
@@ -83,6 +85,7 @@ pub(crate) fn handle_event(from: &Jid, elem: Element, mut tx: &mut mpsc::Unbound
 pub(crate) fn handle_iq_result(from: &Jid, elem: Element) -> impl IntoIterator<Item = Event> {
     let mut events = Vec::new();
     let pubsub = PubSub::try_from(elem).unwrap();
+    trace!("PubSub: {:#?}", pubsub);
     if let PubSub::Items(items) = pubsub {
         match items.node.0.clone() {
             #[cfg(feature = "avatars")]

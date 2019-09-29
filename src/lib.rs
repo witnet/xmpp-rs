@@ -34,6 +34,8 @@ use xmpp_parsers::{
     stanza_error::{StanzaError, ErrorType, DefinedCondition},
     Jid, BareJid, FullJid, JidParseError,
 };
+#[macro_use]
+extern crate log;
 
 mod pubsub;
 
