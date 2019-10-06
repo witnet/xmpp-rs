@@ -81,11 +81,13 @@ pub enum Event {
     ContactChanged(RosterItem),
     #[cfg(feature = "avatars")]
     AvatarRetrieved(Jid, String),
+    ChatMessage(BareJid, Body),
     JoinRoom(BareJid, Conference),
     LeaveRoom(BareJid),
     LeaveAllRooms,
     RoomJoined(BareJid),
     RoomLeft(BareJid),
+    RoomMessage(BareJid, String, Body),
 }
 
 #[derive(Default)]
@@ -263,10 +265,20 @@ impl ClientBuilder<'_> {
                         } else if stanza.is("message", "jabber:client") {
                             let message = Message::try_from(stanza).unwrap();
                             let from = message.from.clone().unwrap();
+                            match message.get_best_body(&["fr", "en"]) {
+                                Some((lang, body)) => match message.type_ {
+                                    MessageType::Groupchat => events.push(Event::RoomMessage(from.clone().into(), FullJid::try_from(from.clone()).unwrap().resource, body.clone())),
+                                    MessageType::Chat => events.push(Event::ChatMessage(from.clone().into(), body.clone())),
+                                    _ => ()
+                                },
+                                None => ()
+                            }
                             for child in message.payloads {
                                 if child.is("event", ns::PUBSUB_EVENT) {
                                     let new_events = pubsub::handle_event(&from, child, &mut sender_tx);
                                     events.extend(new_events);
+                                } else {
+                                    warn!("Unhandled message payload: {}", String::from(&child));
                                 }
                             }
                         } else if stanza.is("presence", "jabber:client") {
