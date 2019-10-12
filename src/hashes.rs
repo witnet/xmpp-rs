@@ -131,6 +131,19 @@ impl Hash {
         Ok(Hash::new(algo, bytes))
     }
 
+    /// Like [new](#method.new) but takes hex-encoded data before decoding it.
+    pub fn from_colon_separated_hex(algo: Algo, hex: &str) -> Result<Hash, ParseIntError> {
+        let mut bytes = vec![];
+        for i in 0..(1 + hex.len()) / 3 {
+            let byte = u8::from_str_radix(&hex[3 * i..3 * i + 2], 16)?;
+            if 3 * i + 2 < hex.len() {
+                assert_eq!(&hex[3 * i + 2..3 * i + 3], ":");
+            }
+            bytes.push(byte);
+        }
+        Ok(Hash::new(algo, bytes))
+    }
+
     /// Formats this hash into base64.
     pub fn to_base64(&self) -> String {
         base64::encode(&self.hash[..])
@@ -146,7 +159,7 @@ impl Hash {
     }
 
     /// Formats this hash into colon-separated hexadecimal.
-    pub fn to_colon_hex(&self) -> String {
+    pub fn to_colon_separated_hex(&self) -> String {
         let mut bytes = vec![];
         for byte in self.hash.iter() {
             bytes.push(format!("{:02x}", byte));
@@ -225,7 +238,7 @@ mod tests {
         let hash = Hash::try_from(elem).unwrap();
         assert_eq!(hash.to_base64(), "2XarmwTlNxDAMkvymloX3S5+VbylNrJt/l5QyPa+YoU=");
         assert_eq!(hash.to_hex(), "d976ab9b04e53710c0324bf29a5a17dd2e7e55bca536b26dfe5e50c8f6be6285");
-        assert_eq!(hash.to_colon_hex(), "d9:76:ab:9b:04:e5:37:10:c0:32:4b:f2:9a:5a:17:dd:2e:7e:55:bc:a5:36:b2:6d:fe:5e:50:c8:f6:be:62:85");
+        assert_eq!(hash.to_colon_separated_hex(), "d9:76:ab:9b:04:e5:37:10:c0:32:4b:f2:9a:5a:17:dd:2e:7e:55:bc:a5:36:b2:6d:fe:5e:50:c8:f6:be:62:85");
     }
 
     #[test]

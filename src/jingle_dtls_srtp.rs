@@ -5,7 +5,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use crate::util::helpers::ColonSeparatedHex;
-use crate::hashes::Algo;
+use crate::util::error::Error;
+use crate::hashes::{Hash, Algo};
 
 generate_attribute!(
     /// Indicates which of the end points should initiate the TCP connection establishment.
@@ -45,6 +46,24 @@ generate_element!(
         value: ColonSeparatedHex<Vec<u8>>
     )
 );
+
+impl Fingerprint {
+    /// Create a new Fingerprint from a Setup and a Hash.
+    pub fn from_hash(setup: Setup, hash: Hash) -> Fingerprint {
+        Fingerprint {
+            hash: hash.algo,
+            setup,
+            value: hash.hash,
+        }
+    }
+
+    /// Create a new Fingerprint from a Setup and parsing the hash.
+    pub fn from_colon_separated_hex(setup: Setup, algo: &str, hash: &str) -> Result<Fingerprint, Error> {
+        let algo = algo.parse()?;
+        let hash = Hash::from_colon_separated_hex(algo, hash)?;
+        Ok(Fingerprint::from_hash(setup, hash))
+    }
+}
 
 #[cfg(test)]
 mod tests {
