@@ -4,6 +4,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+use crate::jingle_ssma::{Source, Group};
+
 generate_element!(
     /// Wrapper element describing an RTP session.
     Description, "description", JINGLE_RTP,
@@ -18,7 +20,13 @@ generate_element!(
     ],
     children: [
         /// List of encodings that can be used for this RTP stream.
-        payload_types: Vec<PayloadType> = ("payload-type", JINGLE_RTP) => PayloadType
+        payload_types: Vec<PayloadType> = ("payload-type", JINGLE_RTP) => PayloadType,
+
+        /// List of ssrc-group.
+        ssrc_groups: Vec<Group> = ("ssrc-group", JINGLE_SSMA) => Group,
+
+        /// List of ssrc.
+        ssrcs: Vec<Source> = ("ssrc", JINGLE_SSMA) => Source
 
         // TODO: Add support for <encryption/> and <bandwidth/>.
     ]
@@ -31,6 +39,8 @@ impl Description {
             media,
             ssrc: None,
             payload_types: Vec::new(),
+            ssrc_groups: Vec::new(),
+            ssrcs: Vec::new(),
         }
     }
 }

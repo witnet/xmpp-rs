@@ -183,6 +183,9 @@ pub mod jingle_dtls_srtp;
 /// XEP-0328: JID Prep
 pub mod jid_prep;
 
+/// XEP-0339: Source-Specific Media Attributes in Jingle
+pub mod jingle_ssma;
+
 /// XEP-0352: Client State Indication
 pub mod csi;
 
