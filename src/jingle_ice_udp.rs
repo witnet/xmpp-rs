@@ -26,6 +26,18 @@ generate_element!(
     ]
 );
 
+impl Transport {
+    /// Create a new ICE-UDP transport.
+    pub fn new() -> Transport {
+        Transport {
+            pwd: None,
+            ufrag: None,
+            candidates: Vec::new(),
+            fingerprint: None,
+        }
+    }
+}
+
 generate_attribute!(
     /// A Candidate Type as defined in ICE-CORE.
     Type, "type", {
