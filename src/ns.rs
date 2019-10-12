@@ -155,6 +155,9 @@ pub const MICROBLOG: &str = "urn:xmpp:microblog:0";
 /// XEP-0280: Message Carbons
 pub const CARBONS: &str = "urn:xmpp:carbons:2";
 
+/// XEP-0293: Jingle RTP Feedback Negotiation
+pub const JINGLE_RTCP_FB: &str = "urn:xmpp:jingle:apps:rtp:rtcp-fb:0";
+
 /// XEP-0297: Stanza Forwarding
 pub const FORWARD: &str = "urn:xmpp:forward:0";
 

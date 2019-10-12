@@ -162,6 +162,9 @@ pub mod jingle_ibb;
 /// XEP-0280: Message Carbons
 pub mod carbons;
 
+/// XEP-0293: Jingle RTP Feedback Negotiation
+pub mod jingle_rtcp_fb;
+
 /// XEP-0297: Stanza Forwarding
 pub mod forwarding;
 

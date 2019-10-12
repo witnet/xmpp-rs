@@ -363,6 +363,15 @@
     </implements>
     <implements>
         <xmpp:SupportedXep>
+            <xmpp:xep rdf:resource="https://xmpp.org/extensions/xep-0293.html"/>
+            <xmpp:status>partial</xmpp:status>
+            <xmpp:version>1.0.1</xmpp:version>
+            <xmpp:since>NEXT</xmpp:since>
+            <xmpp:note>Only supported in payload-type, and only for rtcp-fb.</xmpp:note>
+        </xmpp:SupportedXep>
+    </implements>
+    <implements>
+        <xmpp:SupportedXep>
             <xmpp:xep rdf:resource="https://xmpp.org/extensions/xep-0297.html"/>
             <xmpp:status>complete</xmpp:status>
             <xmpp:version>1.0</xmpp:version>

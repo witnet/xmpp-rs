@@ -5,6 +5,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use crate::jingle_ssma::{Source, Group};
+use crate::jingle_rtcp_fb::RtcpFb;
 
 generate_element!(
     /// Wrapper element describing an RTP session.
@@ -76,7 +77,10 @@ generate_element!(
         /// List of parameters specifying this payload-type.
         ///
         /// Their order MUST be ignored.
-        parameters: Vec<Parameter> = ("parameter", JINGLE_RTP) => Parameter
+        parameters: Vec<Parameter> = ("parameter", JINGLE_RTP) => Parameter,
+
+        /// List of rtcp-fb parameters from XEP-0293.
+        rtcp_fbs: Vec<RtcpFb> = ("rtcp-fb", JINGLE_RTCP_FB) => RtcpFb
     ]
 );
 
@@ -91,6 +95,7 @@ impl PayloadType {
             name: Some(name),
             ptime: None,
             parameters: Vec::new(),
+            rtcp_fbs: Vec::new(),
         }
     }
 }
@@ -126,9 +131,9 @@ mod tests {
     #[cfg(target_pointer_width = "64")]
     #[test]
     fn test_size() {
-        assert_size!(Description, 72);
+        assert_size!(Description, 120);
         assert_size!(Channels, 1);
-        assert_size!(PayloadType, 80);
+        assert_size!(PayloadType, 104);
         assert_size!(Parameter, 48);
     }
 
