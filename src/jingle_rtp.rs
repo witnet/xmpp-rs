@@ -24,6 +24,17 @@ generate_element!(
     ]
 );
 
+impl Description {
+    /// Create a new RTP description.
+    pub fn new(media: String) -> Description {
+        Description {
+            media,
+            ssrc: None,
+            payload_types: Vec::new(),
+        }
+    }
+}
+
 generate_attribute!(
     /// The number of channels.
     Channels, "channels", u8, Default = 1
@@ -58,6 +69,21 @@ generate_element!(
         parameters: Vec<Parameter> = ("parameter", JINGLE_RTP) => Parameter
     ]
 );
+
+impl PayloadType {
+    /// Create a new RTP payload-type.
+    pub fn new(id: u8, name: String) -> PayloadType {
+        PayloadType {
+            channels: Default::default(),
+            clockrate: None,
+            id,
+            maxptime: None,
+            name: Some(name),
+            ptime: None,
+            parameters: Vec::new(),
+        }
+    }
+}
 
 generate_element!(
     /// Parameter related to a payload.
