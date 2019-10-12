@@ -113,6 +113,18 @@ generate_element!(
     ]
 );
 
+impl Items {
+    /// Create a new items request.
+    pub fn new(node: &str) -> Items {
+        Items {
+            node: NodeName(String::from(node)),
+            max_items: None,
+            subid: None,
+            items: Vec::new(),
+        }
+    }
+}
+
 /// Response wrapper for a PubSub `<item/>`.
 #[derive(Debug, Clone)]
 pub struct Item(pub PubSubItem);
