@@ -6,6 +6,9 @@
 
 use crate::util::error::Error;
 use crate::iq::IqSetPayload;
+use crate::jingle_ice_udp::Transport as IceUdpTransport;
+use crate::jingle_ibb::Transport as IbbTransport;
+use crate::jingle_s5b::Transport as Socks5Transport;
 use crate::ns;
 use jid::Jid;
 use crate::Element;
@@ -164,6 +167,78 @@ generate_id!(
     ContentId
 );
 
+/// Enum wrapping all of the various supported transports of a Content.
+#[derive(Debug, Clone)]
+pub enum Transport {
+    /// Jingle ICE-UDP Bytestreams (XEP-0176) transport.
+    IceUdp(IceUdpTransport),
+
+    /// Jingle In-Band Bytestreams (XEP-0261) transport.
+    Ibb(IbbTransport),
+
+    /// Jingle SOCKS5 Bytestreams (XEP-0260) transport.
+    Socks5(Socks5Transport),
+
+    /// To be used for any transport that isn’t known at compile-time.
+    Unknown(Element),
+}
+
+impl TryFrom<Element> for Transport {
+    type Error = Error;
+
+    fn try_from(elem: Element) -> Result<Transport, Error> {
+        Ok(if elem.is("transport", ns::JINGLE_ICE_UDP) {
+            Transport::IceUdp(IceUdpTransport::try_from(elem)?)
+        } else if elem.is("transport", ns::JINGLE_IBB) {
+            Transport::Ibb(IbbTransport::try_from(elem)?)
+        } else if elem.is("transport", ns::JINGLE_S5B) {
+            Transport::Socks5(Socks5Transport::try_from(elem)?)
+        } else {
+            Transport::Unknown(elem)
+        })
+    }
+}
+
+impl From<IceUdpTransport> for Transport {
+    fn from(transport: IceUdpTransport) -> Transport {
+        Transport::IceUdp(transport)
+    }
+}
+
+impl From<IbbTransport> for Transport {
+    fn from(transport: IbbTransport) -> Transport {
+        Transport::Ibb(transport)
+    }
+}
+
+impl From<Socks5Transport> for Transport {
+    fn from(transport: Socks5Transport) -> Transport {
+        Transport::Socks5(transport)
+    }
+}
+
+impl From<Transport> for Element {
+    fn from(transport: Transport) -> Element {
+        match transport {
+            Transport::IceUdp(transport) => transport.into(),
+            Transport::Ibb(transport) => transport.into(),
+            Transport::Socks5(transport) => transport.into(),
+            Transport::Unknown(elem) => elem,
+        }
+    }
+}
+
+impl Transport {
+    fn get_ns(&self) -> String {
+        match self {
+            Transport::IceUdp(_) => String::from(ns::JINGLE_ICE_UDP),
+            Transport::Ibb(_) => String::from(ns::JINGLE_IBB),
+            Transport::Socks5(_) => String::from(ns::JINGLE_S5B),
+            Transport::Unknown(elem) => elem.ns().unwrap_or_else(|| String::new()),
+        }
+    }
+}
+
 generate_element!(
     /// Describes a session’s content, there can be multiple content in one
     /// session.
@@ -186,7 +261,7 @@ generate_element!(
         description: Option<Element> = ("description", JINGLE) => Element,
 
         /// How to send it.
-        transport: Option<Element> = ("transport", JINGLE) => Element,
+        transport: Option<Transport> = ("transport", *) => Transport,
 
         /// With which security.
         security: Option<Element> = ("security", JINGLE) => Element
@@ -226,8 +301,8 @@ impl Content {
     }
 
     /// Set the transport of this content.
-    pub fn with_transport(mut self, transport: Element) -> Content {
-        self.transport = Some(transport);
+    pub fn with_transport<T: Into<Transport>>(mut self, transport: T) -> Content {
+        self.transport = Some(transport.into());
         self
     }
 
@@ -575,7 +650,7 @@ mod tests {
         assert_size!(Senders, 1);
         assert_size!(Disposition, 1);
         assert_size!(ContentId, 24);
-        assert_size!(Content, 344);
+        assert_size!(Content, 384);
         assert_size!(Reason, 1);
         assert_size!(ReasonElement, 32);
         assert_size!(SessionId, 24);
@@ -626,18 +701,18 @@ mod tests {
 
     #[test]
     fn test_content() {
-        let elem: Element = "<jingle xmlns='urn:xmpp:jingle:1' action='session-initiate' sid='coucou'><content creator='initiator' name='coucou'><description/><transport/></content></jingle>".parse().unwrap();
+        let elem: Element = "<jingle xmlns='urn:xmpp:jingle:1' action='session-initiate' sid='coucou'><content creator='initiator' name='coucou'><description/><transport xmlns='urn:xmpp:jingle:transports:stub:0'/></content></jingle>".parse().unwrap();
         let jingle = Jingle::try_from(elem).unwrap();
         assert_eq!(jingle.contents[0].creator, Creator::Initiator);
         assert_eq!(jingle.contents[0].name, ContentId(String::from("coucou")));
         assert_eq!(jingle.contents[0].senders, Senders::Both);
         assert_eq!(jingle.contents[0].disposition, Disposition::Session);
 
-        let elem: Element = "<jingle xmlns='urn:xmpp:jingle:1' action='session-initiate' sid='coucou'><content creator='initiator' name='coucou' senders='both'><description/><transport/></content></jingle>".parse().unwrap();
+        let elem: Element = "<jingle xmlns='urn:xmpp:jingle:1' action='session-initiate' sid='coucou'><content creator='initiator' name='coucou' senders='both'><description/><transport xmlns='urn:xmpp:jingle:transports:stub:0'/></content></jingle>".parse().unwrap();
         let jingle = Jingle::try_from(elem).unwrap();
         assert_eq!(jingle.contents[0].senders, Senders::Both);
 
-        let elem: Element = "<jingle xmlns='urn:xmpp:jingle:1' action='session-initiate' sid='coucou'><content creator='initiator' name='coucou' disposition='early-session'><description/><transport/></content></jingle>".parse().unwrap();
+        let elem: Element = "<jingle xmlns='urn:xmpp:jingle:1' action='session-initiate' sid='coucou'><content creator='initiator' name='coucou' disposition='early-session'><description/><transport xmlns='urn:xmpp:jingle:transports:stub:0'/></content></jingle>".parse().unwrap();
         let jingle = Jingle::try_from(elem).unwrap();
         assert_eq!(jingle.contents[0].disposition, Disposition::EarlySession);
     }
