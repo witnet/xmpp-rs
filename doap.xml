@@ -18,8 +18,8 @@
     <download-page rdf:resource="https://crates.io/crates/xmpp-parsers"/>
     <bug-database rdf:resource="https://gitlab.com/xmpp-rs/xmpp-parsers/issues"/>
     <!-- See https://github.com/ewilderj/doap/issues/53 -->
-    <developer-forum rdf:resource="xmpp:xmpp-rs@muc.linkmauve.fr?join"/>
-    <support-forum rdf:resource="xmpp:xmpp-rs@muc.linkmauve.fr?join"/>
+    <developer-forum rdf:resource="xmpp:chat@xmpp.rs?join"/>
+    <support-forum rdf:resource="xmpp:chat@xmpp.rs?join"/>
 
     <license rdf:resource="https://gitlab.com/xmpp-rs/xmpp-parsers/raw/master/LICENSE"/>
 
