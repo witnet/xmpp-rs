@@ -1,6 +1,8 @@
-Version XXX, released YYY:
+Version 0.8, released 2019-10-15:
   * Updates
     - CI: Split jobs, add tests, and caching
+  * Breaking
+    - 0.7.1 was actually a breaking release
 
 Version 0.7.2, released 2019-09-13:
   * Updates
