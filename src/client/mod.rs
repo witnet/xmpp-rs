@@ -22,8 +22,6 @@ use self::bind::ClientBind;
 
 /// XMPP client connection and state
 pub struct Client {
-    /// The client's current Jabber-Id
-    pub jid: Jid,
     state: ClientState,
 }
 
@@ -51,9 +49,8 @@ impl Client {
     /// Start a new client given that the JID is already parsed.
     pub fn new_with_jid(jid: Jid, password: &str) -> Self {
         let password = password.to_owned();
-        let connect = Self::make_connect(jid.clone(), password.clone());
+        let connect = Self::make_connect(jid, password.clone());
         let client = Client {
-            jid,
             state: ClientState::Connecting(Box::new(connect)),
         };
         client
@@ -124,6 +121,15 @@ impl Client {
 
     fn bind<S: AsyncWrite>(stream: xmpp_stream::XMPPStream<S>) -> ClientBind<S> {
         ClientBind::new(stream)
+    }
+
+    /// Get the client's bound JID (the one reported by the XMPP
+    /// server).
+    pub fn bound_jid(&self) -> Option<&Jid> {
+        match self.state {
+            ClientState::Connected(ref stream) => Some(&stream.jid),
+            _ => None,
+        }
     }
 }
 
