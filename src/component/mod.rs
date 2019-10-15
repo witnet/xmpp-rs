@@ -90,7 +90,7 @@ impl Stream for Component {
             ComponentState::Connecting(mut connect) => match connect.poll() {
                 Ok(Async::Ready(stream)) => {
                     self.state = ComponentState::Connected(stream);
-                    Ok(Async::Ready(Some(Event::Online)))
+                    Ok(Async::Ready(Some(Event::Online(self.jid.clone()))))
                 }
                 Ok(Async::NotReady) => {
                     self.state = ComponentState::Connecting(connect);

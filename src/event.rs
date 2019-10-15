@@ -1,10 +1,10 @@
-use xmpp_parsers::Element;
+use xmpp_parsers::{Element, Jid};
 
 /// High-level event on the Stream implemented by Client and Component
 #[derive(Debug)]
 pub enum Event {
     /// Stream is connected and initialized
-    Online,
+    Online(Jid),
     /// Stream end
     Disconnected,
     /// Received stanza/nonza
@@ -15,8 +15,16 @@ impl Event {
     /// `Online` event?
     pub fn is_online(&self) -> bool {
         match *self {
-            Event::Online => true,
+            Event::Online(_) => true,
             _ => false,
+        }
+    }
+
+    /// Get the server-assigned JID for the `Online` event
+    pub fn get_jid(&self) -> Option<&Jid> {
+        match *self {
+            Event::Online(ref jid) => Some(jid),
+            _ => None,
         }
     }
 

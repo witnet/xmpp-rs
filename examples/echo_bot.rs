@@ -47,7 +47,10 @@ fn main() {
         if wait_for_stream_end {
             /* Do nothing */
         } else if event.is_online() {
-            println!("Online!");
+            let jid = event.get_jid()
+                .map(|jid| format!("{}", jid))
+                .unwrap_or("unknown".to_owned());
+            println!("Online at {}", jid);
 
             let presence = make_presence();
             tx.start_send(Packet::Stanza(presence)).unwrap();

@@ -145,8 +145,9 @@ impl Stream for Client {
             ClientState::Disconnected => Ok(Async::Ready(None)),
             ClientState::Connecting(mut connect) => match connect.poll() {
                 Ok(Async::Ready(stream)) => {
+                    let jid = stream.jid.clone();
                     self.state = ClientState::Connected(stream);
-                    Ok(Async::Ready(Some(Event::Online)))
+                    Ok(Async::Ready(Some(Event::Online(jid))))
                 }
                 Ok(Async::NotReady) => {
                     self.state = ClientState::Connecting(connect);
