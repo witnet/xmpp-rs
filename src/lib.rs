@@ -64,7 +64,7 @@
 //! minidom = "*"
 //! ```
 
-extern crate quick_xml;
+pub use quick_xml;
 
 pub mod error;
 pub mod element;
