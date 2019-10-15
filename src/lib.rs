@@ -50,7 +50,7 @@ impl fmt::Display for JidParseError {
 }
 
 /// An enum representing a Jabber ID. It can be either a `FullJid` or a `BareJid`.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Jid {
     /// Bare Jid
     Bare(BareJid),
@@ -624,6 +624,7 @@ mod tests {
     use super::*;
 
     use std::str::FromStr;
+    use std::collections::HashMap;
 
     #[test]
     fn can_parse_full_jids() {
@@ -734,6 +735,11 @@ mod tests {
             String::from("a@b/c")
         );
         assert_eq!(String::from(BareJid::new("a", "b")), String::from("a@b"));
+    }
+
+    #[test]
+    fn hash() {
+        let _map: HashMap<Jid, String> = HashMap::new();
     }
 
     #[test]
