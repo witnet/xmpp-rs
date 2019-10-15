@@ -21,7 +21,7 @@ edition = "2018"
 gitlab = { repository = "lumi/minidom-rs" }
 
 [dependencies]
-quick-xml = "0.16"
+quick-xml = "0.17"
 
 [features]
 default = ["comments"]
