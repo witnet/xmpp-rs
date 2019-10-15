@@ -1,5 +1,5 @@
-Version NEXT:
-DATE  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
+Version 0.16.0:
+2019-10-15  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
     * New parsers/serialisers:
         - Client Certificate Management for SASL EXTERNAL (XEP-0257)
         - JID Prep (XEP-0328)
@@ -7,10 +7,13 @@ DATE  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
         - OpenPGP for XMPP (XEP-0373)
         - Bookmarks 2 (This Time it's Serious) (XEP-0402)
         - Anonymous unique occupant identifiers for MUCs (XEP-0421)
+        - Source-Specific Media Attributes in Jingle (XEP-0339)
+        - Jingle RTP Feedback Negotiation (XEP-0293)
     * Breaking changes:
         - Presence constructors now take Into<Jid> and assume Some.
     * Improvements:
         - CI: refactor, add caching
+        - Update jid-rs to 0.8
 
 Version 0.15.0:
 2019-09-06  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
