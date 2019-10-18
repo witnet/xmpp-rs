@@ -1,0 +1,28 @@
+[package]
+name = "minidom"
+version = "0.11.1"
+authors = [
+  "lumi <lumi@pew.im>",
+  "Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>",
+  "Bastien Orivel <eijebong+minidom@bananium.fr>",
+  "Astro <astro@spaceboyz.net>",
+  "Maxime “pep” Buquet <pep@bouah.net>",
+]
+description = "A small, simple DOM implementation on top of quick-xml"
+homepage = "https://gitlab.com/lumi/minidom-rs"
+repository = "https://gitlab.com/lumi/minidom-rs"
+documentation = "https://docs.rs/minidom"
+readme = "README.md"
+keywords = ["xml"]
+license = "MIT"
+edition = "2018"
+
+[badges]
+gitlab = { repository = "lumi/minidom-rs" }
+
+[dependencies]
+quick-xml = "0.17"
+
+[features]
+default = ["comments"]
+comments = []
