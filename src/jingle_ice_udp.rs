@@ -36,6 +36,18 @@ impl Transport {
             fingerprint: None,
         }
     }
+
+    /// Add a candidate to this transport.
+    pub fn add_candidate(mut self, candidate: Candidate) -> Self {
+        self.candidates.push(candidate);
+        self
+    }
+
+    /// Set the DTLS-SRTP fingerprint of this transport.
+    pub fn with_fingerprint(mut self, fingerprint: Fingerprint) -> Self {
+        self.fingerprint = Some(fingerprint);
+        self
+    }
 }
 
 generate_attribute!(
