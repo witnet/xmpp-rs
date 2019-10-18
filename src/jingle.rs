@@ -6,6 +6,7 @@
 
 use crate::util::error::Error;
 use crate::iq::IqSetPayload;
+use crate::jingle_rtp::Description as RtpDescription;
 use crate::jingle_ice_udp::Transport as IceUdpTransport;
 use crate::jingle_ibb::Transport as IbbTransport;
 use crate::jingle_s5b::Transport as Socks5Transport;
@@ -167,6 +168,52 @@ generate_id!(
     ContentId
 );
 
+/// Enum wrapping all of the various supported descriptions of a Content.
+#[derive(Debug, Clone)]
+pub enum Description {
+    /// Jingle RTP Sessions (XEP-0167) description.
+    Rtp(RtpDescription),
+
+    /// To be used for any description that isn’t known at compile-time.
+    Unknown(Element),
+}
+
+impl TryFrom<Element> for Description {
+    type Error = Error;
+
+    fn try_from(elem: Element) -> Result<Description, Error> {
+        Ok(if elem.is("description", ns::JINGLE_RTP) {
+            Description::Rtp(RtpDescription::try_from(elem)?)
+        } else {
+            Description::Unknown(elem)
+        })
+    }
+}
+
+impl From<RtpDescription> for Description {
+    fn from(desc: RtpDescription) -> Description {
+        Description::Rtp(desc)
+    }
+}
+
+impl From<Description> for Element {
+    fn from(desc: Description) -> Element {
+        match desc {
+            Description::Rtp(desc) => desc.into(),
+            Description::Unknown(elem) => elem,
+        }
+    }
+}
+
+impl Description {
+    fn get_ns(&self) -> String {
+        match self {
+            Description::Rtp(_) => String::from(ns::JINGLE_RTP),
+            Description::Unknown(elem) => elem.ns().unwrap_or_else(|| String::new()),
+        }
+    }
+}
+
 /// Enum wrapping all of the various supported transports of a Content.
 #[derive(Debug, Clone)]
 pub enum Transport {
@@ -258,7 +305,7 @@ generate_element!(
     ],
     children: [
         /// What to send.
-        description: Option<Element> = ("description", JINGLE) => Element,
+        description: Option<Description> = ("description", *) => Description,
 
         /// How to send it.
         transport: Option<Transport> = ("transport", *) => Transport,
@@ -295,8 +342,8 @@ impl Content {
     }
 
     /// Set the description of this content.
-    pub fn with_description(mut self, description: Element) -> Content {
-        self.description = Some(description);
+    pub fn with_description<D: Into<Description>>(mut self, description: D) -> Content {
+        self.description = Some(description.into());
         self
     }
 
