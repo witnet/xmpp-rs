@@ -85,6 +85,13 @@ macro_rules! generate_attribute {
                 })
             }
         }
+        impl std::fmt::Display for $elem {
+            fn fmt(&self, fmt: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
+                write!(fmt, "{}", match self {
+                    $($elem::$a => $b),+
+                })
+            }
+        }
         impl ::minidom::IntoAttributeValue for $elem {
             fn into_attribute_value(self) -> Option<String> {
                 Some(String::from(match self {
