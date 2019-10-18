@@ -27,7 +27,7 @@ generate_element!(
         ssrc_groups: Vec<Group> = ("ssrc-group", JINGLE_SSMA) => Group,
 
         /// List of ssrc.
-        ssrcs: Vec<Source> = ("ssrc", JINGLE_SSMA) => Source
+        ssrcs: Vec<Source> = ("source", JINGLE_SSMA) => Source
 
         // TODO: Add support for <encryption/> and <bandwidth/>.
     ]
