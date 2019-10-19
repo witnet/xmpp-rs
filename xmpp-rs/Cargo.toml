@@ -15,7 +15,7 @@ edition = "2018"
 
 [dependencies]
 tokio-xmpp = "1.0.1"
-xmpp-parsers = "0.15"
+xmpp-parsers = "0.16"
 futures = "0.1"
 tokio = "0.1"
 log = "0.4"
