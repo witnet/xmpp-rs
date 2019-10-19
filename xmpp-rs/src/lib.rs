@@ -201,7 +201,7 @@ impl ClientBuilder<'_> {
                 };
 
                 match event {
-                    TokioXmppEvent::Online => {
+                    TokioXmppEvent::Online(_) => {
                         let presence = ClientBuilder::make_initial_presence(&disco, &node).into();
                         let packet = Packet::Stanza(presence);
                         sender_tx.unbounded_send(packet)

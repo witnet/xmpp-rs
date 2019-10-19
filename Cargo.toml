@@ -1,21 +1,15 @@
-[package]
-name = "xmpp"
-version = "0.3.0"
-authors = [
-  "Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>",
-  "Maxime “pep” Buquet <pep@bouah.net>",
+[workspace]
+members = [  # alphabetically sorted
+  "jid-rs",
+  "minidom-rs",
+  "tokio-xmpp",
+  "xmpp-parsers",
+  "xmpp-rs",
 ]
-description = "High-level XMPP library"
-homepage = "https://gitlab.com/linkmauve/xmpp-rs"
-repository = "https://gitlab.com/linkmauve/xmpp-rs"
-keywords = ["xmpp", "jabber", "chat", "messaging", "bot"]
-categories = ["network-programming"]
-license = "MPL-2.0"
-edition = "2018"
 
-[dependencies]
-tokio-xmpp = "1.0.1"
-xmpp-parsers = "0.15"
-futures = "0.1"
-tokio = "0.1"
-log = "0.4"
+[patch.crates-io]
+jid = { path = "jid-rs" }
+minidom = { path = "minidom-rs" }
+tokio-xmpp = { path = "tokio-xmpp" }
+xmpp-parsers = { path = "xmpp-parsers" }
+xmpp = { path = "xmpp-rs" }
