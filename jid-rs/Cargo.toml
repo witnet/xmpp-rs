@@ -7,8 +7,8 @@ authors = [
   "Maxime “pep” Buquet <pep@bouah.net>",
 ]
 description = "A crate which provides a Jid struct for Jabber IDs."
-homepage = "https://gitlab.com/xmpp-rs/jid-rs"
-repository = "https://gitlab.com/xmpp-rs/jid-rs"
+homepage = "https://gitlab.com/xmpp-rs/xmpp-rs"
+repository = "https://gitlab.com/xmpp-rs/xmpp-rs"
 documentation = "https://docs.rs/jid"
 readme = "README.md"
 keywords = ["xmpp", "jid"]
@@ -16,7 +16,7 @@ license = "MPL-2.0"
 edition = "2018"
 
 [badges]
-gitlab = { repository = "xmpp-rs/jid-rs" }
+gitlab = { repository = "xmpp-rs/xmpp-rs" }
 
 [dependencies]
 minidom = { version = "0.11", optional = true }

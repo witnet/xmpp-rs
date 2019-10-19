@@ -9,8 +9,8 @@ authors = [
   "Maxime “pep” Buquet <pep@bouah.net>",
 ]
 description = "A small, simple DOM implementation on top of quick-xml"
-homepage = "https://gitlab.com/lumi/minidom-rs"
-repository = "https://gitlab.com/lumi/minidom-rs"
+homepage = "https://gitlab.com/xmpp-rs/xmpp-rs"
+repository = "https://gitlab.com/xmpp-rs/xmpp-rs"
 documentation = "https://docs.rs/minidom"
 readme = "README.md"
 keywords = ["xml"]
@@ -18,7 +18,7 @@ license = "MIT"
 edition = "2018"
 
 [badges]
-gitlab = { repository = "lumi/minidom-rs" }
+gitlab = { repository = "xmpp-rs/xmpp-rs" }
 
 [dependencies]
 quick-xml = "0.17"
