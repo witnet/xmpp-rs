@@ -23,12 +23,12 @@ variables:
 .build:
   stage: build
   script:
-    - cargo build --verbose --no-default-features --features=$FEATURES
+    - cargo build --verbose
 
 .test:
   stage: test
   script:
-    - cargo test --verbose --no-default-features --features=$FEATURES
+    - cargo test --verbose
 
 rust-latest-build:
   extends:
@@ -40,7 +40,6 @@ rust-nightly-build:
     - .build
     - .nightly
 
-
 rust-latest-test:
   extends:
     - .test
@@ -50,13 +49,3 @@ rust-nightly-test:
   extends:
     - .test
     - .nightly
-
-rust-latest-build with features=disable-validation:
-  extends: rust-latest-build
-  variables:
-    FEATURES: "disable-validation"
-
-rust-latest-test with features=disable-validation:
-  extends: rust-latest-test
-  variables:
-    FEATURES: "disable-validation"
