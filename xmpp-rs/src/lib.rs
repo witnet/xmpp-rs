@@ -167,21 +167,23 @@ impl ClientBuilder<'_> {
         self,
     ) -> Result<(Agent, impl Stream<Item = Event, Error = tokio_xmpp::Error>), JidParseError> {
         let client = TokioXmppClient::new(self.jid, self.password)?;
-        Ok(self.build_impl(client))
+        let (sender_tx, sender_rx) = mpsc::unbounded();
+        Ok(self.build_impl(client, sender_tx, sender_rx)?)
     }
 
     // This function is meant to be used for testing build
     pub(crate) fn build_impl<S>(
         self,
         stream: S,
-    ) -> (Agent, impl Stream<Item = Event, Error = tokio_xmpp::Error>)
+        sender_tx: mpsc::UnboundedSender<Packet>,
+        sender_rx: mpsc::UnboundedReceiver<Packet>,
+    ) -> Result<(Agent, impl Stream<Item = Event, Error = tokio_xmpp::Error>), JidParseError>
     where
         S: Stream<Item = tokio_xmpp::Event, Error = tokio_xmpp::Error>
-            + Sink<SinkItem = tokio_xmpp::Packet, SinkError = tokio_xmpp::Error>,
+        + Sink<SinkItem = tokio_xmpp::Packet, SinkError = tokio_xmpp::Error>,
     {
         let disco = self.make_disco();
         let node = self.website;
-        let (sender_tx, sender_rx) = mpsc::unbounded();
 
         let client = stream;
         let (sink, stream) = client.split();
@@ -322,11 +324,11 @@ impl ClientBuilder<'_> {
             default_nick: Rc::new(RefCell::new(self.default_nick)),
         };
 
-        (agent, future)
+        Ok((agent, future))
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Agent {
     sender_tx: mpsc::UnboundedSender<Packet>,
     default_nick: Rc<RefCell<String>>,
@@ -358,5 +360,43 @@ impl Agent {
         let message = message.into();
         self.sender_tx.unbounded_send(Packet::Stanza(message))
             .unwrap();
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use futures::prelude::*;
+    use tokio_xmpp::Client as TokioXmppClient;
+    use tokio::runtime::current_thread::Runtime;
+    use super::{Agent, ClientBuilder, ClientType, ClientFeature, Event};
+    use futures::sync::mpsc;
+
+    #[test]
+    fn test_simple() {
+        // tokio_core context
+        let mut rt = Runtime::new().unwrap();
+        let client = TokioXmppClient::new("foo@bar", "meh").unwrap();
+        let (sender_tx, sender_rx) = mpsc::unbounded();
+
+        // Client instance
+        let client_builder = ClientBuilder::new("foo@bar", "meh")
+            .set_client(ClientType::Bot, "xmpp-rs")
+            .set_website("https://gitlab.com/xmpp-rs/xmpp-rs")
+            .set_default_nick("bot")
+            .enable_feature(ClientFeature::Avatars)
+            .enable_feature(ClientFeature::ContactList);
+
+        let (_agent, stream): (Agent, _) =
+            client_builder
+            .build_impl(client, sender_tx.clone(), sender_rx)
+            .unwrap();
+
+        let handler = stream.map_err(Some).for_each(|_evt: Event| {
+            return Err(None);
+        });
+
+        rt.block_on(handler).unwrap_or_else(|e| match e {
+            _ => (),
+        });
     }
 }
