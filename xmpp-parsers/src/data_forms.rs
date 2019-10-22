@@ -4,9 +4,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use crate::util::error::Error;
 use crate::media_element::MediaElement;
 use crate::ns;
+use crate::util::error::Error;
 use crate::Element;
 use std::convert::TryFrom;
 
@@ -162,11 +162,7 @@ impl From<Field> for Element {
                 field
                     .values
                     .into_iter()
-                    .map(|value| {
-                        Element::builder("value")
-                            .ns(ns::DATA_FORMS)
-                            .append(value)
-                    })
+                    .map(|value| Element::builder("value").ns(ns::DATA_FORMS).append(value)),
             )
             .append_all(field.media.iter().cloned().map(Element::from))
             .build()
@@ -287,9 +283,11 @@ impl From<DataForm> for Element {
                     .ns(ns::DATA_FORMS)
                     .attr("var", "FORM_TYPE")
                     .attr("type", "hidden")
-                    .append(Element::builder("value")
-                        .ns(ns::DATA_FORMS)
-                        .append(form_type))
+                    .append(
+                        Element::builder("value")
+                            .ns(ns::DATA_FORMS)
+                            .append(form_type),
+                    )
             }))
             .append_all(form.fields.iter().cloned().map(Element::from))
             .build()

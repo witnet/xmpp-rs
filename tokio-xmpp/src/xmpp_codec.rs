@@ -2,9 +2,9 @@
 
 use crate::{ParseError, ParserError};
 use bytes::{BufMut, BytesMut};
-use xmpp_parsers::Element;
 use quick_xml::Writer as EventWriter;
 use std;
+use std::borrow::Cow;
 use std::cell::RefCell;
 use std::collections::vec_deque::VecDeque;
 use std::collections::HashMap;
@@ -14,11 +14,11 @@ use std::io;
 use std::iter::FromIterator;
 use std::rc::Rc;
 use std::str::from_utf8;
-use std::borrow::Cow;
 use tokio_codec::{Decoder, Encoder};
+use xml5ever::buffer_queue::BufferQueue;
 use xml5ever::interface::Attribute;
 use xml5ever::tokenizer::{Tag, TagKind, Token, TokenSink, XmlTokenizer};
-use xml5ever::buffer_queue::BufferQueue;
+use xmpp_parsers::Element;
 
 /// Anything that can be sent or received on an XMPP/XML stream
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -288,21 +288,17 @@ impl Encoder for XMPPCodec {
         match item {
             Packet::StreamStart(start_attrs) => {
                 let mut buf = String::new();
-                write!(buf, "<stream:stream")
-                    .map_err(to_io_err)?;
+                write!(buf, "<stream:stream").map_err(to_io_err)?;
                 for (name, value) in start_attrs {
-                    write!(buf, " {}=\"{}\"", escape(&name), escape(&value))
-                        .map_err(to_io_err)?;
+                    write!(buf, " {}=\"{}\"", escape(&name), escape(&value)).map_err(to_io_err)?;
                     if name == "xmlns" {
                         self.ns = Some(value);
                     }
                 }
-                write!(buf, ">\n")
-                    .map_err(to_io_err)?;
+                write!(buf, ">\n").map_err(to_io_err)?;
 
                 // print!(">> {}", buf);
-                write!(dst, "{}", buf)
-                    .map_err(to_io_err)
+                write!(dst, "{}", buf).map_err(to_io_err)
             }
             Packet::Stanza(stanza) => {
                 stanza
@@ -321,10 +317,7 @@ impl Encoder for XMPPCodec {
                     })
                     .map_err(to_io_err)
             }
-            Packet::StreamEnd => {
-                write!(dst, "</stream:stream>\n")
-                    .map_err(to_io_err)
-            }
+            Packet::StreamEnd => write!(dst, "</stream:stream>\n").map_err(to_io_err),
         }
     }
 }
@@ -483,10 +476,13 @@ mod tests {
         b.put(r"<status xml:lang='en'>Test status</status>");
         let r = c.decode(&mut b);
         assert!(match r {
-            Ok(Some(Packet::Stanza(ref el))) if el.name() == "status" && el.text() == "Test status" && el.attr("xml:lang").map_or(false, |a| a == "en") => true,
+            Ok(Some(Packet::Stanza(ref el)))
+                if el.name() == "status"
+                    && el.text() == "Test status"
+                    && el.attr("xml:lang").map_or(false, |a| a == "en") =>
+                true,
             _ => false,
         });
-
     }
 
     /// By default, encode() only get's a BytesMut that has 8kb space reserved.

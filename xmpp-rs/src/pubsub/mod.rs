@@ -10,21 +10,21 @@ use std::convert::TryFrom;
 use std::str::FromStr;
 use tokio_xmpp::Packet;
 use xmpp_parsers::{
-    Jid, BareJid,
-    Element,
+    bookmarks2::{Autojoin, Conference},
     ns,
-    bookmarks2::{
-        Autojoin,
-        Conference,
-    },
     pubsub::event::PubSubEvent,
     pubsub::pubsub::PubSub,
+    BareJid, Element, Jid,
 };
 
 #[cfg(feature = "avatars")]
 pub(crate) mod avatar;
 
-pub(crate) fn handle_event(from: &Jid, elem: Element, mut tx: &mut mpsc::UnboundedSender<Packet>) -> impl IntoIterator<Item = Event> {
+pub(crate) fn handle_event(
+    from: &Jid,
+    elem: Element,
+    mut tx: &mut mpsc::UnboundedSender<Packet>,
+) -> impl IntoIterator<Item = Event> {
     let mut events = Vec::new();
     let event = PubSubEvent::try_from(elem);
     trace!("PubSub event: {:#?}", event);
@@ -35,7 +35,7 @@ pub(crate) fn handle_event(from: &Jid, elem: Element, mut tx: &mut mpsc::Unbound
                 ref node if node == ns::AVATAR_METADATA => {
                     let new_events = avatar::handle_metadata_pubsub_event(&from, &mut tx, items);
                     events.extend(new_events);
-                },
+                }
                 ref node if node == ns::BOOKMARKS2 => {
                     // TODO: Check that our bare JID is the sender.
                     assert_eq!(items.len(), 1);
@@ -49,11 +49,11 @@ pub(crate) fn handle_event(from: &Jid, elem: Element, mut tx: &mut mpsc::Unbound
                             } else {
                                 events.push(Event::LeaveRoom(jid));
                             }
-                        },
-                        Err(err) => println!("not bookmark: {}", err)
+                        }
+                        Err(err) => println!("not bookmark: {}", err),
                     }
-                },
-                ref node => unimplemented!("node {}", node)
+                }
+                ref node => unimplemented!("node {}", node),
             }
         }
         Ok(PubSubEvent::RetractedItems { node, items }) => {
@@ -64,8 +64,8 @@ pub(crate) fn handle_event(from: &Jid, elem: Element, mut tx: &mut mpsc::Unbound
                     let item = items.clone().pop().unwrap();
                     let jid = BareJid::from_str(&item.0).unwrap();
                     events.push(Event::LeaveRoom(jid));
-                },
-                ref node => unimplemented!("node {}", node)
+                }
+                ref node => unimplemented!("node {}", node),
             }
         }
         Ok(PubSubEvent::Purge { node }) => {
@@ -73,11 +73,11 @@ pub(crate) fn handle_event(from: &Jid, elem: Element, mut tx: &mut mpsc::Unbound
                 ref node if node == ns::BOOKMARKS2 => {
                     // TODO: Check that our bare JID is the sender.
                     events.push(Event::LeaveAllRooms);
-                },
-                ref node => unimplemented!("node {}", node)
+                }
+                ref node => unimplemented!("node {}", node),
             }
         }
-        _ => unimplemented!()
+        _ => unimplemented!(),
     }
     events
 }
@@ -92,7 +92,7 @@ pub(crate) fn handle_iq_result(from: &Jid, elem: Element) -> impl IntoIterator<I
             ref node if node == ns::AVATAR_DATA => {
                 let new_events = avatar::handle_data_pubsub_iq(&from, &items);
                 events.extend(new_events);
-            },
+            }
             ref node if node == ns::BOOKMARKS2 => {
                 events.push(Event::LeaveAllRooms);
                 for item in items.items {
@@ -104,12 +104,12 @@ pub(crate) fn handle_iq_result(from: &Jid, elem: Element) -> impl IntoIterator<I
                             if let Autojoin::True = conference.autojoin {
                                 events.push(Event::JoinRoom(jid, conference));
                             }
-                        },
+                        }
                         Err(err) => panic!("Wrong payload type in bookmarks 2 item: {}", err),
                     }
                 }
-            },
-            _ => unimplemented!()
+            }
+            _ => unimplemented!(),
         }
     }
     events

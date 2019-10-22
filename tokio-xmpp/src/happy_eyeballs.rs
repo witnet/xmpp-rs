@@ -8,11 +8,10 @@ use std::mem;
 use std::net::SocketAddr;
 use tokio::net::tcp::ConnectFuture;
 use tokio::net::TcpStream;
-use trust_dns_resolver::{AsyncResolver, Name, IntoName, Background, BackgroundLookup};
 use trust_dns_resolver::config::LookupIpStrategy;
 use trust_dns_resolver::lookup::SrvLookupFuture;
 use trust_dns_resolver::lookup_ip::LookupIpFuture;
-
+use trust_dns_resolver::{AsyncResolver, Background, BackgroundLookup, IntoName, Name};
 
 enum State {
     ResolveSrv(AsyncResolver, BackgroundLookup<SrvLookupFuture>),

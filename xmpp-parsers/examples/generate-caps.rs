@@ -5,14 +5,14 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use std::convert::TryFrom;
-use std::io::{self, Read};
 use std::env;
+use std::io::{self, Read};
 use xmpp_parsers::{
-    Element,
+    caps::{compute_disco as compute_disco_caps, hash_caps, Caps},
     disco::DiscoInfoResult,
-    caps::{Caps, compute_disco as compute_disco_caps, hash_caps},
-    ecaps2::{ECaps2, compute_disco as compute_disco_ecaps2, hash_ecaps2},
+    ecaps2::{compute_disco as compute_disco_ecaps2, hash_ecaps2, ECaps2},
     hashes::Algo,
+    Element,
 };
 
 fn get_caps(disco: &DiscoInfoResult, node: String) -> Result<Caps, String> {

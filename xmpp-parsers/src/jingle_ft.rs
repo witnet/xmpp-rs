@@ -5,14 +5,14 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use crate::date::DateTime;
-use crate::util::error::Error;
 use crate::hashes::Hash;
 use crate::jingle::{ContentId, Creator};
 use crate::ns;
+use crate::util::error::Error;
 use minidom::{Element, Node};
 use std::collections::BTreeMap;
-use std::str::FromStr;
 use std::convert::TryFrom;
+use std::str::FromStr;
 
 generate_element!(
     /// Represents a range in a file.
@@ -195,22 +195,21 @@ impl From<File> for Element {
     fn from(file: File) -> Element {
         Element::builder("file")
             .ns(ns::JINGLE_FT)
-            .append_all(file.date.map(|date|
-                Element::builder("date")
-                    .append(date)))
-            .append_all(file.media_type.map(|media_type|
-                Element::builder("media-type")
-                    .append(media_type)))
-            .append_all(file.name.map(|name|
-                Element::builder("name")
-                    .append(name)))
-            .append_all(file.descs.into_iter().map(|(lang, desc)|
+            .append_all(file.date.map(|date| Element::builder("date").append(date)))
+            .append_all(
+                file.media_type
+                    .map(|media_type| Element::builder("media-type").append(media_type)),
+            )
+            .append_all(file.name.map(|name| Element::builder("name").append(name)))
+            .append_all(file.descs.into_iter().map(|(lang, desc)| {
                 Element::builder("desc")
                     .attr("xml:lang", lang)
-                    .append(desc.0)))
-            .append_all(file.size.map(|size|
-                Element::builder("size")
-                    .append(format!("{}", size))))
+                    .append(desc.0)
+            }))
+            .append_all(
+                file.size
+                    .map(|size| Element::builder("size").append(format!("{}", size))),
+            )
             .append_all(file.range)
             .append_all(file.hashes)
             .build()

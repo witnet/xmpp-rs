@@ -95,8 +95,8 @@ mod tests {
     use crate::util::compare_elements::NamespaceAwareCompare;
     use crate::util::error::Error;
     use crate::Element;
-    use std::str::FromStr;
     use std::convert::TryFrom;
+    use std::str::FromStr;
 
     #[cfg(target_pointer_width = "32")]
     #[test]

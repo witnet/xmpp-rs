@@ -5,9 +5,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use crate::date::DateTime;
-use crate::util::helpers::PlainText;
 use crate::message::MessagePayload;
 use crate::presence::PresencePayload;
+use crate::util::helpers::PlainText;
 use jid::Jid;
 
 generate_element!(
@@ -34,8 +34,8 @@ mod tests {
     use super::*;
     use crate::util::error::Error;
     use crate::Element;
-    use std::str::FromStr;
     use std::convert::TryFrom;
+    use std::str::FromStr;
 
     #[cfg(target_pointer_width = "32")]
     #[test]

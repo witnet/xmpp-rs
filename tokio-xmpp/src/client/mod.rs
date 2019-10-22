@@ -1,12 +1,12 @@
 use futures::{done, Async, AsyncSink, Future, Poll, Sink, StartSend, Stream};
 use idna;
-use xmpp_parsers::{Jid, JidParseError};
 use sasl::common::{ChannelBinding, Credentials};
 use std::mem::replace;
 use std::str::FromStr;
 use tokio::net::TcpStream;
 use tokio_io::{AsyncRead, AsyncWrite};
 use tokio_tls::TlsStream;
+use xmpp_parsers::{Jid, JidParseError};
 
 use super::event::Event;
 use super::happy_eyeballs::Connecter;
@@ -205,10 +205,8 @@ impl Sink for Client {
 
     fn start_send(&mut self, item: Self::SinkItem) -> StartSend<Self::SinkItem, Self::SinkError> {
         match self.state {
-            ClientState::Connected(ref mut stream) =>
-                Ok(stream.start_send(item)?),
-            _ =>
-                Ok(AsyncSink::NotReady(item)),
+            ClientState::Connected(ref mut stream) => Ok(stream.start_send(item)?),
+            _ => Ok(AsyncSink::NotReady(item)),
         }
     }
 
@@ -226,11 +224,8 @@ impl Sink for Client {
     /// incoming stream before closing the connection.
     fn close(&mut self) -> Poll<(), Self::SinkError> {
         match self.state {
-            ClientState::Connected(ref mut stream) =>
-                stream.close()
-                .map_err(|e| e.into()),
-            _ =>
-                Ok(Async::Ready(())),
+            ClientState::Connected(ref mut stream) => stream.close().map_err(|e| e.into()),
+            _ => Ok(Async::Ready(())),
         }
     }
 }

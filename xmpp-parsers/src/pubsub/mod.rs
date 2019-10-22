@@ -13,7 +13,7 @@ pub mod pubsub;
 pub use self::event::PubSubEvent;
 pub use self::pubsub::PubSub;
 
-use crate::{Jid, Element};
+use crate::{Element, Jid};
 
 generate_id!(
     /// The name of a PubSub node, used to identify it on a JID.
@@ -63,7 +63,11 @@ pub struct Item {
 
 impl Item {
     /// Create a new item, accepting only payloads implementing `PubSubPayload`.
-    pub fn new<P: PubSubPayload>(id: Option<ItemId>, publisher: Option<Jid>, payload: Option<P>) -> Item {
+    pub fn new<P: PubSubPayload>(
+        id: Option<ItemId>,
+        publisher: Option<Jid>,
+        payload: Option<P>,
+    ) -> Item {
         Item {
             id,
             publisher,

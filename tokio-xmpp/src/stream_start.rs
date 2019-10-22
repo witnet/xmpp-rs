@@ -1,8 +1,8 @@
 use futures::{sink, Async, Future, Poll, Sink, Stream};
-use xmpp_parsers::{Jid, Element};
 use std::mem::replace;
 use tokio_codec::Framed;
 use tokio_io::{AsyncRead, AsyncWrite};
+use xmpp_parsers::{Element, Jid};
 
 use crate::xmpp_codec::{Packet, XMPPCodec};
 use crate::xmpp_stream::XMPPStream;

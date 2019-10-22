@@ -4,10 +4,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use crate::util::error::Error;
 use crate::ns;
-use jid::Jid;
+use crate::util::error::Error;
 use crate::Element;
+use jid::Jid;
 use std::collections::BTreeMap;
 use std::convert::TryFrom;
 
@@ -212,38 +212,28 @@ impl From<Message> for Element {
             .attr("to", message.to)
             .attr("id", message.id)
             .attr("type", message.type_)
-            .append_all(
-                message
-                    .subjects
-                    .into_iter()
-                    .map(|(lang, subject)| {
-                        let mut subject = Element::from(subject);
-                        subject.set_attr(
-                            "xml:lang",
-                            match lang.as_ref() {
-                                "" => None,
-                                lang => Some(lang),
-                            },
-                        );
-                        subject
-                    })
-            )
-            .append_all(
-                message
-                    .bodies
-                    .into_iter()
-                    .map(|(lang, body)| {
-                        let mut body = Element::from(body);
-                        body.set_attr(
-                            "xml:lang",
-                            match lang.as_ref() {
-                                "" => None,
-                                lang => Some(lang),
-                            },
-                        );
-                        body
-                    })
-            )
+            .append_all(message.subjects.into_iter().map(|(lang, subject)| {
+                let mut subject = Element::from(subject);
+                subject.set_attr(
+                    "xml:lang",
+                    match lang.as_ref() {
+                        "" => None,
+                        lang => Some(lang),
+                    },
+                );
+                subject
+            }))
+            .append_all(message.bodies.into_iter().map(|(lang, body)| {
+                let mut body = Element::from(body);
+                body.set_attr(
+                    "xml:lang",
+                    match lang.as_ref() {
+                        "" => None,
+                        lang => Some(lang),
+                    },
+                );
+                body
+            }))
             .append_all(message.payloads.into_iter())
             .build()
     }

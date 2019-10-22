@@ -1,8 +1,7 @@
-use std::collections::BTreeMap;
 use std::cell::RefCell;
+use std::collections::BTreeMap;
 use std::fmt;
 use std::rc::Rc;
-
 
 #[derive(Clone, PartialEq, Eq)]
 pub struct NamespaceSet {
@@ -23,10 +22,15 @@ impl fmt::Debug for NamespaceSet {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "NamespaceSet(")?;
         for (prefix, namespace) in &self.namespaces {
-            write!(f, "xmlns{}={:?}, ", match prefix {
-                None => String::new(),
-                Some(prefix) => format!(":{}", prefix),
-            }, namespace)?;
+            write!(
+                f,
+                "xmlns{}={:?}, ",
+                match prefix {
+                    None => String::new(),
+                    Some(prefix) => format!(":{}", prefix),
+                },
+                namespace
+            )?;
         }
         write!(f, "parent: {:?})", *self.parent.borrow())
     }
@@ -42,20 +46,17 @@ impl NamespaceSet {
             Some(ns) => Some(ns.clone()),
             None => match *self.parent.borrow() {
                 None => None,
-                Some(ref parent) => parent.get(prefix)
+                Some(ref parent) => parent.get(prefix),
             },
         }
     }
 
     pub fn has<NS: AsRef<str>>(&self, prefix: &Option<String>, wanted_ns: NS) -> bool {
         match self.namespaces.get(prefix) {
-            Some(ns) =>
-                ns == wanted_ns.as_ref(),
+            Some(ns) => ns == wanted_ns.as_ref(),
             None => match *self.parent.borrow() {
-                None =>
-                    false,
-                Some(ref parent) =>
-                    parent.has(prefix, wanted_ns),
+                None => false,
+                Some(ref parent) => parent.has(prefix, wanted_ns),
             },
         }
     }
@@ -65,7 +66,6 @@ impl NamespaceSet {
         let new_set = parent;
         *parent_ns = Some(new_set);
     }
-
 }
 
 impl From<BTreeMap<Option<String>, String>> for NamespaceSet {
@@ -132,7 +132,10 @@ mod tests {
     #[test]
     fn get_has_prefixed() {
         let namespaces = NamespaceSet::from(("x".to_owned(), "bar".to_owned()));
-        assert_eq!(namespaces.get(&Some("x".to_owned())), Some("bar".to_owned()));
+        assert_eq!(
+            namespaces.get(&Some("x".to_owned())),
+            Some("bar".to_owned())
+        );
         assert!(namespaces.has(&Some("x".to_owned()), "bar"));
     }
 
@@ -154,7 +157,10 @@ mod tests {
         for _ in 0..1000 {
             let namespaces = NamespaceSet::default();
             namespaces.set_parent(Rc::new(parent));
-            assert_eq!(namespaces.get(&Some("x".to_owned())), Some("bar".to_owned()));
+            assert_eq!(
+                namespaces.get(&Some("x".to_owned())),
+                Some("bar".to_owned())
+            );
             assert!(namespaces.has(&Some("x".to_owned()), "bar"));
             parent = namespaces;
         }
@@ -163,7 +169,10 @@ mod tests {
     #[test]
     fn debug_looks_correct() {
         let parent = NamespaceSet::from("http://www.w3.org/2000/svg".to_owned());
-        let namespaces = NamespaceSet::from(("xhtml".to_owned(), "http://www.w3.org/1999/xhtml".to_owned()));
+        let namespaces = NamespaceSet::from((
+            "xhtml".to_owned(),
+            "http://www.w3.org/1999/xhtml".to_owned(),
+        ));
         namespaces.set_parent(Rc::new(parent));
         assert_eq!(format!("{:?}", namespaces), "NamespaceSet(xmlns:xhtml=\"http://www.w3.org/1999/xhtml\", parent: Some(NamespaceSet(xmlns=\"http://www.w3.org/2000/svg\", parent: None)))");
     }

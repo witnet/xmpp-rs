@@ -5,9 +5,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use crate::data_forms::DataForm;
-use crate::util::error::Error;
 use crate::iq::{IqGetPayload, IqResultPayload, IqSetPayload};
 use crate::ns;
+use crate::util::error::Error;
 use crate::Element;
 use std::collections::HashMap;
 use std::convert::TryFrom;
@@ -102,7 +102,7 @@ impl From<Query> for Element {
                 query
                     .fields
                     .into_iter()
-                    .map(|(name, value)| Element::builder(name).ns(ns::REGISTER).append(value))
+                    .map(|(name, value)| Element::builder(name).ns(ns::REGISTER).append(value)),
             )
             .append_all(if query.remove {
                 Some(Element::builder("remove").ns(ns::REGISTER))

@@ -32,9 +32,9 @@ impl MessagePayload for Received {}
 mod tests {
     use super::*;
     use crate::ns;
+    use crate::util::error::Error;
     use crate::Element;
     use std::convert::TryFrom;
-    use crate::util::error::Error;
 
     #[cfg(target_pointer_width = "32")]
     #[test]

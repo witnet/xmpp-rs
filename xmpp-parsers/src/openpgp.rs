@@ -5,8 +5,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use crate::date::DateTime;
-use crate::util::helpers::Base64;
 use crate::pubsub::PubSubPayload;
+use crate::util::helpers::Base64;
 
 // TODO: Merge this container with the PubKey struct
 generate_element!(
@@ -59,8 +59,11 @@ impl PubSubPayload for PubKeysMeta {}
 mod tests {
     use super::*;
     use crate::ns;
+    use crate::pubsub::{
+        pubsub::{Item as PubSubItem, Publish},
+        Item, NodeName,
+    };
     use std::str::FromStr;
-    use crate::pubsub::{NodeName, Item, pubsub::{Item as PubSubItem, Publish}};
 
     #[test]
     fn pubsub_publish_pubkey_data() {
@@ -68,15 +71,13 @@ mod tests {
             date: None,
             data: PubKeyData {
                 data: (&"Foo").as_bytes().to_vec(),
-            }
+            },
         };
         println!("Foo1: {:?}", pubkey);
 
         let pubsub = Publish {
             node: NodeName(format!("{}:{}", ns::OX_PUBKEYS, "some-fingerprint")),
-            items: vec![
-                PubSubItem(Item::new(None, None, Some(pubkey))),
-            ],
+            items: vec![PubSubItem(Item::new(None, None, Some(pubkey)))],
         };
         println!("Foo2: {:?}", pubsub);
     }
@@ -84,20 +85,16 @@ mod tests {
     #[test]
     fn pubsub_publish_pubkey_meta() {
         let pubkeymeta = PubKeysMeta {
-            pubkeys: vec![
-                PubKeyMeta {
-                    v4fingerprint: "some-fingerprint".to_owned(),
-                    date: DateTime::from_str("2019-03-30T18:30:25Z").unwrap(),
-                },
-            ],
+            pubkeys: vec![PubKeyMeta {
+                v4fingerprint: "some-fingerprint".to_owned(),
+                date: DateTime::from_str("2019-03-30T18:30:25Z").unwrap(),
+            }],
         };
         println!("Foo1: {:?}", pubkeymeta);
 
         let pubsub = Publish {
             node: NodeName("foo".to_owned()),
-            items: vec![
-                PubSubItem(Item::new(None, None, Some(pubkeymeta))),
-            ],
+            items: vec![PubSubItem(Item::new(None, None, Some(pubkeymeta)))],
         };
         println!("Foo2: {:?}", pubsub);
     }

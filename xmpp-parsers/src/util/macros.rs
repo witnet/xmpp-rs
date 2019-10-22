@@ -41,7 +41,7 @@ macro_rules! get_attr {
                     $attr,
                     "' must not be empty."
                 )));
-            },
+            }
             Some($value) => $func,
             None => {
                 return Err(crate::util::error::Error::ParseError(concat!(
@@ -601,41 +601,42 @@ macro_rules! generate_serialiser {
         $builder.append(
             crate::Element::builder($name)
                 .ns(crate::ns::$ns)
-                .append(::minidom::Node::Text($parent.$elem))
+                .append(::minidom::Node::Text($parent.$elem)),
         )
     };
     ($builder:ident, $parent:ident, $elem:ident, Option, String, ($name:tt, $ns:ident)) => {
         $builder.append_all($parent.$elem.map(|elem| {
-                crate::Element::builder($name)
-                    .ns(crate::ns::$ns)
-                    .append(::minidom::Node::Text(elem))
-            })
-        )
+            crate::Element::builder($name)
+                .ns(crate::ns::$ns)
+                .append(::minidom::Node::Text(elem))
+        }))
     };
     ($builder:ident, $parent:ident, $elem:ident, Option, $constructor:ident, ($name:tt, *)) => {
         $builder.append_all($parent.$elem.map(|elem| {
-                crate::Element::builder($name)
-                    .ns(elem.get_ns())
-                    .append(::minidom::Node::Element(crate::Element::from(elem)))
-            })
-        )
+            crate::Element::builder($name)
+                .ns(elem.get_ns())
+                .append(::minidom::Node::Element(crate::Element::from(elem)))
+        }))
     };
     ($builder:ident, $parent:ident, $elem:ident, Option, $constructor:ident, ($name:tt, $ns:ident)) => {
         $builder.append_all($parent.$elem.map(|elem| {
-                crate::Element::builder($name)
-                    .ns(crate::ns::$ns)
-                    .append(::minidom::Node::Element(crate::Element::from(elem)))
-            })
-        )
+            crate::Element::builder($name)
+                .ns(crate::ns::$ns)
+                .append(::minidom::Node::Element(crate::Element::from(elem)))
+        }))
     };
     ($builder:ident, $parent:ident, $elem:ident, Vec, $constructor:ident, ($name:tt, $ns:ident)) => {
         $builder.append_all($parent.$elem.into_iter())
     };
     ($builder:ident, $parent:ident, $elem:ident, Present, $constructor:ident, ($name:tt, $ns:ident)) => {
-        $builder.append(::minidom::Node::Element(crate::Element::builder($name).ns(crate::ns::$ns).build()))
+        $builder.append(::minidom::Node::Element(
+            crate::Element::builder($name).ns(crate::ns::$ns).build(),
+        ))
     };
     ($builder:ident, $parent:ident, $elem:ident, $_:ident, $constructor:ident, ($name:tt, $ns:ident)) => {
-        $builder.append(::minidom::Node::Element(crate::Element::from($parent.$elem)))
+        $builder.append(::minidom::Node::Element(crate::Element::from(
+            $parent.$elem,
+        )))
     };
 }
 
@@ -804,5 +805,5 @@ macro_rules! impl_pubsub_item {
                 &mut self.0
             }
         }
-    }
+    };
 }

@@ -66,15 +66,16 @@
 
 pub use quick_xml;
 
-pub mod error;
-pub mod element;
 pub mod convert;
-pub mod node;
+pub mod element;
+pub mod error;
 mod namespace_set;
+pub mod node;
 
-#[cfg(test)] mod tests;
+#[cfg(test)]
+mod tests;
 
-pub use error::{Error, Result};
-pub use element::{Element, Children, ChildrenMut, ElementBuilder};
-pub use node::Node;
 pub use convert::IntoAttributeValue;
+pub use element::{Children, ChildrenMut, Element, ElementBuilder};
+pub use error::{Error, Result};
+pub use node::Node;

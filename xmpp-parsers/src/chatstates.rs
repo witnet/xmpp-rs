@@ -32,8 +32,8 @@ impl MessagePayload for ChatState {}
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::util::error::Error;
     use crate::ns;
+    use crate::util::error::Error;
     use crate::Element;
     use std::convert::TryFrom;
 

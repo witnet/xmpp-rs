@@ -5,8 +5,8 @@ use crate::error::Result;
 
 use std::io::Write;
 
+use quick_xml::events::{BytesText, Event};
 use quick_xml::Writer as EventWriter;
-use quick_xml::events::{Event, BytesText};
 
 /// A node in an element tree.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -166,16 +166,16 @@ impl Node {
     }
 
     #[doc(hidden)]
-    pub(crate) fn write_to_inner<W: Write>(&self, writer: &mut EventWriter<W>) -> Result<()>{
+    pub(crate) fn write_to_inner<W: Write>(&self, writer: &mut EventWriter<W>) -> Result<()> {
         match *self {
             Node::Element(ref elmt) => elmt.write_to_inner(writer)?,
             Node::Text(ref s) => {
                 writer.write_event(Event::Text(BytesText::from_plain_str(s)))?;
-            },
+            }
             #[cfg(feature = "comments")]
             Node::Comment(ref s) => {
                 writer.write_event(Event::Comment(BytesText::from_plain_str(s)))?;
-            },
+            }
         }
 
         Ok(())

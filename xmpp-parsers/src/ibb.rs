@@ -4,8 +4,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use crate::util::helpers::Base64;
 use crate::iq::IqSetPayload;
+use crate::util::helpers::Base64;
 
 generate_id!(
     /// An identifier matching a stream.
@@ -74,8 +74,8 @@ mod tests {
     use super::*;
     use crate::util::error::Error;
     use crate::Element;
-    use std::error::Error as StdError;
     use std::convert::TryFrom;
+    use std::error::Error as StdError;
 
     #[cfg(target_pointer_width = "32")]
     #[test]

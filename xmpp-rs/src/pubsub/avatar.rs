@@ -12,6 +12,7 @@ use std::io::{self, Write};
 use tokio_xmpp::Packet;
 use xmpp_parsers::{
     avatar::{Data, Metadata},
+    hashes::Hash,
     iq::Iq,
     ns,
     pubsub::{
@@ -19,7 +20,6 @@ use xmpp_parsers::{
         pubsub::{Items, PubSub},
         NodeName,
     },
-    hashes::Hash,
     Jid,
 };
 
@@ -32,7 +32,11 @@ fn hash_to_hex(hash: &Hash) -> String {
     bytes.join("")
 }
 
-pub(crate) fn handle_metadata_pubsub_event(from: &Jid, tx: &mut mpsc::UnboundedSender<Packet>, items: Vec<Item>) -> impl IntoIterator<Item = Event> {
+pub(crate) fn handle_metadata_pubsub_event(
+    from: &Jid,
+    tx: &mut mpsc::UnboundedSender<Packet>,
+    items: Vec<Item>,
+) -> impl IntoIterator<Item = Event> {
     let mut events = Vec::new();
     for item in items {
         let payload = item.payload.clone().unwrap();
@@ -58,12 +62,15 @@ pub(crate) fn handle_metadata_pubsub_event(from: &Jid, tx: &mut mpsc::UnboundedS
 }
 
 fn download_avatar(from: &Jid) -> Iq {
-    Iq::from_get("coucou", PubSub::Items(Items {
-        max_items: None,
-        node: NodeName(String::from(ns::AVATAR_DATA)),
-        subid: None,
-        items: Vec::new(),
-    }))
+    Iq::from_get(
+        "coucou",
+        PubSub::Items(Items {
+            max_items: None,
+            node: NodeName(String::from(ns::AVATAR_DATA)),
+            subid: None,
+            items: Vec::new(),
+        }),
+    )
     .with_to(from.clone())
 }
 

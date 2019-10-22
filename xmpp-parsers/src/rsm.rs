@@ -4,8 +4,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use crate::util::error::Error;
 use crate::ns;
+use crate::util::error::Error;
 use crate::Element;
 use std::convert::TryFrom;
 
@@ -79,13 +79,12 @@ impl From<SetQuery> for Element {
             }))
             .append_all(
                 set.after
-                    .map(|after| Element::builder("after").ns(ns::RSM).append(after))
+                    .map(|after| Element::builder("after").ns(ns::RSM).append(after)),
             )
-            .append_all(set.before.map(|before| {
-                Element::builder("before")
-                    .ns(ns::RSM)
-                    .append(before)
-            }))
+            .append_all(
+                set.before
+                    .map(|before| Element::builder("before").ns(ns::RSM).append(before)),
+            )
             .append_all(set.index.map(|index| {
                 Element::builder("index")
                     .ns(ns::RSM)

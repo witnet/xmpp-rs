@@ -36,7 +36,8 @@ mod tests {
 
     #[test]
     fn parse_simple() {
-        let elem: Element = "<rtcp-fb xmlns='urn:xmpp:jingle:apps:rtp:rtcp-fb:0' type='nack' subtype='sli'/>"
+        let elem: Element =
+            "<rtcp-fb xmlns='urn:xmpp:jingle:apps:rtp:rtcp-fb:0' type='nack' subtype='sli'/>"
                 .parse()
                 .unwrap();
         let rtcp_fb = RtcpFb::try_from(elem).unwrap();

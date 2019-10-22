@@ -115,10 +115,10 @@ generate_element!(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::Element;
-    use std::convert::TryFrom;
     use crate::hashes::Algo;
     use crate::jingle_dtls_srtp::Setup;
+    use crate::Element;
+    use std::convert::TryFrom;
 
     #[cfg(target_pointer_width = "32")]
     #[test]
@@ -184,6 +184,12 @@ mod tests {
         let fingerprint = transport.fingerprint.unwrap();
         assert_eq!(fingerprint.hash, Algo::Sha_1);
         assert_eq!(fingerprint.setup, Setup::Actpass);
-        assert_eq!(fingerprint.value, [151, 242, 181, 190, 219, 166, 0, 177, 62, 64, 178, 65, 60, 13, 252, 224, 189, 178, 160, 232]);
+        assert_eq!(
+            fingerprint.value,
+            [
+                151, 242, 181, 190, 219, 166, 0, 177, 62, 64, 178, 65, 60, 13, 252, 224, 189, 178,
+                160, 232
+            ]
+        );
     }
 }

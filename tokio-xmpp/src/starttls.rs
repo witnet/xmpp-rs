@@ -1,11 +1,11 @@
 use futures::sink;
 use futures::stream::Stream;
 use futures::{Async, Future, Poll, Sink};
-use xmpp_parsers::{Jid, Element};
 use native_tls::TlsConnector as NativeTlsConnector;
 use std::mem::replace;
 use tokio_io::{AsyncRead, AsyncWrite};
 use tokio_tls::{Connect, TlsConnector, TlsStream};
+use xmpp_parsers::{Element, Jid};
 
 use crate::xmpp_codec::Packet;
 use crate::xmpp_stream::XMPPStream;

@@ -52,11 +52,18 @@ impl std::fmt::Display for Error {
             Error::XmlError(e) => write!(fmt, "XML error: {}", e),
             Error::Utf8Error(e) => write!(fmt, "UTF-8 error: {}", e),
             Error::IoError(e) => write!(fmt, "IO error: {}", e),
-            Error::EndOfDocument => write!(fmt, "the end of the document has been reached prematurely"),
-            Error::InvalidElementClosed => write!(fmt, "the XML is invalid, an element was wrongly closed"),
+            Error::EndOfDocument => {
+                write!(fmt, "the end of the document has been reached prematurely")
+            }
+            Error::InvalidElementClosed => {
+                write!(fmt, "the XML is invalid, an element was wrongly closed")
+            }
             Error::InvalidElement => write!(fmt, "the XML element is invalid"),
             #[cfg(not(comments))]
-            Error::CommentsDisabled => write!(fmt, "a comment has been found even though comments are disabled by feature"),
+            Error::CommentsDisabled => write!(
+                fmt,
+                "a comment has been found even though comments are disabled by feature"
+            ),
         }
     }
 }

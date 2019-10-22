@@ -3,20 +3,13 @@ use std::convert::TryFrom;
 use std::env::args;
 use std::process::exit;
 use tokio::runtime::current_thread::Runtime;
-use tokio_xmpp::{Client, xmpp_codec::Packet};
+use tokio_xmpp::{xmpp_codec::Packet, Client};
 use xmpp_parsers::{
-    Element,
-    Jid,
+    disco::{DiscoInfoQuery, DiscoInfoResult},
+    iq::{Iq, IqType},
     ns,
-    iq::{
-        Iq,
-        IqType,
-    },
-    disco::{
-        DiscoInfoResult,
-        DiscoInfoQuery,
-    },
     server_info::ServerInfo,
+    Element, Jid,
 };
 
 fn main() {
@@ -95,17 +88,19 @@ fn make_disco_iq(target: Jid) -> Element {
 }
 
 fn convert_field(field: Vec<String>) -> String {
-    field.iter()
-    .fold((field.len(), String::new()), |(l, mut acc), s| {
-        acc.push('<');
-        acc.push_str(&s);
-        acc.push('>');
-        if l > 1 {
-            acc.push(',');
-            acc.push(' ');
-        }
-        (0, acc)
-    }).1
+    field
+        .iter()
+        .fold((field.len(), String::new()), |(l, mut acc), s| {
+            acc.push('<');
+            acc.push_str(&s);
+            acc.push('>');
+            if l > 1 {
+                acc.push(',');
+                acc.push(' ');
+            }
+            (0, acc)
+        })
+        .1
 }
 
 fn print_server_info(server_info: ServerInfo) {

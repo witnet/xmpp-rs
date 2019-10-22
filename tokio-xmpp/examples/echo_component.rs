@@ -5,9 +5,9 @@ use std::process::exit;
 use std::str::FromStr;
 use tokio::runtime::current_thread::Runtime;
 use tokio_xmpp::Component;
-use xmpp_parsers::{Jid, Element};
 use xmpp_parsers::message::{Body, Message, MessageType};
 use xmpp_parsers::presence::{Presence, Show as PresenceShow, Type as PresenceType};
+use xmpp_parsers::{Element, Jid};
 
 fn main() {
     let args: Vec<String> = args().collect();

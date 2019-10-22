@@ -4,18 +4,18 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use crate::util::error::Error;
 use crate::iq::IqSetPayload;
-use crate::jingle_rtp::Description as RtpDescription;
-use crate::jingle_ice_udp::Transport as IceUdpTransport;
 use crate::jingle_ibb::Transport as IbbTransport;
+use crate::jingle_ice_udp::Transport as IceUdpTransport;
+use crate::jingle_rtp::Description as RtpDescription;
 use crate::jingle_s5b::Transport as Socks5Transport;
 use crate::ns;
-use jid::Jid;
+use crate::util::error::Error;
 use crate::Element;
+use jid::Jid;
 use std::collections::BTreeMap;
-use std::str::FromStr;
 use std::convert::TryFrom;
+use std::str::FromStr;
 
 generate_attribute!(
     /// The action attribute.
@@ -473,8 +473,8 @@ impl From<Reason> for Element {
             Reason::UnsupportedApplications => "unsupported-applications",
             Reason::UnsupportedTransports => "unsupported-transports",
         })
-            .ns(ns::JINGLE)
-            .build()
+        .ns(ns::JINGLE)
+        .build()
     }
 }
 
@@ -521,13 +521,8 @@ impl TryFrom<Element> for ReasonElement {
                 return Err(Error::ParseError("Reason contains a foreign element."));
             }
         }
-        let reason = reason.ok_or(Error::ParseError(
-            "Reason doesn’t contain a valid reason.",
-        ))?;
-        Ok(ReasonElement {
-            reason,
-            texts,
-        })
+        let reason = reason.ok_or(Error::ParseError("Reason doesn’t contain a valid reason."))?;
+        Ok(ReasonElement { reason, texts })
     }
 }
 
@@ -536,13 +531,12 @@ impl From<ReasonElement> for Element {
         Element::builder("reason")
             .ns(ns::JINGLE)
             .append(Element::from(reason.reason))
-            .append_all(
-                reason.texts.into_iter().map(|(lang, text)| {
-                    Element::builder("text")
-                        .ns(ns::JINGLE)
-                        .attr("xml:lang", lang)
-                        .append(text)
-                }))
+            .append_all(reason.texts.into_iter().map(|(lang, text)| {
+                Element::builder("text")
+                    .ns(ns::JINGLE)
+                    .attr("xml:lang", lang)
+                    .append(text)
+            }))
             .build()
     }
 }

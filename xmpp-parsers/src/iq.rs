@@ -5,11 +5,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use crate::util::error::Error;
 use crate::ns;
 use crate::stanza_error::StanzaError;
-use jid::Jid;
+use crate::util::error::Error;
 use crate::Element;
+use jid::Jid;
 use minidom::IntoAttributeValue;
 use std::convert::TryFrom;
 
@@ -218,9 +218,9 @@ impl From<Iq> for Element {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::util::compare_elements::NamespaceAwareCompare;
     use crate::disco::DiscoInfoQuery;
     use crate::stanza_error::{DefinedCondition, ErrorType};
+    use crate::util::compare_elements::NamespaceAwareCompare;
 
     #[cfg(target_pointer_width = "32")]
     #[test]
@@ -252,7 +252,9 @@ mod tests {
         #[cfg(not(feature = "component"))]
         let elem: Element = "<iq xmlns='jabber:client' id='coucou'/>".parse().unwrap();
         #[cfg(feature = "component")]
-        let elem: Element = "<iq xmlns='jabber:component:accept' id='coucou'/>".parse().unwrap();
+        let elem: Element = "<iq xmlns='jabber:component:accept' id='coucou'/>"
+            .parse()
+            .unwrap();
         let error = Iq::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
@@ -314,7 +316,9 @@ mod tests {
     #[test]
     fn test_result_empty() {
         #[cfg(not(feature = "component"))]
-        let elem: Element = "<iq xmlns='jabber:client' type='result' id='res'/>".parse().unwrap();
+        let elem: Element = "<iq xmlns='jabber:client' type='result' id='res'/>"
+            .parse()
+            .unwrap();
         #[cfg(feature = "component")]
         let elem: Element = "<iq xmlns='jabber:component:accept' type='result' id='res'/>"
             .parse()
@@ -416,7 +420,9 @@ mod tests {
     #[test]
     fn test_serialise() {
         #[cfg(not(feature = "component"))]
-        let elem: Element = "<iq xmlns='jabber:client' type='result' id='res'/>".parse().unwrap();
+        let elem: Element = "<iq xmlns='jabber:client' type='result' id='res'/>"
+            .parse()
+            .unwrap();
         #[cfg(feature = "component")]
         let elem: Element = "<iq xmlns='jabber:component:accept' type='result' id='res'/>"
             .parse()

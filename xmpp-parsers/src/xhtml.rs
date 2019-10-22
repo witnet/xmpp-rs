@@ -4,12 +4,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use crate::util::error::Error;
 use crate::message::MessagePayload;
 use crate::ns;
+use crate::util::error::Error;
 use minidom::{Element, Node};
-use std::convert::TryFrom;
 use std::collections::HashMap;
+use std::convert::TryFrom;
 
 // TODO: Use a proper lang type.
 type Lang = String;
@@ -51,15 +51,10 @@ impl XhtmlIm {
                 }
                 acc
             });
-            let body = Body {
-                children,
-                ..body
-            };
+            let body = Body { children, ..body };
             bodies.insert(lang, body);
         }
-        XhtmlIm {
-            bodies,
-        }
+        XhtmlIm { bodies }
     }
 }
 
@@ -79,11 +74,16 @@ impl TryFrom<Element> for XhtmlIm {
                 let lang = match child.attr("xml:lang") {
                     Some(lang) => lang,
                     None => "",
-                }.to_string();
+                }
+                .to_string();
                 let body = Body::try_from(child)?;
                 match bodies.insert(lang, body) {
                     None => (),
-                    Some(_) => return Err(Error::ParseError("Two identical language bodies found in XHTML-IM."))
+                    Some(_) => {
+                        return Err(Error::ParseError(
+                            "Two identical language bodies found in XHTML-IM.",
+                        ))
+                    }
                 }
             } else {
                 return Err(Error::ParseError("Unknown element in XHTML-IM."));
@@ -160,11 +160,15 @@ impl TryFrom<Element> for Body {
             match child {
                 Node::Element(child) => children.push(Child::Tag(Tag::try_from(child.clone())?)),
                 Node::Text(text) => children.push(Child::Text(text.clone())),
-                Node::Comment(_) => unimplemented!() // XXX: remove!
+                Node::Comment(_) => unimplemented!(), // XXX: remove!
             }
         }
 
-        Ok(Body { style: parse_css(elem.attr("style")), xml_lang: elem.attr("xml:lang").map(|xml_lang| xml_lang.to_string()), children })
+        Ok(Body {
+            style: parse_css(elem.attr("style")),
+            xml_lang: elem.attr("xml:lang").map(|xml_lang| xml_lang.to_string()),
+            children,
+        })
     }
 }
 
@@ -181,39 +185,87 @@ impl From<Body> for Element {
 
 #[derive(Debug, Clone)]
 enum Tag {
-    A { href: Option<String>, style: Css, type_: Option<String>, children: Vec<Child> },
-    Blockquote { style: Css, children: Vec<Child> },
+    A {
+        href: Option<String>,
+        style: Css,
+        type_: Option<String>,
+        children: Vec<Child>,
+    },
+    Blockquote {
+        style: Css,
+        children: Vec<Child>,
+    },
     Br,
-    Cite { style: Css, children: Vec<Child> },
-    Em { children: Vec<Child> },
-    Img { src: Option<String>, alt: Option<String> }, // TODO: height, width, style
-    Li { style: Css, children: Vec<Child> },
-    Ol { style: Css, children: Vec<Child> },
-    P { style: Css, children: Vec<Child> },
-    Span { style: Css, children: Vec<Child> },
-    Strong { children: Vec<Child> },
-    Ul { style: Css, children: Vec<Child> },
+    Cite {
+        style: Css,
+        children: Vec<Child>,
+    },
+    Em {
+        children: Vec<Child>,
+    },
+    Img {
+        src: Option<String>,
+        alt: Option<String>,
+    }, // TODO: height, width, style
+    Li {
+        style: Css,
+        children: Vec<Child>,
+    },
+    Ol {
+        style: Css,
+        children: Vec<Child>,
+    },
+    P {
+        style: Css,
+        children: Vec<Child>,
+    },
+    Span {
+        style: Css,
+        children: Vec<Child>,
+    },
+    Strong {
+        children: Vec<Child>,
+    },
+    Ul {
+        style: Css,
+        children: Vec<Child>,
+    },
     Unknown(Vec<Child>),
 }
 
 impl Tag {
     fn to_html(self) -> String {
         match self {
-            Tag::A { href, style, type_, children } => {
+            Tag::A {
+                href,
+                style,
+                type_,
+                children,
+            } => {
                 let href = write_attr(href, "href");
                 let style = write_attr(get_style_string(style), "style");
                 let type_ = write_attr(type_, "type");
-                format!("<a{}{}{}>{}</a>", href, style, type_, children_to_html(children))
-            },
+                format!(
+                    "<a{}{}{}>{}</a>",
+                    href,
+                    style,
+                    type_,
+                    children_to_html(children)
+                )
+            }
             Tag::Blockquote { style, children } => {
                 let style = write_attr(get_style_string(style), "style");
-                format!("<blockquote{}>{}</blockquote>", style, children_to_html(children))
-            },
+                format!(
+                    "<blockquote{}>{}</blockquote>",
+                    style,
+                    children_to_html(children)
+                )
+            }
             Tag::Br => String::from("<br>"),
             Tag::Cite { style, children } => {
                 let style = write_attr(get_style_string(style), "style");
                 format!("<cite{}>{}</cite>", style, children_to_html(children))
-            },
+            }
             Tag::Em { children } => format!("<em>{}</em>", children_to_html(children)),
             Tag::Img { src, alt } => {
                 let src = write_attr(src, "src");
@@ -241,7 +293,9 @@ impl Tag {
                 let style = write_attr(get_style_string(style), "style");
                 format!("<ul{}>{}</ul>", style, children_to_html(children))
             }
-            Tag::Unknown(_) => panic!("No unknown element should be present in XHTML-IM after parsing."),
+            Tag::Unknown(_) => {
+                panic!("No unknown element should be present in XHTML-IM after parsing.")
+            }
         }
     }
 }
@@ -255,23 +309,52 @@ impl TryFrom<Element> for Tag {
             match child {
                 Node::Element(child) => children.push(Child::Tag(Tag::try_from(child.clone())?)),
                 Node::Text(text) => children.push(Child::Text(text.clone())),
-                Node::Comment(_) => unimplemented!() // XXX: remove!
+                Node::Comment(_) => unimplemented!(), // XXX: remove!
             }
         }
 
         Ok(match elem.name() {
-            "a" => Tag::A { href: elem.attr("href").map(|href| href.to_string()), style: parse_css(elem.attr("style")), type_: elem.attr("type").map(|type_| type_.to_string()), children },
-            "blockquote" => Tag::Blockquote { style: parse_css(elem.attr("style")), children },
+            "a" => Tag::A {
+                href: elem.attr("href").map(|href| href.to_string()),
+                style: parse_css(elem.attr("style")),
+                type_: elem.attr("type").map(|type_| type_.to_string()),
+                children,
+            },
+            "blockquote" => Tag::Blockquote {
+                style: parse_css(elem.attr("style")),
+                children,
+            },
             "br" => Tag::Br,
-            "cite" => Tag::Cite { style: parse_css(elem.attr("style")), children },
+            "cite" => Tag::Cite {
+                style: parse_css(elem.attr("style")),
+                children,
+            },
             "em" => Tag::Em { children },
-            "img" => Tag::Img { src: elem.attr("src").map(|src| src.to_string()), alt: elem.attr("alt").map(|alt| alt.to_string()) },
-            "li" => Tag::Li { style: parse_css(elem.attr("style")), children },
-            "ol" => Tag::Ol { style: parse_css(elem.attr("style")), children },
-            "p" => Tag::P { style: parse_css(elem.attr("style")), children },
-            "span" => Tag::Span { style: parse_css(elem.attr("style")), children },
+            "img" => Tag::Img {
+                src: elem.attr("src").map(|src| src.to_string()),
+                alt: elem.attr("alt").map(|alt| alt.to_string()),
+            },
+            "li" => Tag::Li {
+                style: parse_css(elem.attr("style")),
+                children,
+            },
+            "ol" => Tag::Ol {
+                style: parse_css(elem.attr("style")),
+                children,
+            },
+            "p" => Tag::P {
+                style: parse_css(elem.attr("style")),
+                children,
+            },
+            "span" => Tag::Span {
+                style: parse_css(elem.attr("style")),
+                children,
+            },
             "strong" => Tag::Strong { children },
-            "ul" => Tag::Ul { style: parse_css(elem.attr("style")), children },
+            "ul" => Tag::Ul {
+                style: parse_css(elem.attr("style")),
+                children,
+            },
             _ => Tag::Unknown(children),
         })
     }
@@ -280,28 +363,45 @@ impl TryFrom<Element> for Tag {
 impl From<Tag> for Element {
     fn from(tag: Tag) -> Element {
         let (name, attrs, children) = match tag {
-            Tag::A { href, style, type_, children } => ("a", {
-                let mut attrs = vec![];
-                if let Some(href) = href {
-                    attrs.push(("href", href));
-                }
-                if let Some(style) = get_style_string(style) {
-                    attrs.push(("style", style));
-                }
-                if let Some(type_) = type_ {
-                    attrs.push(("type", type_));
-                }
-                attrs
-            }, children),
-            Tag::Blockquote { style, children } => ("blockquote", match get_style_string(style) {
-                Some(style) => vec![("style", style)],
-                None => vec![],
-            }, children),
+            Tag::A {
+                href,
+                style,
+                type_,
+                children,
+            } => (
+                "a",
+                {
+                    let mut attrs = vec![];
+                    if let Some(href) = href {
+                        attrs.push(("href", href));
+                    }
+                    if let Some(style) = get_style_string(style) {
+                        attrs.push(("style", style));
+                    }
+                    if let Some(type_) = type_ {
+                        attrs.push(("type", type_));
+                    }
+                    attrs
+                },
+                children,
+            ),
+            Tag::Blockquote { style, children } => (
+                "blockquote",
+                match get_style_string(style) {
+                    Some(style) => vec![("style", style)],
+                    None => vec![],
+                },
+                children,
+            ),
             Tag::Br => ("br", vec![], vec![]),
-            Tag::Cite { style, children } => ("cite", match get_style_string(style) {
-                Some(style) => vec![("style", style)],
-                None => vec![],
-            }, children),
+            Tag::Cite { style, children } => (
+                "cite",
+                match get_style_string(style) {
+                    Some(style) => vec![("style", style)],
+                    None => vec![],
+                },
+                children,
+            ),
             Tag::Em { children } => ("em", vec![], children),
             Tag::Img { src, alt } => {
                 let mut attrs = vec![];
@@ -312,29 +412,51 @@ impl From<Tag> for Element {
                     attrs.push(("alt", alt));
                 }
                 ("img", attrs, vec![])
-            },
-            Tag::Li { style, children } => ("li", match get_style_string(style) {
-                Some(style) => vec![("style", style)],
-                None => vec![],
-            }, children),
-            Tag::Ol { style, children } => ("ol", match get_style_string(style) {
-                Some(style) => vec![("style", style)],
-                None => vec![],
-            }, children),
-            Tag::P { style, children } => ("p", match get_style_string(style) {
-                Some(style) => vec![("style", style)],
-                None => vec![],
-            }, children),
-            Tag::Span { style, children } => ("span", match get_style_string(style) {
-                Some(style) => vec![("style", style)],
-                None => vec![],
-            }, children),
+            }
+            Tag::Li { style, children } => (
+                "li",
+                match get_style_string(style) {
+                    Some(style) => vec![("style", style)],
+                    None => vec![],
+                },
+                children,
+            ),
+            Tag::Ol { style, children } => (
+                "ol",
+                match get_style_string(style) {
+                    Some(style) => vec![("style", style)],
+                    None => vec![],
+                },
+                children,
+            ),
+            Tag::P { style, children } => (
+                "p",
+                match get_style_string(style) {
+                    Some(style) => vec![("style", style)],
+                    None => vec![],
+                },
+                children,
+            ),
+            Tag::Span { style, children } => (
+                "span",
+                match get_style_string(style) {
+                    Some(style) => vec![("style", style)],
+                    None => vec![],
+                },
+                children,
+            ),
             Tag::Strong { children } => ("strong", vec![], children),
-            Tag::Ul { style, children } => ("ul", match get_style_string(style) {
-                Some(style) => vec![("style", style)],
-                None => vec![],
-            }, children),
-            Tag::Unknown(_) => panic!("No unknown element should be present in XHTML-IM after parsing."),
+            Tag::Ul { style, children } => (
+                "ul",
+                match get_style_string(style) {
+                    Some(style) => vec![("style", style)],
+                    None => vec![],
+                },
+                children,
+            ),
+            Tag::Unknown(_) => {
+                panic!("No unknown element should be present in XHTML-IM after parsing.")
+            }
         };
         let mut builder = Element::builder(name)
             .ns(ns::XHTML)
@@ -354,7 +476,11 @@ fn children_to_nodes(children: Vec<Child>) -> impl IntoIterator<Item = Node> {
 }
 
 fn children_to_html(children: Vec<Child>) -> String {
-    children.into_iter().map(|child| child.to_html()).collect::<Vec<_>>().concat()
+    children
+        .into_iter()
+        .map(|child| child.to_html())
+        .collect::<Vec<_>>()
+        .concat()
 }
 
 fn write_attr(attr: Option<String>, name: &str) -> String {
@@ -369,7 +495,10 @@ fn parse_css(style: Option<&str>) -> Css {
     if let Some(style) = style {
         // TODO: make that parser a bit more resilient to things.
         for part in style.split(";") {
-            let mut part = part.splitn(2, ":").map(|a| a.to_string()).collect::<Vec<_>>();
+            let mut part = part
+                .splitn(2, ":")
+                .map(|a| a.to_string())
+                .collect::<Vec<_>>();
             let key = part.pop().unwrap();
             let value = part.pop().unwrap();
             properties.push(Property { key, value });
@@ -457,7 +586,7 @@ mod tests {
                 assert_eq!(style.len(), 0);
                 assert_eq!(children.len(), 1);
                 children
-            },
+            }
             _ => panic!(),
         };
         let text = match children.pop() {
@@ -502,14 +631,19 @@ mod tests {
     fn generate_tree() {
         let world = "world".to_string();
 
-        Body { style: vec![], xml_lang: Some("en".to_string()), children: vec![
-            Child::Tag(Tag::P { style: vec![], children: vec![
-                Child::Text("Hello ".to_string()),
-                Child::Tag(Tag::Strong { children: vec![
-                    Child::Text(world),
-                ] }),
-                Child::Text("!".to_string()),
-            ] }),
-        ] };
+        Body {
+            style: vec![],
+            xml_lang: Some("en".to_string()),
+            children: vec![Child::Tag(Tag::P {
+                style: vec![],
+                children: vec![
+                    Child::Text("Hello ".to_string()),
+                    Child::Tag(Tag::Strong {
+                        children: vec![Child::Text(world)],
+                    }),
+                    Child::Text("!".to_string()),
+                ],
+            })],
+        };
     }
 }

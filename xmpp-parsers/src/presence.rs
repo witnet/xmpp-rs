@@ -5,13 +5,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use crate::util::error::Error;
 use crate::ns;
+use crate::util::error::Error;
 use jid::Jid;
 use minidom::{Element, IntoAttributeValue, Node};
 use std::collections::BTreeMap;
-use std::str::FromStr;
 use std::convert::TryFrom;
+use std::str::FromStr;
 
 /// Should be implemented on every known payload of a `<presence/>`.
 pub trait PresencePayload: TryFrom<Element> + Into<Element> {}
@@ -232,8 +232,9 @@ impl Presence {
 
     /// Set the availability information of this presence.
     pub fn set_status<L, S>(&mut self, lang: L, status: S)
-    where L: Into<Lang>,
-          S: Into<Status>,
+    where
+        L: Into<Lang>,
+        S: Into<Status>,
     {
         self.statuses.insert(lang.into(), status.into());
     }
@@ -310,27 +311,21 @@ impl From<Presence> for Element {
             .attr("id", presence.id)
             .attr("type", presence.type_)
             .append_all(presence.show.into_iter())
-            .append_all(
-                presence
-                    .statuses
-                    .into_iter()
-                    .map(|(lang, status)| {
-                        Element::builder("status")
-                            .attr(
-                                "xml:lang",
-                                match lang.as_ref() {
-                                    "" => None,
-                                    lang => Some(lang),
-                                },
-                            )
-                            .append(status)
-                    })
-            )
+            .append_all(presence.statuses.into_iter().map(|(lang, status)| {
+                Element::builder("status")
+                    .attr(
+                        "xml:lang",
+                        match lang.as_ref() {
+                            "" => None,
+                            lang => Some(lang),
+                        },
+                    )
+                    .append(status)
+            }))
             .append_all(if presence.priority == 0 {
                 None
             } else {
-                Some(Element::builder("priority")
-                    .append(format!("{}", presence.priority)))
+                Some(Element::builder("priority").append(format!("{}", presence.priority)))
             })
             .append_all(presence.payloads.into_iter())
             .build()
@@ -409,9 +404,7 @@ mod tests {
     #[test]
     fn test_empty_show_value() {
         #[cfg(not(feature = "component"))]
-        let elem: Element = "<presence xmlns='jabber:client'/>"
-            .parse()
-            .unwrap();
+        let elem: Element = "<presence xmlns='jabber:client'/>".parse().unwrap();
         #[cfg(feature = "component")]
         let elem: Element = "<presence xmlns='jabber:component:accept'/>"
             .parse()
@@ -623,8 +616,7 @@ mod tests {
 
     #[test]
     fn test_serialise_priority() {
-        let presence = Presence::new(Type::None)
-            .with_priority(42);
+        let presence = Presence::new(Type::None).with_priority(42);
         let elem: Element = presence.into();
         assert!(elem.is("presence", ns::DEFAULT_NS));
         let priority = elem.children().next().unwrap();
@@ -638,23 +630,24 @@ mod tests {
         let elem: Element = presence.into();
         assert_eq!(elem.attr("to"), None);
 
-        let presence = Presence::new(Type::None)
-            .with_to(Jid::Bare(BareJid::domain("localhost")));
+        let presence = Presence::new(Type::None).with_to(Jid::Bare(BareJid::domain("localhost")));
         let elem: Element = presence.into();
         assert_eq!(elem.attr("to"), Some("localhost"));
 
-        let presence = Presence::new(Type::None)
-            .with_to(BareJid::domain("localhost"));
+        let presence = Presence::new(Type::None).with_to(BareJid::domain("localhost"));
         let elem: Element = presence.into();
         assert_eq!(elem.attr("to"), Some("localhost"));
 
-        let presence = Presence::new(Type::None)
-            .with_to(Jid::Full(FullJid::new("test", "localhost", "coucou")));
+        let presence = Presence::new(Type::None).with_to(Jid::Full(FullJid::new(
+            "test",
+            "localhost",
+            "coucou",
+        )));
         let elem: Element = presence.into();
         assert_eq!(elem.attr("to"), Some("test@localhost/coucou"));
 
-        let presence = Presence::new(Type::None)
-            .with_to(FullJid::new("test", "localhost", "coucou"));
+        let presence =
+            Presence::new(Type::None).with_to(FullJid::new("test", "localhost", "coucou"));
         let elem: Element = presence.into();
         assert_eq!(elem.attr("to"), Some("test@localhost/coucou"));
     }

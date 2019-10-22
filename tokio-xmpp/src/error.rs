@@ -7,8 +7,8 @@ use std::str::Utf8Error;
 use trust_dns_proto::error::ProtoError;
 use trust_dns_resolver::error::ResolveError;
 
-use xmpp_parsers::Error as ParsersError;
 use xmpp_parsers::sasl::DefinedCondition as SaslDefinedCondition;
+use xmpp_parsers::Error as ParsersError;
 
 /// Top-level error type
 #[derive(Debug)]
@@ -159,8 +159,12 @@ impl fmt::Display for ProtocolError {
             ProtocolError::Parser(e) => write!(fmt, "XML parser error: {}", e),
             ProtocolError::Parsers(e) => write!(fmt, "error with expected stanza schema: {}", e),
             ProtocolError::NoTls => write!(fmt, "no TLS available"),
-            ProtocolError::InvalidBindResponse => write!(fmt, "invalid response to resource binding"),
-            ProtocolError::NoStreamNamespace => write!(fmt, "no xmlns attribute in <stream:stream>"),
+            ProtocolError::InvalidBindResponse => {
+                write!(fmt, "invalid response to resource binding")
+            }
+            ProtocolError::NoStreamNamespace => {
+                write!(fmt, "no xmlns attribute in <stream:stream>")
+            }
             ProtocolError::NoStreamId => write!(fmt, "no id attribute in <stream:stream>"),
             ProtocolError::InvalidToken => write!(fmt, "encountered an unexpected XML token"),
             ProtocolError::InvalidStreamStart => write!(fmt, "unexpected <stream:stream>"),

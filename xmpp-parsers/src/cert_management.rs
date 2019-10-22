@@ -4,12 +4,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use crate::iq::{IqSetPayload, IqGetPayload, IqResultPayload};
+use crate::iq::{IqGetPayload, IqResultPayload, IqSetPayload};
 use crate::util::helpers::Base64;
 
 generate_elem_id!(
     /// The name of a certificate.
-    Name, "name", SASL_CERT
+    Name,
+    "name",
+    SASL_CERT
 );
 
 generate_element!(
@@ -40,14 +42,18 @@ impl IqSetPayload for Append {}
 
 generate_empty_element!(
     /// Client requests the current list of X.509 certificates.
-    ListCertsQuery, "items", SASL_CERT
+    ListCertsQuery,
+    "items",
+    SASL_CERT
 );
 
 impl IqGetPayload for ListCertsQuery {}
 
 generate_elem_id!(
     /// One resource currently using a certificate.
-    Resource, "resource", SASL_CERT
+    Resource,
+    "resource",
+    SASL_CERT
 );
 
 generate_element!(
@@ -113,10 +119,10 @@ impl IqSetPayload for Revoke {}
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::ns;
     use crate::Element;
     use std::convert::TryFrom;
     use std::str::FromStr;
-    use crate::ns;
 
     #[cfg(target_pointer_width = "32")]
     #[test]
@@ -153,11 +159,17 @@ mod tests {
         assert_eq!(append.name.0, "Mobile Client");
         assert_eq!(append.cert.data, b"\0\0\0");
 
-        let elem: Element = "<disable xmlns='urn:xmpp:saslcert:1'><name>Mobile Client</name></disable>".parse().unwrap();
+        let elem: Element =
+            "<disable xmlns='urn:xmpp:saslcert:1'><name>Mobile Client</name></disable>"
+                .parse()
+                .unwrap();
         let disable = Disable::try_from(elem).unwrap();
         assert_eq!(disable.name.0, "Mobile Client");
 
-        let elem: Element = "<revoke xmlns='urn:xmpp:saslcert:1'><name>Mobile Client</name></revoke>".parse().unwrap();
+        let elem: Element =
+            "<revoke xmlns='urn:xmpp:saslcert:1'><name>Mobile Client</name></revoke>"
+                .parse()
+                .unwrap();
         let revoke = Revoke::try_from(elem).unwrap();
         assert_eq!(revoke.name.0, "Mobile Client");
     }
@@ -177,7 +189,9 @@ mod tests {
             <name>Laptop</name>
             <x509cert>BBBB</x509cert>
           </item>
-        </items>"#.parse().unwrap();
+        </items>"#
+            .parse()
+            .unwrap();
         let mut list = ListCertsResponse::try_from(elem).unwrap();
         assert_eq!(list.items.len(), 2);
 
@@ -196,7 +210,9 @@ mod tests {
     fn test_serialise() {
         let append = Append {
             name: Name::from_str("Mobile Client").unwrap(),
-            cert: Cert { data: b"\0\0\0".to_vec() },
+            cert: Cert {
+                data: b"\0\0\0".to_vec(),
+            },
             no_cert_management: false,
         };
         let elem: Element = append.into();

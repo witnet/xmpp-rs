@@ -4,8 +4,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use crate::jingle_ssma::{Source, Group};
 use crate::jingle_rtcp_fb::RtcpFb;
+use crate::jingle_ssma::{Group, Source};
 
 generate_element!(
     /// Wrapper element describing an RTP session.
@@ -48,7 +48,10 @@ impl Description {
 
 generate_attribute!(
     /// The number of channels.
-    Channels, "channels", u8, Default = 1
+    Channels,
+    "channels",
+    u8,
+    Default = 1
 );
 
 generate_element!(

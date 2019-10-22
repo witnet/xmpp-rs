@@ -4,9 +4,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+use crate::ns;
 use crate::util::error::Error;
 use crate::util::helpers::Base64;
-use crate::ns;
 use crate::Element;
 use std::collections::BTreeMap;
 use std::convert::TryFrom;
@@ -203,17 +203,12 @@ impl From<Failure> for Element {
         Element::builder("failure")
             .ns(ns::SASL)
             .append(failure.defined_condition)
-            .append_all(
-                failure
-                    .texts
-                    .into_iter()
-                    .map(|(lang, text)| {
-                        Element::builder("text")
-                            .ns(ns::SASL)
-                            .attr("xml:lang", lang)
-                            .append(text)
-                    })
-            )
+            .append_all(failure.texts.into_iter().map(|(lang, text)| {
+                Element::builder("text")
+                    .ns(ns::SASL)
+                    .attr("xml:lang", lang)
+                    .append(text)
+            }))
             .build()
     }
 }

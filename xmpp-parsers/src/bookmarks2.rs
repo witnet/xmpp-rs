@@ -45,12 +45,12 @@ impl Conference {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::ns;
+    use crate::pubsub::event::PubSubEvent;
+    use crate::pubsub::pubsub::Item as PubSubItem;
     use crate::util::compare_elements::NamespaceAwareCompare;
     use crate::Element;
     use std::convert::TryFrom;
-    use crate::pubsub::pubsub::Item as PubSubItem;
-    use crate::pubsub::event::PubSubEvent;
-    use crate::ns;
 
     #[cfg(target_pointer_width = "32")]
     #[test]
@@ -66,7 +66,9 @@ mod tests {
 
     #[test]
     fn simple() {
-        let elem: Element = "<conference xmlns='urn:xmpp:bookmarks:0'/>".parse().unwrap();
+        let elem: Element = "<conference xmlns='urn:xmpp:bookmarks:0'/>"
+            .parse()
+            .unwrap();
         let elem1 = elem.clone();
         let conference = Conference::try_from(elem).unwrap();
         assert_eq!(conference.autojoin, Autojoin::False);
@@ -104,7 +106,7 @@ mod tests {
             Ok(PubSubEvent::PublishedItems { node, items }) => {
                 assert_eq!(&node.0, ns::BOOKMARKS2);
                 items
-            },
+            }
             _ => panic!(),
         };
         assert_eq!(items.len(), 1);

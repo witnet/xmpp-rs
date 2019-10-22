@@ -5,13 +5,13 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use crate::data_forms::DataForm;
-use crate::util::error::Error;
 use crate::forwarding::Forwarded;
 use crate::iq::{IqGetPayload, IqResultPayload, IqSetPayload};
 use crate::message::MessagePayload;
 use crate::ns;
 use crate::pubsub::NodeName;
 use crate::rsm::{SetQuery, SetResult};
+use crate::util::error::Error;
 use jid::Jid;
 use minidom::{Element, Node};
 use std::convert::TryFrom;
@@ -168,14 +168,14 @@ fn serialise_jid_list(name: &str, jids: Vec<Jid>) -> ::std::option::IntoIter<Nod
         Some(
             Element::builder(name)
                 .ns(ns::MAM)
-                .append_all(
-                    jids.into_iter()
-                        .map(|jid|
-                            Element::builder("jid")
-                                .ns(ns::MAM)
-                                .append(String::from(jid))))
+                .append_all(jids.into_iter().map(|jid| {
+                    Element::builder("jid")
+                        .ns(ns::MAM)
+                        .append(String::from(jid))
+                }))
                 .into(),
-        ).into_iter()
+        )
+        .into_iter()
     }
 }
 

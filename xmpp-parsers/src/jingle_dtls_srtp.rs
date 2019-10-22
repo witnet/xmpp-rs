@@ -4,9 +4,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use crate::util::helpers::ColonSeparatedHex;
+use crate::hashes::{Algo, Hash};
 use crate::util::error::Error;
-use crate::hashes::{Hash, Algo};
+use crate::util::helpers::ColonSeparatedHex;
 
 generate_attribute!(
     /// Indicates which of the end points should initiate the TCP connection establishment.
@@ -58,7 +58,11 @@ impl Fingerprint {
     }
 
     /// Create a new Fingerprint from a Setup and parsing the hash.
-    pub fn from_colon_separated_hex(setup: Setup, algo: &str, hash: &str) -> Result<Fingerprint, Error> {
+    pub fn from_colon_separated_hex(
+        setup: Setup,
+        algo: &str,
+        hash: &str,
+    ) -> Result<Fingerprint, Error> {
         let algo = algo.parse()?;
         let hash = Hash::from_colon_separated_hex(algo, hash)?;
         Ok(Fingerprint::from_hash(setup, hash))
@@ -93,6 +97,12 @@ mod tests {
         let fingerprint = Fingerprint::try_from(elem).unwrap();
         assert_eq!(fingerprint.setup, Setup::Actpass);
         assert_eq!(fingerprint.hash, Algo::Sha_256);
-        assert_eq!(fingerprint.value, [2, 26, 204, 84, 39, 171, 235, 156, 83, 63, 62, 75, 101, 46, 125, 70, 63, 84, 66, 205, 84, 241, 122, 3, 162, 125, 249, 176, 127, 70, 25, 178]);
+        assert_eq!(
+            fingerprint.value,
+            [
+                2, 26, 204, 84, 39, 171, 235, 156, 83, 63, 62, 75, 101, 46, 125, 70, 63, 84, 66,
+                205, 84, 241, 122, 3, 162, 125, 249, 176, 127, 70, 25, 178
+            ]
+        );
     }
 }

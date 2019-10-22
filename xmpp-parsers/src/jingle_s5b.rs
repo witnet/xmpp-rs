@@ -4,12 +4,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use crate::util::error::Error;
 use crate::ns;
-use jid::Jid;
+use crate::util::error::Error;
 use crate::Element;
-use std::net::IpAddr;
+use jid::Jid;
 use std::convert::TryFrom;
+use std::net::IpAddr;
 
 generate_attribute!(
     /// The type of the connection being proposed by this candidate.
@@ -263,9 +263,9 @@ impl From<Transport> for Element {
                     .ns(ns::JINGLE_S5B)
                     .attr("cid", cid)
                     .build()],
-                TransportPayload::ProxyError => vec![Element::builder("proxy-error")
-                    .ns(ns::JINGLE_S5B)
-                    .build()],
+                TransportPayload::ProxyError => {
+                    vec![Element::builder("proxy-error").ns(ns::JINGLE_S5B).build()]
+                }
                 TransportPayload::None => vec![],
             })
             .build()

@@ -6,13 +6,13 @@
 
 use crate::data_forms::DataForm;
 use crate::disco::{DiscoInfoQuery, DiscoInfoResult, Feature, Identity};
-use crate::util::error::Error;
 use crate::hashes::{Algo, Hash};
 use crate::ns;
 use crate::presence::PresencePayload;
+use crate::util::error::Error;
+use crate::Element;
 use blake2::VarBlake2b;
 use digest::{Digest, Input, VariableOutput};
-use crate::Element;
 use sha1::Sha1;
 use sha2::{Sha256, Sha512};
 use sha3::{Sha3_256, Sha3_512};

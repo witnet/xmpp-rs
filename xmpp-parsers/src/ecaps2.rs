@@ -30,9 +30,7 @@ impl PresencePayload for ECaps2 {}
 impl ECaps2 {
     /// Create an ECaps2 element from a list of hashes.
     pub fn new(hashes: Vec<Hash>) -> ECaps2 {
-        ECaps2 {
-            hashes,
-        }
+        ECaps2 { hashes }
     }
 }
 
@@ -85,7 +83,13 @@ fn compute_extensions(extensions: &[DataForm]) -> Result<Vec<u8>, ()> {
     }
     Ok(compute_items(extensions, 0x1c, |extension| {
         let mut bytes = compute_item("FORM_TYPE");
-        bytes.append(&mut compute_item(if let Some(ref form_type) = extension.form_type { form_type } else { unreachable!() }));
+        bytes.append(&mut compute_item(
+            if let Some(ref form_type) = extension.form_type {
+                form_type
+            } else {
+                unreachable!()
+            },
+        ));
         bytes.push(0x1e);
         bytes.append(&mut compute_items(&extension.fields, 0x1d, |field| {
             let mut bytes = compute_item(&field.var);

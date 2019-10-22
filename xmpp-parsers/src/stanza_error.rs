@@ -4,12 +4,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use crate::util::error::Error;
 use crate::message::MessagePayload;
 use crate::ns;
 use crate::presence::PresencePayload;
-use jid::Jid;
+use crate::util::error::Error;
 use crate::Element;
+use jid::Jid;
 use std::collections::BTreeMap;
 use std::convert::TryFrom;
 
@@ -217,9 +217,15 @@ impl PresencePayload for StanzaError {}
 
 impl StanzaError {
     /// Create a new `<error/>` with the according content.
-    pub fn new<L, T>(type_: ErrorType, defined_condition: DefinedCondition, lang: L, text: T) -> StanzaError
-    where L: Into<Lang>,
-          T: Into<String>,
+    pub fn new<L, T>(
+        type_: ErrorType,
+        defined_condition: DefinedCondition,
+        lang: L,
+        text: T,
+    ) -> StanzaError
+    where
+        L: Into<Lang>,
+        T: Into<String>,
     {
         StanzaError {
             type_,
@@ -294,14 +300,12 @@ impl From<StanzaError> for Element {
             .attr("type", err.type_)
             .attr("by", err.by)
             .append(err.defined_condition)
-            .append_all(
-                err.texts.into_iter().map(|(lang, text)| {
-                    Element::builder("text")
-                        .ns(ns::XMPP_STANZAS)
-                        .attr("xml:lang", lang)
-                        .append(text)
-                })
-            )
+            .append_all(err.texts.into_iter().map(|(lang, text)| {
+                Element::builder("text")
+                    .ns(ns::XMPP_STANZAS)
+                    .attr("xml:lang", lang)
+                    .append(text)
+            }))
             .append_all(err.other)
             .build()
     }

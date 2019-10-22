@@ -23,9 +23,9 @@
 
 #![deny(missing_docs)]
 
-pub use minidom::Element;
-pub use jid::{BareJid, FullJid, Jid, JidParseError};
 pub use crate::util::error::Error;
+pub use jid::{BareJid, FullJid, Jid, JidParseError};
+pub use minidom::Element;
 
 /// XML namespace definitions used through XMPP.
 pub mod ns;

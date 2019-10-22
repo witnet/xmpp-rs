@@ -4,13 +4,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use crate::util::error::Error;
 use crate::iq::{IqResultPayload, IqSetPayload};
 use crate::ns;
-use jid::{FullJid, Jid};
+use crate::util::error::Error;
 use crate::Element;
-use std::str::FromStr;
+use jid::{FullJid, Jid};
 use std::convert::TryFrom;
+use std::str::FromStr;
 
 /// The request for resource binding, which is the process by which a client
 /// can obtain a full JID and start exchanging on the XMPP network.
@@ -63,10 +63,10 @@ impl From<BindQuery> for Element {
     fn from(bind: BindQuery) -> Element {
         Element::builder("bind")
             .ns(ns::BIND)
-            .append_all(bind.resource.map(|resource|
-                Element::builder("resource")
-                    .ns(ns::BIND)
-                    .append(resource)))
+            .append_all(
+                bind.resource
+                    .map(|resource| Element::builder("resource").ns(ns::BIND).append(resource)),
+            )
             .build()
     }
 }
@@ -115,10 +115,16 @@ impl TryFrom<Element> for BindResponse {
             }
         }
 
-        Ok(BindResponse { jid: match jid {
-            None => return Err(Error::ParseError("Bind response must contain a jid element.")),
-            Some(jid) => jid,
-        } })
+        Ok(BindResponse {
+            jid: match jid {
+                None => {
+                    return Err(Error::ParseError(
+                        "Bind response must contain a jid element.",
+                    ))
+                }
+                Some(jid) => jid,
+            },
+        })
     }
 }
 
@@ -157,9 +163,10 @@ mod tests {
         let bind = BindQuery::try_from(elem).unwrap();
         assert_eq!(bind.resource, None);
 
-        let elem: Element = "<bind xmlns='urn:ietf:params:xml:ns:xmpp-bind'><resource>Hello™</resource></bind>"
-            .parse()
-            .unwrap();
+        let elem: Element =
+            "<bind xmlns='urn:ietf:params:xml:ns:xmpp-bind'><resource>Hello™</resource></bind>"
+                .parse()
+                .unwrap();
         let bind = BindQuery::try_from(elem).unwrap();
         // FIXME: “™” should be resourceprep’d into “TM” here…
         //assert_eq!(bind.resource.unwrap(), "HelloTM");

@@ -66,7 +66,9 @@ mod tests {
 
     #[test]
     fn test_invalid_id() {
-        let elem: Element = "<occupant-id xmlns='urn:xmpp:occupant-id:0'/>".parse().unwrap();
+        let elem: Element = "<occupant-id xmlns='urn:xmpp:occupant-id:0'/>"
+            .parse()
+            .unwrap();
         let error = OccupantId::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,

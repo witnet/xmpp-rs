@@ -6,25 +6,31 @@
 
 generate_empty_element!(
     /// Stream:feature sent by the server to advertise it supports CSI.
-    Feature, "csi", CSI
+    Feature,
+    "csi",
+    CSI
 );
 
 generate_empty_element!(
     /// Client indicates it is inactive.
-    Inactive, "inactive", CSI
+    Inactive,
+    "inactive",
+    CSI
 );
 
 generate_empty_element!(
     /// Client indicates it is active again.
-    Active, "active", CSI
+    Active,
+    "active",
+    CSI
 );
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::ns;
     use crate::Element;
     use std::convert::TryFrom;
-    use crate::ns;
 
     #[test]
     fn test_size() {

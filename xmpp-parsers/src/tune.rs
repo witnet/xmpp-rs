@@ -4,49 +4,63 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use crate::util::error::Error;
-use crate::pubsub::PubSubPayload;
 use crate::ns;
+use crate::pubsub::PubSubPayload;
+use crate::util::error::Error;
 use crate::Element;
 use std::convert::TryFrom;
 
 generate_elem_id!(
     /// The artist or performer of the song or piece.
-    Artist, "artist", TUNE
+    Artist,
+    "artist",
+    TUNE
 );
 
 generate_elem_id!(
     /// The duration of the song or piece in seconds.
-    Length, "length", TUNE,
+    Length,
+    "length",
+    TUNE,
     u16
 );
 
 generate_elem_id!(
     /// The user's rating of the song or piece, from 1 (lowest) to 10 (highest).
-    Rating, "rating", TUNE,
+    Rating,
+    "rating",
+    TUNE,
     u8
 );
 
 generate_elem_id!(
     /// The collection (e.g., album) or other source (e.g., a band website that hosts streams or
     /// audio files).
-    Source, "source", TUNE
+    Source,
+    "source",
+    TUNE
 );
 
 generate_elem_id!(
     /// The title of the song or piece.
-    Title, "title", TUNE
+    Title,
+    "title",
+    TUNE
 );
 
 generate_elem_id!(
     /// A unique identifier for the tune; e.g., the track number within a collection or the
     /// specific URI for the object (e.g., a stream or audio file).
-    Track, "track", TUNE
+    Track,
+    "track",
+    TUNE
 );
 
 generate_elem_id!(
     /// A URI or URL pointing to information about the song, collection, or artist.
-    Uri, "uri", TUNE
+    Uri,
+    "uri",
+    TUNE
 );
 
 /// Container for formatted text.
@@ -221,8 +235,14 @@ mod tests {
         assert_eq!(tune.length, Some(Length(686)));
         assert_eq!(tune.rating, Some(Rating(8)));
         assert_eq!(tune.source, Some(Source::from_str("Yessongs").unwrap()));
-        assert_eq!(tune.title, Some(Title::from_str("Heart of the Sunrise").unwrap()));
+        assert_eq!(
+            tune.title,
+            Some(Title::from_str("Heart of the Sunrise").unwrap())
+        );
         assert_eq!(tune.track, Some(Track::from_str("3").unwrap()));
-        assert_eq!(tune.uri, Some(Uri::from_str("http://www.yesworld.com/lyrics/Fragile.html#9").unwrap()));
+        assert_eq!(
+            tune.uri,
+            Some(Uri::from_str("http://www.yesworld.com/lyrics/Fragile.html#9").unwrap())
+        );
     }
 }

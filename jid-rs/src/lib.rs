@@ -40,12 +40,16 @@ impl StdError for JidParseError {}
 
 impl fmt::Display for JidParseError {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        write!(fmt, "{}", match self {
-            JidParseError::NoDomain => "no domain found in this JID",
-            JidParseError::NoResource => "no resource found in this full JID",
-            JidParseError::EmptyNode => "nodepart empty despite the presence of a @",
-            JidParseError::EmptyResource => "resource empty despite the presence of a /",
-        })
+        write!(
+            fmt,
+            "{}",
+            match self {
+                JidParseError::NoDomain => "no domain found in this JID",
+                JidParseError::NoResource => "no resource found in this full JID",
+                JidParseError::EmptyNode => "nodepart empty despite the presence of a @",
+                JidParseError::EmptyResource => "resource empty despite the presence of a /",
+            }
+        )
     }
 }
 
@@ -623,8 +627,8 @@ impl Into<Node> for BareJid {
 mod tests {
     use super::*;
 
-    use std::str::FromStr;
     use std::collections::HashMap;
+    use std::str::FromStr;
 
     #[test]
     fn can_parse_full_jids() {
@@ -710,22 +714,13 @@ mod tests {
         let full = FullJid::new("a", "b.c", "d");
         let bare = BareJid::new("a", "b.c");
 
-        assert_eq!(
-            FullJid::try_from(Jid::Full(full.clone())),
-            Ok(full.clone()),
-        );
+        assert_eq!(FullJid::try_from(Jid::Full(full.clone())), Ok(full.clone()),);
         assert_eq!(
             FullJid::try_from(Jid::Bare(bare.clone())),
             Err(JidParseError::NoResource),
         );
-        assert_eq!(
-            BareJid::from(Jid::Full(full.clone())),
-            bare.clone(),
-        );
-        assert_eq!(
-            BareJid::from(Jid::Bare(bare.clone())),
-            bare,
-        );
+        assert_eq!(BareJid::from(Jid::Full(full.clone())), bare.clone(),);
+        assert_eq!(BareJid::from(Jid::Bare(bare.clone())), bare,);
     }
 
     #[test]
@@ -760,10 +755,19 @@ mod tests {
 
     #[test]
     fn display_jids() {
-      assert_eq!(format!("{}", FullJid::new("a", "b", "c")), String::from("a@b/c"));
-      assert_eq!(format!("{}", BareJid::new("a", "b")), String::from("a@b"));
-      assert_eq!(format!("{}", Jid::Full(FullJid::new("a", "b", "c"))), String::from("a@b/c"));
-      assert_eq!(format!("{}", Jid::Bare(BareJid::new("a", "b"))), String::from("a@b"));
+        assert_eq!(
+            format!("{}", FullJid::new("a", "b", "c")),
+            String::from("a@b/c")
+        );
+        assert_eq!(format!("{}", BareJid::new("a", "b")), String::from("a@b"));
+        assert_eq!(
+            format!("{}", Jid::Full(FullJid::new("a", "b", "c"))),
+            String::from("a@b/c")
+        );
+        assert_eq!(
+            format!("{}", Jid::Bare(BareJid::new("a", "b"))),
+            String::from("a@b")
+        );
     }
 
     #[cfg(feature = "minidom")]

@@ -8,8 +8,8 @@ use futures::prelude::*;
 use std::env::args;
 use std::process::exit;
 use tokio::runtime::current_thread::Runtime;
+use xmpp::{ClientBuilder, ClientFeature, ClientType, Event};
 use xmpp_parsers::{message::MessageType, Jid};
-use xmpp::{ClientBuilder, ClientType, ClientFeature, Event};
 
 fn main() {
     let args: Vec<String> = args().collect();
@@ -40,40 +40,46 @@ fn main() {
         match evt {
             Event::Online => {
                 println!("Online.");
-            },
+            }
             Event::Disconnected => {
                 println!("Disconnected.");
                 return Err(None);
-            },
+            }
             Event::ContactAdded(contact) => {
                 println!("Contact {} added.", contact.jid);
-            },
+            }
             Event::ContactRemoved(contact) => {
                 println!("Contact {} removed.", contact.jid);
-            },
+            }
             Event::ContactChanged(contact) => {
                 println!("Contact {} changed.", contact.jid);
-            },
+            }
             Event::JoinRoom(jid, conference) => {
                 println!("Joining room {} ({:?})…", jid, conference.name);
-                agent.join_room(jid, conference.nick, conference.password, "en", "Yet another bot!");
-            },
+                agent.join_room(
+                    jid,
+                    conference.nick,
+                    conference.password,
+                    "en",
+                    "Yet another bot!",
+                );
+            }
             Event::LeaveRoom(jid) => {
                 println!("Leaving room {}…", jid);
-            },
+            }
             Event::LeaveAllRooms => {
                 println!("Leaving all rooms…");
-            },
+            }
             Event::RoomJoined(jid) => {
                 println!("Joined room {}.", jid);
                 agent.send_message(Jid::Bare(jid), MessageType::Groupchat, "en", "Hello world!");
-            },
+            }
             Event::RoomLeft(jid) => {
                 println!("Left room {}.", jid);
-            },
+            }
             Event::AvatarRetrieved(jid, path) => {
                 println!("Received avatar for {} in {}.", jid, path);
-            },
+            }
         }
         Ok(())
     });

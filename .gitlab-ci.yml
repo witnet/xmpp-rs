@@ -1,4 +1,5 @@
 stages:
+  - lint
   - build
   - test
 
@@ -29,6 +30,11 @@ variables:
   stage: test
   script:
     - cargo test --verbose
+
+rustfmt:
+  stage: lint
+  script:
+    - rustfmt --check --edition 2018 **/*.rs
 
 rust-latest-build:
   extends:

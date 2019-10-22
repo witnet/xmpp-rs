@@ -5,11 +5,11 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use crate::data_forms::{DataForm, DataFormType};
-use crate::util::error::Error;
 use crate::iq::{IqGetPayload, IqResultPayload};
 use crate::ns;
-use jid::Jid;
+use crate::util::error::Error;
 use crate::Element;
+use jid::Jid;
 use std::convert::TryFrom;
 
 generate_element!(
@@ -37,9 +37,7 @@ attributes: [
 impl Feature {
     /// Create a new `<feature/>` with the according `@var`.
     pub fn new<S: Into<String>>(var: S) -> Feature {
-        Feature {
-            var: var.into(),
-        }
+        Feature { var: var.into() }
     }
 }
 
@@ -66,10 +64,11 @@ generate_element!(
 impl Identity {
     /// Create a new `<identity/>`.
     pub fn new<C, T, L, N>(category: C, type_: T, lang: L, name: N) -> Identity
-    where C: Into<String>,
-          T: Into<String>,
-          L: Into<String>,
-          N: Into<String>,
+    where
+        C: Into<String>,
+        T: Into<String>,
+        L: Into<String>,
+        N: Into<String>,
     {
         Identity {
             category: category.into(),
@@ -81,8 +80,9 @@ impl Identity {
 
     /// Create a new `<identity/>` without a name.
     pub fn new_anonymous<C, T, L, N>(category: C, type_: T) -> Identity
-    where C: Into<String>,
-          T: Into<String>,
+    where
+        C: Into<String>,
+        T: Into<String>,
     {
         Identity {
             category: category.into(),
@@ -340,10 +340,7 @@ mod tests {
             Error::ParseError(string) => string,
             _ => panic!(),
         };
-        assert_eq!(
-            message,
-            "Required attribute 'category' must not be empty."
-        );
+        assert_eq!(message, "Required attribute 'category' must not be empty.");
 
         let elem: Element = "<query xmlns='http://jabber.org/protocol/disco#info'><identity category='coucou'/></query>".parse().unwrap();
         let error = DiscoInfoResult::try_from(elem).unwrap_err();

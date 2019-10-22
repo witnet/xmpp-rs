@@ -4,9 +4,9 @@ use std::env::args;
 use std::process::exit;
 use tokio::runtime::current_thread::Runtime;
 use tokio_xmpp::{Client, Packet};
-use xmpp_parsers::{Jid, Element};
 use xmpp_parsers::message::{Body, Message, MessageType};
 use xmpp_parsers::presence::{Presence, Show as PresenceShow, Type as PresenceType};
+use xmpp_parsers::{Element, Jid};
 
 fn main() {
     let args: Vec<String> = args().collect();
@@ -29,16 +29,14 @@ fn main() {
     // Create outgoing pipe
     let (mut tx, rx) = futures::unsync::mpsc::unbounded();
     rt.spawn(
-        rx.forward(
-            sink.sink_map_err(|_| panic!("Pipe"))
-        )
+        rx.forward(sink.sink_map_err(|_| panic!("Pipe")))
             .map(|(rx, mut sink)| {
                 drop(rx);
                 let _ = sink.close();
             })
             .map_err(|e| {
                 panic!("Send error: {:?}", e);
-            })
+            }),
     );
 
     // Main loop, processes events
@@ -47,7 +45,8 @@ fn main() {
         if wait_for_stream_end {
             /* Do nothing */
         } else if event.is_online() {
-            let jid = event.get_jid()
+            let jid = event
+                .get_jid()
                 .map(|jid| format!("{}", jid))
                 .unwrap_or("unknown".to_owned());
             println!("Online at {}", jid);

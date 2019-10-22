@@ -21,7 +21,7 @@ use xmpp_parsers::{
         pubsub::{Items, PubSub},
         NodeName,
     },
-    stanza_error::{StanzaError, ErrorType, DefinedCondition},
+    stanza_error::{DefinedCondition, ErrorType, StanzaError},
     Jid,
 };
 
@@ -46,16 +46,14 @@ fn main() {
     // Create outgoing pipe
     let (mut tx, rx) = futures::unsync::mpsc::unbounded();
     rt.spawn(
-        rx.forward(
-            sink.sink_map_err(|_| panic!("Pipe"))
-        )
+        rx.forward(sink.sink_map_err(|_| panic!("Pipe")))
             .map(|(rx, mut sink)| {
                 drop(rx);
                 let _ = sink.close();
             })
             .map_err(|e| {
                 panic!("Send error: {:?}", e);
-            })
+            }),
     );
 
     let disco_info = make_disco();
@@ -66,8 +64,7 @@ fn main() {
         // Helper function to send an iq error.
         let mut send_error = |to, id, type_, condition, text: &str| {
             let error = StanzaError::new(type_, condition, "en", text);
-            let iq = Iq::from_error(id, error)
-                .with_to(to);
+            let iq = Iq::from_error(id, error).with_to(to);
             tx.start_send(Packet::Stanza(iq.into())).unwrap();
         };
 
@@ -89,28 +86,45 @@ fn main() {
                             Ok(query) => {
                                 let mut disco = disco_info.clone();
                                 disco.node = query.node;
-                                let iq = Iq::from_result(iq.id, Some(disco))
-                                    .with_to(iq.from.unwrap());
+                                let iq =
+                                    Iq::from_result(iq.id, Some(disco)).with_to(iq.from.unwrap());
                                 tx.start_send(Packet::Stanza(iq.into())).unwrap();
-                            },
+                            }
                             Err(err) => {
-                                send_error(iq.from.unwrap(), iq.id, ErrorType::Modify, DefinedCondition::BadRequest, &format!("{}", err));
-                            },
+                                send_error(
+                                    iq.from.unwrap(),
+                                    iq.id,
+                                    ErrorType::Modify,
+                                    DefinedCondition::BadRequest,
+                                    &format!("{}", err),
+                                );
+                            }
                         }
                     } else {
                         // We MUST answer unhandled get iqs with a service-unavailable error.
-                        send_error(iq.from.unwrap(), iq.id, ErrorType::Cancel, DefinedCondition::ServiceUnavailable, "No handler defined for this kind of iq.");
+                        send_error(
+                            iq.from.unwrap(),
+                            iq.id,
+                            ErrorType::Cancel,
+                            DefinedCondition::ServiceUnavailable,
+                            "No handler defined for this kind of iq.",
+                        );
                     }
                 } else if let IqType::Result(Some(payload)) = iq.payload {
                     if payload.is("pubsub", ns::PUBSUB) {
                         let pubsub = PubSub::try_from(payload).unwrap();
-                        let from =
-                            iq.from.clone().unwrap_or(Jid::from_str(jid).unwrap());
+                        let from = iq.from.clone().unwrap_or(Jid::from_str(jid).unwrap());
                         handle_iq_result(pubsub, &from);
                     }
                 } else if let IqType::Set(_) = iq.payload {
                     // We MUST answer unhandled set iqs with a service-unavailable error.
-                    send_error(iq.from.unwrap(), iq.id, ErrorType::Cancel, DefinedCondition::ServiceUnavailable, "No handler defined for this kind of iq.");
+                    send_error(
+                        iq.from.unwrap(),
+                        iq.id,
+                        ErrorType::Cancel,
+                        DefinedCondition::ServiceUnavailable,
+                        "No handler defined for this kind of iq.",
+                    );
                 }
             } else if stanza.is("message", "jabber:client") {
                 let message = Message::try_from(stanza).unwrap();
@@ -186,20 +200,22 @@ fn get_disco_caps(disco: &DiscoInfoResult, node: &str) -> Caps {
 
 // Construct a <presence/>
 fn make_presence(caps: Caps) -> Presence {
-    let mut presence = Presence::new(PresenceType::None)
-        .with_priority(-1);
+    let mut presence = Presence::new(PresenceType::None).with_priority(-1);
     presence.set_status("en", "Downloading avatars.");
     presence.add_payload(caps);
     presence
 }
 
 fn download_avatar(from: Jid) -> Iq {
-    Iq::from_get("coucou", PubSub::Items(Items {
-        max_items: None,
-        node: NodeName(String::from(ns::AVATAR_DATA)),
-        subid: None,
-        items: Vec::new(),
-    }))
+    Iq::from_get(
+        "coucou",
+        PubSub::Items(Items {
+            max_items: None,
+            node: NodeName(String::from(ns::AVATAR_DATA)),
+            subid: None,
+            items: Vec::new(),
+        }),
+    )
     .with_to(from)
 }
 
@@ -222,10 +238,7 @@ fn handle_iq_result(pubsub: PubSub, from: &Jid) {
 fn save_avatar(from: &Jid, id: String, data: &[u8]) -> io::Result<()> {
     let directory = format!("data/{}", from);
     let filename = format!("data/{}/{}", from, id);
-    println!(
-        "Saving avatar from [1m{}[0m to [4m{}[0m.",
-        from, filename
-    );
+    println!("Saving avatar from [1m{}[0m to [4m{}[0m.", from, filename);
     create_dir_all(directory)?;
     let mut file = File::create(filename)?;
     file.write_all(data)

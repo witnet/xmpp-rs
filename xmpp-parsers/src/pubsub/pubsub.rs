@@ -5,12 +5,12 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use crate::data_forms::DataForm;
-use crate::util::error::Error;
 use crate::iq::{IqGetPayload, IqResultPayload, IqSetPayload};
 use crate::ns;
-use crate::pubsub::{NodeName, Subscription, SubscriptionId, Item as PubSubItem};
-use jid::Jid;
+use crate::pubsub::{Item as PubSubItem, NodeName, Subscription, SubscriptionId};
+use crate::util::error::Error;
 use crate::Element;
+use jid::Jid;
 use std::convert::TryFrom;
 
 // TODO: a better solution would be to split this into a query and a result elements, like for

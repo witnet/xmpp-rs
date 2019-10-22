@@ -23,9 +23,9 @@ mod tests {
     use super::*;
     use crate::util::error::Error;
     use crate::Element;
+    use std::convert::TryFrom;
     use std::error::Error as StdError;
     use std::str::FromStr;
-    use std::convert::TryFrom;
 
     #[test]
     fn test_size() {

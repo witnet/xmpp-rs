@@ -6,11 +6,11 @@
 
 use crate::data_forms::DataForm;
 use crate::date::DateTime;
-use crate::util::error::Error;
 use crate::ns;
-use crate::pubsub::{ItemId, NodeName, Subscription, SubscriptionId, Item as PubSubItem};
-use jid::Jid;
+use crate::pubsub::{Item as PubSubItem, ItemId, NodeName, Subscription, SubscriptionId};
+use crate::util::error::Error;
 use crate::Element;
+use jid::Jid;
 use std::convert::TryFrom;
 
 /// Event wrapper for a PubSub `<item/>`.
@@ -214,15 +214,11 @@ impl From<PubSubEvent> for Element {
             PubSubEvent::RetractedItems { node, items } => Element::builder("items")
                 .ns(ns::PUBSUB_EVENT)
                 .attr("node", node)
-                .append_all(
-                    items
-                        .into_iter()
-                        .map(|id| {
-                            Element::builder("retract")
-                                .ns(ns::PUBSUB_EVENT)
-                                .attr("id", id)
-                        })
-                ),
+                .append_all(items.into_iter().map(|id| {
+                    Element::builder("retract")
+                        .ns(ns::PUBSUB_EVENT)
+                        .attr("id", id)
+                })),
             PubSubEvent::Purge { node } => Element::builder("purge")
                 .ns(ns::PUBSUB_EVENT)
                 .attr("node", node),

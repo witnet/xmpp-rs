@@ -88,7 +88,10 @@ mod tests {
         assert_eq!(ssrc.parameters.len(), 2);
         let parameter = ssrc.parameters.pop().unwrap();
         assert_eq!(parameter.name, "msid");
-        assert_eq!(parameter.value.unwrap(), "MLTJKIHilGn71fNQoszkQ4jlPTuS5vJyKVIv MLTJKIHilGn71fNQoszkQ4jlPTuS5vJyKVIva0");
+        assert_eq!(
+            parameter.value.unwrap(),
+            "MLTJKIHilGn71fNQoszkQ4jlPTuS5vJyKVIv MLTJKIHilGn71fNQoszkQ4jlPTuS5vJyKVIva0"
+        );
         let parameter = ssrc.parameters.pop().unwrap();
         assert_eq!(parameter.name, "cname");
         assert_eq!(parameter.value.unwrap(), "Yv/wvbCdsDW2Prgd");
@@ -101,8 +104,8 @@ mod tests {
     <source ssrc='2301230316'/>
     <source ssrc='386328120'/>
 </ssrc-group>"
-                .parse()
-                .unwrap();
+            .parse()
+            .unwrap();
         let mut group = Group::try_from(elem).unwrap();
         assert_eq!(group.semantics, "FID");
         assert_eq!(group.sources.len(), 2);

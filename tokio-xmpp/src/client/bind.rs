@@ -2,9 +2,9 @@ use futures::{sink, Async, Future, Poll, Stream};
 use std::convert::TryFrom;
 use std::mem::replace;
 use tokio_io::{AsyncRead, AsyncWrite};
-use xmpp_parsers::Jid;
 use xmpp_parsers::bind::{BindQuery, BindResponse};
 use xmpp_parsers::iq::{Iq, IqType};
+use xmpp_parsers::Jid;
 
 use crate::xmpp_codec::Packet;
 use crate::xmpp_stream::XMPPStream;

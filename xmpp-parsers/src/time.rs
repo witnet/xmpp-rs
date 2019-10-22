@@ -4,18 +4,20 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use chrono::FixedOffset;
 use crate::date::DateTime;
 use crate::iq::{IqGetPayload, IqResultPayload};
 use crate::ns;
 use crate::util::error::Error;
 use crate::Element;
+use chrono::FixedOffset;
 use std::convert::TryFrom;
 use std::str::FromStr;
 
 generate_empty_element!(
     /// An entity time query.
-    TimeQuery, "time", TIME
+    TimeQuery,
+    "time",
+    TIME
 );
 
 impl IqGetPayload for TimeQuery {}
@@ -59,9 +61,7 @@ impl TryFrom<Element> for TimeResult {
                 }
                 utc = Some(date_time);
             } else {
-                return Err(Error::ParseError(
-                    "Unknown child in time element.",
-                ));
+                return Err(Error::ParseError("Unknown child in time element."));
             }
         }
 
@@ -77,10 +77,11 @@ impl From<TimeResult> for Element {
     fn from(time: TimeResult) -> Element {
         Element::builder("time")
             .ns(ns::TIME)
-            .append(Element::builder("tzo")
-                    .append(format!("{}", time.0.timezone())))
-            .append(Element::builder("utc")
-                    .append(time.0.with_timezone(FixedOffset::east(0)).format("%FT%TZ")))
+            .append(Element::builder("tzo").append(format!("{}", time.0.timezone())))
+            .append(
+                Element::builder("utc")
+                    .append(time.0.with_timezone(FixedOffset::east(0)).format("%FT%TZ")),
+            )
             .build()
     }
 }
@@ -105,7 +106,10 @@ mod tests {
         let elem1 = elem.clone();
         let time = TimeResult::try_from(elem).unwrap();
         assert_eq!(time.0.timezone(), FixedOffset::west(6 * 3600));
-        assert_eq!(time.0, DateTime::from_str("2006-12-19T12:58:35-05:00").unwrap());
+        assert_eq!(
+            time.0,
+            DateTime::from_str("2006-12-19T12:58:35-05:00").unwrap()
+        );
         let elem2 = Element::from(time);
         assert_eq!(elem1, elem2);
     }

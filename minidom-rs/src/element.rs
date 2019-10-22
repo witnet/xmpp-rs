@@ -5,16 +5,16 @@ use crate::error::{Error, Result};
 use crate::namespace_set::NamespaceSet;
 use crate::node::Node;
 
-use std::io:: Write;
 use std::collections::{btree_map, BTreeMap};
+use std::io::Write;
 
-use std::str;
-use std::rc::Rc;
 use std::borrow::Cow;
+use std::rc::Rc;
+use std::str;
 
+use quick_xml::events::{BytesDecl, BytesEnd, BytesStart, Event};
 use quick_xml::Reader as EventReader;
 use quick_xml::Writer as EventWriter;
-use quick_xml::events::{Event, BytesStart, BytesEnd, BytesDecl};
 
 use std::io::BufRead;
 
@@ -68,7 +68,6 @@ pub fn escape(raw: &[u8]) -> Cow<[u8]> {
     }
 }
 
-
 #[derive(Clone, PartialEq, Eq, Debug)]
 /// A struct representing a DOM Element.
 pub struct Element {
@@ -97,9 +96,16 @@ impl FromStr for Element {
 }
 
 impl Element {
-    fn new<NS: Into<NamespaceSet>>(name: String, prefix: Option<String>, namespaces: NS, attributes: BTreeMap<String, String>, children: Vec<Node>) -> Element {
+    fn new<NS: Into<NamespaceSet>>(
+        name: String,
+        prefix: Option<String>,
+        namespaces: NS,
+        attributes: BTreeMap<String, String>,
+        children: Vec<Node>,
+    ) -> Element {
         Element {
-            prefix, name,
+            prefix,
+            name,
             namespaces: Rc::new(namespaces.into()),
             attributes,
             children,
@@ -186,7 +192,7 @@ impl Element {
     /// Returns a reference to the value of the given attribute, if it exists, else `None`.
     pub fn attr(&self, name: &str) -> Option<&str> {
         if let Some(value) = self.attributes.get(name) {
-            return Some(value)
+            return Some(value);
         }
         None
     }
@@ -225,7 +231,8 @@ impl Element {
         let val = val.into_attribute_value();
 
         if let Some(value) = self.attributes.get_mut(&name) {
-            *value = val.expect("removing existing value via set_attr, this is not yet supported (TODO)"); // TODO
+            *value = val
+                .expect("removing existing value via set_attr, this is not yet supported (TODO)"); // TODO
             return;
         }
 
@@ -249,8 +256,7 @@ impl Element {
     /// assert_eq!(elem.is("wrong", "wrong"), false);
     /// ```
     pub fn is<N: AsRef<str>, NS: AsRef<str>>(&self, name: N, namespace: NS) -> bool {
-        self.name == name.as_ref() &&
-            self.has_ns(namespace)
+        self.name == name.as_ref() && self.has_ns(namespace)
     }
 
     /// Returns whether the element has the given namespace.
@@ -278,22 +284,22 @@ impl Element {
             match e {
                 Event::Empty(ref e) | Event::Start(ref e) => {
                     break build_element(reader, e)?;
-                },
+                }
                 Event::Eof => {
                     return Err(Error::EndOfDocument);
-                },
+                }
                 #[cfg(not(feature = "comments"))]
                 Event::Comment { .. } => {
                     return Err(Error::CommentsDisabled);
                 }
                 #[cfg(feature = "comments")]
                 Event::Comment { .. } => (),
-                Event::Text { .. } |
-                Event::End { .. } |
-                Event::CData { .. } |
-                Event::Decl { .. } |
-                Event::PI { .. } |
-                Event::DocType { .. } => (), // TODO: may need more errors
+                Event::Text { .. }
+                | Event::End { .. }
+                | Event::CData { .. }
+                | Event::Decl { .. }
+                | Event::PI { .. }
+                | Event::DocType { .. } => (), // TODO: may need more errors
             }
         };
 
@@ -305,11 +311,11 @@ impl Element {
                     let elem = build_element(reader, e)?;
                     // Since there is no Event::End after, directly append it to the current node
                     stack.last_mut().unwrap().append_child(elem);
-                },
+                }
                 Event::Start(ref e) => {
                     let elem = build_element(reader, e)?;
                     stack.push(elem);
-                },
+                }
                 Event::End(ref e) => {
                     if stack.len() <= 1 {
                         break;
@@ -327,15 +333,15 @@ impl Element {
                                         if possible_prefix != prefix.as_bytes() {
                                             return Err(Error::InvalidElementClosed);
                                         }
-                                    },
+                                    }
                                     None => {
                                         return Err(Error::InvalidElementClosed);
-                                    },
+                                    }
                                 }
                                 if name != elem.name().as_bytes() {
                                     return Err(Error::InvalidElementClosed);
                                 }
-                            },
+                            }
                             None => {
                                 if elem.prefix().is_some() {
                                     return Err(Error::InvalidElementClosed);
@@ -343,28 +349,28 @@ impl Element {
                                 if possible_prefix != elem.name().as_bytes() {
                                     return Err(Error::InvalidElementClosed);
                                 }
-                            },
+                            }
                         }
                         to.append_child(elem);
                     }
-                },
+                }
                 Event::Text(s) => {
                     let text = s.unescape_and_decode(reader)?;
                     if text != "" {
                         let current_elem = stack.last_mut().unwrap();
                         current_elem.append_text_node(text);
                     }
-                },
+                }
                 Event::CData(s) => {
                     let text = reader.decode(&s)?.to_owned();
                     if text != "" {
                         let current_elem = stack.last_mut().unwrap();
                         current_elem.append_text_node(text);
                     }
-                },
+                }
                 Event::Eof => {
                     break;
-                },
+                }
                 #[cfg(not(feature = "comments"))]
                 Event::Comment(_) => return Err(Error::CommentsDisabled),
                 #[cfg(feature = "comments")]
@@ -374,10 +380,8 @@ impl Element {
                         let current_elem = stack.last_mut().unwrap();
                         current_elem.append_comment_node(comment);
                     }
-                },
-                Event::Decl { .. } |
-                Event::PI { .. } |
-                Event::DocType { .. } => (),
+                }
+                Event::Decl { .. } | Event::PI { .. } | Event::DocType { .. } => (),
             }
         }
         Ok(stack.pop().unwrap())
@@ -408,7 +412,7 @@ impl Element {
                 Some(ref prefix) => {
                     let key = format!("xmlns:{}", prefix);
                     start.push_attribute((key.as_bytes(), ns.as_bytes()))
-                },
+                }
             }
         }
         for (key, value) in &self.attributes {
@@ -417,7 +421,7 @@ impl Element {
 
         if self.children.is_empty() {
             writer.write_event(Event::Empty(start))?;
-            return Ok(())
+            return Ok(());
         }
 
         writer.write_event(Event::Start(start))?;
@@ -448,12 +452,14 @@ impl Element {
     /// assert_eq!(iter.next().unwrap().as_text().unwrap(), "c");
     /// assert_eq!(iter.next(), None);
     /// ```
-    #[inline] pub fn nodes(&self) -> Nodes {
+    #[inline]
+    pub fn nodes(&self) -> Nodes {
         self.children.iter()
     }
 
     /// Returns an iterator over mutable references to every child node of this element.
-    #[inline] pub fn nodes_mut(&mut self) -> NodesMut {
+    #[inline]
+    pub fn nodes_mut(&mut self) -> NodesMut {
         self.children.iter_mut()
     }
 
@@ -472,14 +478,16 @@ impl Element {
     /// assert_eq!(iter.next().unwrap().name(), "child3");
     /// assert_eq!(iter.next(), None);
     /// ```
-    #[inline] pub fn children(&self) -> Children {
+    #[inline]
+    pub fn children(&self) -> Children {
         Children {
             iter: self.children.iter(),
         }
     }
 
     /// Returns an iterator over mutable references to every child element of this element.
-    #[inline] pub fn children_mut(&mut self) -> ChildrenMut {
+    #[inline]
+    pub fn children_mut(&mut self) -> ChildrenMut {
         ChildrenMut {
             iter: self.children.iter_mut(),
         }
@@ -499,14 +507,16 @@ impl Element {
     /// assert_eq!(iter.next().unwrap(), " world!");
     /// assert_eq!(iter.next(), None);
     /// ```
-    #[inline] pub fn texts(&self) -> Texts {
+    #[inline]
+    pub fn texts(&self) -> Texts {
         Texts {
             iter: self.children.iter(),
         }
     }
 
     /// Returns an iterator over mutable references to every text node of this element.
-    #[inline] pub fn texts_mut(&mut self) -> TextsMut {
+    #[inline]
+    pub fn texts_mut(&mut self) -> TextsMut {
         TextsMut {
             iter: self.children.iter_mut(),
         }
@@ -630,7 +640,11 @@ impl Element {
     /// assert_eq!(elem.get_child("b", "other_ns"), None);
     /// assert_eq!(elem.get_child("a", "inexistent_ns"), None);
     /// ```
-    pub fn get_child<N: AsRef<str>, NS: AsRef<str>>(&self, name: N, namespace: NS) -> Option<&Element> {
+    pub fn get_child<N: AsRef<str>, NS: AsRef<str>>(
+        &self,
+        name: N,
+        namespace: NS,
+    ) -> Option<&Element> {
         for fork in &self.children {
             if let Node::Element(ref e) = *fork {
                 if e.is(name.as_ref(), namespace.as_ref()) {
@@ -643,7 +657,11 @@ impl Element {
 
     /// Returns a mutable reference to the first child element with the specific name and namespace,
     /// if it exists in the direct descendants of this `Element`, else returns `None`.
-    pub fn get_child_mut<N: AsRef<str>, NS: AsRef<str>>(&mut self, name: N, namespace: NS) -> Option<&mut Element> {
+    pub fn get_child_mut<N: AsRef<str>, NS: AsRef<str>>(
+        &mut self,
+        name: N,
+        namespace: NS,
+    ) -> Option<&mut Element> {
         for fork in &mut self.children {
             if let Node::Element(ref mut e) = *fork {
                 if e.is(name.as_ref(), namespace.as_ref()) {
@@ -690,7 +708,11 @@ impl Element {
     /// assert!(elem.remove_child("a", "ns").is_none());
     /// assert!(elem.remove_child("inexistent", "inexistent").is_none());
     /// ```
-    pub fn remove_child<N: AsRef<str>, NS: AsRef<str>>(&mut self, name: N, namespace: NS) -> Option<Element> {
+    pub fn remove_child<N: AsRef<str>, NS: AsRef<str>>(
+        &mut self,
+        name: N,
+        namespace: NS,
+    ) -> Option<Element> {
         let name = name.as_ref();
         let namespace = namespace.as_ref();
         let idx = self.children.iter().position(|x| {
@@ -715,25 +737,24 @@ fn split_element_name<S: AsRef<str>>(s: S) -> Result<(Option<String>, String)> {
 
 fn build_element<R: BufRead>(reader: &EventReader<R>, event: &BytesStart) -> Result<Element> {
     let mut namespaces = BTreeMap::new();
-    let attributes = event.attributes()
+    let attributes = event
+        .attributes()
         .map(|o| {
             let o = o?;
             let key = str::from_utf8(o.key)?.to_owned();
             let value = o.unescape_and_decode_value(reader)?;
             Ok((key, value))
         })
-        .filter(|o| {
-            match *o {
-                Ok((ref key, ref value)) if key == "xmlns" => {
-                    namespaces.insert(None, value.to_owned());
-                    false
-                },
-                Ok((ref key, ref value)) if key.starts_with("xmlns:") => {
-                    namespaces.insert(Some(key[6..].to_owned()), value.to_owned());
-                    false
-                },
-                _ => true,
+        .filter(|o| match *o {
+            Ok((ref key, ref value)) if key == "xmlns" => {
+                namespaces.insert(None, value.to_owned());
+                false
             }
+            Ok((ref key, ref value)) if key.starts_with("xmlns:") => {
+                namespaces.insert(Some(key[6..].to_owned()), value.to_owned());
+                false
+            }
+            _ => true,
         })
         .collect::<Result<BTreeMap<String, String>>>()?;
 
@@ -861,7 +882,11 @@ impl ElementBuilder {
     }
 
     /// Sets an attribute.
-    pub fn attr<S: Into<String>, V: IntoAttributeValue>(mut self, name: S, value: V) -> ElementBuilder {
+    pub fn attr<S: Into<String>, V: IntoAttributeValue>(
+        mut self,
+        name: S,
+        value: V,
+    ) -> ElementBuilder {
         self.root.set_attr(name, value);
         self
     }
@@ -873,7 +898,10 @@ impl ElementBuilder {
     }
 
     /// Appends an iterator of things implementing `Into<Node>` into the tree.
-    pub fn append_all<T: Into<Node>, I: IntoIterator<Item = T>>(mut self, iter: I) -> ElementBuilder {
+    pub fn append_all<T: Into<Node>, I: IntoIterator<Item = T>>(
+        mut self,
+        iter: I,
+    ) -> ElementBuilder {
         for node in iter {
             self.root.append_node(node.into());
         }
@@ -903,11 +931,13 @@ mod tests {
     fn test_element_new() {
         use std::iter::FromIterator;
 
-        let elem = Element::new( "name".to_owned()
-                               , None
-                               , Some("namespace".to_owned())
-                               , BTreeMap::from_iter(vec![ ("name".to_string(), "value".to_string()) ].into_iter() )
-                               , Vec::new() );
+        let elem = Element::new(
+            "name".to_owned(),
+            None,
+            Some("namespace".to_owned()),
+            BTreeMap::from_iter(vec![("name".to_string(), "value".to_string())].into_iter()),
+            Vec::new(),
+        );
 
         assert_eq!(elem.name(), "name");
         assert_eq!(elem.ns(), Some("namespace".to_owned()));
@@ -932,12 +962,8 @@ mod tests {
         let mut reader = EventReader::from_str(xml);
         let elem = Element::from_reader(&mut reader);
 
-        let nested = Element::builder("bar")
-                             .attr("baz", "qxx")
-                             .build();
-        let elem2 = Element::builder("foo")
-                            .append(nested)
-                            .build();
+        let nested = Element::builder("bar").attr("baz", "qxx").build();
+        let elem2 = Element::builder("foo").append(nested).build();
 
         assert_eq!(elem.unwrap(), elem2);
     }
@@ -948,18 +974,15 @@ mod tests {
         let mut reader = EventReader::from_str(xml);
         let elem = Element::from_reader(&mut reader);
 
-        let nested = Element::builder("prefix:bar")
-                             .attr("baz", "qxx")
-                             .build();
-        let elem2 = Element::builder("foo")
-                            .append(nested)
-                            .build();
+        let nested = Element::builder("prefix:bar").attr("baz", "qxx").build();
+        let elem2 = Element::builder("foo").append(nested).build();
 
         assert_eq!(elem.unwrap(), elem2);
     }
 
     #[test]
-    fn parses_spectest_xml() { // From: https://gitlab.com/lumi/minidom-rs/issues/8
+    fn parses_spectest_xml() {
+        // From: https://gitlab.com/lumi/minidom-rs/issues/8
         let xml = r#"
             <rng:grammar xmlns:rng="http://relaxng.org/ns/structure/1.0">
                 <rng:name xmlns:rng="http://relaxng.org/ns/structure/1.0"></rng:name>

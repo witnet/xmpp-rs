@@ -71,7 +71,10 @@ pub struct WhitespaceAwareBase64;
 
 impl WhitespaceAwareBase64 {
     pub fn decode(s: &str) -> Result<Vec<u8>, Error> {
-        let s: String = s.chars().filter(|ch| *ch != ' ' && *ch != '\n' && *ch != '\t').collect();
+        let s: String = s
+            .chars()
+            .filter(|ch| *ch != ' ' && *ch != '\n' && *ch != '\t')
+            .collect();
         Ok(base64::decode(&s)?)
     }
 

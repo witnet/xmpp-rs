@@ -13,7 +13,7 @@ macro_rules! impl_into_attribute_value {
                 Some(format!("{}", self))
             }
         }
-    }
+    };
 }
 
 macro_rules! impl_into_attribute_values {
@@ -22,7 +22,19 @@ macro_rules! impl_into_attribute_values {
     }
 }
 
-impl_into_attribute_values!(usize, u64, u32, u16, u8, isize, i64, i32, i16, i8, ::std::net::IpAddr);
+impl_into_attribute_values!(
+    usize,
+    u64,
+    u32,
+    u16,
+    u8,
+    isize,
+    i64,
+    i32,
+    i16,
+    i8,
+    ::std::net::IpAddr
+);
 
 impl IntoAttributeValue for String {
     fn into_attribute_value(self) -> Option<String> {
@@ -56,14 +68,20 @@ mod tests {
 
     #[test]
     fn test_into_attribute_value_on_ints() {
-        assert_eq!(16u8.into_attribute_value().unwrap()    , "16");
-        assert_eq!(17u16.into_attribute_value().unwrap()   , "17");
-        assert_eq!(18u32.into_attribute_value().unwrap()   , "18");
-        assert_eq!(19u64.into_attribute_value().unwrap()   , "19");
-        assert_eq!(   16i8.into_attribute_value().unwrap() , "16");
+        assert_eq!(16u8.into_attribute_value().unwrap(), "16");
+        assert_eq!(17u16.into_attribute_value().unwrap(), "17");
+        assert_eq!(18u32.into_attribute_value().unwrap(), "18");
+        assert_eq!(19u64.into_attribute_value().unwrap(), "19");
+        assert_eq!(16i8.into_attribute_value().unwrap(), "16");
         assert_eq!((-17i16).into_attribute_value().unwrap(), "-17");
-        assert_eq!(   18i32.into_attribute_value().unwrap(), "18");
+        assert_eq!(18i32.into_attribute_value().unwrap(), "18");
         assert_eq!((-19i64).into_attribute_value().unwrap(), "-19");
-        assert_eq!(IpAddr::from_str("127.000.0.1").unwrap().into_attribute_value().unwrap(), "127.0.0.1");
+        assert_eq!(
+            IpAddr::from_str("127.000.0.1")
+                .unwrap()
+                .into_attribute_value()
+                .unwrap(),
+            "127.0.0.1"
+        );
     }
 }

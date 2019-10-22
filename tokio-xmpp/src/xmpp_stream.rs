@@ -2,9 +2,9 @@
 
 use futures::sink::Send;
 use futures::{Poll, Sink, StartSend, Stream};
-use xmpp_parsers::{Jid, Element};
 use tokio_codec::Framed;
 use tokio_io::{AsyncRead, AsyncWrite};
+use xmpp_parsers::{Element, Jid};
 
 use crate::stream_start::StreamStart;
 use crate::xmpp_codec::{Packet, XMPPCodec};
