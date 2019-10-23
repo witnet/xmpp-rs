@@ -12,7 +12,6 @@ use std::io::{self, Write};
 use tokio_xmpp::Packet;
 use xmpp_parsers::{
     avatar::{Data, Metadata},
-    hashes::Hash,
     iq::Iq,
     ns,
     pubsub::{
@@ -22,15 +21,6 @@ use xmpp_parsers::{
     },
     Jid,
 };
-
-// TODO: Update xmpp-parsers to get this function for free on Hash.
-fn hash_to_hex(hash: &Hash) -> String {
-    let mut bytes = vec![];
-    for byte in hash.hash.iter() {
-        bytes.push(format!("{:02x}", byte));
-    }
-    bytes.join("")
-}
 
 pub(crate) fn handle_metadata_pubsub_event(
     from: &Jid,
@@ -43,7 +33,7 @@ pub(crate) fn handle_metadata_pubsub_event(
         if payload.is("metadata", ns::AVATAR_METADATA) {
             let metadata = Metadata::try_from(payload).unwrap();
             for info in metadata.infos {
-                let filename = format!("data/{}/{}", from, hash_to_hex(&*info.id));
+                let filename = format!("data/{}/{}", from, &*info.id.to_hex());
                 let file_length = match fs::metadata(filename.clone()) {
                     Ok(metadata) => metadata.len(),
                     Err(_) => 0,
