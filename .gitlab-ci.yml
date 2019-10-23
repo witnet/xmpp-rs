@@ -33,8 +33,9 @@ variables:
 
 rustfmt:
   stage: lint
+  image: rustlang/rust:nightly
   script:
-    - rustfmt --check --edition 2018 **/*.rs
+    - find -type f -iname '*.rs' -not -path './target/*' | xargs rustfmt --check --edition 2018
 
 rust-latest-build:
   extends:
