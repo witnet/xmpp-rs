@@ -260,11 +260,6 @@ macro_rules! generate_element_enum {
                     .build()
             }
         }
-        impl From<$elem> for ::minidom::Node {
-            fn from(elem: $elem) -> ::minidom::Node {
-                ::minidom::Node::Element(elem.into())
-            }
-        }
     );
 }
 
@@ -301,11 +296,6 @@ macro_rules! generate_attribute_enum {
                          $($elem::$enum => $enum_name,)+
                      })
                      .build()
-            }
-        }
-        impl From<$elem> for ::minidom::Node {
-            fn from(elem: $elem) -> ::minidom::Node {
-                ::minidom::Node::Element(elem.into())
             }
         }
     );
@@ -402,12 +392,6 @@ macro_rules! generate_empty_element {
                     .build()
             }
         }
-
-        impl From<$elem> for ::minidom::Node {
-            fn from(elem: $elem) -> ::minidom::Node {
-                ::minidom::Node::Element(elem.into())
-            }
-        }
     );
 }
 
@@ -462,12 +446,6 @@ macro_rules! generate_elem_id {
                     .ns(crate::ns::$ns)
                     .append(elem.0.to_string())
                     .build()
-            }
-        }
-
-        impl From<$elem> for ::minidom::Node {
-            fn from(elem: $elem) -> ::minidom::Node {
-                ::minidom::Node::Element(elem.into())
             }
         }
     );
@@ -735,12 +713,6 @@ macro_rules! generate_element {
                 builder.build()
             }
         }
-
-        impl From<$elem> for ::minidom::Node {
-            fn from(elem: $elem) -> ::minidom::Node {
-                ::minidom::Node::Element(elem.into())
-            }
-        }
     );
 }
 
@@ -783,12 +755,6 @@ macro_rules! impl_pubsub_item {
                     .attr("publisher", item.0.publisher)
                     .append_all(item.0.payload)
                     .build()
-            }
-        }
-
-        impl From<$item> for ::minidom::Node {
-            fn from(item: $item) -> ::minidom::Node {
-                ::minidom::Node::Element(item.into())
             }
         }
 
