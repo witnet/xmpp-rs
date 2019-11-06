@@ -183,7 +183,8 @@ impl Node {
 }
 
 impl<I> From<I> for Node
-where I: Into<Element>
+where
+    I: Into<Element>,
 {
     fn from(elm: I) -> Node {
         Node::Element(elm.into())
