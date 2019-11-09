@@ -2,7 +2,7 @@
 
 use crate::convert::IntoAttributeValue;
 use crate::error::{Error, Result};
-use crate::namespace_set::{NamespaceSet, NSChoice};
+use crate::namespace_set::{NSChoice, NamespaceSet};
 use crate::node::Node;
 
 use std::collections::{btree_map, BTreeMap};
