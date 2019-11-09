@@ -620,7 +620,7 @@ macro_rules! generate_serialiser {
 
 macro_rules! generate_child_test {
     ($child:ident, $name:tt, *) => {
-        true
+        $child.is($name, ::minidom::NSChoice::Any)
     };
     ($child:ident, $name:tt, $ns:tt) => {
         $child.is($name, crate::ns::$ns)
