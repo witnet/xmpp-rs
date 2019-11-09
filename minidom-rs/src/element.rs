@@ -2,7 +2,7 @@
 
 use crate::convert::IntoAttributeValue;
 use crate::error::{Error, Result};
-use crate::namespace_set::NamespaceSet;
+use crate::namespace_set::{NamespaceSet, NSChoice};
 use crate::node::Node;
 
 use std::collections::{btree_map, BTreeMap};
@@ -246,7 +246,7 @@ impl Element {
     /// # Examples
     ///
     /// ```rust
-    /// use minidom::Element;
+    /// use minidom::{Element, NSChoice};
     ///
     /// let elem = Element::builder("name").ns("namespace").build();
     ///
@@ -254,8 +254,19 @@ impl Element {
     /// assert_eq!(elem.is("name", "wrong"), false);
     /// assert_eq!(elem.is("wrong", "namespace"), false);
     /// assert_eq!(elem.is("wrong", "wrong"), false);
+    ///
+    /// assert_eq!(elem.is("name", NSChoice::None), false);
+    /// assert_eq!(elem.is("name", NSChoice::OneOf("namespace")), true);
+    /// assert_eq!(elem.is("name", NSChoice::OneOf("foo")), false);
+    /// assert_eq!(elem.is("name", NSChoice::AnyOf(vec!["foo", "namespace"])), true);
+    /// assert_eq!(elem.is("name", NSChoice::Any), true);
+    ///
+    /// let elem2 = Element::builder("name").build();
+    ///
+    /// assert_eq!(elem2.is("name", NSChoice::None), true);
+    /// assert_eq!(elem2.is("name", NSChoice::Any), true);
     /// ```
-    pub fn is<N: AsRef<str>, NS: AsRef<str>>(&self, name: N, namespace: NS) -> bool {
+    pub fn is<'a, N: AsRef<str>, NS: Into<NSChoice<'a>>>(&self, name: N, namespace: NS) -> bool {
         self.name == name.as_ref() && self.has_ns(namespace)
     }
 
@@ -264,14 +275,25 @@ impl Element {
     /// # Examples
     ///
     /// ```rust
-    /// use minidom::Element;
+    /// use minidom::{Element, NSChoice};
     ///
     /// let elem = Element::builder("name").ns("namespace").build();
     ///
     /// assert_eq!(elem.has_ns("namespace"), true);
     /// assert_eq!(elem.has_ns("wrong"), false);
+    ///
+    /// assert_eq!(elem.has_ns(NSChoice::None), false);
+    /// assert_eq!(elem.has_ns(NSChoice::OneOf("namespace")), true);
+    /// assert_eq!(elem.has_ns(NSChoice::OneOf("foo")), false);
+    /// assert_eq!(elem.has_ns(NSChoice::AnyOf(vec!["foo", "namespace"])), true);
+    /// assert_eq!(elem.has_ns(NSChoice::Any), true);
+    ///
+    /// let elem2 = Element::builder("name").build();
+    ///
+    /// assert_eq!(elem2.has_ns(NSChoice::None), true);
+    /// assert_eq!(elem2.has_ns(NSChoice::Any), true);
     /// ```
-    pub fn has_ns<NS: AsRef<str>>(&self, namespace: NS) -> bool {
+    pub fn has_ns<'a, NS: Into<NSChoice<'a>>>(&self, namespace: NS) -> bool {
         self.namespaces.has(&self.prefix, namespace)
     }
 

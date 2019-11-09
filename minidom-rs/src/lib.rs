@@ -77,5 +77,6 @@ mod tests;
 
 pub use convert::IntoAttributeValue;
 pub use element::{Children, ChildrenMut, Element, ElementBuilder};
+pub use namespace_set::NSChoice;
 pub use error::{Error, Result};
 pub use node::Node;

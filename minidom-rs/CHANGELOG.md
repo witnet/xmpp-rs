@@ -1,6 +1,7 @@
 Version XXX, released YYY:
   * Changes
     * Update edition to 2018
+    * Add NSChoice enum to allow comparing NSs differently
   * Fixes
     * Update old CI configuration with newer Rust images
 Version 0.11.1, released 2019-09-06:

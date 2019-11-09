@@ -3,6 +3,25 @@ use std::collections::BTreeMap;
 use std::fmt;
 use std::rc::Rc;
 
+#[derive(Clone, PartialEq, Eq, Debug)]
+/// Use to compare namespaces
+pub enum NSChoice<'a> {
+    /// The element must have no namespace
+    None,
+    /// The element's namespace must match the specified namespace
+    OneOf(&'a str),
+    /// The element's namespace must be in the specified vector
+    AnyOf(Vec<&'a str>),
+    /// The element can have any namespace, or no namespace
+    Any,
+}
+
+impl<'a> From<&'a str> for NSChoice<'a> {
+    fn from(ns: &'a str) -> NSChoice<'a> {
+        NSChoice::OneOf(ns)
+    }
+}
+
 #[derive(Clone, PartialEq, Eq)]
 pub struct NamespaceSet {
     parent: RefCell<Option<Rc<NamespaceSet>>>,
@@ -51,11 +70,22 @@ impl NamespaceSet {
         }
     }
 
-    pub fn has<NS: AsRef<str>>(&self, prefix: &Option<String>, wanted_ns: NS) -> bool {
+    fn compare_ns<'a>(&self, ns: Option<&str>, wanted_ns: NSChoice<'a>) -> bool {
+        match (ns, wanted_ns) {
+            (None, NSChoice::None) | (None, NSChoice::Any) => true,
+            (None, NSChoice::OneOf(_)) | (None, NSChoice::AnyOf(_)) => false,
+            (Some(_), NSChoice::None) => false,
+            (Some(_), NSChoice::Any) => true,
+            (Some(ns), NSChoice::OneOf(wanted_ns)) => ns == wanted_ns,
+            (Some(ns), NSChoice::AnyOf(wanted_nss)) => wanted_nss.iter().any(|w| &ns == w),
+        }
+    }
+
+    pub fn has<'a, NS: Into<NSChoice<'a>>>(&self, prefix: &Option<String>, wanted_ns: NS) -> bool {
         match self.namespaces.get(prefix) {
-            Some(ns) => ns == wanted_ns.as_ref(),
+            Some(ns) => self.compare_ns(Some(ns), wanted_ns.into()),
             None => match *self.parent.borrow() {
-                None => false,
+                None => self.compare_ns(None, wanted_ns.into()),
                 Some(ref parent) => parent.has(prefix, wanted_ns),
             },
         }
