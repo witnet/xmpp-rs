@@ -22,6 +22,19 @@ impl<'a> From<&'a str> for NSChoice<'a> {
     }
 }
 
+impl<'a> NSChoice<'a> {
+    fn compare(&self, ns: Option<&str>) -> bool {
+        match (ns, &self) {
+            (None, NSChoice::None) | (None, NSChoice::Any) => true,
+            (None, NSChoice::OneOf(_)) | (None, NSChoice::AnyOf(_)) => false,
+            (Some(_), NSChoice::None) => false,
+            (Some(_), NSChoice::Any) => true,
+            (Some(ns), NSChoice::OneOf(wanted_ns)) => &ns == wanted_ns,
+            (Some(ns), NSChoice::AnyOf(wanted_nss)) => wanted_nss.iter().any(|w| &ns == w),
+        }
+    }
+}
+
 #[derive(Clone, PartialEq, Eq)]
 pub struct NamespaceSet {
     parent: RefCell<Option<Rc<NamespaceSet>>>,
@@ -70,22 +83,11 @@ impl NamespaceSet {
         }
     }
 
-    fn compare_ns<'a>(&self, ns: Option<&str>, wanted_ns: NSChoice<'a>) -> bool {
-        match (ns, wanted_ns) {
-            (None, NSChoice::None) | (None, NSChoice::Any) => true,
-            (None, NSChoice::OneOf(_)) | (None, NSChoice::AnyOf(_)) => false,
-            (Some(_), NSChoice::None) => false,
-            (Some(_), NSChoice::Any) => true,
-            (Some(ns), NSChoice::OneOf(wanted_ns)) => ns == wanted_ns,
-            (Some(ns), NSChoice::AnyOf(wanted_nss)) => wanted_nss.iter().any(|w| &ns == w),
-        }
-    }
-
     pub fn has<'a, NS: Into<NSChoice<'a>>>(&self, prefix: &Option<String>, wanted_ns: NS) -> bool {
         match self.namespaces.get(prefix) {
-            Some(ns) => self.compare_ns(Some(ns), wanted_ns.into()),
+            Some(ns) => wanted_ns.into().compare(Some(ns)),
             None => match *self.parent.borrow() {
-                None => self.compare_ns(None, wanted_ns.into()),
+                None => wanted_ns.into().compare(None),
                 Some(ref parent) => parent.has(prefix, wanted_ns),
             },
         }
