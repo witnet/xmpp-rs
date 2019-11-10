@@ -2,7 +2,6 @@
 
 use crate::{ParseError, ParserError};
 use bytes::{BufMut, BytesMut};
-use quick_xml::Writer as EventWriter;
 use std;
 use std::borrow::Cow;
 use std::cell::RefCell;
@@ -302,7 +301,7 @@ impl Encoder for XMPPCodec {
             }
             Packet::Stanza(stanza) => {
                 stanza
-                    .write_to_inner(&mut EventWriter::new(WriteBytes::new(dst)))
+                    .write_to(&mut WriteBytes::new(dst))
                     .and_then(|_| {
                         // println!(">> {:?}", dst);
                         Ok(())

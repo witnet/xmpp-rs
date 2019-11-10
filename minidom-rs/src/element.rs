@@ -414,8 +414,18 @@ impl Element {
         self.to_writer(&mut EventWriter::new(writer))
     }
 
+    /// Output a document to a `Writer`.
+    pub fn write_to_decl<W: Write>(&self, writer: &mut W) -> Result<()> {
+        self.to_writer_decl(&mut EventWriter::new(writer))
+    }
+
     /// Output the document to quick-xml `Writer`
     pub fn to_writer<W: Write>(&self, writer: &mut EventWriter<W>) -> Result<()> {
+        self.write_to_inner(writer)
+    }
+
+    /// Output the document to quick-xml `Writer`
+    pub fn to_writer_decl<W: Write>(&self, writer: &mut EventWriter<W>) -> Result<()> {
         writer.write_event(Event::Decl(BytesDecl::new(b"1.0", Some(b"utf-8"), None)))?;
         self.write_to_inner(writer)
     }

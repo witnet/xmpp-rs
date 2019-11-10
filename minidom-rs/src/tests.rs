@@ -2,7 +2,7 @@ use crate::element::Element;
 
 use quick_xml::Reader;
 
-const TEST_STRING: &'static str = r#"<?xml version="1.0" encoding="utf-8"?><root xmlns="root_ns" a="b" xml:lang="en">meow<child c="d"/><child xmlns="child_ns" d="e" xml:lang="fr"/>nya</root>"#;
+const TEST_STRING: &'static str = r#"<root xmlns="root_ns" a="b" xml:lang="en">meow<child c="d"/><child xmlns="child_ns" d="e" xml:lang="fr"/>nya</root>"#;
 
 fn build_test_tree() -> Element {
     let mut root = Element::builder("root")
@@ -24,7 +24,7 @@ fn build_test_tree() -> Element {
 }
 
 #[cfg(feature = "comments")]
-const COMMENT_TEST_STRING: &'static str = r#"<?xml version="1.0" encoding="utf-8"?><root><!--This is a child.--><child attr="val"><!--This is a grandchild.--><grandchild/></child></root>"#;
+const COMMENT_TEST_STRING: &'static str = r#"<root><!--This is a child.--><child attr="val"><!--This is a grandchild.--><grandchild/></child></root>"#;
 
 #[cfg(feature = "comments")]
 fn build_comment_test_tree() -> Element {
@@ -58,6 +58,17 @@ fn writer_works() {
 }
 
 #[test]
+fn writer_with_decl_works() {
+    let root = build_test_tree();
+    let mut writer = Vec::new();
+    {
+        root.write_to_decl(&mut writer).unwrap();
+    }
+    let result = format!(r#"<?xml version="1.0" encoding="utf-8"?>{}"#, TEST_STRING);
+    assert_eq!(String::from_utf8(writer).unwrap(), result);
+}
+
+#[test]
 fn writer_escapes_attributes() {
     let root = Element::builder("root").attr("a", "\"Air\" quotes").build();
     let mut writer = Vec::new();
@@ -66,7 +77,7 @@ fn writer_escapes_attributes() {
     }
     assert_eq!(
         String::from_utf8(writer).unwrap(),
-        r#"<?xml version="1.0" encoding="utf-8"?><root a="&quot;Air&quot; quotes"/>"#
+        r#"<root a="&quot;Air&quot; quotes"/>"#
     );
 }
 
@@ -77,10 +88,7 @@ fn writer_escapes_text() {
     {
         root.write_to(&mut writer).unwrap();
     }
-    assert_eq!(
-        String::from_utf8(writer).unwrap(),
-        r#"<?xml version="1.0" encoding="utf-8"?><root>&lt;3</root>"#
-    );
+    assert_eq!(String::from_utf8(writer).unwrap(), r#"<root>&lt;3</root>"#);
 }
 
 #[test]

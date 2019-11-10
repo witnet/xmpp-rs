@@ -1,4 +1,6 @@
 Version XXX, released YYY:
+  * Breaking
+    `Element.write_to` doesn't prepand xml prelude anymore. Use `write_to_decl`.
   * Changes
     * Update edition to 2018
     * Add NSChoice enum to allow comparing NSs differently
