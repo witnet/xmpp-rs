@@ -193,6 +193,7 @@ impl From<Prefs> for Element {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::data_forms::{DataFormType, Field, FieldType};
     use std::str::FromStr;
 
     #[cfg(target_pointer_width = "32")]
@@ -378,7 +379,7 @@ mod tests {
     }
 
     #[test]
-    fn test_serialise() {
+    fn test_serialise_empty() {
         let elem: Element = "<query xmlns='urn:xmpp:mam:2'/>".parse().unwrap();
         let replace = Query {
             queryid: None,
@@ -387,6 +388,49 @@ mod tests {
             set: None,
         };
         let elem2 = replace.into();
+        assert_eq!(elem, elem2);
+    }
+
+    #[ignore]
+    #[test]
+    fn test_serialize_query_with() {
+        let elem: Element = r#"
+        <query xmlns='urn:xmpp:mam:2'>
+            <x xmlns='jabber:x:data' type='submit'>
+                <field var='FORM_TYPE' type='hidden'>
+                    <value>urn:xmpp:mam:2</value>
+                </field>
+                <field var='with'>
+                    <value>juliet@capulet.lit</value>
+                </field>
+            </x>
+        </query>
+        "#
+        .parse()
+        .unwrap();
+
+        let form = DataForm {
+            type_: DataFormType::Submit,
+            form_type: Some(String::from(ns::MAM)),
+            title: None,
+            instructions: None,
+            fields: vec![Field {
+                var: String::from("var"),
+                type_: FieldType::TextSingle,
+                label: None,
+                required: true,
+                options: vec![],
+                values: vec![String::from("juliet@capulet.lit")],
+                media: vec![],
+            }],
+        };
+        let foo = Query {
+            queryid: None,
+            node: None,
+            set: None,
+            form: Some(form),
+        };
+        let elem2 = foo.into();
         assert_eq!(elem, elem2);
     }
 }
