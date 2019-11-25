@@ -1,4 +1,5 @@
 use crate::element::Element;
+use std::collections::BTreeMap;
 
 use quick_xml::Reader;
 
@@ -45,6 +46,15 @@ fn reader_works() {
         Element::from_reader(&mut reader).unwrap(),
         build_test_tree()
     );
+}
+
+#[test]
+fn reader_works_context_ns() {
+    let mut reader = Reader::from_str("<root />");
+    let mut ns = BTreeMap::new();
+    ns.insert(None, String::from("foo"));
+    let elem = Element::from_reader_inner(&mut reader, Some(ns)).unwrap();
+    assert_eq!(elem.ns(), Some(String::from("foo")));
 }
 
 #[test]

@@ -299,6 +299,14 @@ impl Element {
 
     /// Parse a document from an `EventReader`.
     pub fn from_reader<R: BufRead>(reader: &mut EventReader<R>) -> Result<Element> {
+        Element::from_reader_inner(reader, None::<NamespaceSet>)
+    }
+
+    /// Parse a document from an `EventReader` and with a contextual `NamespaceSet`.
+    pub fn from_reader_inner<R: BufRead, NS: Into<Rc<NamespaceSet>>>(
+        reader: &mut EventReader<R>,
+        namespaces: Option<NS>,
+    ) -> Result<Element> {
         let mut buf = Vec::new();
 
         let root: Element = loop {
@@ -406,7 +414,12 @@ impl Element {
                 Event::Decl { .. } | Event::PI { .. } | Event::DocType { .. } => (),
             }
         }
-        Ok(stack.pop().unwrap())
+        let elem = stack.pop().unwrap();
+        if let Some(ns) = namespaces {
+            let ns: Rc<NamespaceSet> = ns.into();
+            elem.namespaces.set_parent(ns);
+        }
+        Ok(elem)
     }
 
     /// Output a document to a `Writer`.
