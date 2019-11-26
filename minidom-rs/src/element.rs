@@ -258,7 +258,7 @@ impl Element {
     /// assert_eq!(elem.is("name", NSChoice::None), false);
     /// assert_eq!(elem.is("name", NSChoice::OneOf("namespace")), true);
     /// assert_eq!(elem.is("name", NSChoice::OneOf("foo")), false);
-    /// assert_eq!(elem.is("name", NSChoice::AnyOf(vec!["foo", "namespace"])), true);
+    /// assert_eq!(elem.is("name", NSChoice::AnyOf(&["foo", "namespace"])), true);
     /// assert_eq!(elem.is("name", NSChoice::Any), true);
     ///
     /// let elem2 = Element::builder("name").build();
@@ -285,7 +285,7 @@ impl Element {
     /// assert_eq!(elem.has_ns(NSChoice::None), false);
     /// assert_eq!(elem.has_ns(NSChoice::OneOf("namespace")), true);
     /// assert_eq!(elem.has_ns(NSChoice::OneOf("foo")), false);
-    /// assert_eq!(elem.has_ns(NSChoice::AnyOf(vec!["foo", "namespace"])), true);
+    /// assert_eq!(elem.has_ns(NSChoice::AnyOf(&["foo", "namespace"])), true);
     /// assert_eq!(elem.has_ns(NSChoice::Any), true);
     ///
     /// let elem2 = Element::builder("name").build();
@@ -661,25 +661,31 @@ impl Element {
     /// # Examples
     ///
     /// ```rust
-    /// use minidom::Element;
+    /// use minidom::{Element, NSChoice};
     ///
     /// let elem: Element = r#"<node xmlns="ns"><a /><a xmlns="other_ns" /><b /></node>"#.parse().unwrap();
-    ///
     /// assert!(elem.get_child("a", "ns").unwrap().is("a", "ns"));
     /// assert!(elem.get_child("a", "other_ns").unwrap().is("a", "other_ns"));
     /// assert!(elem.get_child("b", "ns").unwrap().is("b", "ns"));
     /// assert_eq!(elem.get_child("c", "ns"), None);
     /// assert_eq!(elem.get_child("b", "other_ns"), None);
     /// assert_eq!(elem.get_child("a", "inexistent_ns"), None);
+    ///
+    /// let elem: Element = r#"<node><a xmlns="other_ns" /><b /></node>"#.parse().unwrap();
+    /// assert_eq!(elem.get_child("a", NSChoice::None), None);
+    /// assert!(elem.get_child("a", NSChoice::Any).unwrap().is("a", "other_ns"));
+    /// assert!(elem.get_child("b", NSChoice::None).unwrap().is("b", NSChoice::None));
+    /// assert!(elem.get_child("b", NSChoice::Any).unwrap().is("b", NSChoice::None));
     /// ```
-    pub fn get_child<N: AsRef<str>, NS: AsRef<str>>(
+    pub fn get_child<'a, N: AsRef<str>, NS: Into<NSChoice<'a>>>(
         &self,
         name: N,
         namespace: NS,
     ) -> Option<&Element> {
+        let namespace = namespace.into();
         for fork in &self.children {
             if let Node::Element(ref e) = *fork {
-                if e.is(name.as_ref(), namespace.as_ref()) {
+                if e.is(name.as_ref(), namespace) {
                     return Some(e);
                 }
             }
@@ -689,14 +695,15 @@ impl Element {
 
     /// Returns a mutable reference to the first child element with the specific name and namespace,
     /// if it exists in the direct descendants of this `Element`, else returns `None`.
-    pub fn get_child_mut<N: AsRef<str>, NS: AsRef<str>>(
+    pub fn get_child_mut<'a, N: AsRef<str>, NS: Into<NSChoice<'a>>>(
         &mut self,
         name: N,
         namespace: NS,
     ) -> Option<&mut Element> {
+        let namespace = namespace.into();
         for fork in &mut self.children {
             if let Node::Element(ref mut e) = *fork {
-                if e.is(name.as_ref(), namespace.as_ref()) {
+                if e.is(name.as_ref(), namespace) {
                     return Some(e);
                 }
             }
@@ -710,18 +717,27 @@ impl Element {
     /// # Examples
     ///
     /// ```rust
-    /// use minidom::Element;
+    /// use minidom::{Element, NSChoice};
     ///
     /// let elem: Element = r#"<node xmlns="ns"><a /><a xmlns="other_ns" /><b /></node>"#.parse().unwrap();
-    ///
     /// assert_eq!(elem.has_child("a", "other_ns"), true);
     /// assert_eq!(elem.has_child("a", "ns"), true);
     /// assert_eq!(elem.has_child("a", "inexistent_ns"), false);
     /// assert_eq!(elem.has_child("b", "ns"), true);
     /// assert_eq!(elem.has_child("b", "other_ns"), false);
     /// assert_eq!(elem.has_child("b", "inexistent_ns"), false);
+    ///
+    /// let elem: Element = r#"<node><a xmlns="other_ns" /><b /></node>"#.parse().unwrap();
+    /// assert_eq!(elem.has_child("a", NSChoice::None), false);
+    /// assert_eq!(elem.has_child("a", NSChoice::OneOf("other_ns")), true);
+    /// assert_eq!(elem.has_child("a", NSChoice::Any), true);
+    /// assert_eq!(elem.has_child("b", NSChoice::None), true);
     /// ```
-    pub fn has_child<N: AsRef<str>, NS: AsRef<str>>(&self, name: N, namespace: NS) -> bool {
+    pub fn has_child<'a, N: AsRef<str>, NS: Into<NSChoice<'a>>>(
+        &self,
+        name: N,
+        namespace: NS,
+    ) -> bool {
         self.get_child(name, namespace).is_some()
     }
 
@@ -732,21 +748,25 @@ impl Element {
     /// # Examples
     ///
     /// ```rust
-    /// use minidom::Element;
+    /// use minidom::{Element, NSChoice};
     ///
     /// let mut elem: Element = r#"<node xmlns="ns"><a /><a xmlns="other_ns" /><b /></node>"#.parse().unwrap();
-    ///
     /// assert!(elem.remove_child("a", "ns").unwrap().is("a", "ns"));
     /// assert!(elem.remove_child("a", "ns").is_none());
     /// assert!(elem.remove_child("inexistent", "inexistent").is_none());
+    ///
+    /// let mut elem: Element = r#"<node><a xmlns="other_ns" /><b /></node>"#.parse().unwrap();
+    /// assert!(elem.remove_child("a", NSChoice::None).is_none());
+    /// assert!(elem.remove_child("a", NSChoice::Any).unwrap().is("a", "other_ns"));
+    /// assert!(elem.remove_child("b", NSChoice::None).unwrap().is("b", NSChoice::None));
     /// ```
-    pub fn remove_child<N: AsRef<str>, NS: AsRef<str>>(
+    pub fn remove_child<'a, N: AsRef<str>, NS: Into<NSChoice<'a>>>(
         &mut self,
         name: N,
         namespace: NS,
     ) -> Option<Element> {
         let name = name.as_ref();
-        let namespace = namespace.as_ref();
+        let namespace = namespace.into();
         let idx = self.children.iter().position(|x| {
             if let Node::Element(ref elm) = x {
                 elm.is(name, namespace)
