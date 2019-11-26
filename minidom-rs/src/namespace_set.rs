@@ -3,7 +3,7 @@ use std::collections::BTreeMap;
 use std::fmt;
 use std::rc::Rc;
 
-#[derive(Clone, PartialEq, Eq, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 /// Use to compare namespaces
 pub enum NSChoice<'a> {
     /// The element must have no namespace
@@ -11,7 +11,7 @@ pub enum NSChoice<'a> {
     /// The element's namespace must match the specified namespace
     OneOf(&'a str),
     /// The element's namespace must be in the specified vector
-    AnyOf(Vec<&'a str>),
+    AnyOf(&'a [&'a str]),
     /// The element can have any namespace, or no namespace
     Any,
 }
