@@ -391,21 +391,9 @@ mod tests {
         assert_eq!(elem, elem2);
     }
 
-    #[ignore]
     #[test]
     fn test_serialize_query_with() {
-        let elem: Element = r#"
-        <query xmlns='urn:xmpp:mam:2'>
-            <x xmlns='jabber:x:data' type='submit'>
-                <field var='FORM_TYPE' type='hidden'>
-                    <value>urn:xmpp:mam:2</value>
-                </field>
-                <field var='with'>
-                    <value>juliet@capulet.lit</value>
-                </field>
-            </x>
-        </query>
-        "#
+        let reference: Element = "<query xmlns='urn:xmpp:mam:2'><x xmlns='jabber:x:data' type='submit'><field xmlns='jabber:x:data' var='FORM_TYPE' type='hidden'><value xmlns='jabber:x:data'>urn:xmpp:mam:2</value></field><field xmlns='jabber:x:data' var='with'><value xmlns='jabber:x:data'>juliet@capulet.lit</value></field></x></query>"
         .parse()
         .unwrap();
 
@@ -415,10 +403,10 @@ mod tests {
             title: None,
             instructions: None,
             fields: vec![Field {
-                var: String::from("var"),
+                var: String::from("with"),
                 type_: FieldType::TextSingle,
                 label: None,
-                required: true,
+                required: false,
                 options: vec![],
                 values: vec![String::from("juliet@capulet.lit")],
                 media: vec![],
@@ -430,7 +418,7 @@ mod tests {
             set: None,
             form: Some(form),
         };
-        let elem2 = foo.into();
-        assert_eq!(elem, elem2);
+        let serialized: Element = foo.into();
+        assert_eq!(serialized, reference);
     }
 }
