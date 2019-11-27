@@ -858,4 +858,39 @@ mod tests {
         };
         assert_eq!(message, "Text element present twice for the same xml:lang.");
     }
+
+    #[test]
+    fn test_serialize_jingle() {
+        let reference: Element = "<jingle xmlns='urn:xmpp:jingle:1' action='session-initiate' sid='a73sjjvkla37jfea'><content xmlns='urn:xmpp:jingle:1' creator='initiator' name='this-is-a-stub'><description xmlns='urn:xmpp:jingle:apps:stub:0'/><transport xmlns='urn:xmpp:jingle:transports:stub:0'/></content></jingle>"
+        .parse()
+        .unwrap();
+
+        let jingle = Jingle {
+            action: Action::SessionInitiate,
+            initiator: None,
+            responder: None,
+            sid: SessionId(String::from("a73sjjvkla37jfea")),
+            contents: vec![Content {
+                creator: Creator::Initiator,
+                disposition: Disposition::default(),
+                name: ContentId(String::from("this-is-a-stub")),
+                senders: Senders::default(),
+                description: Some(Description::Unknown(
+                    Element::builder("description")
+                        .ns("urn:xmpp:jingle:apps:stub:0")
+                        .build(),
+                )),
+                transport: Some(Transport::Unknown(
+                    Element::builder("transport")
+                        .ns("urn:xmpp:jingle:transports:stub:0")
+                        .build(),
+                )),
+                security: None,
+            }],
+            reason: None,
+            other: vec![],
+        };
+        let serialized: Element = jingle.into();
+        assert_eq!(serialized, reference);
+    }
 }
