@@ -224,4 +224,9 @@ mod tests {
         assert_eq!(resumed.h, 5);
         assert_eq!(resumed.previd, previd);
     }
+
+    #[test]
+    fn test_serialize_failed() {
+        assert!(false);
+    }
 }

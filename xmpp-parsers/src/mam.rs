@@ -421,4 +421,14 @@ mod tests {
         let serialized: Element = foo.into();
         assert_eq!(serialized, reference);
     }
+
+    #[test]
+    fn test_serialize_result() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_serialize_fin() {
+        assert!(false);
+    }
 }

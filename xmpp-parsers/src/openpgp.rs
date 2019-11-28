@@ -98,4 +98,9 @@ mod tests {
         };
         println!("Foo2: {:?}", pubsub);
     }
+
+    #[test]
+    fn test_serialize_pubkey() {
+        assert!(false);
+    }
 }

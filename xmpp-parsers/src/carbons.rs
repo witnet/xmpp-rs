@@ -124,4 +124,14 @@ mod tests {
         let sent = Sent::try_from(elem).unwrap();
         assert!(sent.forwarded.stanza.is_some());
     }
+
+    #[test]
+    fn test_serialize_received() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_serialize_sent() {
+        assert!(false);
+    }
 }

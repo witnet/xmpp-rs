@@ -227,4 +227,24 @@ mod tests {
         assert!(elem.is("name", ns::SASL_CERT));
         assert_eq!(elem.text(), "Mobile Client");
     }
+
+    #[test]
+    fn test_serialize_item() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_serialize_append() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_serialize_disable() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_serialize_revoke() {
+        assert!(false);
+    }
 }

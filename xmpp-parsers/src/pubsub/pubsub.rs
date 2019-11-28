@@ -689,4 +689,24 @@ mod tests {
         let subscribe_options2 = SubscribeOptions::try_from(elem2).unwrap();
         assert_eq!(subscribe_options2.required, true);
     }
+
+    #[test]
+    fn test_serialize_configure() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_serialize_options() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_serialize_publish_options() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_serialize_subscriptions() {
+        assert!(false);
+    }
 }

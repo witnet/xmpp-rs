@@ -71,4 +71,9 @@ mod tests {
         let elem2 = forwarded.into();
         assert_eq!(elem, elem2);
     }
+
+    #[test]
+    fn test_serialize_with_delay_and_stanza() {
+        assert!(false);
+    }
 }

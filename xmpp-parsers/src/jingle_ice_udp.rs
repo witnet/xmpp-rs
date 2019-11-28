@@ -192,4 +192,9 @@ mod tests {
             ]
         );
     }
+
+    #[test]
+    fn test_serialize_transport() {
+        assert!(false);
+    }
 }

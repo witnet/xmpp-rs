@@ -687,4 +687,9 @@ mod tests {
             Item { reason, .. } => assert_eq!(reason, Some(Reason("foobar".to_owned()))),
         }
     }
+
+    #[test]
+    fn test_serialize_item() {
+        assert!(false);
+    }
 }
