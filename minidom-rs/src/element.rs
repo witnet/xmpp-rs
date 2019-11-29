@@ -68,7 +68,7 @@ pub fn escape(raw: &[u8]) -> Cow<[u8]> {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, Debug)]
+#[derive(Clone, Eq, Debug)]
 /// A struct representing a DOM Element.
 pub struct Element {
     prefix: Option<String>,
@@ -92,6 +92,31 @@ impl FromStr for Element {
     fn from_str(s: &str) -> Result<Element> {
         let mut reader = EventReader::from_str(s);
         Element::from_reader(&mut reader)
+    }
+}
+
+impl PartialEq for Element {
+    fn eq(&self, other: &Self) -> bool {
+        if self.name() == other.name() && self.ns() == other.ns() && self.attrs().eq(other.attrs())
+        {
+            let child_elems = self.children().count();
+            let text_is_whitespace = self
+                .texts()
+                .all(|text| text.chars().all(char::is_whitespace));
+            if child_elems > 0 && text_is_whitespace {
+                // Ignore all the whitespace text nodes
+                self.children()
+                    .zip(other.children())
+                    .all(|(node1, node2)| node1 == node2)
+            } else {
+                // Compare with text nodes
+                self.nodes()
+                    .zip(other.nodes())
+                    .all(|(node1, node2)| node1 == node2)
+            }
+        } else {
+            false
+        }
     }
 }
 

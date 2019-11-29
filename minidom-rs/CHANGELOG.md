@@ -1,6 +1,8 @@
 Version XXX, released YYY:
   * Breaking
-    `Element.write_to` doesn't prepand xml prelude anymore. Use `write_to_decl`.
+    * `Element.write_to` doesn't prepand xml prelude anymore. Use `write_to_decl`.
+    * PartialEq implementation for Element and Node have been changed to
+      ensure namespaces match even if the objects are slightly different.
   * Changes
     * Update edition to 2018
     * Add NSChoice enum to allow comparing NSs differently

@@ -220,7 +220,6 @@ mod tests {
     use super::*;
     use crate::disco::DiscoInfoQuery;
     use crate::stanza_error::{DefinedCondition, ErrorType};
-    use crate::util::compare_elements::NamespaceAwareCompare;
 
     #[cfg(target_pointer_width = "32")]
     #[test]
@@ -283,7 +282,7 @@ mod tests {
         assert_eq!(iq.to, None);
         assert_eq!(&iq.id, "foo");
         assert!(match iq.payload {
-            IqType::Get(element) => element.compare_to(&query),
+            IqType::Get(element) => element == query,
             _ => false,
         });
     }
@@ -308,7 +307,7 @@ mod tests {
         assert_eq!(iq.to, None);
         assert_eq!(&iq.id, "vcard");
         assert!(match iq.payload {
-            IqType::Set(element) => element.compare_to(&vcard),
+            IqType::Set(element) => element == vcard,
             _ => false,
         });
     }
@@ -355,7 +354,7 @@ mod tests {
         assert_eq!(iq.to, None);
         assert_eq!(&iq.id, "res");
         assert!(match iq.payload {
-            IqType::Result(Some(element)) => element.compare_to(&query),
+            IqType::Result(Some(element)) => element == query,
             _ => false,
         });
     }

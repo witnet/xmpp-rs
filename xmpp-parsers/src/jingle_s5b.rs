@@ -275,7 +275,6 @@ impl From<Transport> for Element {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::util::compare_elements::NamespaceAwareCompare;
     use std::str::FromStr;
 
     #[cfg(target_pointer_width = "32")]
@@ -327,7 +326,7 @@ mod tests {
             payload: TransportPayload::Activated(CandidateId(String::from("coucou"))),
         };
         let elem2: Element = transport.into();
-        assert!(elem.compare_to(&elem2));
+        assert_eq!(elem, elem2);
     }
 
     #[test]
@@ -347,6 +346,6 @@ mod tests {
             }]),
         };
         let elem2: Element = transport.into();
-        assert!(elem.compare_to(&elem2));
+        assert_eq!(elem, elem2);
     }
 }

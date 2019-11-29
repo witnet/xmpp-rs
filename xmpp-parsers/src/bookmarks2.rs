@@ -48,7 +48,6 @@ mod tests {
     use crate::ns;
     use crate::pubsub::event::PubSubEvent;
     use crate::pubsub::pubsub::Item as PubSubItem;
-    use crate::util::compare_elements::NamespaceAwareCompare;
     use crate::Element;
     use std::convert::TryFrom;
 
@@ -77,7 +76,7 @@ mod tests {
         assert_eq!(conference.password, None);
 
         let elem2 = Element::from(Conference::new());
-        assert!(elem1.compare_to(&elem2));
+        assert_eq!(elem1, elem2);
     }
 
     #[test]

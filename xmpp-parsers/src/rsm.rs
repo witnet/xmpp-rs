@@ -174,7 +174,6 @@ impl From<SetResult> for Element {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::util::compare_elements::NamespaceAwareCompare;
 
     #[cfg(target_pointer_width = "32")]
     #[test]
@@ -304,6 +303,6 @@ mod tests {
             count: None,
         };
         let elem2 = set2.into();
-        assert!(elem1.compare_to(&elem2));
+        assert_eq!(elem1, elem2);
     }
 }

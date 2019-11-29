@@ -518,7 +518,6 @@ impl From<PubSub> for Element {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::util::compare_elements::NamespaceAwareCompare;
 
     #[test]
     fn create() {
@@ -536,7 +535,7 @@ mod tests {
         }
 
         let elem2 = Element::from(pubsub);
-        assert!(elem1.compare_to(&elem2));
+        assert_eq!(elem1, elem2);
 
         let elem: Element =
             "<pubsub xmlns='http://jabber.org/protocol/pubsub'><create node='coucou'/></pubsub>"
@@ -553,7 +552,7 @@ mod tests {
         }
 
         let elem2 = Element::from(pubsub);
-        assert!(elem1.compare_to(&elem2));
+        assert_eq!(elem1, elem2);
     }
 
     #[test]
@@ -573,7 +572,7 @@ mod tests {
         }
 
         let elem2 = Element::from(pubsub);
-        assert!(elem1.compare_to(&elem2));
+        assert_eq!(elem1, elem2);
     }
 
     #[test]
@@ -596,7 +595,7 @@ mod tests {
         }
 
         let elem2 = Element::from(pubsub);
-        assert!(elem1.compare_to(&elem2));
+        assert_eq!(elem1, elem2);
     }
 
     #[test]
@@ -616,7 +615,7 @@ mod tests {
         }
 
         let elem2 = Element::from(pubsub);
-        assert!(elem1.compare_to(&elem2));
+        assert_eq!(elem1, elem2);
     }
 
     #[test]

@@ -117,7 +117,6 @@ impl From<Query> for Element {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::util::compare_elements::NamespaceAwareCompare;
 
     #[cfg(target_pointer_width = "32")]
     #[test]
@@ -207,7 +206,7 @@ mod tests {
         let form = query.form.clone().unwrap();
         assert!(!form.instructions.unwrap().is_empty());
         let elem2 = query.into();
-        assert!(elem1.compare_to(&elem2));
+        assert_eq!(elem1, elem2);
     }
 
     #[test]
@@ -242,6 +241,6 @@ mod tests {
             panic!();
         }
         let elem2 = query.into();
-        assert!(elem1.compare_to(&elem2));
+        assert_eq!(elem1, elem2);
     }
 }
