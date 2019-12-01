@@ -518,6 +518,7 @@ impl From<PubSub> for Element {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::data_forms::{DataForm, DataFormType, Field, FieldType};
 
     #[test]
     fn create() {
@@ -556,7 +557,7 @@ mod tests {
     }
 
     #[test]
-    fn create_and_configure() {
+    fn create_and_configure_empty() {
         let elem: Element =
             "<pubsub xmlns='http://jabber.org/protocol/pubsub'><create/><configure/></pubsub>"
                 .parse()
@@ -570,6 +571,41 @@ mod tests {
             }
             _ => panic!(),
         }
+
+        let elem2 = Element::from(pubsub);
+        assert_eq!(elem1, elem2);
+    }
+
+    #[test]
+    fn create_and_configure_simple() {
+        // XXX: Do we want xmpp-parsers to always specify the field type in the output Element?
+        let elem: Element = "<pubsub xmlns='http://jabber.org/protocol/pubsub'><create node='foo'/><configure><x xmlns='jabber:x:data' type='submit'><field var='FORM_TYPE' type='hidden'><value>http://jabber.org/protocol/pubsub#node_config</value></field><field var='pubsub#access_model' type='list-single'><value>whitelist</value></field></x></configure></pubsub>"
+        .parse()
+        .unwrap();
+        let elem1 = elem.clone();
+
+        let pubsub = PubSub::Create {
+            create: Create {
+                node: Some(NodeName(String::from("foo"))),
+            },
+            configure: Some(Configure {
+                form: Some(DataForm {
+                    type_: DataFormType::Submit,
+                    form_type: Some(String::from(ns::PUBSUB_CONFIGURE)),
+                    title: None,
+                    instructions: None,
+                    fields: vec![Field {
+                        var: String::from("pubsub#access_model"),
+                        type_: FieldType::ListSingle,
+                        label: None,
+                        required: false,
+                        options: vec![],
+                        values: vec![String::from("whitelist")],
+                        media: vec![],
+                    }],
+                }),
+            }),
+        };
 
         let elem2 = Element::from(pubsub);
         assert_eq!(elem1, elem2);

@@ -52,6 +52,8 @@ pub const PUBSUB_ERRORS: &str = "http://jabber.org/protocol/pubsub#errors";
 pub const PUBSUB_EVENT: &str = "http://jabber.org/protocol/pubsub#event";
 /// XEP-0060: Publish-Subscribe
 pub const PUBSUB_OWNER: &str = "http://jabber.org/protocol/pubsub#owner";
+/// XEP-0060: Publish-Subscribe node configuration
+pub const PUBSUB_CONFIGURE: &str = "http://jabber.org/protocol/pubsub#node_config";
 
 /// XEP-0071: XHTML-IM
 pub const XHTML_IM: &str = "http://jabber.org/protocol/xhtml-im";
