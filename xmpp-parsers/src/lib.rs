@@ -150,6 +150,9 @@ pub mod bob;
 /// XEP-0234: Jingle File Transfer
 pub mod jingle_ft;
 
+/// XEP-0249: Direct MUC Invitations
+pub mod muc_invite;
+
 /// XEP-0257: Client Certificate Management for SASL EXTERNAL
 pub mod cert_management;
 

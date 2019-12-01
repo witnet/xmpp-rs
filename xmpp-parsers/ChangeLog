@@ -1,3 +1,8 @@
+Version NEXT:
+TODO  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
+    * New parsers/serialisers:
+        - Direct MUC Invitations (XEP-0249)
+
 Version 0.16.0:
 2019-10-15  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
     * New parsers/serialisers:
