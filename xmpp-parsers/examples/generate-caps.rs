@@ -16,16 +16,21 @@ use xmpp_parsers::{
 };
 
 fn get_caps(disco: &DiscoInfoResult, node: String) -> Result<Caps, String> {
-    let caps_data = compute_disco_caps(&disco);
-    let caps_hash = hash_caps(&caps_data, Algo::Sha_1)?;
-    Ok(Caps::new(node, caps_hash))
+    let data = compute_disco_caps(&disco);
+    let hash = hash_caps(&data, Algo::Sha_1)?;
+    Ok(Caps::new(node, hash))
 }
 
 fn get_ecaps2(disco: &DiscoInfoResult) -> Result<ECaps2, Error> {
-    let ecaps2_data = compute_disco_ecaps2(&disco)?;
-    let ecaps2_sha256 = hash_ecaps2(&ecaps2_data, Algo::Sha_256)?;
-    let ecaps2_sha3_256 = hash_ecaps2(&ecaps2_data, Algo::Sha3_256)?;
-    Ok(ECaps2::new(vec![ecaps2_sha256, ecaps2_sha3_256]))
+    let data = compute_disco_ecaps2(&disco)?;
+    let hash_sha256 = hash_ecaps2(&data, Algo::Sha_256)?;
+    let hash_sha3_256 = hash_ecaps2(&data, Algo::Sha3_256)?;
+    let hash_blake2b_256 = hash_ecaps2(&data, Algo::Blake2b_256)?;
+    Ok(ECaps2::new(vec![
+        hash_sha256,
+        hash_sha3_256,
+        hash_blake2b_256,
+    ]))
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
