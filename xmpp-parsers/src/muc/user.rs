@@ -236,7 +236,6 @@ generate_element!(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::util::compare_elements::NamespaceAwareCompare;
     use std::error::Error as StdError;
 
     #[test]
@@ -298,7 +297,7 @@ mod tests {
             items: vec![],
         };
         let elem2 = muc.into();
-        assert!(elem.compare_to(&elem2));
+        assert_eq!(elem, elem2);
     }
 
     #[cfg(not(feature = "disable-validation"))]

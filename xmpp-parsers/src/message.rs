@@ -242,7 +242,6 @@ impl From<Message> for Element {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::util::compare_elements::NamespaceAwareCompare;
     use std::str::FromStr;
 
     #[cfg(target_pointer_width = "32")]
@@ -312,7 +311,7 @@ mod tests {
         }
 
         let elem2 = message.into();
-        assert!(elem1.compare_to(&elem2));
+        assert_eq!(elem1, elem2);
     }
 
     #[test]
@@ -326,7 +325,7 @@ mod tests {
             .bodies
             .insert(String::from(""), Body::from_str("Hello world!").unwrap());
         let elem2 = message.into();
-        assert!(elem.compare_to(&elem2));
+        assert_eq!(elem, elem2);
     }
 
     #[test]
@@ -349,7 +348,7 @@ mod tests {
         }
 
         let elem2 = message.into();
-        assert!(elem1.compare_to(&elem2));
+        assert_eq!(elem1, elem2);
     }
 
     #[test]

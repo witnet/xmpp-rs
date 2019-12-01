@@ -70,7 +70,6 @@ impl Storage {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::util::compare_elements::NamespaceAwareCompare;
     use crate::Element;
     use std::convert::TryFrom;
 
@@ -99,7 +98,7 @@ mod tests {
         assert_eq!(storage.urls.len(), 0);
 
         let elem2 = Element::from(Storage::new());
-        assert!(elem1.compare_to(&elem2));
+        assert_eq!(elem1, elem2);
     }
 
     #[test]

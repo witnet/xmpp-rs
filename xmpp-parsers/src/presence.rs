@@ -335,7 +335,6 @@ impl From<Presence> for Element {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::util::compare_elements::NamespaceAwareCompare;
     use jid::{BareJid, FullJid};
 
     #[cfg(target_pointer_width = "32")]
@@ -382,7 +381,7 @@ mod tests {
             .unwrap();
         let presence = Presence::new(Type::Unavailable);
         let elem2 = presence.into();
-        assert!(elem.compare_to(&elem2));
+        assert_eq!(elem, elem2);
     }
 
     #[test]

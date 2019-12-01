@@ -13,7 +13,3 @@ pub(crate) mod helpers;
 /// Helper macros to parse and serialise more easily.
 #[macro_use]
 mod macros;
-
-#[cfg(test)]
-/// Namespace-aware comparison for tests
-pub(crate) mod compare_elements;

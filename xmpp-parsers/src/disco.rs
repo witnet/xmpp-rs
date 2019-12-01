@@ -232,7 +232,6 @@ impl IqResultPayload for DiscoItemsResult {}
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::util::compare_elements::NamespaceAwareCompare;
     use std::str::FromStr;
 
     #[cfg(target_pointer_width = "32")]
@@ -301,7 +300,7 @@ mod tests {
         assert_eq!(query.extensions[0].form_type, Some(String::from("example")));
 
         let elem2 = query.into();
-        assert!(elem1.compare_to(&elem2));
+        assert_eq!(elem1, elem2);
     }
 
     #[test]

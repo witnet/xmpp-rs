@@ -94,7 +94,6 @@ impl Muc {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::util::compare_elements::NamespaceAwareCompare;
     use crate::util::error::Error;
     use crate::Element;
     use std::convert::TryFrom;
@@ -161,7 +160,7 @@ mod tests {
         assert_eq!(muc.password, Some("coucou".to_owned()));
 
         let elem2 = Element::from(muc);
-        assert!(elem1.compare_to(&elem2));
+        assert_eq!(elem1, elem2);
     }
 
     #[test]

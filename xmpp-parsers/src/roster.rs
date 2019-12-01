@@ -92,7 +92,6 @@ impl IqResultPayload for Roster {}
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::util::compare_elements::NamespaceAwareCompare;
     use crate::util::error::Error;
     use crate::Element;
     use std::convert::TryFrom;
@@ -220,7 +219,7 @@ mod tests {
         assert_eq!(roster.items[0].groups[0], Group::from_str("A").unwrap());
         assert_eq!(roster.items[0].groups[1], Group::from_str("B").unwrap());
         let elem2 = roster.into();
-        assert!(elem1.compare_to(&elem2));
+        assert_eq!(elem1, elem2);
     }
 
     #[test]

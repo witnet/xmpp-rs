@@ -590,18 +590,18 @@ macro_rules! generate_serialiser {
         }))
     };
     ($builder:ident, $parent:ident, $elem:ident, Option, $constructor:ident, ($name:tt, *)) => {
-        $builder.append_all($parent.$elem.map(|elem| {
-            crate::Element::builder($name)
-                .ns(elem.get_ns())
-                .append(::minidom::Node::Element(crate::Element::from(elem)))
-        }))
+        $builder.append_all(
+            $parent
+                .$elem
+                .map(|elem| ::minidom::Node::Element(crate::Element::from(elem))),
+        )
     };
     ($builder:ident, $parent:ident, $elem:ident, Option, $constructor:ident, ($name:tt, $ns:ident)) => {
-        $builder.append_all($parent.$elem.map(|elem| {
-            crate::Element::builder($name)
-                .ns(crate::ns::$ns)
-                .append(::minidom::Node::Element(crate::Element::from(elem)))
-        }))
+        $builder.append_all(
+            $parent
+                .$elem
+                .map(|elem| ::minidom::Node::Element(crate::Element::from(elem))),
+        )
     };
     ($builder:ident, $parent:ident, $elem:ident, Vec, $constructor:ident, ($name:tt, $ns:ident)) => {
         $builder.append_all($parent.$elem.into_iter())
