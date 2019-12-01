@@ -83,7 +83,7 @@ impl Connecter {
             }
             None => {
                 self_.targets = [(self_.domain.clone(), self_.fallback_port)]
-                    .into_iter()
+                    .iter()
                     .cloned()
                     .collect();
                 self_.state = State::Connecting(Some(resolver), vec![]);
@@ -120,7 +120,7 @@ impl Future for Connecter {
                     Err(_) => {
                         // ignore, fallback
                         self.targets = [(self.domain.clone(), self.fallback_port)]
-                            .into_iter()
+                            .iter()
                             .cloned()
                             .collect();
                         self.state = State::Connecting(Some(resolver), vec![]);
