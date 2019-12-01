@@ -9,6 +9,7 @@ use crate::disco::{DiscoInfoQuery, DiscoInfoResult, Feature, Identity};
 use crate::hashes::{Algo, Hash};
 use crate::ns;
 use crate::presence::PresencePayload;
+use crate::util::error::Error;
 use blake2::VarBlake2b;
 use digest::{Digest, Input, VariableOutput};
 use sha2::{Sha256, Sha512};
@@ -75,10 +76,10 @@ fn compute_identities(identities: &[Identity]) -> Vec<u8> {
     })
 }
 
-fn compute_extensions(extensions: &[DataForm]) -> Result<Vec<u8>, ()> {
+fn compute_extensions(extensions: &[DataForm]) -> Result<Vec<u8>, Error> {
     for extension in extensions {
         if extension.form_type.is_none() {
-            return Err(());
+            return Err(Error::ParseError("Missing FORM_TYPE in extension."));
         }
     }
     Ok(compute_items(extensions, 0x1c, |extension| {
@@ -105,7 +106,7 @@ fn compute_extensions(extensions: &[DataForm]) -> Result<Vec<u8>, ()> {
 /// Applies the [algorithm from
 /// XEP-0390](https://xmpp.org/extensions/xep-0390.html#algorithm-input) on a
 /// [disco#info query element](../disco/struct.DiscoInfoResult.html).
-pub fn compute_disco(disco: &DiscoInfoResult) -> Result<Vec<u8>, ()> {
+pub fn compute_disco(disco: &DiscoInfoResult) -> Result<Vec<u8>, Error> {
     let features_string = compute_features(&disco.features);
     let identities_string = compute_identities(&disco.identities);
     let extensions_string = compute_extensions(&disco.extensions)?;
@@ -125,7 +126,7 @@ fn get_hash_vec(hash: &[u8]) -> Vec<u8> {
 
 /// Hashes the result of [compute_disco()] with one of the supported [hash
 /// algorithms](../hashes/enum.Algo.html).
-pub fn hash_ecaps2(data: &[u8], algo: Algo) -> Result<Hash, String> {
+pub fn hash_ecaps2(data: &[u8], algo: Algo) -> Result<Hash, Error> {
     Ok(Hash {
         hash: match algo {
             Algo::Sha_256 => {
@@ -154,8 +155,8 @@ pub fn hash_ecaps2(data: &[u8], algo: Algo) -> Result<Hash, String> {
                 hasher.input(data);
                 hasher.vec_result()
             }
-            Algo::Sha_1 => return Err(String::from("Disabled algorithm sha-1: unsafe.")),
-            Algo::Unknown(algo) => return Err(format!("Unknown algorithm: {}.", algo)),
+            Algo::Sha_1 => return Err(Error::ParseError("Disabled algorithm sha-1: unsafe.")),
+            Algo::Unknown(_algo) => return Err(Error::ParseError("Unknown algorithm in ecaps2.")),
         },
         algo,
     })
