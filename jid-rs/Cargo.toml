@@ -20,3 +20,4 @@ gitlab = { repository = "xmpp-rs/xmpp-rs" }
 
 [dependencies]
 minidom = { version = "0.11", optional = true }
+icu = { version = "0.1", optional = true }
