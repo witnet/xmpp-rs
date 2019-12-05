@@ -127,11 +127,39 @@ mod tests {
 
     #[test]
     fn test_serialize_received() {
-        assert!(false);
+        let reference: Element = "<received xmlns='urn:xmpp:carbons:2'><forwarded xmlns='urn:xmpp:forward:0'><message xmlns='jabber:client' to='juliet@capulet.example/balcony' from='romeo@montague.example/home'/></forwarded></received>"
+        .parse()
+        .unwrap();
+
+        let elem: Element = "<forwarded xmlns='urn:xmpp:forward:0'><message xmlns='jabber:client' to='juliet@capulet.example/balcony' from='romeo@montague.example/home'/></forwarded>"
+          .parse()
+          .unwrap();
+        let forwarded = Forwarded::try_from(elem).unwrap();
+
+        let received = Received {
+          forwarded: forwarded,
+        };
+
+        let serialized: Element = received.into();
+        assert_eq!(serialized, reference);
     }
 
     #[test]
     fn test_serialize_sent() {
-        assert!(false);
+        let reference: Element = "<sent xmlns='urn:xmpp:carbons:2'><forwarded xmlns='urn:xmpp:forward:0'><message xmlns='jabber:client' to='juliet@capulet.example/balcony' from='romeo@montague.example/home'/></forwarded></sent>"
+        .parse()
+        .unwrap();
+
+        let elem: Element = "<forwarded xmlns='urn:xmpp:forward:0'><message xmlns='jabber:client' to='juliet@capulet.example/balcony' from='romeo@montague.example/home'/></forwarded>"
+          .parse()
+          .unwrap();
+        let forwarded = Forwarded::try_from(elem).unwrap();
+
+        let sent = Sent {
+          forwarded: forwarded,
+        };
+
+        let serialized: Element = sent.into();
+        assert_eq!(serialized, reference);
     }
 }
