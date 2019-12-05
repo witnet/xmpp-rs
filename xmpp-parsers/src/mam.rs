@@ -392,26 +392,17 @@ mod tests {
     }
 
     #[test]
-    fn test_serialize_query_with() {
+    fn test_serialize_query_with_form() {
         let reference: Element = "<query xmlns='urn:xmpp:mam:2'><x xmlns='jabber:x:data' type='submit'><field xmlns='jabber:x:data' var='FORM_TYPE' type='hidden'><value xmlns='jabber:x:data'>urn:xmpp:mam:2</value></field><field xmlns='jabber:x:data' var='with'><value xmlns='jabber:x:data'>juliet@capulet.lit</value></field></x></query>"
         .parse()
         .unwrap();
 
-        let form = DataForm {
-            type_: DataFormType::Submit,
-            form_type: Some(String::from(ns::MAM)),
-            title: None,
-            instructions: None,
-            fields: vec![Field {
-                var: String::from("with"),
-                type_: FieldType::TextSingle,
-                label: None,
-                required: false,
-                options: vec![],
-                values: vec![String::from("juliet@capulet.lit")],
-                media: vec![],
-            }],
-        };
+        let elem: Element = "<x xmlns='jabber:x:data' type='submit'><field xmlns='jabber:x:data' var='FORM_TYPE' type='hidden'><value xmlns='jabber:x:data'>urn:xmpp:mam:2</value></field><field xmlns='jabber:x:data' var='with'><value xmlns='jabber:x:data'>juliet@capulet.lit</value></field></x>"
+          .parse()
+          .unwrap();
+
+        let form = DataForm::try_from(elem).unwrap();
+
         let foo = Query {
             queryid: None,
             node: None,
@@ -424,11 +415,42 @@ mod tests {
 
     #[test]
     fn test_serialize_result() {
-        assert!(false);
+        let reference: Element = "<result xmlns='urn:xmpp:mam:2' queryid='f27' id='28482-98726-73623'><forwarded xmlns='urn:xmpp:forward:0'><delay xmlns='urn:xmpp:delay' stamp='2002-09-10T23:08:25+00:00'/><message xmlns='jabber:client' to='juliet@capulet.example/balcony' from='romeo@montague.example/home'/></forwarded></result>"
+        .parse()
+        .unwrap();
+
+        let elem: Element = "<forwarded xmlns='urn:xmpp:forward:0'><delay xmlns='urn:xmpp:delay' stamp='2002-09-10T23:08:25+00:00'/><message xmlns='jabber:client' to='juliet@capulet.example/balcony' from='romeo@montague.example/home'/></forwarded>"
+          .parse()
+          .unwrap();
+
+        let forwarded = Forwarded::try_from(elem).unwrap();
+
+        let result = Result_ {
+          id: String::from("28482-98726-73623"),
+          queryid: Some(QueryId(String::from("f27"))),
+          forwarded: forwarded,
+        };
+        let serialized: Element = result.into();
+        assert_eq!(serialized, reference);
     }
 
     #[test]
     fn test_serialize_fin() {
-        assert!(false);
+        let reference: Element = "<fin xmlns='urn:xmpp:mam:2'><set xmlns='http://jabber.org/protocol/rsm'><first index='0'>28482-98726-73623</first><last>09af3-cc343-b409f</last></set></fin>"
+        .parse()
+        .unwrap();
+
+        let elem: Element = "<set xmlns='http://jabber.org/protocol/rsm'><first index='0'>28482-98726-73623</first><last>09af3-cc343-b409f</last></set>"
+          .parse()
+          .unwrap();
+
+        let set = SetResult::try_from(elem).unwrap();
+
+        let fin = Fin {
+          set: set,
+          complete: Complete::default(),
+        };
+        let serialized: Element = fin.into();
+        assert_eq!(serialized, reference);
     }
 }
