@@ -519,6 +519,8 @@ impl From<PubSub> for Element {
 mod tests {
     use super::*;
     use crate::data_forms::{DataForm, DataFormType, Field, FieldType};
+    use jid::FullJid;
+    use std::str::FromStr;
 
     #[test]
     fn create() {
@@ -691,22 +693,43 @@ mod tests {
     }
 
     #[test]
-    fn test_serialize_configure() {
-        assert!(false);
-    }
-
-    #[test]
     fn test_serialize_options() {
-        assert!(false);
+        let reference: Element = "<options xmlns='http://jabber.org/protocol/pubsub' jid='juliet@capulet.lit/balcony'><x xmlns='jabber:x:data' type='submit'/></options>"
+        .parse()
+        .unwrap();
+
+        let elem: Element = "<x xmlns='jabber:x:data' type='submit'/>"
+          .parse()
+          .unwrap();
+
+        let form = DataForm::try_from(elem).unwrap();
+
+        let options = Options {
+            jid: Jid::Full(FullJid::from_str("juliet@capulet.lit/balcony").unwrap()),
+            node: None,
+            subid: None,
+            form: Some(form),
+        };
+        let serialized: Element = options.into();
+        assert_eq!(serialized, reference);
     }
 
     #[test]
     fn test_serialize_publish_options() {
-        assert!(false);
-    }
+        let reference: Element = "<publish-options xmlns='http://jabber.org/protocol/pubsub'><x xmlns='jabber:x:data' type='submit'/></publish-options>"
+        .parse()
+        .unwrap();
 
-    #[test]
-    fn test_serialize_subscriptions() {
-        assert!(false);
+        let elem: Element = "<x xmlns='jabber:x:data' type='submit'/>"
+          .parse()
+          .unwrap();
+
+        let form = DataForm::try_from(elem).unwrap();
+
+        let options = PublishOptions {
+            form: Some(form),
+        };
+        let serialized: Element = options.into();
+        assert_eq!(serialized, reference);
     }
 }

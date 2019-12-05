@@ -403,13 +403,13 @@ mod tests {
 
         let form = DataForm::try_from(elem).unwrap();
 
-        let foo = Query {
+        let query = Query {
             queryid: None,
             node: None,
             set: None,
             form: Some(form),
         };
-        let serialized: Element = foo.into();
+        let serialized: Element = query.into();
         assert_eq!(serialized, reference);
     }
 
