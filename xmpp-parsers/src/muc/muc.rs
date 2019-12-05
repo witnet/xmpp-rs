@@ -191,9 +191,4 @@ mod tests {
             DateTime::from_str("1970-01-01T00:00:00+00:00").unwrap()
         );
     }
-
-    #[test]
-    fn test_serialize_muc_history() {
-        assert!(false);
-    }
 }
