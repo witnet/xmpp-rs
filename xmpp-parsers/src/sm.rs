@@ -227,6 +227,21 @@ mod tests {
 
     #[test]
     fn test_serialize_failed() {
-        assert!(false);
+        let reference: Element = "<failed xmlns='urn:xmpp:sm:3'><unexpected-request xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/></failed>"
+        .parse()
+        .unwrap();
+
+        let elem: Element = "<unexpected-request xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/>"
+          .parse()
+          .unwrap();
+
+        let error = DefinedCondition::try_from(elem).unwrap();
+
+        let failed = Failed {
+          h: None,
+          error: Some(error),
+        };
+        let serialized: Element = failed.into();
+        assert_eq!(serialized, reference);
     }
 }
