@@ -74,6 +74,26 @@ mod tests {
 
     #[test]
     fn test_serialize_with_delay_and_stanza() {
-        assert!(false);
+        let reference: Element = "<forwarded xmlns='urn:xmpp:forward:0'><delay xmlns='urn:xmpp:delay' from='capulet.com' stamp='2002-09-10T23:08:25+00:00'/><message xmlns='jabber:client' to='juliet@capulet.example/balcony' from='romeo@montague.example/home'/></forwarded>"
+        .parse()
+        .unwrap();
+
+        let elem: Element = "<message xmlns='jabber:client' to='juliet@capulet.example/balcony' from='romeo@montague.example/home'/>"
+          .parse()
+          .unwrap();
+        let message = Message::try_from(elem).unwrap();
+
+        let elem: Element = "<delay xmlns='urn:xmpp:delay' from='capulet.com' stamp='2002-09-10T23:08:25Z'/>"
+          .parse()
+          .unwrap();
+        let delay = Delay::try_from(elem).unwrap();
+
+        let forwarded = Forwarded {
+            delay: Some(delay),
+            stanza: Some(message)
+        };
+
+        let serialized: Element = forwarded.into();
+        assert_eq!(serialized, reference);
     }
 }
