@@ -690,6 +690,36 @@ mod tests {
 
     #[test]
     fn test_serialize_item() {
-        assert!(false);
+        let reference: Element = "<item xmlns='http://jabber.org/protocol/muc#user' affiliation='member' role='moderator'><actor nick='foobar'/><continue thread='foobar'/><reason>foobar</reason></item>"
+        .parse()
+        .unwrap();
+
+        let elem: Element = "<actor xmlns='http://jabber.org/protocol/muc#user' nick='foobar'/>"
+          .parse()
+          .unwrap();
+        let actor = Actor::try_from(elem).unwrap();
+
+        let elem: Element = "<continue xmlns='http://jabber.org/protocol/muc#user' thread='foobar'/>"
+          .parse()
+          .unwrap();
+        let continue_ = Continue::try_from(elem).unwrap();
+
+        let elem: Element = "<reason xmlns='http://jabber.org/protocol/muc#user'>foobar</reason>"
+          .parse()
+          .unwrap();
+        let reason = Reason::try_from(elem).unwrap();
+
+        let item = Item {
+            affiliation: Affiliation::Member,
+            role: Role::Moderator,
+            jid: None,
+            nick: None,
+            actor: Some(actor),
+            reason: Some(reason),
+            continue_: Some(continue_),
+        };
+
+        let serialized: Element = item.into();
+        assert_eq!(serialized, reference);
     }
 }
