@@ -214,6 +214,8 @@ impl PartialEq for Node {
         match (self, other) {
             (&Node::Element(ref elem1), &Node::Element(ref elem2)) => elem1 == elem2,
             (&Node::Text(ref text1), &Node::Text(ref text2)) => text1 == text2,
+            #[cfg(feature = "comments")]
+            (&Node::Comment(ref text1), &Node::Comment(ref text2)) => text1 == text2,
             _ => false,
         }
     }
