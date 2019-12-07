@@ -99,21 +99,9 @@ impl PartialEq for Element {
     fn eq(&self, other: &Self) -> bool {
         if self.name() == other.name() && self.ns() == other.ns() && self.attrs().eq(other.attrs())
         {
-            let child_elems = self.children().count();
-            let text_is_whitespace = self
-                .texts()
-                .all(|text| text.chars().all(char::is_whitespace));
-            if child_elems > 0 && text_is_whitespace {
-                // Ignore all the whitespace text nodes
-                self.children()
-                    .zip(other.children())
-                    .all(|(node1, node2)| node1 == node2)
-            } else {
-                // Compare with text nodes
-                self.nodes()
-                    .zip(other.nodes())
-                    .all(|(node1, node2)| node1 == node2)
-            }
+            self.nodes()
+                .zip(other.nodes())
+                .all(|(node1, node2)| node1 == node2)
         } else {
             false
         }
@@ -1075,5 +1063,26 @@ mod tests {
         let mut reader = EventReader::from_str(xml);
         let elem = Element::from_reader(&mut reader).unwrap();
         assert_eq!(elem.text(), "&apos;&gt;blah<blah>");
+    }
+
+    #[test]
+    fn test_compare_all_ns() {
+        let xml = "<foo xmlns='foo' xmlns:bar='baz'><bar:meh/></foo>";
+        let mut reader = EventReader::from_str(xml);
+        let elem = Element::from_reader(&mut reader).unwrap();
+
+        let elem2 = elem.clone();
+
+        let xml3 = "<foo xmlns='foo'><bar:meh xmlns:bar='baz'/></foo>";
+        let mut reader3 = EventReader::from_str(xml3);
+        let elem3 = Element::from_reader(&mut reader3).unwrap();
+
+        let xml4 = "<prefix:foo xmlns:prefix='foo'><bar:meh xmlns:bar='baz'/></prefix:foo>";
+        let mut reader4 = EventReader::from_str(xml4);
+        let elem4 = Element::from_reader(&mut reader4).unwrap();
+
+        assert_eq!(elem, elem2);
+        assert_eq!(elem, elem3);
+        assert_eq!(elem, elem4);
     }
 }
