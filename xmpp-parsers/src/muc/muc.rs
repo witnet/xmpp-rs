@@ -149,12 +149,10 @@ mod tests {
 
     #[test]
     fn test_muc_simple_password() {
-        let elem: Element = "
-            <x xmlns='http://jabber.org/protocol/muc'>
-                <password>coucou</password>
-            </x>"
-            .parse()
-            .unwrap();
+        let elem: Element =
+            "<x xmlns='http://jabber.org/protocol/muc'><password>coucou</password></x>"
+                .parse()
+                .unwrap();
         let elem1 = elem.clone();
         let muc = Muc::try_from(elem).unwrap();
         assert_eq!(muc.password, Some("coucou".to_owned()));

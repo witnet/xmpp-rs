@@ -196,14 +196,7 @@ mod tests {
 
     #[test]
     fn test_multiple_groups() {
-        let elem: Element = r#"
-<query xmlns='jabber:iq:roster'>
-  <item jid='test@example.org'>
-    <group>A</group>
-    <group>B</group>
-  </item>
-</query>
-"#
+        let elem: Element = "<query xmlns='jabber:iq:roster'><item jid='test@example.org'><group>A</group><group>B</group></item></query>"
         .parse()
         .unwrap();
         let elem1 = elem.clone();

@@ -166,37 +166,7 @@ mod tests {
 
     #[test]
     fn test_ex9() {
-        let elem: Element = r#"
-<query xmlns='jabber:iq:register'>
-  <instructions>
-    Use the enclosed form to register. If your Jabber client does not
-    support Data Forms, visit http://www.shakespeare.lit/contests.php
-  </instructions>
-  <x xmlns='jabber:x:data' type='form'>
-    <title>Contest Registration</title>
-    <instructions>
-      Please provide the following information
-      to sign up for our special contests!
-    </instructions>
-    <field type='hidden' var='FORM_TYPE'>
-      <value>jabber:iq:register</value>
-    </field>
-    <field label='Given Name' var='first'>
-      <required/>
-    </field>
-    <field label='Family Name' var='last'>
-      <required/>
-    </field>
-    <field label='Email Address' var='email'>
-      <required/>
-    </field>
-    <field type='list-single' label='Gender' var='x-gender'>
-      <option label='Male'><value>M</value></option>
-      <option label='Female'><value>F</value></option>
-    </field>
-  </x>
-</query>
-"#
+        let elem: Element = "<query xmlns='jabber:iq:register'><instructions>Use the enclosed form to register. If your Jabber client does not support Data Forms, visit http://www.shakespeare.lit/contests.php</instructions><x xmlns='jabber:x:data' type='form'><title>Contest Registration</title><instructions>Please provide the following information to sign up for our special contests!</instructions><field type='hidden' var='FORM_TYPE'><value>jabber:iq:register</value></field><field label='Given Name' var='first'><required/></field><field label='Family Name' var='last'><required/></field><field label='Email Address' var='email'><required/></field><field type='list-single' label='Gender' var='x-gender'><option label='Male'><value>M</value></option><option label='Female'><value>F</value></option></field></x></query>"
         .parse()
         .unwrap();
         let elem1 = elem.clone();
@@ -211,27 +181,7 @@ mod tests {
 
     #[test]
     fn test_ex10() {
-        let elem: Element = r#"
-<query xmlns='jabber:iq:register'>
-  <x xmlns='jabber:x:data' type='submit'>
-    <field type='hidden' var='FORM_TYPE'>
-      <value>jabber:iq:register</value>
-    </field>
-    <field label='Given Name' var='first'>
-      <value>Juliet</value>
-    </field>
-    <field label='Family Name' var='last'>
-      <value>Capulet</value>
-    </field>
-    <field label='Email Address' var='email'>
-      <value>juliet@capulet.com</value>
-    </field>
-    <field type='list-single' label='Gender' var='x-gender'>
-      <value>F</value>
-    </field>
-  </x>
-</query>
-"#
+        let elem: Element = "<query xmlns='jabber:iq:register'><x xmlns='jabber:x:data' type='submit'><field type='hidden' var='FORM_TYPE'><value>jabber:iq:register</value></field><field label='Given Name' var='first'><value>Juliet</value></field><field label='Family Name' var='last'><value>Capulet</value></field><field label='Email Address' var='email'><value>juliet@capulet.com</value></field><field type='list-single' label='Gender' var='x-gender'><value>F</value></field></x></query>"
         .parse()
         .unwrap();
         let elem1 = elem.clone();

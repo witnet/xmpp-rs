@@ -383,16 +383,7 @@ mod tests {
 
     #[test]
     fn test_ex221_subscription() {
-        let elem: Element = r#"
-<event xmlns='http://jabber.org/protocol/pubsub#event'>
-  <subscription
-      expiry='2006-02-28T23:59:59+00:00'
-      jid='francisco@denmark.lit'
-      node='princely_musings'
-      subid='ba49252aaa4f5d320c24d3766f0bdcade78c78d3'
-      subscription='subscribed'/>
-</event>
-"#
+        let elem: Element = "<event xmlns='http://jabber.org/protocol/pubsub#event'><subscription expiry='2006-02-28T23:59:59+00:00' jid='francisco@denmark.lit' node='princely_musings' subid='ba49252aaa4f5d320c24d3766f0bdcade78c78d3' subscription='subscribed'/></event>"
         .parse()
         .unwrap();
         let event = PubSubEvent::try_from(elem.clone()).unwrap();
