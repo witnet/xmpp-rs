@@ -9,19 +9,9 @@ variables:
 
 .stable:
   image: rust:latest
-  cache:
-    key: stable
-    paths:
-      - target/
-      - ~/.cargo
 
 .nightly:
   image: rustlang/rust:nightly
-  cache:
-    key: nightly
-    paths:
-      - target/
-      - ~/.cargo
 
 .build:
   stage: build
