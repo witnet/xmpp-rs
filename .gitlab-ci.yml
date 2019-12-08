@@ -13,6 +13,7 @@ variables:
     key: stable
     paths:
       - target/
+      - ~/.cargo
 
 .nightly:
   image: rustlang/rust:nightly
@@ -20,6 +21,7 @@ variables:
     key: nightly
     paths:
       - target/
+      - ~/.cargo
 
 .build:
   stage: build
