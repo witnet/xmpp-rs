@@ -1,0 +1,7 @@
+<jingle xmlns='urn:xmpp:jingle:1' action='transport-info' sid='4NSu8r30tGWPwGYAYIL0ig'>
+    <content creator='initiator' name='audio'>
+        <transport xmlns='urn:xmpp:jingle:transports:ice-udp:1' pwd='nPgeoTwXeBQC6NfsLK8xIv1Y' ufrag='iu1E'>
+            <candidate component='1' foundation='2875537382' generation='0' ip='2a01:e0a:828:c7c0:7130:9c97:d6a2:37ea' port='46833' priority='2122262783' protocol='udp' type='host'/>
+        </transport>
+    </content>
+</jingle>

@@ -1,0 +1,37 @@
+<jingle xmlns='urn:xmpp:jingle:1' action='session-initiate' sid='CiJfiBkr2vZa+CWtngb+lQ'>
+    <group xmlns='urn:xmpp:jingle:apps:grouping:0' semantics='BUNDLE'>
+        <content name='audio'/>
+    </group>
+    <content xmlns='urn:xmpp:jingle:1' creator='initiator' name='audio'>
+        <description xmlns='urn:xmpp:jingle:apps:rtp:1' media='audio'>
+            <payload-type channels='2' clockrate='48000' id='111' name='opus'>
+                <parameter name='minptime' value='10'/>
+                <parameter name='useinbandfec' value='1'/>
+                <rtcp-fb xmlns='urn:xmpp:jingle:apps:rtp:rtcp-fb:0' type='transport-cc'/>
+            </payload-type>
+            <payload-type xmlns='urn:xmpp:jingle:apps:rtp:1' clockrate='16000' id='103' name='ISAC'/>
+            <payload-type clockrate='8000' id='9' name='G722'/>
+            <payload-type clockrate='8000' id='102' name='ILBC'/>
+            <payload-type clockrate='8000' id='0' name='PCMU'/>
+            <payload-type clockrate='8000' id='8' name='PCMA'/>
+            <payload-type clockrate='16000' id='105' name='CN'/>
+            <payload-type clockrate='8000' id='13' name='CN'/>
+            <payload-type clockrate='48000' id='110' name='telephone-event'/>
+            <payload-type clockrate='16000' id='113' name='telephone-event'/>
+            <payload-type clockrate='8000' id='126' name='telephone-event'/>
+            <rtp-hdrext xmlns='urn:xmpp:jingle:apps:rtp:rtp-hdrext:0' id='1' uri='urn:ietf:params:rtp-hdrext:ssrc-audio-level'/>
+            <rtp-hdrext xmlns='urn:xmpp:jingle:apps:rtp:rtp-hdrext:0' id='2' uri='http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time'/>
+            <rtp-hdrext xmlns='urn:xmpp:jingle:apps:rtp:rtp-hdrext:0' id='3' uri='http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01'/>
+            <source xmlns='urn:xmpp:jingle:apps:rtp:ssma:0' ssrc='628414781'>
+                <parameter name='cname' value='kDV1NDQK3T+h8rK2'/>
+                <parameter name='msid' value='my-media-stream my-audio-track'/>
+                <parameter name='mslabel' value='my-media-stream'/>
+                <parameter name='label' value='my-audio-track'/>
+            </source>
+            <rtcp-mux xmlns='urn:xmpp:jingle:apps:rtp:1'/>
+        </description>
+        <transport xmlns='urn:xmpp:jingle:transports:ice-udp:1' pwd='aJx3VDok7v/0MPYrvIUnheSg' ufrag='F/BC'>
+            <fingerprint xmlns='urn:xmpp:jingle:apps:dtls:0' hash='sha-256' setup='actpass'>C6:E8:EE:51:EB:39:D9:B9:DC:C7:A9:C1:11:36:67:6F:75:40:F4:F2:39:23:41:B4:E2:1E:7F:9B:3C:4B:F1:34</fingerprint>
+        </transport>
+    </content>
+</jingle>
