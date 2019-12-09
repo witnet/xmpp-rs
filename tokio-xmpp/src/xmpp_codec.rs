@@ -2,6 +2,7 @@
 
 use crate::{ParseError, ParserError};
 use bytes::{BufMut, BytesMut};
+use log::debug;
 use std;
 use std::borrow::Cow;
 use std::cell::RefCell;
@@ -229,9 +230,9 @@ impl Decoder for XMPPCodec {
         let buf1 = buf1.as_ref().as_ref();
         match from_utf8(buf1) {
             Ok(mut s) => {
+                debug!("<< {:?}", s);
                 s = s.trim();
                 if !s.is_empty() {
-                    // println!("<< {}", s);
                     let mut buffer_queue = BufferQueue::new();
                     let tendril = FromIterator::from_iter(s.chars());
                     buffer_queue.push_back(tendril);
@@ -296,26 +297,22 @@ impl Encoder for XMPPCodec {
                 }
                 write!(buf, ">\n").map_err(to_io_err)?;
 
-                // print!(">> {}", buf);
+                debug!(">> {:?}", buf);
                 write!(dst, "{}", buf).map_err(to_io_err)
             }
-            Packet::Stanza(stanza) => {
-                stanza
-                    .write_to(&mut WriteBytes::new(dst))
-                    .and_then(|_| {
-                        // println!(">> {:?}", dst);
-                        Ok(())
-                    })
-                    .map_err(|e| to_io_err(format!("{}", e)))
-            }
-            Packet::Text(text) => {
-                write_text(&text, dst)
-                    .and_then(|_| {
-                        // println!(">> {:?}", dst);
-                        Ok(())
-                    })
-                    .map_err(to_io_err)
-            }
+            Packet::Stanza(stanza) => stanza
+                .write_to(&mut WriteBytes::new(dst))
+                .and_then(|_| {
+                    debug!(">> {:?}", dst);
+                    Ok(())
+                })
+                .map_err(|e| to_io_err(format!("{}", e))),
+            Packet::Text(text) => write_text(&text, dst)
+                .and_then(|_| {
+                    debug!(">> {:?}", dst);
+                    Ok(())
+                })
+                .map_err(to_io_err),
             Packet::StreamEnd => write!(dst, "</stream:stream>\n").map_err(to_io_err),
         }
     }
