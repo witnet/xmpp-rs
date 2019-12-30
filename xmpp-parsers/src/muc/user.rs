@@ -695,18 +695,19 @@ mod tests {
         .unwrap();
 
         let elem: Element = "<actor xmlns='http://jabber.org/protocol/muc#user' nick='foobar'/>"
-          .parse()
-          .unwrap();
+            .parse()
+            .unwrap();
         let actor = Actor::try_from(elem).unwrap();
 
-        let elem: Element = "<continue xmlns='http://jabber.org/protocol/muc#user' thread='foobar'/>"
-          .parse()
-          .unwrap();
+        let elem: Element =
+            "<continue xmlns='http://jabber.org/protocol/muc#user' thread='foobar'/>"
+                .parse()
+                .unwrap();
         let continue_ = Continue::try_from(elem).unwrap();
 
         let elem: Element = "<reason xmlns='http://jabber.org/protocol/muc#user'>foobar</reason>"
-          .parse()
-          .unwrap();
+            .parse()
+            .unwrap();
         let reason = Reason::try_from(elem).unwrap();
 
         let item = Item {

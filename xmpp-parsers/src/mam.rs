@@ -426,9 +426,9 @@ mod tests {
         let forwarded = Forwarded::try_from(elem).unwrap();
 
         let result = Result_ {
-          id: String::from("28482-98726-73623"),
-          queryid: Some(QueryId(String::from("f27"))),
-          forwarded: forwarded,
+            id: String::from("28482-98726-73623"),
+            queryid: Some(QueryId(String::from("f27"))),
+            forwarded: forwarded,
         };
         let serialized: Element = result.into();
         assert_eq!(serialized, reference);
@@ -447,8 +447,8 @@ mod tests {
         let set = SetResult::try_from(elem).unwrap();
 
         let fin = Fin {
-          set: set,
-          complete: Complete::default(),
+            set: set,
+            complete: Complete::default(),
         };
         let serialized: Element = fin.into();
         assert_eq!(serialized, reference);

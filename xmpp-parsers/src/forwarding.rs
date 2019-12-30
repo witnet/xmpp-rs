@@ -83,14 +83,15 @@ mod tests {
           .unwrap();
         let message = Message::try_from(elem).unwrap();
 
-        let elem: Element = "<delay xmlns='urn:xmpp:delay' from='capulet.com' stamp='2002-09-10T23:08:25Z'/>"
-          .parse()
-          .unwrap();
+        let elem: Element =
+            "<delay xmlns='urn:xmpp:delay' from='capulet.com' stamp='2002-09-10T23:08:25Z'/>"
+                .parse()
+                .unwrap();
         let delay = Delay::try_from(elem).unwrap();
 
         let forwarded = Forwarded {
             delay: Some(delay),
-            stanza: Some(message)
+            stanza: Some(message),
         };
 
         let serialized: Element = forwarded.into();

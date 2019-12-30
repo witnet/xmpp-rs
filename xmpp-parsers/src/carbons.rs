@@ -137,7 +137,7 @@ mod tests {
         let forwarded = Forwarded::try_from(elem).unwrap();
 
         let received = Received {
-          forwarded: forwarded,
+            forwarded: forwarded,
         };
 
         let serialized: Element = received.into();
@@ -156,7 +156,7 @@ mod tests {
         let forwarded = Forwarded::try_from(elem).unwrap();
 
         let sent = Sent {
-          forwarded: forwarded,
+            forwarded: forwarded,
         };
 
         let serialized: Element = sent.into();

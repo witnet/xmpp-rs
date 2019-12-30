@@ -698,9 +698,7 @@ mod tests {
         .parse()
         .unwrap();
 
-        let elem: Element = "<x xmlns='jabber:x:data' type='submit'/>"
-          .parse()
-          .unwrap();
+        let elem: Element = "<x xmlns='jabber:x:data' type='submit'/>".parse().unwrap();
 
         let form = DataForm::try_from(elem).unwrap();
 
@@ -720,15 +718,11 @@ mod tests {
         .parse()
         .unwrap();
 
-        let elem: Element = "<x xmlns='jabber:x:data' type='submit'/>"
-          .parse()
-          .unwrap();
+        let elem: Element = "<x xmlns='jabber:x:data' type='submit'/>".parse().unwrap();
 
         let form = DataForm::try_from(elem).unwrap();
 
-        let options = PublishOptions {
-            form: Some(form),
-        };
+        let options = PublishOptions { form: Some(form) };
         let serialized: Element = options.into();
         assert_eq!(serialized, reference);
     }

@@ -232,14 +232,14 @@ mod tests {
         .unwrap();
 
         let elem: Element = "<unexpected-request xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/>"
-          .parse()
-          .unwrap();
+            .parse()
+            .unwrap();
 
         let error = DefinedCondition::try_from(elem).unwrap();
 
         let failed = Failed {
-          h: None,
-          error: Some(error),
+            h: None,
+            error: Some(error),
         };
         let serialized: Element = failed.into();
         assert_eq!(serialized, reference);
