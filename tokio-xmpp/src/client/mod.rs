@@ -177,6 +177,7 @@ impl Stream for Client {
                     }
                     Ok(Async::Ready(Some(Packet::Text(_)))) => {
                         // Ignore text between stanzas
+                        self.state = ClientState::Connected(stream);
                         Ok(Async::NotReady)
                     }
                     Ok(Async::Ready(Some(Packet::StreamStart(_)))) => {
