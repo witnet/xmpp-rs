@@ -195,6 +195,24 @@ mod tests {
 
     #[test]
     fn test_serialize_transport() {
-        assert!(false);
+        let reference: Element =
+            "<transport xmlns='urn:xmpp:jingle:transports:ice-udp:1'><fingerprint xmlns='urn:xmpp:jingle:apps:dtls:0' hash='sha-256' setup='actpass'>02:1A:CC:54:27:AB:EB:9C:53:3F:3E:4B:65:2E:7D:46:3F:54:42:CD:54:F1:7A:03:A2:7D:F9:B0:7F:46:19:B2</fingerprint></transport>"
+                .parse()
+                .unwrap();
+
+        let elem: Element = "<fingerprint xmlns='urn:xmpp:jingle:apps:dtls:0' hash='sha-256' setup='actpass'>02:1A:CC:54:27:AB:EB:9C:53:3F:3E:4B:65:2E:7D:46:3F:54:42:CD:54:F1:7A:03:A2:7D:F9:B0:7F:46:19:B2</fingerprint>"
+                .parse()
+                .unwrap();
+        let fingerprint = Fingerprint::try_from(elem).unwrap();
+
+        let transport = Transport {
+            pwd: None,
+            ufrag: None,
+            candidates: vec![],
+            fingerprint: Some(fingerprint),
+        };
+
+        let serialized: Element = transport.into();
+        assert_eq!(serialized, reference);
     }
 }
