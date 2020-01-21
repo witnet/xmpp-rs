@@ -230,21 +230,68 @@ mod tests {
 
     #[test]
     fn test_serialize_item() {
-        assert!(false);
+        let reference: Element = "<item xmlns='urn:xmpp:saslcert:1'><name>Mobile Client</name><x509cert>AAAA</x509cert></item>"
+        .parse()
+        .unwrap();
+
+        let item = Item {
+            name: Name::from_str("Mobile Client").unwrap(),
+            cert: Cert {
+                data: b"\0\0\0".to_vec(),
+            },
+            no_cert_management: false,
+            users: None,
+        };
+
+        let serialized: Element = item.into();
+        assert_eq!(serialized, reference);
     }
 
     #[test]
     fn test_serialize_append() {
-        assert!(false);
+        let reference: Element = "<append xmlns='urn:xmpp:saslcert:1'><name>Mobile Client</name><x509cert>AAAA</x509cert></append>"
+        .parse()
+        .unwrap();
+
+        let append = Append {
+            name: Name::from_str("Mobile Client").unwrap(),
+            cert: Cert {
+                data: b"\0\0\0".to_vec(),
+            },
+            no_cert_management: false,
+        };
+
+        let serialized: Element = append.into();
+        assert_eq!(serialized, reference);
     }
 
     #[test]
     fn test_serialize_disable() {
-        assert!(false);
+        let reference: Element =
+            "<disable xmlns='urn:xmpp:saslcert:1'><name>Mobile Client</name></disable>"
+                .parse()
+                .unwrap();
+
+        let disable = Disable {
+            name: Name::from_str("Mobile Client").unwrap(),
+        };
+
+        let serialized: Element = disable.into();
+        assert_eq!(serialized, reference);
     }
 
     #[test]
     fn test_serialize_revoke() {
-        assert!(false);
+        let reference: Element =
+            "<revoke xmlns='urn:xmpp:saslcert:1'><name>Mobile Client</name></revoke>"
+                .parse()
+                .unwrap();
+
+        let revoke = Revoke {
+            name: Name::from_str("Mobile Client").unwrap(),
+        };
+
+        let serialized: Element = revoke.into();
+        assert_eq!(serialized, reference);
     }
 }
