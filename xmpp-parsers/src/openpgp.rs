@@ -63,6 +63,7 @@ mod tests {
         pubsub::{Item as PubSubItem, Publish},
         Item, NodeName,
     };
+    use crate::Element;
     use std::str::FromStr;
 
     #[test]
@@ -101,6 +102,18 @@ mod tests {
 
     #[test]
     fn test_serialize_pubkey() {
-        assert!(false);
+        let reference: Element = "<pubkey xmlns='urn:xmpp:openpgp:0'><data>AAAA</data></pubkey>"
+            .parse()
+            .unwrap();
+
+        let pubkey = PubKey {
+            date: None,
+            data: PubKeyData {
+                data: b"\0\0\0".to_vec(),
+            },
+        };
+
+        let serialized: Element = pubkey.into();
+        assert_eq!(serialized, reference);
     }
 }
