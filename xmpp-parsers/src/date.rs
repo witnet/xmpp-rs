@@ -56,7 +56,6 @@ impl Into<Node> for DateTime {
 mod tests {
     use super::*;
     use chrono::{Datelike, Timelike};
-    use std::error::Error as StdError;
 
     // DateTime’s size doesn’t depend on the architecture.
     #[test]
@@ -85,7 +84,7 @@ mod tests {
             Error::ChronoParseError(string) => string,
             _ => panic!(),
         };
-        assert_eq!(message.description(), "input is out of range");
+        assert_eq!(message.to_string(), "input is out of range");
 
         // Timezone ≥24:00 aren’t allowed.
         let error = DateTime::from_str("2017-05-27T12:11:02+25:00").unwrap_err();
@@ -93,7 +92,7 @@ mod tests {
             Error::ChronoParseError(string) => string,
             _ => panic!(),
         };
-        assert_eq!(message.description(), "input is out of range");
+        assert_eq!(message.to_string(), "input is out of range");
 
         // Timezone without the : separator aren’t allowed.
         let error = DateTime::from_str("2017-05-27T12:11:02+0100").unwrap_err();
@@ -101,7 +100,7 @@ mod tests {
             Error::ChronoParseError(string) => string,
             _ => panic!(),
         };
-        assert_eq!(message.description(), "input contains invalid characters");
+        assert_eq!(message.to_string(), "input contains invalid characters");
 
         // No seconds, error message could be improved.
         let error = DateTime::from_str("2017-05-27T12:11+01:00").unwrap_err();
@@ -109,7 +108,7 @@ mod tests {
             Error::ChronoParseError(string) => string,
             _ => panic!(),
         };
-        assert_eq!(message.description(), "input contains invalid characters");
+        assert_eq!(message.to_string(), "input contains invalid characters");
 
         // TODO: maybe we’ll want to support this one, as per XEP-0082 §4.
         let error = DateTime::from_str("20170527T12:11:02+01:00").unwrap_err();
@@ -117,7 +116,7 @@ mod tests {
             Error::ChronoParseError(string) => string,
             _ => panic!(),
         };
-        assert_eq!(message.description(), "input contains invalid characters");
+        assert_eq!(message.to_string(), "input contains invalid characters");
 
         // No timezone.
         let error = DateTime::from_str("2017-05-27T12:11:02").unwrap_err();
@@ -125,7 +124,7 @@ mod tests {
             Error::ChronoParseError(string) => string,
             _ => panic!(),
         };
-        assert_eq!(message.description(), "premature end of input");
+        assert_eq!(message.to_string(), "premature end of input");
     }
 
     #[test]

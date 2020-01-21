@@ -24,7 +24,6 @@ mod tests {
     use crate::util::error::Error;
     use crate::Element;
     use std::convert::TryFrom;
-    use std::error::Error as StdError;
     use std::str::FromStr;
 
     #[test]
@@ -75,7 +74,7 @@ mod tests {
             Error::ChronoParseError(string) => string,
             _ => panic!(),
         };
-        assert_eq!(message.description(), "input is out of range");
+        assert_eq!(message.to_string(), "input is out of range");
 
         // Timezone ≥24:00 aren’t allowed.
         let elem: Element = "<idle xmlns='urn:xmpp:idle:1' since='2017-05-27T12:11:02+25:00'/>"
@@ -86,7 +85,7 @@ mod tests {
             Error::ChronoParseError(string) => string,
             _ => panic!(),
         };
-        assert_eq!(message.description(), "input is out of range");
+        assert_eq!(message.to_string(), "input is out of range");
 
         // Timezone without the : separator aren’t allowed.
         let elem: Element = "<idle xmlns='urn:xmpp:idle:1' since='2017-05-27T12:11:02+0100'/>"
@@ -97,7 +96,7 @@ mod tests {
             Error::ChronoParseError(string) => string,
             _ => panic!(),
         };
-        assert_eq!(message.description(), "input contains invalid characters");
+        assert_eq!(message.to_string(), "input contains invalid characters");
 
         // No seconds, error message could be improved.
         let elem: Element = "<idle xmlns='urn:xmpp:idle:1' since='2017-05-27T12:11+01:00'/>"
@@ -108,7 +107,7 @@ mod tests {
             Error::ChronoParseError(string) => string,
             _ => panic!(),
         };
-        assert_eq!(message.description(), "input contains invalid characters");
+        assert_eq!(message.to_string(), "input contains invalid characters");
 
         // TODO: maybe we’ll want to support this one, as per XEP-0082 §4.
         let elem: Element = "<idle xmlns='urn:xmpp:idle:1' since='20170527T12:11:02+01:00'/>"
@@ -119,7 +118,7 @@ mod tests {
             Error::ChronoParseError(string) => string,
             _ => panic!(),
         };
-        assert_eq!(message.description(), "input contains invalid characters");
+        assert_eq!(message.to_string(), "input contains invalid characters");
 
         // No timezone.
         let elem: Element = "<idle xmlns='urn:xmpp:idle:1' since='2017-05-27T12:11:02'/>"
@@ -130,7 +129,7 @@ mod tests {
             Error::ChronoParseError(string) => string,
             _ => panic!(),
         };
-        assert_eq!(message.description(), "premature end of input");
+        assert_eq!(message.to_string(), "premature end of input");
     }
 
     #[test]

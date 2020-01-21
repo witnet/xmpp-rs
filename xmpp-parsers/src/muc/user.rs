@@ -236,7 +236,6 @@ generate_element!(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::error::Error as StdError;
 
     #[test]
     fn test_simple() {
@@ -397,7 +396,7 @@ mod tests {
             Error::ParseIntError(error) => error,
             _ => panic!(),
         };
-        assert_eq!(error.description(), "invalid digit found in string");
+        assert_eq!(error.to_string(), "invalid digit found in string");
     }
 
     #[test]

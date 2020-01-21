@@ -49,7 +49,6 @@ mod tests {
     use crate::util::error::Error;
     use crate::Element;
     use std::convert::TryFrom;
-    use std::error::Error as StdError;
 
     #[cfg(target_pointer_width = "32")]
     #[test]
@@ -103,10 +102,7 @@ mod tests {
             Error::ParseIntError(error) => error,
             _ => panic!(),
         };
-        assert_eq!(
-            error.description(),
-            "cannot parse integer from empty string"
-        );
+        assert_eq!(error.to_string(), "cannot parse integer from empty string");
 
         let elem: Element = "<media xmlns='urn:xmpp:media-element' width='coucou'/>"
             .parse()
@@ -116,7 +112,7 @@ mod tests {
             Error::ParseIntError(error) => error,
             _ => panic!(),
         };
-        assert_eq!(error.description(), "invalid digit found in string");
+        assert_eq!(error.to_string(), "invalid digit found in string");
 
         let elem: Element = "<media xmlns='urn:xmpp:media-element' height=''/>"
             .parse()
@@ -126,10 +122,7 @@ mod tests {
             Error::ParseIntError(error) => error,
             _ => panic!(),
         };
-        assert_eq!(
-            error.description(),
-            "cannot parse integer from empty string"
-        );
+        assert_eq!(error.to_string(), "cannot parse integer from empty string");
 
         let elem: Element = "<media xmlns='urn:xmpp:media-element' height='-10'/>"
             .parse()
@@ -139,7 +132,7 @@ mod tests {
             Error::ParseIntError(error) => error,
             _ => panic!(),
         };
-        assert_eq!(error.description(), "invalid digit found in string");
+        assert_eq!(error.to_string(), "invalid digit found in string");
     }
 
     #[test]

@@ -27,7 +27,6 @@ mod tests {
     use crate::util::error::Error;
     use crate::Element;
     use std::convert::TryFrom;
-    use std::error::Error as StdError;
 
     #[cfg(target_pointer_width = "32")]
     #[test]
@@ -75,7 +74,7 @@ mod tests {
             _ => panic!(),
         };
         assert_eq!(
-            message.description(),
+            message.to_string(),
             "number too large to fit in target type"
         );
 
@@ -87,7 +86,7 @@ mod tests {
             Error::ParseIntError(error) => error,
             _ => panic!(),
         };
-        assert_eq!(message.description(), "invalid digit found in string");
+        assert_eq!(message.to_string(), "invalid digit found in string");
 
         let elem: Element =
             "<transport xmlns='urn:xmpp:jingle:transports:ibb:1' block-size='128'/>"

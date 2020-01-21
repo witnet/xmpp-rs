@@ -193,7 +193,6 @@ impl From<Prefs> for Element {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::data_forms::{DataFormType, Field, FieldType};
     use std::str::FromStr;
 
     #[cfg(target_pointer_width = "32")]

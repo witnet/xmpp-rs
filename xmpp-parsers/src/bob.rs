@@ -90,7 +90,6 @@ mod tests {
     use super::*;
     use crate::Element;
     use std::convert::TryFrom;
-    use std::error::Error as StdError;
 
     #[cfg(target_pointer_width = "32")]
     #[test]
@@ -165,7 +164,7 @@ mod tests {
             Error::ParseIntError(error) => error,
             _ => panic!(),
         };
-        assert_eq!(message.description(), "invalid digit found in string");
+        assert_eq!(message.to_string(), "invalid digit found in string");
     }
 
     #[test]
