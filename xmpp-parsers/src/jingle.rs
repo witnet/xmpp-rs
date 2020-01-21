@@ -205,15 +205,6 @@ impl From<Description> for Element {
     }
 }
 
-impl Description {
-    fn get_ns(&self) -> String {
-        match self {
-            Description::Rtp(_) => String::from(ns::JINGLE_RTP),
-            Description::Unknown(elem) => elem.ns().unwrap_or_else(|| String::new()),
-        }
-    }
-}
-
 /// Enum wrapping all of the various supported transports of a Content.
 #[derive(Debug, Clone)]
 pub enum Transport {
@@ -271,17 +262,6 @@ impl From<Transport> for Element {
             Transport::Ibb(transport) => transport.into(),
             Transport::Socks5(transport) => transport.into(),
             Transport::Unknown(elem) => elem,
-        }
-    }
-}
-
-impl Transport {
-    fn get_ns(&self) -> String {
-        match self {
-            Transport::IceUdp(_) => String::from(ns::JINGLE_ICE_UDP),
-            Transport::Ibb(_) => String::from(ns::JINGLE_IBB),
-            Transport::Socks5(_) => String::from(ns::JINGLE_S5B),
-            Transport::Unknown(elem) => elem.ns().unwrap_or_else(|| String::new()),
         }
     }
 }
