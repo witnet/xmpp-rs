@@ -13,7 +13,7 @@ homepage = "https://gitlab.com/xmpp-rs/xmpp-rs"
 repository = "https://gitlab.com/xmpp-rs/xmpp-rs"
 documentation = "https://docs.rs/minidom"
 readme = "README.md"
-keywords = ["xml"]
+keywords = ["xml", "xmpp"]
 license = "MIT"
 edition = "2018"
 

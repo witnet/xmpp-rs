@@ -4,6 +4,7 @@ Version XXX, released YYY:
     * PartialEq implementation for Element and Node have been changed to
       ensure namespaces match even if the objects are slightly different.
   * Changes
+    * Explicitely focus on XMPP
     * Update edition to 2018
     * Add NSChoice enum to allow comparing NSs differently
   * Fixes
