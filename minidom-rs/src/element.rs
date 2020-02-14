@@ -1,3 +1,15 @@
+// Copyright (c) 2020 lumi <lumi@pew.im>
+// Copyright (c) 2020 Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
+// Copyright (c) 2020 Bastien Orivel <eijebong+minidom@bananium.fr>
+// Copyright (c) 2020 Maxime “pep” Buquet <pep@bouah.net>
+// Copyright (c) 2020 Yue Liu <amznyue@amazon.com>
+// Copyright (c) 2020 Matt Bilker <me@mbilker.us>
+// Copyright (c) 2020 Xidorn Quan <me@upsuper.org>
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 //! Provides an `Element` type, which represents DOM nodes, and a builder to create them with.
 
 use crate::convert::IntoAttributeValue;

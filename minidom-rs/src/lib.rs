@@ -1,3 +1,13 @@
+// Copyright (c) 2020 lumi <lumi@pew.im>
+// Copyright (c) 2020 Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
+// Copyright (c) 2020 Bastien Orivel <eijebong+minidom@bananium.fr>
+// Copyright (c) 2020 Astro <astro@spaceboyz.net>
+// Copyright (c) 2020 Maxime “pep” Buquet <pep@bouah.net>
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 #![deny(missing_docs)]
 
 //! A minimal DOM crate built on top of quick-xml.
