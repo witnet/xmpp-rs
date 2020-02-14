@@ -1,12 +1,15 @@
 Version XXX, released YYY:
   * Breaking
-    * `Element.write_to` doesn't prepand xml prelude anymore. Use `write_to_decl`.
+    * `Element.write_to` doesn't prepand xml prelude anymore. Use `write_to_decl` when necessary.
     * PartialEq implementation for Element and Node have been changed to
-      ensure namespaces match even if the objects are slightly different.
+      ensure namespaces match even if the objects are not structurally
+      equivalent in Rust.
   * Changes
-    * Explicitely focus on XMPP
+    * Explicitely focus on XMPP. Some features will eventually be removed from
+      the project to comply with this.
     * Update edition to 2018
     * Add NSChoice enum to allow comparing NSs differently
+    * Add impl for From<Into<Element>> for Node
   * Fixes
     * Update old CI configuration with newer Rust images
 Version 0.11.1, released 2019-09-06:
