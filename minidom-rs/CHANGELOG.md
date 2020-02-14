@@ -1,4 +1,4 @@
-Version XXX, released YYY:
+Version 0.12, released 2020-02-15:
   * Breaking
     * `Element.write_to` doesn't prepand xml prelude anymore. Use `write_to_decl` when necessary.
     * PartialEq implementation for Element and Node have been changed to

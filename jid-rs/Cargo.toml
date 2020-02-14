@@ -19,4 +19,4 @@ edition = "2018"
 gitlab = { repository = "xmpp-rs/xmpp-rs" }
 
 [dependencies]
-minidom = { version = "0.11", optional = true }
+minidom = { version = "0.12", optional = true }
