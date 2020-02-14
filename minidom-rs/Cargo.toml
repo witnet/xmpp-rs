@@ -14,7 +14,7 @@ repository = "https://gitlab.com/xmpp-rs/xmpp-rs"
 documentation = "https://docs.rs/minidom"
 readme = "README.md"
 keywords = ["xml", "xmpp"]
-license = "MIT"
+license = "MPL-2.0"
 edition = "2018"
 
 [badges]
