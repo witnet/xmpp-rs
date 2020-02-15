@@ -1,3 +1,7 @@
+Version 0.9.0, release 2020-02-15:
+  * Breaking
+    - Update minidom dependency to 0.12
+
 Version 0.8, released 2019-10-15:
   * Updates
     - CI: Split jobs, add tests, and caching
