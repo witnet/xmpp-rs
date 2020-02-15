@@ -1,3 +1,14 @@
+Version XXX:
+YYY  AUTHORS
+  * Improvements:
+      - Add serialization tests where possible
+      - Use minidom's NSChoice API for Jingle parser
+      - Remove NamespaceAwareCompare. Move to minidom
+  * Breaking changes:
+      - Prevent generate_serializer macro from adding another layer of Node.
+        Fixes some serializers.
+      - ecaps2: Use the Error type instead of ()
+
 Version 0.16.0:
 2019-10-15  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
     * New parsers/serialisers:
