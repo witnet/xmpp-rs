@@ -50,7 +50,7 @@
             <browse rdf:resource="https://gitlab.com/xmpp-rs/xmpp-parsers"/>
             <location rdf:resource="https://gitlab.com/xmpp-rs/xmpp-parsers.git"/>
         </GitRepository>
-    </repository> 
+    </repository>
 
     <implements rdf:resource="https://xmpp.org/rfcs/rfc6120.html"/>
     <implements rdf:resource="https://xmpp.org/rfcs/rfc6121.html"/>
