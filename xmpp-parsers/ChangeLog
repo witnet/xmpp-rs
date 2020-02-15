@@ -1,5 +1,5 @@
-Version XXX:
-YYY  AUTHORS
+Version 0.17.0:
+2020-02-15  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>, Maxime “pep” Buquet <pep@bouah.net>, Paul Fariello <paul@fariello.eu>
   * Improvements:
       - Add serialization tests where possible
       - Use minidom's NSChoice API for Jingle parser
