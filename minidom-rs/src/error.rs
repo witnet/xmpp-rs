@@ -43,9 +43,7 @@ pub enum Error {
 impl StdError for Error {
     fn cause(&self) -> Option<&dyn StdError> {
         match self {
-            // TODO: return Some(e) for this case after the merge of
-            // https://github.com/tafia/quick-xml/pull/170
-            Error::XmlError(_e) => None,
+            Error::XmlError(e) => Some(e),
             Error::Utf8Error(e) => Some(e),
             Error::IoError(e) => Some(e),
             Error::EndOfDocument => None,
