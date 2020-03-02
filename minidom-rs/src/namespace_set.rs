@@ -46,8 +46,8 @@ impl<'a> NSChoice<'a> {
 
 #[derive(Clone, PartialEq, Eq)]
 pub struct NamespaceSet {
-    parent: RefCell<Option<Rc<NamespaceSet>>>,
-    namespaces: BTreeMap<Option<String>, String>,
+    parent: RefCell<Option<Rc<RefCell<NamespaceSet>>>>,
+    pub namespaces: BTreeMap<Option<String>, String>,
 }
 
 impl Default for NamespaceSet {
@@ -87,7 +87,10 @@ impl NamespaceSet {
             Some(ns) => Some(ns.clone()),
             None => match *self.parent.borrow() {
                 None => None,
-                Some(ref parent) => parent.get(prefix),
+                Some(ref parent) => {
+                    let parent = parent.borrow();
+                    parent.get(prefix)
+                },
             },
         }
     }
@@ -97,12 +100,15 @@ impl NamespaceSet {
             Some(ns) => wanted_ns.into().compare(Some(ns)),
             None => match *self.parent.borrow() {
                 None => wanted_ns.into().compare(None),
-                Some(ref parent) => parent.has(prefix, wanted_ns),
+                Some(ref parent) => {
+                    let parent = parent.borrow();
+                    parent.has(prefix, wanted_ns)
+                },
             },
         }
     }
 
-    pub fn set_parent(&self, parent: Rc<NamespaceSet>) {
+    pub fn set_parent(&self, parent: Rc<RefCell<NamespaceSet>>) {
         let mut parent_ns = self.parent.borrow_mut();
         let new_set = parent;
         *parent_ns = Some(new_set);

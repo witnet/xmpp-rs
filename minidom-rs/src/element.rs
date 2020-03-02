@@ -21,6 +21,7 @@ use std::collections::{btree_map, BTreeMap};
 use std::io::Write;
 
 use std::borrow::Cow;
+use core::cell::RefCell;
 use std::rc::Rc;
 use std::str;
 
@@ -85,7 +86,7 @@ pub fn escape(raw: &[u8]) -> Cow<[u8]> {
 pub struct Element {
     prefix: Option<String>,
     name: String,
-    namespaces: Rc<NamespaceSet>,
+    namespaces: Rc<RefCell<NamespaceSet>>,
     attributes: BTreeMap<String, String>,
     children: Vec<Node>,
 }
@@ -131,7 +132,7 @@ impl Element {
         Element {
             prefix,
             name,
-            namespaces: Rc::new(namespaces.into()),
+            namespaces: Rc::new(RefCell::new(namespaces.into())),
             attributes,
             children,
         }
@@ -182,7 +183,7 @@ impl Element {
         Element {
             prefix: None,
             name: name.into(),
-            namespaces: Rc::new(NamespaceSet::default()),
+            namespaces: Rc::new(RefCell::new(NamespaceSet::default())),
             attributes: BTreeMap::new(),
             children: Vec::new(),
         }
@@ -211,7 +212,14 @@ impl Element {
 
     /// Returns a reference to the namespace of this element, if it has one, else `None`.
     pub fn ns(&self) -> Option<String> {
-        self.namespaces.get(&self.prefix)
+        let namespaces = self.namespaces.borrow();
+        namespaces.get(&self.prefix)
+    }
+
+    /// XXX: fix that in the parser instead!
+    pub fn set_ns(&mut self, ns: &str) {
+        let mut namespaces = self.namespaces.borrow_mut();
+        namespaces.namespaces.insert(None, ns.to_string());
     }
 
     /// Returns a reference to the value of the given attribute, if it exists, else `None`.
@@ -319,7 +327,8 @@ impl Element {
     /// assert_eq!(elem2.has_ns(NSChoice::Any), true);
     /// ```
     pub fn has_ns<'a, NS: Into<NSChoice<'a>>>(&self, namespace: NS) -> bool {
-        self.namespaces.has(&self.prefix, namespace)
+        let namespaces = self.namespaces.borrow();
+        namespaces.has(&self.prefix, namespace)
     }
 
     /// Parse a document from an `EventReader`.
@@ -463,7 +472,8 @@ impl Element {
         };
 
         let mut start = BytesStart::borrowed(name.as_bytes(), name.len());
-        for (prefix, ns) in self.namespaces.declared_ns() {
+        let namespaces = self.namespaces.borrow();
+        for (prefix, ns) in namespaces.declared_ns() {
             match *prefix {
                 None => start.push_attribute(("xmlns", ns.as_ref())),
                 Some(ref prefix) => {
@@ -603,7 +613,10 @@ impl Element {
     /// assert_eq!(child.name(), "new");
     /// ```
     pub fn append_child(&mut self, child: Element) -> &mut Element {
-        child.namespaces.set_parent(Rc::clone(&self.namespaces));
+        {
+            let child_namespaces = child.namespaces.borrow();
+            child_namespaces.set_parent(Rc::clone(&self.namespaces));
+        }
 
         self.children.push(Node::Element(child));
         if let Node::Element(ref mut cld) = *self.children.last_mut().unwrap() {
@@ -989,11 +1002,12 @@ impl ElementBuilder {
     pub fn build(self) -> Element {
         let mut element = self.root;
         // Set namespaces
-        element.namespaces = Rc::new(NamespaceSet::from(self.namespaces));
+        element.namespaces = Rc::new(RefCell::new(NamespaceSet::from(self.namespaces)));
         // Propagate namespaces
         for node in &element.children {
             if let Node::Element(ref e) = *node {
-                e.namespaces.set_parent(Rc::clone(&element.namespaces));
+                let e_namespaces = e.namespaces.borrow();
+                e_namespaces.set_parent(Rc::clone(&element.namespaces));
             }
         }
         element
