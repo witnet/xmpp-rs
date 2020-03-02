@@ -1,0 +1,17 @@
+[package]
+name = "mix-component"
+version = "0.1.0"
+authors = ["Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>"]
+description = "MIX component library"
+homepage = "https://gitlab.com/xmpp-rs/xmpp-rs"
+repository = "https://gitlab.com/xmpp-rs/xmpp-rs"
+keywords = ["xmpp", "jabber", "mix", "component"]
+categories = ["network-programming"]
+license = "MPL-2.0"
+edition = "2018"
+
+[dependencies]
+xmpp-parsers = { version = "*", features = ["component"] }
+minidom = "*"
+async-std = "1.5"
+futures = "0.3"

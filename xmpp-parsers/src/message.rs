@@ -108,6 +108,11 @@ impl Message {
         }
     }
 
+    /// Sets the `<subject/>` for a given language.
+    pub fn add_subject(&mut self, lang: &str, subject: &str) {
+        self.subjects.insert(String::from(lang), Subject(subject.to_string()));
+    }
+
     fn get_best<'a, T>(
         map: &'a BTreeMap<Lang, T>,
         preferred_langs: Vec<&str>,

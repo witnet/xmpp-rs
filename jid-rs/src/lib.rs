@@ -145,6 +145,42 @@ impl TryFrom<Jid> for FullJid {
     }
 }
 
+impl PartialEq<Jid> for FullJid {
+    fn eq(&self, rhs: &Jid) -> bool {
+        match rhs {
+            Jid::Full(full) => self == full,
+            Jid::Bare(_) => false,
+        }
+    }
+}
+
+impl PartialEq<Jid> for BareJid {
+    fn eq(&self, rhs: &Jid) -> bool {
+        match rhs {
+            Jid::Bare(bare) => self == bare,
+            Jid::Full(_) => false,
+        }
+    }
+}
+
+impl PartialEq<FullJid> for Jid {
+    fn eq(&self, rhs: &FullJid) -> bool {
+        match self {
+            Jid::Full(full) => full == rhs,
+            Jid::Bare(_) => false,
+        }
+    }
+}
+
+impl PartialEq<BareJid> for Jid {
+    fn eq(&self, rhs: &BareJid) -> bool {
+        match self {
+            Jid::Bare(bare) => bare == rhs,
+            Jid::Full(_) => false,
+        }
+    }
+}
+
 /// A struct representing a full Jabber ID.
 ///
 /// A full Jabber ID is composed of 3 components, of which one is optional:

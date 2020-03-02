@@ -210,6 +210,29 @@ attributes: [
     name: Option<String> = "name",
 ]);
 
+impl Item {
+    /// Create a new `<item/>`.
+    pub fn new(jid: impl Into<Jid>) -> Item {
+        Item {
+            jid: jid.into(),
+            node: None,
+            name: None,
+        }
+    }
+
+    /// Sets the node of the `<item/>`.
+    pub fn with_node(mut self, node: &str) -> Item {
+        self.node = Some(node.to_string());
+        self
+    }
+
+    /// Sets the name of the `<item/>`.
+    pub fn with_name(mut self, name: &str) -> Item {
+        self.name = Some(name.to_string());
+        self
+    }
+}
+
 generate_element!(
     /// Structure representing a `<query
     /// xmlns='http://jabber.org/protocol/disco#items'/>` element.

@@ -38,6 +38,26 @@ generate_element!(
 
 impl IqResultPayload for VersionResult {}
 
+impl VersionResult {
+    /// Create a new `<version/>` answer.
+    pub fn new(name: &str, version: &str) -> VersionResult {
+        let name = name.to_string();
+        let version = version.to_string();
+        let os = None;
+        VersionResult {
+            name,
+            version,
+            os,
+        }
+    }
+
+    /// Set the operating system.
+    pub fn with_os(mut self, os: &str) -> Self {
+        self.os = Some(os.to_string());
+        self
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

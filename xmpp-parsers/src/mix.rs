@@ -17,6 +17,13 @@ generate_id!(
     ParticipantId
 );
 
+impl ParticipantId {
+    /// Create a new ParticipantId.
+    pub fn new<P: Into<String>>(participant: P) -> ParticipantId {
+        ParticipantId(participant.into())
+    }
+}
+
 generate_id!(
     /// A MIX channel identifier.
     ChannelId
@@ -40,10 +47,10 @@ impl PubSubPayload for Participant {}
 
 impl Participant {
     /// Create a new MIX participant.
-    pub fn new(jid: &str, nick: &str) -> Participant {
+    pub fn new<J: Into<String>, N: Into<String>>(jid: J, nick: N) -> Participant {
         Participant {
-            nick: nick.to_string(),
-            jid: jid.to_string(),
+            nick: nick.into(),
+            jid: jid.into(),
         }
     }
 }
@@ -55,6 +62,13 @@ generate_element!(
         node: Required<NodeName> = "node",
     ]
 );
+
+impl Subscribe {
+    /// Create a new Subscribe element.
+    pub fn new<N: Into<String>>(node: N) -> Subscribe {
+        Subscribe { node: NodeName(node.into()) }
+    }
+}
 
 generate_element!(
     /// A request from a user’s server to join a MIX channel.
@@ -116,6 +130,13 @@ generate_element!(
 
 impl IqSetPayload for SetNick {}
 impl IqResultPayload for SetNick {}
+
+impl SetNick {
+    /// Create a new SetNick element.
+    pub fn new<N: Into<String>>(nick: N) -> SetNick {
+        SetNick { nick: nick.into() }
+    }
+}
 
 generate_element!(
     /// Message payload describing who actually sent the message, since unlike in MUC, all messages

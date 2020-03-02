@@ -97,6 +97,19 @@ impl Field {
     fn is_list(&self) -> bool {
         self.type_ == FieldType::ListSingle || self.type_ == FieldType::ListMulti
     }
+
+    /// Create a simple field containing a text-single value.
+    pub fn text_single(var: &str, value: &str) -> Field {
+        Field {
+            var: var.to_string(),
+            type_: FieldType::TextSingle,
+            label: None,
+            required: false,
+            options: vec![],
+            values: vec![value.to_string()],
+            media: vec![],
+        }
+    }
 }
 
 impl TryFrom<Element> for Field {

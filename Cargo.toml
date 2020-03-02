@@ -2,6 +2,7 @@
 members = [  # alphabetically sorted
   "jid-rs",
   "minidom-rs",
+  "mix-component",
   "tokio-xmpp",
   "xmpp-parsers",
   "xmpp-rs",
@@ -10,6 +11,7 @@ members = [  # alphabetically sorted
 [patch.crates-io]
 jid = { path = "jid-rs" }
 minidom = { path = "minidom-rs" }
+mix-component = { path = "mix-component" }
 tokio-xmpp = { path = "tokio-xmpp" }
 xmpp-parsers = { path = "xmpp-parsers" }
 xmpp = { path = "xmpp-rs" }
