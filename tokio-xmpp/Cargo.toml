@@ -1,6 +1,6 @@
 [package]
 name = "tokio-xmpp"
-version = "1.0.1"
+version = "2.0.0"
 authors = ["Astro <astro@spaceboyz.net>", "Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>", "pep <pep+code@bouah.net>", "O01eg <o01eg@yandex.ru>"]
 description = "Asynchronous XMPP for Rust with tokio"
 license = "MPL-2.0"
@@ -12,17 +12,16 @@ keywords = ["xmpp", "tokio"]
 edition = "2018"
 
 [dependencies]
-bytes = "0.4"
-futures = "0.1"
+bytes = "0.5"
+futures = "0.3"
 idna = "0.2"
 log = "0.4"
 native-tls = "0.2"
 sasl = "0.4"
-tokio = "0.1"
-tokio-codec = "0.1"
-trust-dns-resolver = "0.12"
-trust-dns-proto = "0.8"
-tokio-io = "0.1"
-tokio-tls = "0.2"
+tokio = { version = "0.2", features = ["net", "stream", "rt-util", "rt-threaded", "macros"] }
+tokio-util = { version = "0.2", features = ["codec"] }
+tokio-tls = "0.3"
+trust-dns-resolver = "0.19"
+trust-dns-proto = "0.19"
 xml5ever = "0.16"
 xmpp-parsers = "0.17"

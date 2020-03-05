@@ -5,16 +5,16 @@ use bytes::{BufMut, BytesMut};
 use log::debug;
 use std;
 use std::borrow::Cow;
-use std::cell::RefCell;
 use std::collections::vec_deque::VecDeque;
 use std::collections::HashMap;
 use std::default::Default;
 use std::fmt::Write;
 use std::io;
 use std::iter::FromIterator;
-use std::rc::Rc;
 use std::str::from_utf8;
-use tokio_codec::{Decoder, Encoder};
+use std::sync::Arc;
+use std::sync::Mutex;
+use tokio_util::codec::{Decoder, Encoder};
 use xml5ever::buffer_queue::BufferQueue;
 use xml5ever::interface::Attribute;
 use xml5ever::tokenizer::{Tag, TagKind, Token, TokenSink, XmlTokenizer};
@@ -38,14 +38,14 @@ type QueueItem = Result<Packet, ParserError>;
 /// Parser state
 struct ParserSink {
     // Ready stanzas, shared with XMPPCodec
-    queue: Rc<RefCell<VecDeque<QueueItem>>>,
+    queue: Arc<Mutex<VecDeque<QueueItem>>>,
     // Parsing stack
     stack: Vec<Element>,
     ns_stack: Vec<HashMap<Option<String>, String>>,
 }
 
 impl ParserSink {
-    pub fn new(queue: Rc<RefCell<VecDeque<QueueItem>>>) -> Self {
+    pub fn new(queue: Arc<Mutex<VecDeque<QueueItem>>>) -> Self {
         ParserSink {
             queue,
             stack: vec![],
@@ -54,11 +54,11 @@ impl ParserSink {
     }
 
     fn push_queue(&self, pkt: Packet) {
-        self.queue.borrow_mut().push_back(Ok(pkt));
+        self.queue.lock().unwrap().push_back(Ok(pkt));
     }
 
     fn push_queue_error(&self, e: ParserError) {
-        self.queue.borrow_mut().push_back(Err(e));
+        self.queue.lock().unwrap().push_back(Err(e));
     }
 
     /// Lookup XML namespace declaration for given prefix (or no prefix)
@@ -169,7 +169,6 @@ impl TokenSink for ParserSink {
             },
             Token::EOFToken => self.push_queue(Packet::StreamEnd),
             Token::ParseError(s) => {
-                // println!("ParseError: {:?}", s);
                 self.push_queue_error(ParserError::Parse(ParseError(s)));
             }
             _ => (),
@@ -190,13 +189,13 @@ pub struct XMPPCodec {
     // TODO: optimize using  tendrils?
     buf: Vec<u8>,
     /// Shared with ParserSink
-    queue: Rc<RefCell<VecDeque<QueueItem>>>,
+    queue: Arc<Mutex<VecDeque<QueueItem>>>,
 }
 
 impl XMPPCodec {
     /// Constructor
     pub fn new() -> Self {
-        let queue = Rc::new(RefCell::new(VecDeque::new()));
+        let queue = Arc::new(Mutex::new(VecDeque::new()));
         let sink = ParserSink::new(queue.clone());
         // TODO: configure parser?
         let parser = XmlTokenizer::new(sink, Default::default());
@@ -222,10 +221,10 @@ impl Decoder for XMPPCodec {
     fn decode(&mut self, buf: &mut BytesMut) -> Result<Option<Self::Item>, Self::Error> {
         let buf1: Box<dyn AsRef<[u8]>> = if !self.buf.is_empty() && !buf.is_empty() {
             let mut prefix = std::mem::replace(&mut self.buf, vec![]);
-            prefix.extend_from_slice(buf.take().as_ref());
+            prefix.extend_from_slice(&buf.split_to(buf.len()));
             Box::new(prefix)
         } else {
-            Box::new(buf.take())
+            Box::new(buf.split_to(buf.len()))
         };
         let buf1 = buf1.as_ref().as_ref();
         match from_utf8(buf1) {
@@ -258,7 +257,7 @@ impl Decoder for XMPPCodec {
             }
         }
 
-        match self.queue.borrow_mut().pop_front() {
+        match self.queue.lock().unwrap().pop_front() {
             None => Ok(None),
             Some(result) => result.map(|pkt| Some(pkt)),
         }
@@ -372,7 +371,7 @@ mod tests {
     fn test_stream_start() {
         let mut c = XMPPCodec::new();
         let mut b = BytesMut::with_capacity(1024);
-        b.put(r"<?xml version='1.0'?><stream:stream xmlns:stream='http://etherx.jabber.org/streams' version='1.0' xmlns='jabber:client'>");
+        b.put_slice(b"<?xml version='1.0'?><stream:stream xmlns:stream='http://etherx.jabber.org/streams' version='1.0' xmlns='jabber:client'>");
         let r = c.decode(&mut b);
         assert!(match r {
             Ok(Some(Packet::StreamStart(_))) => true,
@@ -384,14 +383,14 @@ mod tests {
     fn test_stream_end() {
         let mut c = XMPPCodec::new();
         let mut b = BytesMut::with_capacity(1024);
-        b.put(r"<?xml version='1.0'?><stream:stream xmlns:stream='http://etherx.jabber.org/streams' version='1.0' xmlns='jabber:client'>");
+        b.put_slice(b"<?xml version='1.0'?><stream:stream xmlns:stream='http://etherx.jabber.org/streams' version='1.0' xmlns='jabber:client'>");
         let r = c.decode(&mut b);
         assert!(match r {
             Ok(Some(Packet::StreamStart(_))) => true,
             _ => false,
         });
         b.clear();
-        b.put(r"</stream:stream>");
+        b.put_slice(b"</stream:stream>");
         let r = c.decode(&mut b);
         assert!(match r {
             Ok(Some(Packet::StreamEnd)) => true,
@@ -403,7 +402,7 @@ mod tests {
     fn test_truncated_stanza() {
         let mut c = XMPPCodec::new();
         let mut b = BytesMut::with_capacity(1024);
-        b.put(r"<?xml version='1.0'?><stream:stream xmlns:stream='http://etherx.jabber.org/streams' version='1.0' xmlns='jabber:client'>");
+        b.put_slice(b"<?xml version='1.0'?><stream:stream xmlns:stream='http://etherx.jabber.org/streams' version='1.0' xmlns='jabber:client'>");
         let r = c.decode(&mut b);
         assert!(match r {
             Ok(Some(Packet::StreamStart(_))) => true,
@@ -411,7 +410,7 @@ mod tests {
         });
 
         b.clear();
-        b.put(r"<test>ß</test");
+        b.put_slice("<test>ß</test".as_bytes());
         let r = c.decode(&mut b);
         assert!(match r {
             Ok(None) => true,
@@ -419,7 +418,7 @@ mod tests {
         });
 
         b.clear();
-        b.put(r">");
+        b.put_slice(b">");
         let r = c.decode(&mut b);
         assert!(match r {
             Ok(Some(Packet::Stanza(ref el))) if el.name() == "test" && el.text() == "ß" => true,
@@ -431,7 +430,7 @@ mod tests {
     fn test_truncated_utf8() {
         let mut c = XMPPCodec::new();
         let mut b = BytesMut::with_capacity(1024);
-        b.put(r"<?xml version='1.0'?><stream:stream xmlns:stream='http://etherx.jabber.org/streams' version='1.0' xmlns='jabber:client'>");
+        b.put_slice(b"<?xml version='1.0'?><stream:stream xmlns:stream='http://etherx.jabber.org/streams' version='1.0' xmlns='jabber:client'>");
         let r = c.decode(&mut b);
         assert!(match r {
             Ok(Some(Packet::StreamStart(_))) => true,
@@ -460,7 +459,7 @@ mod tests {
     fn test_atrribute_prefix() {
         let mut c = XMPPCodec::new();
         let mut b = BytesMut::with_capacity(1024);
-        b.put(r"<?xml version='1.0'?><stream:stream xmlns:stream='http://etherx.jabber.org/streams' version='1.0' xmlns='jabber:client'>");
+        b.put_slice(b"<?xml version='1.0'?><stream:stream xmlns:stream='http://etherx.jabber.org/streams' version='1.0' xmlns='jabber:client'>");
         let r = c.decode(&mut b);
         assert!(match r {
             Ok(Some(Packet::StreamStart(_))) => true,
@@ -468,7 +467,7 @@ mod tests {
         });
 
         b.clear();
-        b.put(r"<status xml:lang='en'>Test status</status>");
+        b.put_slice(b"<status xml:lang='en'>Test status</status>");
         let r = c.decode(&mut b);
         assert!(match r {
             Ok(Some(Packet::Stanza(ref el)))
@@ -483,10 +482,10 @@ mod tests {
     /// By default, encode() only get's a BytesMut that has 8kb space reserved.
     #[test]
     fn test_large_stanza() {
-        use futures::{Future, Sink};
+        use futures::{executor::block_on, sink::SinkExt};
         use std::io::Cursor;
-        use tokio_codec::FramedWrite;
-        let framed = FramedWrite::new(Cursor::new(vec![]), XMPPCodec::new());
+        use tokio_util::codec::FramedWrite;
+        let mut framed = FramedWrite::new(Cursor::new(vec![]), XMPPCodec::new());
         let mut text = "".to_owned();
         for _ in 0..2usize.pow(15) {
             text = text + "A";
@@ -494,7 +493,7 @@ mod tests {
         let stanza = Element::builder("message")
             .append(Element::builder("body").append(text.as_ref()).build())
             .build();
-        let framed = framed.send(Packet::Stanza(stanza)).wait().expect("send");
+        block_on(framed.send(Packet::Stanza(stanza))).expect("send");
         assert_eq!(
             framed.get_ref().get_ref(),
             &("<message><body>".to_owned() + &text + "</body></message>").as_bytes()
@@ -505,7 +504,7 @@ mod tests {
     fn test_cut_out_stanza() {
         let mut c = XMPPCodec::new();
         let mut b = BytesMut::with_capacity(1024);
-        b.put(r"<?xml version='1.0'?><stream:stream xmlns:stream='http://etherx.jabber.org/streams' version='1.0' xmlns='jabber:client'>");
+        b.put_slice(b"<?xml version='1.0'?><stream:stream xmlns:stream='http://etherx.jabber.org/streams' version='1.0' xmlns='jabber:client'>");
         let r = c.decode(&mut b);
         assert!(match r {
             Ok(Some(Packet::StreamStart(_))) => true,
@@ -513,8 +512,8 @@ mod tests {
         });
 
         b.clear();
-        b.put(r"<message ");
-        b.put(r"type='chat'><body>Foo</body></message>");
+        b.put_slice(b"<message ");
+        b.put_slice(b"type='chat'><body>Foo</body></message>");
         let r = c.decode(&mut b);
         assert!(match r {
             Ok(Some(Packet::Stanza(_))) => true,

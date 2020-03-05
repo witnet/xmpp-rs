@@ -1,28 +1,33 @@
-use futures::{done, Async, AsyncSink, Future, Poll, Sink, StartSend, Stream};
+use futures::{sink::SinkExt, task::Poll, Future, Sink, Stream};
 use idna;
 use sasl::common::{ChannelBinding, Credentials};
 use std::mem::replace;
+use std::pin::Pin;
 use std::str::FromStr;
+use std::task::Context;
+use tokio::io::{AsyncRead, AsyncWrite};
 use tokio::net::TcpStream;
-use tokio_io::{AsyncRead, AsyncWrite};
+use tokio::task::JoinHandle;
+use tokio::task::LocalSet;
 use tokio_tls::TlsStream;
-use xmpp_parsers::{Jid, JidParseError};
+use xmpp_parsers::{Element, Jid, JidParseError};
 
 use super::event::Event;
-use super::happy_eyeballs::Connecter;
-use super::starttls::{StartTlsClient, NS_XMPP_TLS};
+use super::happy_eyeballs::connect;
+use super::starttls::{starttls, NS_XMPP_TLS};
 use super::xmpp_codec::Packet;
 use super::xmpp_stream;
 use super::{Error, ProtocolError};
 
 mod auth;
-use self::auth::ClientAuth;
 mod bind;
-use self::bind::ClientBind;
 
 /// XMPP client connection and state
 pub struct Client {
     state: ClientState,
+    jid: Jid,
+    password: String,
+    reconnect: bool,
 }
 
 type XMPPStream = xmpp_stream::XMPPStream<TlsStream<TcpStream>>;
@@ -31,7 +36,7 @@ const NS_JABBER_CLIENT: &str = "jabber:client";
 enum ClientState {
     Invalid,
     Disconnected,
-    Connecting(Box<dyn Future<Item = XMPPStream, Error = Error>>),
+    Connecting(JoinHandle<Result<XMPPStream, Error>>, LocalSet),
     Connected(XMPPStream),
 }
 
@@ -40,87 +45,87 @@ impl Client {
     ///
     /// Start polling the returned instance so that it will connect
     /// and yield events.
-    pub fn new(jid: &str, password: &str) -> Result<Self, JidParseError> {
+    pub fn new<P: Into<String>>(jid: &str, password: P) -> Result<Self, JidParseError> {
         let jid = Jid::from_str(jid)?;
-        let client = Self::new_with_jid(jid, password);
+        let client = Self::new_with_jid(jid, password.into());
         Ok(client)
     }
 
     /// Start a new client given that the JID is already parsed.
-    pub fn new_with_jid(jid: Jid, password: &str) -> Self {
-        let password = password.to_owned();
-        let connect = Self::make_connect(jid, password.clone());
+    pub fn new_with_jid(jid: Jid, password: String) -> Self {
+        let local = LocalSet::new();
+        let connect = local.spawn_local(Self::connect(jid.clone(), password.clone()));
         let client = Client {
-            state: ClientState::Connecting(Box::new(connect)),
+            jid,
+            password,
+            state: ClientState::Connecting(connect, local),
+            reconnect: false,
         };
         client
     }
 
-    fn make_connect(jid: Jid, password: String) -> impl Future<Item = XMPPStream, Error = Error> {
-        let username = jid.clone().node().unwrap();
-        let jid1 = jid.clone();
-        let jid2 = jid.clone();
-        let password = password;
-        done(idna::domain_to_ascii(&jid.domain()))
-            .map_err(|_| Error::Idna)
-            .and_then(|domain| {
-                done(Connecter::from_lookup(
-                    &domain,
-                    Some("_xmpp-client._tcp"),
-                    5222,
-                ))
-            })
-            .flatten()
-            .and_then(move |tcp_stream| {
-                xmpp_stream::XMPPStream::start(tcp_stream, jid1, NS_JABBER_CLIENT.to_owned())
-            })
-            .and_then(|xmpp_stream| {
-                if Self::can_starttls(&xmpp_stream) {
-                    Ok(Self::starttls(xmpp_stream))
-                } else {
-                    Err(Error::Protocol(ProtocolError::NoTls))
-                }
-            })
-            .flatten()
-            .and_then(|tls_stream| XMPPStream::start(tls_stream, jid2, NS_JABBER_CLIENT.to_owned()))
-            .and_then(
-                move |xmpp_stream| done(Self::auth(xmpp_stream, username, password)), // TODO: flatten?
-            )
-            .and_then(|auth| auth)
-            .and_then(|xmpp_stream| Self::bind(xmpp_stream))
-            .and_then(|xmpp_stream| {
-                // println!("Bound to {}", xmpp_stream.jid);
-                Ok(xmpp_stream)
-            })
+    /// Set whether to reconnect (`true`) or end the stream (`false`)
+    /// when a connection to the server has ended.
+    pub fn set_reconnect(&mut self, reconnect: bool) -> &mut Self {
+        self.reconnect = reconnect;
+        self
     }
 
-    fn can_starttls<S>(stream: &xmpp_stream::XMPPStream<S>) -> bool {
-        stream
+    async fn connect(jid: Jid, password: String) -> Result<XMPPStream, Error> {
+        let username = jid.clone().node().unwrap();
+        let password = password;
+        let domain = idna::domain_to_ascii(&jid.clone().domain()).map_err(|_| Error::Idna)?;
+
+        let tcp_stream = connect(&domain, Some("_xmpp-client._tcp"), 5222).await?;
+
+        let xmpp_stream =
+            xmpp_stream::XMPPStream::start(tcp_stream, jid, NS_JABBER_CLIENT.to_owned()).await?;
+        let xmpp_stream = if Self::can_starttls(&xmpp_stream) {
+            Self::starttls(xmpp_stream).await?
+        } else {
+            return Err(Error::Protocol(ProtocolError::NoTls));
+        };
+
+        let xmpp_stream = Self::auth(xmpp_stream, username, password).await?;
+        let xmpp_stream = Self::bind(xmpp_stream).await?;
+        Ok(xmpp_stream)
+    }
+
+    fn can_starttls<S: AsyncRead + AsyncWrite + Unpin>(
+        xmpp_stream: &xmpp_stream::XMPPStream<S>,
+    ) -> bool {
+        xmpp_stream
             .stream_features
             .get_child("starttls", NS_XMPP_TLS)
             .is_some()
     }
 
-    fn starttls<S: AsyncRead + AsyncWrite>(
-        stream: xmpp_stream::XMPPStream<S>,
-    ) -> StartTlsClient<S> {
-        StartTlsClient::from_stream(stream)
+    async fn starttls<S: AsyncRead + AsyncWrite + Unpin>(
+        xmpp_stream: xmpp_stream::XMPPStream<S>,
+    ) -> Result<xmpp_stream::XMPPStream<TlsStream<S>>, Error> {
+        let jid = xmpp_stream.jid.clone();
+        let tls_stream = starttls(xmpp_stream).await?;
+        xmpp_stream::XMPPStream::start(tls_stream, jid, NS_JABBER_CLIENT.to_owned()).await
     }
 
-    fn auth<S: AsyncRead + AsyncWrite + 'static>(
-        stream: xmpp_stream::XMPPStream<S>,
+    async fn auth<S: AsyncRead + AsyncWrite + Unpin + 'static>(
+        xmpp_stream: xmpp_stream::XMPPStream<S>,
         username: String,
         password: String,
-    ) -> Result<ClientAuth<S>, Error> {
+    ) -> Result<xmpp_stream::XMPPStream<S>, Error> {
+        let jid = xmpp_stream.jid.clone();
         let creds = Credentials::default()
             .with_username(username)
             .with_password(password)
             .with_channel_binding(ChannelBinding::None);
-        ClientAuth::new(stream, creds)
+        let stream = auth::auth(xmpp_stream, creds).await?;
+        xmpp_stream::XMPPStream::start(stream, jid, NS_JABBER_CLIENT.to_owned()).await
     }
 
-    fn bind<S: AsyncWrite>(stream: xmpp_stream::XMPPStream<S>) -> ClientBind<S> {
-        ClientBind::new(stream)
+    async fn bind<S: Unpin + AsyncRead + AsyncWrite>(
+        stream: xmpp_stream::XMPPStream<S>,
+    ) -> Result<xmpp_stream::XMPPStream<S>, Error> {
+        bind::bind(stream).await
     }
 
     /// Get the client's bound JID (the one reported by the XMPP
@@ -131,102 +136,150 @@ impl Client {
             _ => None,
         }
     }
+
+    /// Send stanza
+    pub async fn send_stanza(&mut self, stanza: Element) -> Result<(), Error> {
+        self.send(Packet::Stanza(stanza)).await
+    }
+
+    /// End connection
+    pub async fn send_end(&mut self) -> Result<(), Error> {
+        self.send(Packet::StreamEnd).await
+    }
 }
 
 impl Stream for Client {
     type Item = Event;
-    type Error = Error;
 
-    fn poll(&mut self) -> Poll<Option<Self::Item>, Self::Error> {
+    fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context) -> Poll<Option<Self::Item>> {
         let state = replace(&mut self.state, ClientState::Invalid);
 
         match state {
-            ClientState::Invalid => Err(Error::InvalidState),
-            ClientState::Disconnected => Ok(Async::Ready(None)),
-            ClientState::Connecting(mut connect) => match connect.poll() {
-                Ok(Async::Ready(stream)) => {
-                    let jid = stream.jid.clone();
-                    self.state = ClientState::Connected(stream);
-                    Ok(Async::Ready(Some(Event::Online(jid))))
+            ClientState::Invalid => panic!("Invalid client state"),
+            ClientState::Disconnected if self.reconnect => {
+                // TODO: add timeout
+                let mut local = LocalSet::new();
+                let connect =
+                    local.spawn_local(Self::connect(self.jid.clone(), self.password.clone()));
+                let _ = Pin::new(&mut local).poll(cx);
+                self.state = ClientState::Connecting(connect, local);
+                self.poll_next(cx)
+            }
+            ClientState::Disconnected => Poll::Ready(None),
+            ClientState::Connecting(mut connect, mut local) => {
+                match Pin::new(&mut connect).poll(cx) {
+                    Poll::Ready(Ok(Ok(stream))) => {
+                        let bound_jid = stream.jid.clone();
+                        self.state = ClientState::Connected(stream);
+                        Poll::Ready(Some(Event::Online(bound_jid)))
+                    }
+                    Poll::Ready(Ok(Err(e))) => {
+                        self.state = ClientState::Disconnected;
+                        return Poll::Ready(Some(Event::Disconnected(e.into())));
+                    }
+                    Poll::Ready(Err(e)) => {
+                        self.state = ClientState::Disconnected;
+                        panic!("connect task: {}", e);
+                    }
+                    Poll::Pending => {
+                        let _ = Pin::new(&mut local).poll(cx);
+
+                        self.state = ClientState::Connecting(connect, local);
+                        Poll::Pending
+                    }
                 }
-                Ok(Async::NotReady) => {
-                    self.state = ClientState::Connecting(connect);
-                    Ok(Async::NotReady)
-                }
-                Err(e) => Err(e),
-            },
+            }
             ClientState::Connected(mut stream) => {
                 // Poll sink
-                match stream.poll_complete() {
-                    Ok(Async::NotReady) => (),
-                    Ok(Async::Ready(())) => (),
-                    Err(e) => return Err(e)?,
+                match Pin::new(&mut stream).poll_ready(cx) {
+                    Poll::Pending => (),
+                    Poll::Ready(Ok(())) => (),
+                    Poll::Ready(Err(e)) => {
+                        self.state = ClientState::Disconnected;
+                        return Poll::Ready(Some(Event::Disconnected(e.into())));
+                    }
                 };
 
                 // Poll stream
-                match stream.poll() {
-                    Ok(Async::Ready(None)) => {
+                match Pin::new(&mut stream).poll_next(cx) {
+                    Poll::Ready(None) => {
                         // EOF
                         self.state = ClientState::Disconnected;
-                        Ok(Async::Ready(Some(Event::Disconnected)))
+                        Poll::Ready(Some(Event::Disconnected(Error::Disconnected)))
                     }
-                    Ok(Async::Ready(Some(Packet::Stanza(stanza)))) => {
+                    Poll::Ready(Some(Ok(Packet::Stanza(stanza)))) => {
                         // Receive stanza
                         self.state = ClientState::Connected(stream);
-                        Ok(Async::Ready(Some(Event::Stanza(stanza))))
+                        Poll::Ready(Some(Event::Stanza(stanza)))
                     }
-                    Ok(Async::Ready(Some(Packet::Text(_)))) => {
+                    Poll::Ready(Some(Ok(Packet::Text(_)))) => {
                         // Ignore text between stanzas
                         self.state = ClientState::Connected(stream);
-                        Ok(Async::NotReady)
+                        Poll::Pending
                     }
-                    Ok(Async::Ready(Some(Packet::StreamStart(_)))) => {
+                    Poll::Ready(Some(Ok(Packet::StreamStart(_)))) => {
                         // <stream:stream>
-                        Err(ProtocolError::InvalidStreamStart.into())
+                        self.state = ClientState::Disconnected;
+                        Poll::Ready(Some(Event::Disconnected(
+                            ProtocolError::InvalidStreamStart.into(),
+                        )))
                     }
-                    Ok(Async::Ready(Some(Packet::StreamEnd))) => {
+                    Poll::Ready(Some(Ok(Packet::StreamEnd))) => {
                         // End of stream: </stream:stream>
-                        Ok(Async::Ready(None))
+                        self.state = ClientState::Disconnected;
+                        Poll::Ready(Some(Event::Disconnected(Error::Disconnected)))
                     }
-                    Ok(Async::NotReady) => {
+                    Poll::Pending => {
                         // Try again later
                         self.state = ClientState::Connected(stream);
-                        Ok(Async::NotReady)
+                        Poll::Pending
                     }
-                    Err(e) => Err(e)?,
+                    Poll::Ready(Some(Err(e))) => {
+                        self.state = ClientState::Disconnected;
+                        Poll::Ready(Some(Event::Disconnected(e.into())))
+                    }
                 }
             }
         }
     }
 }
 
-impl Sink for Client {
-    type SinkItem = Packet;
-    type SinkError = Error;
+impl Sink<Packet> for Client {
+    type Error = Error;
 
-    fn start_send(&mut self, item: Self::SinkItem) -> StartSend<Self::SinkItem, Self::SinkError> {
+    fn start_send(mut self: Pin<&mut Self>, item: Packet) -> Result<(), Self::Error> {
         match self.state {
-            ClientState::Connected(ref mut stream) => Ok(stream.start_send(item)?),
-            _ => Ok(AsyncSink::NotReady(item)),
+            ClientState::Connected(ref mut stream) => {
+                Pin::new(stream).start_send(item).map_err(|e| e.into())
+            }
+            _ => Err(Error::InvalidState),
         }
     }
 
-    fn poll_complete(&mut self) -> Poll<(), Self::SinkError> {
+    fn poll_ready(mut self: Pin<&mut Self>, cx: &mut Context) -> Poll<Result<(), Self::Error>> {
         match self.state {
-            ClientState::Connected(ref mut stream) => stream.poll_complete().map_err(|e| e.into()),
-            _ => Ok(Async::Ready(())),
+            ClientState::Connected(ref mut stream) => {
+                Pin::new(stream).poll_ready(cx).map_err(|e| e.into())
+            }
+            _ => Poll::Pending,
         }
     }
 
-    /// This closes the inner TCP stream.
-    ///
-    /// To synchronize your shutdown with the server side, you should
-    /// first send `Packet::StreamEnd` and wait for the end of the
-    /// incoming stream before closing the connection.
-    fn close(&mut self) -> Poll<(), Self::SinkError> {
+    fn poll_flush(mut self: Pin<&mut Self>, cx: &mut Context) -> Poll<Result<(), Self::Error>> {
         match self.state {
-            ClientState::Connected(ref mut stream) => stream.close().map_err(|e| e.into()),
-            _ => Ok(Async::Ready(())),
+            ClientState::Connected(ref mut stream) => {
+                Pin::new(stream).poll_flush(cx).map_err(|e| e.into())
+            }
+            _ => Poll::Pending,
+        }
+    }
+
+    fn poll_close(mut self: Pin<&mut Self>, cx: &mut Context) -> Poll<Result<(), Self::Error>> {
+        match self.state {
+            ClientState::Connected(ref mut stream) => {
+                Pin::new(stream).poll_close(cx).map_err(|e| e.into())
+            }
+            _ => Poll::Pending,
         }
     }
 }

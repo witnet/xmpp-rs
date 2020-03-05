@@ -1,9 +1,8 @@
-use futures::{future, Sink, Stream};
+use futures::stream::StreamExt;
 use std::convert::TryFrom;
 use std::env::args;
 use std::process::exit;
-use tokio::runtime::current_thread::Runtime;
-use tokio_xmpp::{xmpp_codec::Packet, Client};
+use tokio_xmpp::Client;
 use xmpp_parsers::{
     disco::{DiscoInfoQuery, DiscoInfoResult},
     iq::{Iq, IqType},
@@ -12,70 +11,55 @@ use xmpp_parsers::{
     Element, Jid,
 };
 
-fn main() {
+#[tokio::main]
+async fn main() {
     let args: Vec<String> = args().collect();
     if args.len() != 4 {
         println!("Usage: {} <jid> <password> <target>", args[0]);
         exit(1);
     }
     let jid = &args[1];
-    let password = &args[2];
+    let password = args[2].clone();
     let target = &args[3];
 
-    // tokio_core context
-    let mut rt = Runtime::new().unwrap();
     // Client instance
-    let client = Client::new(jid, password).unwrap();
+    let mut client = Client::new(jid, password).unwrap();
 
-    // Make the two interfaces for sending and receiving independent
-    // of each other so we can move one into a closure.
-    let (mut sink, stream) = client.split();
-    // Wrap sink in Option so that we can take() it for the send(self)
-    // to consume and return it back when ready.
-    let mut send = move |packet| {
-        sink.start_send(packet).expect("start_send");
-    };
     // Main loop, processes events
     let mut wait_for_stream_end = false;
-    let done = stream.for_each(|event| {
-        if wait_for_stream_end {
-            /* Do Nothing. */
-        } else if event.is_online() {
-            println!("Online!");
+    let mut stream_ended = false;
+    while !stream_ended {
+        if let Some(event) = client.next().await {
+            if wait_for_stream_end {
+                /* Do Nothing. */
+            } else if event.is_online() {
+                println!("Online!");
 
-            let target_jid: Jid = target.clone().parse().unwrap();
-            let iq = make_disco_iq(target_jid);
-            println!("Sending disco#info request to {}", target.clone());
-            println!(">> {}", String::from(&iq));
-            send(Packet::Stanza(iq));
-        } else if let Some(stanza) = event.into_stanza() {
-            if stanza.is("iq", "jabber:client") {
-                let iq = Iq::try_from(stanza).unwrap();
-                if let IqType::Result(Some(payload)) = iq.payload {
-                    if payload.is("query", ns::DISCO_INFO) {
-                        if let Ok(disco_info) = DiscoInfoResult::try_from(payload) {
-                            for ext in disco_info.extensions {
-                                if let Ok(server_info) = ServerInfo::try_from(ext) {
-                                    print_server_info(server_info);
-                                    wait_for_stream_end = true;
-                                    send(Packet::StreamEnd);
+                let target_jid: Jid = target.clone().parse().unwrap();
+                let iq = make_disco_iq(target_jid);
+                println!("Sending disco#info request to {}", target.clone());
+                println!(">> {}", String::from(&iq));
+                client.send_stanza(iq).await.unwrap();
+            } else if let Some(stanza) = event.into_stanza() {
+                if stanza.is("iq", "jabber:client") {
+                    let iq = Iq::try_from(stanza).unwrap();
+                    if let IqType::Result(Some(payload)) = iq.payload {
+                        if payload.is("query", ns::DISCO_INFO) {
+                            if let Ok(disco_info) = DiscoInfoResult::try_from(payload) {
+                                for ext in disco_info.extensions {
+                                    if let Ok(server_info) = ServerInfo::try_from(ext) {
+                                        print_server_info(server_info);
+                                    }
                                 }
                             }
                         }
+                        wait_for_stream_end = true;
+                        client.send_end().await.unwrap();
                     }
                 }
             }
-        }
-
-        Box::new(future::ok(()))
-    });
-
-    // Start polling `done`
-    match rt.block_on(done) {
-        Ok(_) => (),
-        Err(e) => {
-            println!("Fatal: {}", e);
-            ()
+        } else {
+            stream_ended = true;
         }
     }
 }

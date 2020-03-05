@@ -8,7 +8,7 @@ use trust_dns_proto::error::ProtoError;
 use trust_dns_resolver::error::ResolveError;
 
 use xmpp_parsers::sasl::DefinedCondition as SaslDefinedCondition;
-use xmpp_parsers::Error as ParsersError;
+use xmpp_parsers::{Error as ParsersError, JidParseError};
 
 /// Top-level error type
 #[derive(Debug)]
@@ -20,6 +20,8 @@ pub enum Error {
     /// DNS label conversion error, no details available from module
     /// `idna`
     Idna,
+    /// Error parsing Jabber-Id
+    JidParse(JidParseError),
     /// Protocol-level error
     Protocol(ProtocolError),
     /// Authentication error
@@ -38,6 +40,7 @@ impl fmt::Display for Error {
             Error::Io(e) => write!(fmt, "IO error: {}", e),
             Error::Connection(e) => write!(fmt, "connection error: {}", e),
             Error::Idna => write!(fmt, "IDNA error"),
+            Error::JidParse(e) => write!(fmt, "jid parse error: {}", e),
             Error::Protocol(e) => write!(fmt, "protocol error: {}", e),
             Error::Auth(e) => write!(fmt, "authentication error: {}", e),
             Error::Tls(e) => write!(fmt, "TLS error: {}", e),
@@ -56,6 +59,12 @@ impl From<IoError> for Error {
 impl From<ConnecterError> for Error {
     fn from(e: ConnecterError) -> Self {
         Error::Connection(e)
+    }
+}
+
+impl From<JidParseError> for Error {
+    fn from(e: JidParseError) -> Self {
+        Error::JidParse(e)
     }
 }
 

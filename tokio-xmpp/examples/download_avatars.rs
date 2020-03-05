@@ -1,12 +1,12 @@
-use futures::{future, Future, Sink, Stream};
+use futures::stream::StreamExt;
 use std::convert::TryFrom;
 use std::env::args;
 use std::fs::{create_dir_all, File};
 use std::io::{self, Write};
 use std::process::exit;
 use std::str::FromStr;
-use tokio::runtime::current_thread::Runtime;
-use tokio_xmpp::{Client, Packet};
+use tokio;
+use tokio_xmpp::Client;
 use xmpp_parsers::{
     avatar::{Data as AvatarData, Metadata as AvatarMetadata},
     caps::{compute_disco, hash_caps, Caps},
@@ -22,160 +22,151 @@ use xmpp_parsers::{
         NodeName,
     },
     stanza_error::{DefinedCondition, ErrorType, StanzaError},
-    Jid,
+    Element, Jid,
 };
 
-fn main() {
+#[tokio::main]
+async fn main() {
     let args: Vec<String> = args().collect();
     if args.len() != 3 {
         println!("Usage: {} <jid> <password>", args[0]);
         exit(1);
     }
     let jid = &args[1];
-    let password = &args[2];
+    let password = args[2].clone();
 
-    // tokio_core context
-    let mut rt = Runtime::new().unwrap();
     // Client instance
-    let client = Client::new(jid, password).unwrap();
-
-    // Make the two interfaces for sending and receiving independent
-    // of each other so we can move one into a closure.
-    let (sink, stream) = client.split();
-
-    // Create outgoing pipe
-    let (mut tx, rx) = futures::unsync::mpsc::unbounded();
-    rt.spawn(
-        rx.forward(sink.sink_map_err(|_| panic!("Pipe")))
-            .map(|(rx, mut sink)| {
-                drop(rx);
-                let _ = sink.close();
-            })
-            .map_err(|e| {
-                panic!("Send error: {:?}", e);
-            }),
-    );
+    let mut client = Client::new(jid, password).unwrap();
 
     let disco_info = make_disco();
 
     // Main loop, processes events
     let mut wait_for_stream_end = false;
-    let done = stream.for_each(move |event| {
-        // Helper function to send an iq error.
-        let mut send_error = |to, id, type_, condition, text: &str| {
-            let error = StanzaError::new(type_, condition, "en", text);
-            let iq = Iq::from_error(id, error).with_to(to);
-            tx.start_send(Packet::Stanza(iq.into())).unwrap();
-        };
+    let mut stream_ended = false;
+    while !stream_ended {
+        if let Some(event) = client.next().await {
+            if wait_for_stream_end {
+                /* Do nothing */
+            } else if event.is_online() {
+                println!("Online!");
 
-        if wait_for_stream_end {
-            /* Do nothing */
-        } else if event.is_online() {
-            println!("Online!");
-
-            let caps = get_disco_caps(&disco_info, "https://gitlab.com/xmpp-rs/tokio-xmpp");
-            let presence = make_presence(caps);
-            tx.start_send(Packet::Stanza(presence.into())).unwrap();
-        } else if let Some(stanza) = event.into_stanza() {
-            if stanza.is("iq", "jabber:client") {
-                let iq = Iq::try_from(stanza).unwrap();
-                if let IqType::Get(payload) = iq.payload {
-                    if payload.is("query", ns::DISCO_INFO) {
-                        let query = DiscoInfoQuery::try_from(payload);
-                        match query {
-                            Ok(query) => {
-                                let mut disco = disco_info.clone();
-                                disco.node = query.node;
-                                let iq =
-                                    Iq::from_result(iq.id, Some(disco)).with_to(iq.from.unwrap());
-                                tx.start_send(Packet::Stanza(iq.into())).unwrap();
+                let caps = get_disco_caps(&disco_info, "https://gitlab.com/xmpp-rs/tokio-xmpp");
+                let presence = make_presence(caps);
+                client.send_stanza(presence.into()).await.unwrap();
+            } else if let Some(stanza) = event.into_stanza() {
+                if stanza.is("iq", "jabber:client") {
+                    let iq = Iq::try_from(stanza).unwrap();
+                    if let IqType::Get(payload) = iq.payload {
+                        if payload.is("query", ns::DISCO_INFO) {
+                            let query = DiscoInfoQuery::try_from(payload);
+                            match query {
+                                Ok(query) => {
+                                    let mut disco = disco_info.clone();
+                                    disco.node = query.node;
+                                    let iq = Iq::from_result(iq.id, Some(disco))
+                                        .with_to(iq.from.unwrap());
+                                    client.send_stanza(iq.into()).await.unwrap();
+                                }
+                                Err(err) => client
+                                    .send_stanza(make_error(
+                                        iq.from.unwrap(),
+                                        iq.id,
+                                        ErrorType::Modify,
+                                        DefinedCondition::BadRequest,
+                                        &format!("{}", err),
+                                    ))
+                                    .await
+                                    .unwrap(),
                             }
-                            Err(err) => {
-                                send_error(
+                        } else {
+                            // We MUST answer unhandled get iqs with a service-unavailable error.
+                            client
+                                .send_stanza(make_error(
                                     iq.from.unwrap(),
                                     iq.id,
-                                    ErrorType::Modify,
-                                    DefinedCondition::BadRequest,
-                                    &format!("{}", err),
-                                );
-                            }
+                                    ErrorType::Cancel,
+                                    DefinedCondition::ServiceUnavailable,
+                                    "No handler defined for this kind of iq.",
+                                ))
+                                .await
+                                .unwrap();
                         }
-                    } else {
-                        // We MUST answer unhandled get iqs with a service-unavailable error.
-                        send_error(
-                            iq.from.unwrap(),
-                            iq.id,
-                            ErrorType::Cancel,
-                            DefinedCondition::ServiceUnavailable,
-                            "No handler defined for this kind of iq.",
-                        );
+                    } else if let IqType::Result(Some(payload)) = iq.payload {
+                        if payload.is("pubsub", ns::PUBSUB) {
+                            let pubsub = PubSub::try_from(payload).unwrap();
+                            let from = iq.from.clone().unwrap_or(Jid::from_str(jid).unwrap());
+                            handle_iq_result(pubsub, &from);
+                        }
+                    } else if let IqType::Set(_) = iq.payload {
+                        // We MUST answer unhandled set iqs with a service-unavailable error.
+                        client
+                            .send_stanza(make_error(
+                                iq.from.unwrap(),
+                                iq.id,
+                                ErrorType::Cancel,
+                                DefinedCondition::ServiceUnavailable,
+                                "No handler defined for this kind of iq.",
+                            ))
+                            .await
+                            .unwrap();
                     }
-                } else if let IqType::Result(Some(payload)) = iq.payload {
-                    if payload.is("pubsub", ns::PUBSUB) {
-                        let pubsub = PubSub::try_from(payload).unwrap();
-                        let from = iq.from.clone().unwrap_or(Jid::from_str(jid).unwrap());
-                        handle_iq_result(pubsub, &from);
+                } else if stanza.is("message", "jabber:client") {
+                    let message = Message::try_from(stanza).unwrap();
+                    let from = message.from.clone().unwrap();
+                    if let Some(body) = message.get_best_body(vec!["en"]) {
+                        if body.0 == "die" {
+                            println!("Secret die command triggered by {}", from);
+                            wait_for_stream_end = true;
+                            client.send_end().await.unwrap();
+                        }
                     }
-                } else if let IqType::Set(_) = iq.payload {
-                    // We MUST answer unhandled set iqs with a service-unavailable error.
-                    send_error(
-                        iq.from.unwrap(),
-                        iq.id,
-                        ErrorType::Cancel,
-                        DefinedCondition::ServiceUnavailable,
-                        "No handler defined for this kind of iq.",
-                    );
-                }
-            } else if stanza.is("message", "jabber:client") {
-                let message = Message::try_from(stanza).unwrap();
-                let from = message.from.clone().unwrap();
-                if let Some(body) = message.get_best_body(vec!["en"]) {
-                    if body.1 .0 == "die" {
-                        println!("Secret die command triggered by {}", from);
-                        wait_for_stream_end = true;
-                        tx.start_send(Packet::StreamEnd).unwrap();
-                    }
-                }
-                for child in message.payloads {
-                    if child.is("event", ns::PUBSUB_EVENT) {
-                        let event = PubSubEvent::try_from(child).unwrap();
-                        if let PubSubEvent::PublishedItems { node, items } = event {
-                            if node.0 == ns::AVATAR_METADATA {
-                                for item in items.into_iter() {
-                                    let payload = item.payload.clone().unwrap();
-                                    if payload.is("metadata", ns::AVATAR_METADATA) {
-                                        // TODO: do something with these metadata.
-                                        let _metadata = AvatarMetadata::try_from(payload).unwrap();
-                                        println!(
-                                            "[1m{}[0m has published an avatar, downloading...",
-                                            from.clone()
-                                        );
-                                        let iq = download_avatar(from.clone());
-                                        tx.start_send(Packet::Stanza(iq.into())).unwrap();
+                    for child in message.payloads {
+                        if child.is("event", ns::PUBSUB_EVENT) {
+                            let event = PubSubEvent::try_from(child).unwrap();
+                            if let PubSubEvent::PublishedItems { node, items } = event {
+                                if node.0 == ns::AVATAR_METADATA {
+                                    for item in items.into_iter() {
+                                        let payload = item.payload.clone().unwrap();
+                                        if payload.is("metadata", ns::AVATAR_METADATA) {
+                                            // TODO: do something with these metadata.
+                                            let _metadata =
+                                                AvatarMetadata::try_from(payload).unwrap();
+                                            println!(
+                                                "[1m{}[0m has published an avatar, downloading...",
+                                                from.clone()
+                                            );
+                                            let iq = download_avatar(from.clone());
+                                            client.send_stanza(iq.into()).await.unwrap();
+                                        }
                                     }
                                 }
                             }
                         }
                     }
+                } else if stanza.is("presence", "jabber:client") {
+                    // Nothing to do here.
+                    ()
+                } else {
+                    panic!("Unknown stanza: {}", String::from(&stanza));
                 }
-            } else if stanza.is("presence", "jabber:client") {
-                // Nothing to do here.
-            } else {
-                panic!("Unknown stanza: {}", String::from(&stanza));
             }
-        }
-
-        future::ok(())
-    });
-
-    // Start polling `done`
-    match rt.block_on(done) {
-        Ok(_) => (),
-        Err(e) => {
-            println!("Fatal: {}", e);
-            ()
+        } else {
+            println!("stream_ended");
+            stream_ended = true;
         }
     }
+}
+
+fn make_error(
+    to: Jid,
+    id: String,
+    type_: ErrorType,
+    condition: DefinedCondition,
+    text: &str,
+) -> Element {
+    let error = StanzaError::new(type_, condition, "en", text);
+    let iq = Iq::from_error(id, error).with_to(to);
+    iq.into()
 }
 
 fn make_disco() -> DiscoInfoResult {
@@ -235,6 +226,7 @@ fn handle_iq_result(pubsub: PubSub, from: &Jid) {
     }
 }
 
+// TODO: may use tokio?
 fn save_avatar(from: &Jid, id: String, data: &[u8]) -> io::Result<()> {
     let directory = format!("data/{}", from);
     let filename = format!("data/{}/{}", from, id);

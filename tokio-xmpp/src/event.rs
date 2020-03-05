@@ -1,3 +1,4 @@
+use super::Error;
 use xmpp_parsers::{Element, Jid};
 
 /// High-level event on the Stream implemented by Client and Component
@@ -6,7 +7,7 @@ pub enum Event {
     /// Stream is connected and initialized
     Online(Jid),
     /// Stream end
-    Disconnected,
+    Disconnected(Error),
     /// Received stanza/nonza
     Stanza(Element),
 }

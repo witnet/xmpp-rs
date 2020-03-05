@@ -1,163 +1,115 @@
 //! Components in XMPP are services/gateways that are logged into an
 //! XMPP server under a JID consisting of just a domain name. They are
 //! allowed to use any user and resource identifiers in their stanzas.
-use futures::{done, Async, AsyncSink, Future, Poll, Sink, StartSend, Stream};
-use std::mem::replace;
+use futures::{sink::SinkExt, task::Poll, Sink, Stream};
+use std::pin::Pin;
 use std::str::FromStr;
+use std::task::Context;
 use tokio::net::TcpStream;
-use tokio_io::{AsyncRead, AsyncWrite};
-use xmpp_parsers::{Element, Jid, JidParseError};
+use xmpp_parsers::{Element, Jid};
 
-use super::event::Event;
-use super::happy_eyeballs::Connecter;
+use super::happy_eyeballs::connect;
 use super::xmpp_codec::Packet;
 use super::xmpp_stream;
 use super::Error;
 
 mod auth;
-use self::auth::ComponentAuth;
 
 /// Component connection to an XMPP server
+///
+/// This simplifies the `XMPPStream` to a `Stream`/`Sink` of `Element`
+/// (stanzas). Connection handling however is up to the user.
 pub struct Component {
     /// The component's Jabber-Id
     pub jid: Jid,
-    state: ComponentState,
+    stream: XMPPStream,
 }
 
 type XMPPStream = xmpp_stream::XMPPStream<TcpStream>;
 const NS_JABBER_COMPONENT_ACCEPT: &str = "jabber:component:accept";
 
-enum ComponentState {
-    Invalid,
-    Disconnected,
-    Connecting(Box<dyn Future<Item = XMPPStream, Error = Error>>),
-    Connected(XMPPStream),
-}
-
 impl Component {
     /// Start a new XMPP component
-    ///
-    /// Start polling the returned instance so that it will connect
-    /// and yield events.
-    pub fn new(jid: &str, password: &str, server: &str, port: u16) -> Result<Self, JidParseError> {
+    pub async fn new(jid: &str, password: &str, server: &str, port: u16) -> Result<Self, Error> {
         let jid = Jid::from_str(jid)?;
         let password = password.to_owned();
-        let connect = Self::make_connect(jid.clone(), password, server, port);
-        Ok(Component {
-            jid,
-            state: ComponentState::Connecting(Box::new(connect)),
-        })
+        let stream = Self::connect(jid.clone(), password, server, port).await?;
+        Ok(Component { jid, stream })
     }
 
-    fn make_connect(
+    async fn connect(
         jid: Jid,
         password: String,
         server: &str,
         port: u16,
-    ) -> impl Future<Item = XMPPStream, Error = Error> {
-        let jid1 = jid.clone();
+    ) -> Result<XMPPStream, Error> {
         let password = password;
-        done(Connecter::from_lookup(server, None, port))
-            .flatten()
-            .and_then(move |tcp_stream| {
-                xmpp_stream::XMPPStream::start(
-                    tcp_stream,
-                    jid1,
-                    NS_JABBER_COMPONENT_ACCEPT.to_owned(),
-                )
-            })
-            .and_then(move |xmpp_stream| Self::auth(xmpp_stream, password).expect("auth"))
+        let tcp_stream = connect(server, None, port).await?;
+        let mut xmpp_stream =
+            xmpp_stream::XMPPStream::start(tcp_stream, jid, NS_JABBER_COMPONENT_ACCEPT.to_owned())
+                .await?;
+        auth::auth(&mut xmpp_stream, password).await?;
+        Ok(xmpp_stream)
     }
 
-    fn auth<S: AsyncRead + AsyncWrite>(
-        stream: xmpp_stream::XMPPStream<S>,
-        password: String,
-    ) -> Result<ComponentAuth<S>, Error> {
-        ComponentAuth::new(stream, password)
+    /// Send stanza
+    pub async fn send_stanza(&mut self, stanza: Element) -> Result<(), Error> {
+        self.send(stanza).await
+    }
+
+    /// End connection
+    pub async fn send_end(&mut self) -> Result<(), Error> {
+        self.close().await
     }
 }
 
 impl Stream for Component {
-    type Item = Event;
-    type Error = Error;
+    type Item = Element;
 
-    fn poll(&mut self) -> Poll<Option<Self::Item>, Self::Error> {
-        let state = replace(&mut self.state, ComponentState::Invalid);
-
-        match state {
-            ComponentState::Invalid => Err(Error::InvalidState),
-            ComponentState::Disconnected => Ok(Async::Ready(None)),
-            ComponentState::Connecting(mut connect) => match connect.poll() {
-                Ok(Async::Ready(stream)) => {
-                    self.state = ComponentState::Connected(stream);
-                    Ok(Async::Ready(Some(Event::Online(self.jid.clone()))))
+    fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context) -> Poll<Option<Self::Item>> {
+        loop {
+            match Pin::new(&mut self.stream).poll_next(cx) {
+                Poll::Ready(Some(Ok(Packet::Stanza(stanza)))) => return Poll::Ready(Some(stanza)),
+                Poll::Ready(Some(Ok(Packet::Text(_)))) => {
+                    // retry
                 }
-                Ok(Async::NotReady) => {
-                    self.state = ComponentState::Connecting(connect);
-                    Ok(Async::NotReady)
+                Poll::Ready(Some(Ok(_))) =>
+                // unexpected
+                {
+                    return Poll::Ready(None)
                 }
-                Err(e) => Err(e),
-            },
-            ComponentState::Connected(mut stream) => {
-                // Poll sink
-                match stream.poll_complete() {
-                    Ok(Async::NotReady) => (),
-                    Ok(Async::Ready(())) => (),
-                    Err(e) => return Err(e)?,
-                };
-
-                // Poll stream
-                match stream.poll() {
-                    Ok(Async::NotReady) => {
-                        self.state = ComponentState::Connected(stream);
-                        Ok(Async::NotReady)
-                    }
-                    Ok(Async::Ready(None)) => {
-                        // EOF
-                        self.state = ComponentState::Disconnected;
-                        Ok(Async::Ready(Some(Event::Disconnected)))
-                    }
-                    Ok(Async::Ready(Some(Packet::Stanza(stanza)))) => {
-                        self.state = ComponentState::Connected(stream);
-                        Ok(Async::Ready(Some(Event::Stanza(stanza))))
-                    }
-                    Ok(Async::Ready(_)) => {
-                        self.state = ComponentState::Connected(stream);
-                        Ok(Async::NotReady)
-                    }
-                    Err(e) => Err(e)?,
-                }
+                Poll::Ready(Some(Err(_))) => return Poll::Ready(None),
+                Poll::Ready(None) => return Poll::Ready(None),
+                Poll::Pending => return Poll::Pending,
             }
         }
     }
 }
 
-impl Sink for Component {
-    type SinkItem = Element;
-    type SinkError = Error;
+impl Sink<Element> for Component {
+    type Error = Error;
 
-    fn start_send(&mut self, item: Self::SinkItem) -> StartSend<Self::SinkItem, Self::SinkError> {
-        match self.state {
-            ComponentState::Connected(ref mut stream) => match stream
-                .start_send(Packet::Stanza(item))
-            {
-                Ok(AsyncSink::NotReady(Packet::Stanza(stanza))) => Ok(AsyncSink::NotReady(stanza)),
-                Ok(AsyncSink::NotReady(_)) => {
-                    panic!("Component.start_send with stanza but got something else back")
-                }
-                Ok(AsyncSink::Ready) => Ok(AsyncSink::Ready),
-                Err(e) => Err(e)?,
-            },
-            _ => Ok(AsyncSink::NotReady(item)),
-        }
+    fn start_send(mut self: Pin<&mut Self>, item: Element) -> Result<(), Self::Error> {
+        Pin::new(&mut self.stream)
+            .start_send(Packet::Stanza(item))
+            .map_err(|e| e.into())
     }
 
-    fn poll_complete(&mut self) -> Poll<(), Self::SinkError> {
-        match &mut self.state {
-            &mut ComponentState::Connected(ref mut stream) => {
-                stream.poll_complete().map_err(|e| e.into())
-            }
-            _ => Ok(Async::Ready(())),
-        }
+    fn poll_ready(mut self: Pin<&mut Self>, cx: &mut Context) -> Poll<Result<(), Self::Error>> {
+        Pin::new(&mut self.stream)
+            .poll_ready(cx)
+            .map_err(|e| e.into())
+    }
+
+    fn poll_flush(mut self: Pin<&mut Self>, cx: &mut Context) -> Poll<Result<(), Self::Error>> {
+        Pin::new(&mut self.stream)
+            .poll_flush(cx)
+            .map_err(|e| e.into())
+    }
+
+    fn poll_close(mut self: Pin<&mut Self>, cx: &mut Context) -> Poll<Result<(), Self::Error>> {
+        Pin::new(&mut self.stream)
+            .poll_close(cx)
+            .map_err(|e| e.into())
     }
 }
