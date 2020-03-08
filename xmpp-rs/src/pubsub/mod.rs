@@ -4,11 +4,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+use super::Agent;
 use crate::Event;
-use futures::sync::mpsc;
 use std::convert::TryFrom;
 use std::str::FromStr;
-use tokio_xmpp::Packet;
 use xmpp_parsers::{
     bookmarks2::{Autojoin, Conference},
     ns,
@@ -20,11 +19,7 @@ use xmpp_parsers::{
 #[cfg(feature = "avatars")]
 pub(crate) mod avatar;
 
-pub(crate) fn handle_event(
-    from: &Jid,
-    elem: Element,
-    mut tx: &mut mpsc::UnboundedSender<Packet>,
-) -> impl IntoIterator<Item = Event> {
+pub(crate) async fn handle_event(from: &Jid, elem: Element, agent: &mut Agent) -> Vec<Event> {
     let mut events = Vec::new();
     let event = PubSubEvent::try_from(elem);
     trace!("PubSub event: {:#?}", event);
@@ -33,7 +28,8 @@ pub(crate) fn handle_event(
             match node.0 {
                 #[cfg(feature = "avatars")]
                 ref node if node == ns::AVATAR_METADATA => {
-                    let new_events = avatar::handle_metadata_pubsub_event(&from, &mut tx, items);
+                    let new_events =
+                        avatar::handle_metadata_pubsub_event(&from, agent, items).await;
                     events.extend(new_events);
                 }
                 ref node if node == ns::BOOKMARKS2 => {

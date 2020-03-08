@@ -4,27 +4,22 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use futures::prelude::*;
 use std::env::args;
-use std::process::exit;
-use tokio::runtime::current_thread::Runtime;
 use xmpp::{ClientBuilder, ClientFeature, ClientType, Event};
 use xmpp_parsers::{message::MessageType, Jid};
 
-fn main() {
+#[tokio::main]
+async fn main() -> Result<(), Option<()>> {
     let args: Vec<String> = args().collect();
     if args.len() != 3 {
         println!("Usage: {} <jid> <password>", args[0]);
-        exit(1);
+        return Err(None);
     }
     let jid = &args[1];
     let password = &args[2];
 
-    // tokio_core context
-    let mut rt = Runtime::new().unwrap();
-
     // Client instance
-    let (mut agent, stream) = ClientBuilder::new(jid, password)
+    let mut client = ClientBuilder::new(jid, password)
         .set_client(ClientType::Bot, "xmpp-rs")
         .set_website("https://gitlab.com/xmpp-rs/xmpp-rs")
         .set_default_nick("bot")
@@ -34,58 +29,58 @@ fn main() {
         .build()
         .unwrap();
 
-    // We return either Some(Error) if an error was encountered
-    // or None, if we were simply disconnected
-    let handler = stream.map_err(Some).for_each(|evt: Event| {
-        match evt {
-            Event::Online => {
-                println!("Online.");
-            }
-            Event::Disconnected => {
-                println!("Disconnected.");
-                return Err(None);
-            }
-            Event::ContactAdded(contact) => {
-                println!("Contact {} added.", contact.jid);
-            }
-            Event::ContactRemoved(contact) => {
-                println!("Contact {} removed.", contact.jid);
-            }
-            Event::ContactChanged(contact) => {
-                println!("Contact {} changed.", contact.jid);
-            }
-            Event::JoinRoom(jid, conference) => {
-                println!("Joining room {} ({:?})…", jid, conference.name);
-                agent.join_room(
-                    jid,
-                    conference.nick,
-                    conference.password,
-                    "en",
-                    "Yet another bot!",
-                );
-            }
-            Event::LeaveRoom(jid) => {
-                println!("Leaving room {}…", jid);
-            }
-            Event::LeaveAllRooms => {
-                println!("Leaving all rooms…");
-            }
-            Event::RoomJoined(jid) => {
-                println!("Joined room {}.", jid);
-                agent.send_message(Jid::Bare(jid), MessageType::Groupchat, "en", "Hello world!");
-            }
-            Event::RoomLeft(jid) => {
-                println!("Left room {}.", jid);
-            }
-            Event::AvatarRetrieved(jid, path) => {
-                println!("Received avatar for {} in {}.", jid, path);
+    while let Some(events) = client.wait_for_events().await {
+        for event in events {
+            match event {
+                Event::Online => {
+                    println!("Online.");
+                }
+                Event::Disconnected => {
+                    println!("Disconnected");
+                    return Err(None);
+                }
+                Event::ContactAdded(contact) => {
+                    println!("Contact {} added.", contact.jid);
+                }
+                Event::ContactRemoved(contact) => {
+                    println!("Contact {} removed.", contact.jid);
+                }
+                Event::ContactChanged(contact) => {
+                    println!("Contact {} changed.", contact.jid);
+                }
+                Event::JoinRoom(jid, conference) => {
+                    println!("Joining room {} ({:?})…", jid, conference.name);
+                    client
+                        .join_room(
+                            jid,
+                            conference.nick,
+                            conference.password,
+                            "en",
+                            "Yet another bot!",
+                        )
+                        .await;
+                }
+                Event::LeaveRoom(jid) => {
+                    println!("Leaving room {}…", jid);
+                }
+                Event::LeaveAllRooms => {
+                    println!("Leaving all rooms…");
+                }
+                Event::RoomJoined(jid) => {
+                    println!("Joined room {}.", jid);
+                    client
+                        .send_message(Jid::Bare(jid), MessageType::Groupchat, "en", "Hello world!")
+                        .await;
+                }
+                Event::RoomLeft(jid) => {
+                    println!("Left room {}.", jid);
+                }
+                Event::AvatarRetrieved(jid, path) => {
+                    println!("Received avatar for {} in {}.", jid, path);
+                }
             }
         }
-        Ok(())
-    });
+    }
 
-    rt.block_on(handler).unwrap_or_else(|e| match e {
-        Some(e) => println!("Error: {:?}", e),
-        None => println!("Disconnected."),
-    });
+    Ok(())
 }

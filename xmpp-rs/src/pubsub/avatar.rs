@@ -4,12 +4,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+use super::Agent;
 use crate::Event;
-use futures::{sync::mpsc, Sink};
 use std::convert::TryFrom;
 use std::fs::{self, File};
 use std::io::{self, Write};
-use tokio_xmpp::Packet;
 use xmpp_parsers::{
     avatar::{Data, Metadata},
     iq::Iq,
@@ -22,11 +21,11 @@ use xmpp_parsers::{
     Jid,
 };
 
-pub(crate) fn handle_metadata_pubsub_event(
+pub(crate) async fn handle_metadata_pubsub_event(
     from: &Jid,
-    tx: &mut mpsc::UnboundedSender<Packet>,
+    agent: &mut Agent,
     items: Vec<Item>,
-) -> impl IntoIterator<Item = Event> {
+) -> Vec<Event> {
     let mut events = Vec::new();
     for item in items {
         let payload = item.payload.clone().unwrap();
@@ -43,7 +42,7 @@ pub(crate) fn handle_metadata_pubsub_event(
                     events.push(Event::AvatarRetrieved(from.clone(), filename));
                 } else {
                     let iq = download_avatar(from);
-                    tx.start_send(Packet::Stanza(iq.into())).unwrap();
+                    let _ = agent.client.send_stanza(iq.into()).await;
                 }
             }
         }

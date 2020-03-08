@@ -14,10 +14,10 @@ license = "MPL-2.0"
 edition = "2018"
 
 [dependencies]
-tokio-xmpp = "1.0.1"
+tokio-xmpp = "2.0.0"
 xmpp-parsers = "0.17"
-futures = "0.1"
-tokio = "0.1"
+futures = "0.3"
+tokio = "0.2"
 log = "0.4"
 
 [features]
