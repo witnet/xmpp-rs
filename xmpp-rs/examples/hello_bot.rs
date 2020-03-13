@@ -4,12 +4,15 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+use env_logger;
 use std::env::args;
 use xmpp::{ClientBuilder, ClientFeature, ClientType, Event};
 use xmpp_parsers::{message::MessageType, Jid};
 
 #[tokio::main]
 async fn main() -> Result<(), Option<()>> {
+    env_logger::init();
+
     let args: Vec<String> = args().collect();
     if args.len() != 3 {
         println!("Usage: {} <jid> <password>", args[0]);

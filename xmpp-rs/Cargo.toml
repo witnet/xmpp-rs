@@ -20,6 +20,9 @@ futures = "0.3"
 tokio = "0.2"
 log = "0.4"
 
+[dev-dependencies]
+env_logger = "0.7"
+
 [features]
 default = ["avatars"]
 avatars = []
