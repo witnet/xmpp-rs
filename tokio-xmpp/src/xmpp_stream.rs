@@ -34,10 +34,6 @@ pub struct XMPPStream<S: AsyncRead + AsyncWrite + Unpin> {
     pub id: String,
 }
 
-// // TODO: fix this hack
-// unsafe impl<S: AsyncRead + AsyncWrite + Unpin> core::marker::Send for XMPPStream<S> {}
-// unsafe impl<S: AsyncRead + AsyncWrite + Unpin> Sync for XMPPStream<S> {}
-
 impl<S: AsyncRead + AsyncWrite + Unpin> XMPPStream<S> {
     /// Constructor
     pub fn new(
@@ -63,7 +59,6 @@ impl<S: AsyncRead + AsyncWrite + Unpin> XMPPStream<S> {
     }
 
     /// Unwraps the inner stream
-    // TODO: use this everywhere
     pub fn into_inner(self) -> S {
         self.stream.into_inner().unwrap().into_inner()
     }
