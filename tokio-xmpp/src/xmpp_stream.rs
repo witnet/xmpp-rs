@@ -1,4 +1,4 @@
-//! `XMPPStream` is the common container for all XMPP network connections
+//! `XMPPStream` provides encoding/decoding for XMPP
 
 use futures::sink::Send;
 use futures::{sink::SinkExt, task::Poll, Sink, Stream};
@@ -17,7 +17,10 @@ use crate::Error;
 /// <stream:stream> namespace
 pub const NS_XMPP_STREAM: &str = "http://etherx.jabber.org/streams";
 
-/// Wraps a `stream`
+/// Wraps a binary stream (tokio's `AsyncRead + AsyncWrite`) to decode
+/// and encode XMPP packets.
+///
+/// Implements `Sink + Stream`
 pub struct XMPPStream<S: AsyncRead + AsyncWrite + Unpin> {
     /// The local Jabber-Id
     pub jid: Jid,

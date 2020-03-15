@@ -10,6 +10,8 @@ use crate::{Error, ProtocolError};
 
 const NS_XMPP_STREAM: &str = "http://etherx.jabber.org/streams";
 
+/// Sends a `<stream:stream>`, then wait for one from the server, and
+/// construct an XMPPStream.
 pub async fn start<S: AsyncRead + AsyncWrite + Unpin>(
     mut stream: Framed<S, XMPPCodec>,
     jid: Jid,

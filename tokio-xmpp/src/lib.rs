@@ -1,10 +1,10 @@
-#![deny(unsafe_code, unused, missing_docs, bare_trait_objects)]
-
 //! XMPP implementation with asynchronous I/O using Tokio.
+
+#![deny(unsafe_code, unused, missing_docs, bare_trait_objects)]
 
 mod starttls;
 mod stream_start;
-pub mod xmpp_codec;
+mod xmpp_codec;
 pub use crate::xmpp_codec::Packet;
 mod event;
 mod happy_eyeballs;

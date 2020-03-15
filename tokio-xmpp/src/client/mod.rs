@@ -23,6 +23,9 @@ mod auth;
 mod bind;
 
 /// XMPP client connection and state
+///
+/// This implements the `futures` crate's [`Stream`](#impl-Stream) and
+/// [`Sink`](#impl-Sink<Packet>) traits.
 pub struct Client {
     state: ClientState,
     jid: Jid,
@@ -64,8 +67,8 @@ impl Client {
         client
     }
 
-    /// Set whether to reconnect (`true`) or end the stream (`false`)
-    /// when a connection to the server has ended.
+    /// Set whether to reconnect (`true`) or let the stream end
+    /// (`false`) when a connection to the server has ended.
     pub fn set_reconnect(&mut self, reconnect: bool) -> &mut Self {
         self.reconnect = reconnect;
         self
@@ -142,15 +145,34 @@ impl Client {
         self.send(Packet::Stanza(stanza)).await
     }
 
-    /// End connection
+    /// End connection by sending `</stream:stream>`
+    ///
+    /// You may expect the server to respond with the same. This
+    /// client will then drop its connection.
+    ///
+    /// Make sure to disable reconnect.
     pub async fn send_end(&mut self) -> Result<(), Error> {
         self.send(Packet::StreamEnd).await
     }
 }
 
+/// Incoming XMPP events
+///
+/// In an `async fn` you may want to use this with `use
+/// futures::stream::StreamExt;`
 impl Stream for Client {
     type Item = Event;
 
+    /// Low-level read on the XMPP stream, allowing the underlying
+    /// machinery to:
+    ///
+    /// * connect,
+    /// * starttls,
+    /// * authenticate,
+    /// * bind a session, and finally
+    /// * receive stanzas
+    ///
+    /// ...for your client
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context) -> Poll<Option<Self::Item>> {
         let state = replace(&mut self.state, ClientState::Invalid);
 
@@ -244,6 +266,9 @@ impl Stream for Client {
     }
 }
 
+/// Outgoing XMPP packets
+///
+/// See `send_stanza()` for an `async fn`
 impl Sink<Packet> for Client {
     type Error = Error;
 

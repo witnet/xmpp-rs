@@ -11,6 +11,8 @@ use crate::{Error, ProtocolError};
 /// XMPP TLS XML namespace
 pub const NS_XMPP_TLS: &str = "urn:ietf:params:xml:ns:xmpp-tls";
 
+/// Performs `<starttls/>` on an XMPPStream and returns a binary
+/// TlsStream.
 pub async fn starttls<S: AsyncRead + AsyncWrite + Unpin>(
     mut xmpp_stream: XMPPStream<S>,
 ) -> Result<TlsStream<S>, Error> {
