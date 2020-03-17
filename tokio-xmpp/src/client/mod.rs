@@ -193,7 +193,10 @@ impl Stream for Client {
                     Poll::Ready(Ok(Ok(stream))) => {
                         let bound_jid = stream.jid.clone();
                         self.state = ClientState::Connected(stream);
-                        Poll::Ready(Some(Event::Online(bound_jid)))
+                        Poll::Ready(Some(Event::Online {
+                            bound_jid,
+                            resumed: false,
+                        }))
                     }
                     Poll::Ready(Ok(Err(e))) => {
                         self.state = ClientState::Disconnected;
