@@ -2,7 +2,7 @@
 
 use crate::{ParseError, ParserError};
 use bytes::{BufMut, BytesMut};
-use log::debug;
+use log::{debug, error};
 use std;
 use std::borrow::Cow;
 use std::collections::vec_deque::VecDeque;
@@ -250,7 +250,7 @@ impl Decoder for XMPPCodec {
                 return result;
             }
             Err(e) => {
-                // println!("error {} at {}/{} in {:?}", e, e.valid_up_to(), buf1.len(), buf1);
+                error!("error {} at {}/{} in {:?}", e, e.valid_up_to(), buf1.len(), buf1);
                 return Err(ParserError::Utf8(e));
             }
         }
@@ -309,7 +309,9 @@ impl Encoder for XMPPCodec {
                     Ok(())
                 })
                 .map_err(to_io_err),
-            Packet::StreamEnd => write!(dst, "</stream:stream>\n").map_err(to_io_err),
+            Packet::StreamEnd =>
+                write!(dst, "</stream:stream>\n")
+                    .map_err(to_io_err),
         }
     }
 }
