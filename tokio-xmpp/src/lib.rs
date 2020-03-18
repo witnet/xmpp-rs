@@ -12,7 +12,7 @@ pub mod xmpp_stream;
 pub mod stream_features;
 pub use crate::event::Event;
 mod client;
-pub use crate::client::Client;
+pub use client::{Client, oneshot_client::Client as OneshotClient};
 mod component;
 pub use crate::component::Component;
 mod error;
