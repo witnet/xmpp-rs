@@ -5,7 +5,6 @@ use std::mem::replace;
 use std::pin::Pin;
 use std::str::FromStr;
 use std::task::Context;
-use tokio::io::{AsyncRead, AsyncWrite};
 use tokio::net::TcpStream;
 use tokio::task::JoinHandle;
 use tokio::task::LocalSet;
@@ -14,13 +13,18 @@ use xmpp_parsers::{Element, Jid, JidParseError};
 
 use super::event::Event;
 use super::happy_eyeballs::connect;
-use super::starttls::{starttls, NS_XMPP_TLS};
+use super::starttls::starttls;
 use super::xmpp_codec::Packet;
 use super::xmpp_stream;
 use super::{Error, ProtocolError};
 
 mod auth;
+use auth::auth;
 mod bind;
+use bind::bind;
+
+pub const NS_XMPP_SASL: &str = "urn:ietf:params:xml:ns:xmpp-sasl";
+pub const NS_XMPP_BIND: &str = "urn:ietf:params:xml:ns:xmpp-bind";
 
 /// XMPP client connection and state
 ///
@@ -79,56 +83,34 @@ impl Client {
         let password = password;
         let domain = idna::domain_to_ascii(&jid.clone().domain()).map_err(|_| Error::Idna)?;
 
+        // TCP connection
         let tcp_stream = connect(&domain, Some("_xmpp-client._tcp"), 5222).await?;
 
+        // Unencryped XMPPStream
         let xmpp_stream =
-            xmpp_stream::XMPPStream::start(tcp_stream, jid, NS_JABBER_CLIENT.to_owned()).await?;
-        let xmpp_stream = if Self::can_starttls(&xmpp_stream) {
-            Self::starttls(xmpp_stream).await?
+            xmpp_stream::XMPPStream::start(tcp_stream, jid.clone(), NS_JABBER_CLIENT.to_owned()).await?;
+
+        let xmpp_stream = if xmpp_stream.stream_features.can_starttls() {
+            // TlsStream
+            let tls_stream = starttls(xmpp_stream).await?;
+            // Encrypted XMPPStream
+            xmpp_stream::XMPPStream::start(tls_stream, jid.clone(), NS_JABBER_CLIENT.to_owned()).await?
         } else {
             return Err(Error::Protocol(ProtocolError::NoTls));
         };
 
-        let xmpp_stream = Self::auth(xmpp_stream, username, password).await?;
-        let xmpp_stream = Self::bind(xmpp_stream).await?;
-        Ok(xmpp_stream)
-    }
-
-    fn can_starttls<S: AsyncRead + AsyncWrite + Unpin>(
-        xmpp_stream: &xmpp_stream::XMPPStream<S>,
-    ) -> bool {
-        xmpp_stream
-            .stream_features
-            .get_child("starttls", NS_XMPP_TLS)
-            .is_some()
-    }
-
-    async fn starttls<S: AsyncRead + AsyncWrite + Unpin>(
-        xmpp_stream: xmpp_stream::XMPPStream<S>,
-    ) -> Result<xmpp_stream::XMPPStream<TlsStream<S>>, Error> {
-        let jid = xmpp_stream.jid.clone();
-        let tls_stream = starttls(xmpp_stream).await?;
-        xmpp_stream::XMPPStream::start(tls_stream, jid, NS_JABBER_CLIENT.to_owned()).await
-    }
-
-    async fn auth<S: AsyncRead + AsyncWrite + Unpin + 'static>(
-        xmpp_stream: xmpp_stream::XMPPStream<S>,
-        username: String,
-        password: String,
-    ) -> Result<xmpp_stream::XMPPStream<S>, Error> {
-        let jid = xmpp_stream.jid.clone();
         let creds = Credentials::default()
             .with_username(username)
             .with_password(password)
             .with_channel_binding(ChannelBinding::None);
-        let stream = auth::auth(xmpp_stream, creds).await?;
-        xmpp_stream::XMPPStream::start(stream, jid, NS_JABBER_CLIENT.to_owned()).await
-    }
+        // Authenticated (unspecified) stream
+        let stream = auth(xmpp_stream, creds).await?;
+        // Authenticated XMPPStream
+        let xmpp_stream = xmpp_stream::XMPPStream::start(stream, jid, NS_JABBER_CLIENT.to_owned()).await?;
 
-    async fn bind<S: Unpin + AsyncRead + AsyncWrite>(
-        stream: xmpp_stream::XMPPStream<S>,
-    ) -> Result<xmpp_stream::XMPPStream<S>, Error> {
-        bind::bind(stream).await
+        // XMPPStream bound to user session
+        let xmpp_stream = bind(xmpp_stream).await?;
+        Ok(xmpp_stream)
     }
 
     /// Get the client's bound JID (the one reported by the XMPP

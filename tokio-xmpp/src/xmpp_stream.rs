@@ -11,6 +11,7 @@ use tokio_util::codec::Framed;
 use xmpp_parsers::{Element, Jid};
 
 use crate::stream_start;
+use crate::stream_features::StreamFeatures;
 use crate::xmpp_codec::{Packet, XMPPCodec};
 use crate::Error;
 
@@ -27,7 +28,7 @@ pub struct XMPPStream<S: AsyncRead + AsyncWrite + Unpin> {
     /// Codec instance
     pub stream: Mutex<Framed<S, XMPPCodec>>,
     /// `<stream:features/>` for XMPP version 1.0
-    pub stream_features: Element,
+    pub stream_features: StreamFeatures,
     /// Root namespace
     ///
     /// This is different for either c2s, s2s, or component
@@ -49,7 +50,7 @@ impl<S: AsyncRead + AsyncWrite + Unpin> XMPPStream<S> {
         XMPPStream {
             jid,
             stream: Mutex::new(stream),
-            stream_features,
+            stream_features: StreamFeatures::new(stream_features),
             ns,
             id,
         }

@@ -13,8 +13,6 @@ use crate::xmpp_codec::Packet;
 use crate::xmpp_stream::XMPPStream;
 use crate::{AuthError, Error, ProtocolError};
 
-const NS_XMPP_SASL: &str = "urn:ietf:params:xml:ns:xmpp-sasl";
-
 pub async fn auth<S: AsyncRead + AsyncWrite + Unpin>(
     mut stream: XMPPStream<S>,
     creds: Credentials,
@@ -28,11 +26,7 @@ pub async fn auth<S: AsyncRead + AsyncWrite + Unpin>(
 
     let remote_mechs: HashSet<String> = stream
         .stream_features
-        .get_child("mechanisms", NS_XMPP_SASL)
-        .ok_or(AuthError::NoMechanism)?
-        .children()
-        .filter(|child| child.is("mechanism", NS_XMPP_SASL))
-        .map(|mech_el| mech_el.text())
+        .sasl_mechanisms()?
         .collect();
 
     for local_mech in local_mechs {

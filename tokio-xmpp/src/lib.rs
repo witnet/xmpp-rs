@@ -9,6 +9,7 @@ pub use crate::xmpp_codec::Packet;
 mod event;
 mod happy_eyeballs;
 pub mod xmpp_stream;
+pub mod stream_features;
 pub use crate::event::Event;
 mod client;
 pub use crate::client::Client;

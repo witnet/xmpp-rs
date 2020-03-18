@@ -10,46 +10,42 @@ use crate::xmpp_codec::Packet;
 use crate::xmpp_stream::XMPPStream;
 use crate::{Error, ProtocolError};
 
-const NS_XMPP_BIND: &str = "urn:ietf:params:xml:ns:xmpp-bind";
 const BIND_REQ_ID: &str = "resource-bind";
 
 pub async fn bind<S: AsyncRead + AsyncWrite + Unpin>(
     mut stream: XMPPStream<S>,
 ) -> Result<XMPPStream<S>, Error> {
-    match stream.stream_features.get_child("bind", NS_XMPP_BIND) {
-        None => {
-            // No resource binding available,
-            // return the (probably // usable) stream immediately
-            return Ok(stream);
-        }
-        Some(_) => {
-            let resource = if let Jid::Full(jid) = stream.jid.clone() {
-                Some(jid.resource)
-            } else {
-                None
-            };
-            let iq = Iq::from_set(BIND_REQ_ID, BindQuery::new(resource));
-            stream.send_stanza(iq).await?;
+    if stream.stream_features.can_bind() {
+        let resource = if let Jid::Full(jid) = stream.jid.clone() {
+            Some(jid.resource)
+        } else {
+            None
+        };
+        let iq = Iq::from_set(BIND_REQ_ID, BindQuery::new(resource));
+        stream.send_stanza(iq).await?;
 
-            loop {
-                match stream.next().await {
-                    Some(Ok(Packet::Stanza(stanza))) => match Iq::try_from(stanza) {
-                        Ok(iq) if iq.id == BIND_REQ_ID => match iq.payload {
-                            IqType::Result(payload) => {
-                                payload
-                                    .and_then(|payload| BindResponse::try_from(payload).ok())
-                                    .map(|bind| stream.jid = bind.into());
-                                return Ok(stream);
-                            }
-                            _ => return Err(ProtocolError::InvalidBindResponse.into()),
-                        },
-                        _ => {}
+        loop {
+            match stream.next().await {
+                Some(Ok(Packet::Stanza(stanza))) => match Iq::try_from(stanza) {
+                    Ok(iq) if iq.id == BIND_REQ_ID => match iq.payload {
+                        IqType::Result(payload) => {
+                            payload
+                                .and_then(|payload| BindResponse::try_from(payload).ok())
+                                .map(|bind| stream.jid = bind.into());
+                            return Ok(stream);
+                        }
+                        _ => return Err(ProtocolError::InvalidBindResponse.into()),
                     },
-                    Some(Ok(_)) => {}
-                    Some(Err(e)) => return Err(e),
-                    None => return Err(Error::Disconnected),
-                }
+                    _ => {}
+                },
+                Some(Ok(_)) => {}
+                Some(Err(e)) => return Err(e),
+                None => return Err(Error::Disconnected),
             }
         }
+    } else {
+        // No resource binding available,
+        // return the (probably // usable) stream immediately
+        return Ok(stream);
     }
 }
