@@ -21,7 +21,7 @@ edition = "2018"
 gitlab = { repository = "xmpp-rs/xmpp-rs" }
 
 [dependencies]
-quick-xml = "0.17"
+quick-xml = "0.18"
 
 [features]
 default = ["comments"]
