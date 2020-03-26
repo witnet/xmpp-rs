@@ -160,7 +160,6 @@ impl TryFrom<Element> for Body {
             match child {
                 Node::Element(child) => children.push(Child::Tag(Tag::try_from(child.clone())?)),
                 Node::Text(text) => children.push(Child::Text(text.clone())),
-                Node::Comment(_) => unimplemented!(), // XXX: remove!
             }
         }
 
@@ -309,7 +308,6 @@ impl TryFrom<Element> for Tag {
             match child {
                 Node::Element(child) => children.push(Child::Tag(Tag::try_from(child.clone())?)),
                 Node::Text(text) => children.push(Child::Text(text.clone())),
-                Node::Comment(_) => unimplemented!(), // XXX: remove!
             }
         }
 

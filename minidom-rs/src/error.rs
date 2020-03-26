@@ -36,8 +36,7 @@ pub enum Error {
     InvalidElement,
 
     /// An error which is returned when a comment is to be parsed by minidom
-    #[cfg(not(comments))]
-    CommentsDisabled,
+    NoComments,
 }
 
 impl StdError for Error {
@@ -49,8 +48,7 @@ impl StdError for Error {
             Error::EndOfDocument => None,
             Error::InvalidElementClosed => None,
             Error::InvalidElement => None,
-            #[cfg(not(comments))]
-            Error::CommentsDisabled => None,
+            Error::NoComments => None,
         }
     }
 }
@@ -68,10 +66,9 @@ impl std::fmt::Display for Error {
                 write!(fmt, "the XML is invalid, an element was wrongly closed")
             }
             Error::InvalidElement => write!(fmt, "the XML element is invalid"),
-            #[cfg(not(comments))]
-            Error::CommentsDisabled => write!(
+            Error::NoComments => write!(
                 fmt,
-                "a comment has been found even though comments are disabled by feature"
+                "a comment has been found even though comments are forbidden"
             ),
         }
     }

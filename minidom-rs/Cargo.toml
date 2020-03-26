@@ -22,7 +22,3 @@ gitlab = { repository = "xmpp-rs/xmpp-rs" }
 
 [dependencies]
 quick-xml = "0.18"
-
-[features]
-default = ["comments"]
-comments = []

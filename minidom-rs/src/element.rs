@@ -335,12 +335,9 @@ impl Element {
                 Event::Eof => {
                     return Err(Error::EndOfDocument);
                 }
-                #[cfg(not(feature = "comments"))]
                 Event::Comment { .. } => {
-                    return Err(Error::CommentsDisabled);
+                    return Err(Error::NoComments);
                 }
-                #[cfg(feature = "comments")]
-                Event::Comment { .. } => (),
                 Event::Text { .. }
                 | Event::End { .. }
                 | Event::CData { .. }
@@ -418,16 +415,7 @@ impl Element {
                 Event::Eof => {
                     break;
                 }
-                #[cfg(not(feature = "comments"))]
-                Event::Comment(_) => return Err(Error::CommentsDisabled),
-                #[cfg(feature = "comments")]
-                Event::Comment(s) => {
-                    let comment = reader.decode(&s)?.to_owned();
-                    if comment != "" {
-                        let current_elem = stack.last_mut().unwrap();
-                        current_elem.append_comment_node(comment);
-                    }
-                }
+                Event::Comment(_) => return Err(Error::NoComments),
                 Event::Decl { .. } | Event::PI { .. } | Event::DocType { .. } => (),
             }
         }
@@ -630,22 +618,6 @@ impl Element {
     /// ```
     pub fn append_text_node<S: Into<String>>(&mut self, child: S) {
         self.children.push(Node::Text(child.into()));
-    }
-
-    /// Appends a comment node to an `Element`.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use minidom::Element;
-    ///
-    /// let mut elem = Element::bare("node");
-    ///
-    /// elem.append_comment_node("comment");
-    /// ```
-    #[cfg(feature = "comments")]
-    pub fn append_comment_node<S: Into<String>>(&mut self, child: S) {
-        self.children.push(Node::Comment(child.into()));
     }
 
     /// Appends a node to an `Element`.

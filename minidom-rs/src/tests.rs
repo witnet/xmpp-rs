@@ -11,6 +11,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use crate::element::Element;
+use crate::error::Error;
 
 use quick_xml::Reader;
 
@@ -32,21 +33,6 @@ fn build_test_tree() -> Element {
         .build();
     root.append_child(other_child);
     root.append_text_node("nya");
-    root
-}
-
-#[cfg(feature = "comments")]
-const COMMENT_TEST_STRING: &'static str = r#"<root><!--This is a child.--><child attr="val"><!--This is a grandchild.--><grandchild/></child></root>"#;
-
-#[cfg(feature = "comments")]
-fn build_comment_test_tree() -> Element {
-    let mut root = Element::builder("root").build();
-    root.append_comment_node("This is a child.");
-    let mut child = Element::builder("child").attr("attr", "val").build();
-    child.append_comment_node("This is a grandchild.");
-    let grand_child = Element::builder("grandchild").build();
-    child.append_child(grand_child);
-    root.append_child(child);
     root
 }
 
@@ -265,25 +251,13 @@ fn namespace_inherited_prefixed2() {
     assert_eq!(child.ns(), Some("jabber:client".to_owned()));
 }
 
-#[cfg(feature = "comments")]
 #[test]
-fn read_comments() {
-    let mut reader = Reader::from_str(COMMENT_TEST_STRING);
-    assert_eq!(
-        Element::from_reader(&mut reader).unwrap(),
-        build_comment_test_tree()
-    );
-}
-
-#[cfg(feature = "comments")]
-#[test]
-fn write_comments() {
-    let root = build_comment_test_tree();
-    let mut writer = Vec::new();
-    {
-        root.write_to(&mut writer).unwrap();
-    }
-    assert_eq!(String::from_utf8(writer).unwrap(), COMMENT_TEST_STRING);
+fn fail_comments() {
+    let elem: Result<Element, Error> = "<foo><!-- bar --></foo>".parse();
+    match elem {
+        Err(Error::NoComments) => (),
+        _ => panic!(),
+    };
 }
 
 #[test]
