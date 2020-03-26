@@ -198,6 +198,9 @@ pub mod jingle_message;
 /// XEP-0359: Unique and Stable Stanza IDs
 pub mod stanza_id;
 
+/// XEP-0369: Mediated Information eXchange (MIX)
+pub mod mix;
+
 /// XEP-0373: OpenPGP for XMPP
 pub mod openpgp;
 
