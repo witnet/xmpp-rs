@@ -26,9 +26,11 @@ variables:
 
 rustfmt:
   stage: lint
-  image: rustlang/rust:nightly
   script:
+    - rustup component add rustfmt
     - find -type f -iname '*.rs' -not -path './target/*' | xargs rustfmt --check --edition 2018
+  extends:
+    - .stable
 
 rust-latest-build:
   extends:
