@@ -12,6 +12,7 @@ variables:
 
 .nightly:
   image: rustlang/rust:nightly
+  allow_failure: true  # It's not often, but it happens nightly breaks, surprisingly.
 
 .build:
   stage: build
