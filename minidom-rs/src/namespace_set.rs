@@ -15,8 +15,6 @@ use std::rc::Rc;
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 /// Use to compare namespaces
 pub enum NSChoice<'a> {
-    /// The element must have no namespace
-    None,
     /// The element's namespace must match the specified namespace
     OneOf(&'a str),
     /// The element's namespace must be in the specified vector
@@ -34,9 +32,8 @@ impl<'a> From<&'a str> for NSChoice<'a> {
 impl<'a> NSChoice<'a> {
     fn compare(&self, ns: Option<&str>) -> bool {
         match (ns, &self) {
-            (None, NSChoice::None) | (None, NSChoice::Any) => true,
+            (None, NSChoice::Any) => true,
             (None, NSChoice::OneOf(_)) | (None, NSChoice::AnyOf(_)) => false,
-            (Some(_), NSChoice::None) => false,
             (Some(_), NSChoice::Any) => true,
             (Some(ns), NSChoice::OneOf(wanted_ns)) => &ns == wanted_ns,
             (Some(ns), NSChoice::AnyOf(wanted_nss)) => wanted_nss.iter().any(|w| &ns == w),

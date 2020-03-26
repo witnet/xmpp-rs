@@ -280,7 +280,6 @@ impl Element {
     /// assert_eq!(elem.is("wrong", "namespace"), false);
     /// assert_eq!(elem.is("wrong", "wrong"), false);
     ///
-    /// assert_eq!(elem.is("name", NSChoice::None), false);
     /// assert_eq!(elem.is("name", NSChoice::OneOf("namespace")), true);
     /// assert_eq!(elem.is("name", NSChoice::OneOf("foo")), false);
     /// assert_eq!(elem.is("name", NSChoice::AnyOf(&["foo", "namespace"])), true);
@@ -288,7 +287,6 @@ impl Element {
     ///
     /// let elem2 = Element::builder("name").build();
     ///
-    /// assert_eq!(elem2.is("name", NSChoice::None), true);
     /// assert_eq!(elem2.is("name", NSChoice::Any), true);
     /// ```
     pub fn is<'a, N: AsRef<str>, NS: Into<NSChoice<'a>>>(&self, name: N, namespace: NS) -> bool {
@@ -307,7 +305,6 @@ impl Element {
     /// assert_eq!(elem.has_ns("namespace"), true);
     /// assert_eq!(elem.has_ns("wrong"), false);
     ///
-    /// assert_eq!(elem.has_ns(NSChoice::None), false);
     /// assert_eq!(elem.has_ns(NSChoice::OneOf("namespace")), true);
     /// assert_eq!(elem.has_ns(NSChoice::OneOf("foo")), false);
     /// assert_eq!(elem.has_ns(NSChoice::AnyOf(&["foo", "namespace"])), true);
@@ -315,7 +312,6 @@ impl Element {
     ///
     /// let elem2 = Element::builder("name").build();
     ///
-    /// assert_eq!(elem2.has_ns(NSChoice::None), true);
     /// assert_eq!(elem2.has_ns(NSChoice::Any), true);
     /// ```
     pub fn has_ns<'a, NS: Into<NSChoice<'a>>>(&self, namespace: NS) -> bool {
@@ -667,12 +663,6 @@ impl Element {
     /// assert_eq!(elem.get_child("c", "ns"), None);
     /// assert_eq!(elem.get_child("b", "other_ns"), None);
     /// assert_eq!(elem.get_child("a", "inexistent_ns"), None);
-    ///
-    /// let elem: Element = r#"<node><a xmlns="other_ns" /><b /></node>"#.parse().unwrap();
-    /// assert_eq!(elem.get_child("a", NSChoice::None), None);
-    /// assert!(elem.get_child("a", NSChoice::Any).unwrap().is("a", "other_ns"));
-    /// assert!(elem.get_child("b", NSChoice::None).unwrap().is("b", NSChoice::None));
-    /// assert!(elem.get_child("b", NSChoice::Any).unwrap().is("b", NSChoice::None));
     /// ```
     pub fn get_child<'a, N: AsRef<str>, NS: Into<NSChoice<'a>>>(
         &self,
@@ -723,12 +713,6 @@ impl Element {
     /// assert_eq!(elem.has_child("b", "ns"), true);
     /// assert_eq!(elem.has_child("b", "other_ns"), false);
     /// assert_eq!(elem.has_child("b", "inexistent_ns"), false);
-    ///
-    /// let elem: Element = r#"<node><a xmlns="other_ns" /><b /></node>"#.parse().unwrap();
-    /// assert_eq!(elem.has_child("a", NSChoice::None), false);
-    /// assert_eq!(elem.has_child("a", NSChoice::OneOf("other_ns")), true);
-    /// assert_eq!(elem.has_child("a", NSChoice::Any), true);
-    /// assert_eq!(elem.has_child("b", NSChoice::None), true);
     /// ```
     pub fn has_child<'a, N: AsRef<str>, NS: Into<NSChoice<'a>>>(
         &self,
@@ -751,11 +735,6 @@ impl Element {
     /// assert!(elem.remove_child("a", "ns").unwrap().is("a", "ns"));
     /// assert!(elem.remove_child("a", "ns").is_none());
     /// assert!(elem.remove_child("inexistent", "inexistent").is_none());
-    ///
-    /// let mut elem: Element = r#"<node><a xmlns="other_ns" /><b /></node>"#.parse().unwrap();
-    /// assert!(elem.remove_child("a", NSChoice::None).is_none());
-    /// assert!(elem.remove_child("a", NSChoice::Any).unwrap().is("a", "other_ns"));
-    /// assert!(elem.remove_child("b", NSChoice::None).unwrap().is("b", NSChoice::None));
     /// ```
     pub fn remove_child<'a, N: AsRef<str>, NS: Into<NSChoice<'a>>>(
         &mut self,
