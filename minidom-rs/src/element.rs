@@ -14,7 +14,8 @@
 
 use crate::convert::IntoAttributeValue;
 use crate::error::{Error, Result};
-use crate::namespace_set::{NSChoice, NamespaceSet};
+use crate::namespaces::NSChoice;
+use crate::prefixes::Prefixes;
 use crate::node::Node;
 
 use std::collections::{btree_map, BTreeMap};
@@ -83,9 +84,9 @@ pub fn escape(raw: &[u8]) -> Cow<[u8]> {
 #[derive(Clone, Eq, Debug)]
 /// A struct representing a DOM Element.
 pub struct Element {
-    prefix: Option<String>,
     name: String,
-    namespaces: Rc<NamespaceSet>,
+    namespace: String,
+    prefixes: Rc<Prefixes>,
     attributes: BTreeMap<String, String>,
     children: Vec<Node>,
 }
@@ -121,17 +122,18 @@ impl PartialEq for Element {
 }
 
 impl Element {
-    fn new<NS: Into<NamespaceSet>>(
+    fn new<P: Into<Prefixes>>(
         name: String,
-        prefix: Option<String>,
-        namespaces: NS,
+        namespace: String,
+        prefixes: P,
         attributes: BTreeMap<String, String>,
         children: Vec<Node>,
     ) -> Element {
+        // TODO split name and possible prefix.
         Element {
-            prefix,
             name,
-            namespaces: Rc::new(namespaces.into()),
+            namespace,
+            prefixes: Rc::new(prefixes.into()),
             attributes,
             children,
         }
@@ -144,23 +146,31 @@ impl Element {
     /// ```rust
     /// use minidom::Element;
     ///
-    /// let elem = Element::builder("name")
-    ///                    .ns("namespace")
+    /// let elem = Element::builder("name", "namespace")
     ///                    .attr("name", "value")
     ///                    .append("inner")
     ///                    .build();
     ///
     /// assert_eq!(elem.name(), "name");
-    /// assert_eq!(elem.ns(), Some("namespace".to_owned()));
+    /// assert_eq!(elem.ns(), "namespace".to_owned());
     /// assert_eq!(elem.attr("name"), Some("value"));
     /// assert_eq!(elem.attr("inexistent"), None);
     /// assert_eq!(elem.text(), "inner");
     /// ```
-    pub fn builder<S: AsRef<str>>(name: S) -> ElementBuilder {
+    pub fn builder<S: AsRef<str>, NS: Into<String>>(name: S, namespace: NS) -> ElementBuilder {
         let (prefix, name) = split_element_name(name).unwrap();
+        let namespace: String = namespace.into();
+        let prefixes: BTreeMap<String, Option<String>> = match prefix {
+            None => Default::default(),
+            Some(_) => {
+                let mut prefixes: BTreeMap<String, Option<String>> = BTreeMap::new();
+                prefixes.insert(namespace.clone(), prefix);
+                prefixes
+            },
+        };
         ElementBuilder {
-            root: Element::new(name, prefix, None, BTreeMap::new(), Vec::new()),
-            namespaces: Default::default(),
+            root: Element::new(name, namespace, None, BTreeMap::new(), Vec::new()),
+            prefixes,
         }
     }
 
@@ -171,47 +181,33 @@ impl Element {
     /// ```rust
     /// use minidom::Element;
     ///
-    /// let bare = Element::bare("name");
+    /// let bare = Element::bare("name", "namespace");
     ///
     /// assert_eq!(bare.name(), "name");
-    /// assert_eq!(bare.ns(), None);
+    /// assert_eq!(bare.ns(), "namespace");
     /// assert_eq!(bare.attr("name"), None);
     /// assert_eq!(bare.text(), "");
     /// ```
-    pub fn bare<S: Into<String>>(name: S) -> Element {
+    pub fn bare<S: Into<String>, NS: Into<String>>(name: S, namespace: NS) -> Element {
+        // TODO split name and possible prefix.
         Element {
-            prefix: None,
             name: name.into(),
-            namespaces: Rc::new(NamespaceSet::default()),
+            namespace: namespace.into(),
+            prefixes: Rc::new(Prefixes::default()),
             attributes: BTreeMap::new(),
             children: Vec::new(),
         }
     }
 
     /// Returns a reference to the name of this element.
+    // TODO: rename local_name
     pub fn name(&self) -> &str {
         &self.name
     }
 
-    /// Returns a reference to the prefix of this element.
-    ///
-    /// # Examples
-    /// ```rust
-    /// use minidom::Element;
-    ///
-    /// let elem = Element::builder("prefix:name")
-    ///                    .build();
-    ///
-    /// assert_eq!(elem.name(), "name");
-    /// assert_eq!(elem.prefix(), Some("prefix"));
-    /// ```
-    pub fn prefix(&self) -> Option<&str> {
-        self.prefix.as_ref().map(String::as_ref)
-    }
-
     /// Returns a reference to the namespace of this element, if it has one, else `None`.
-    pub fn ns(&self) -> Option<String> {
-        self.namespaces.get(&self.prefix)
+    pub fn ns(&self) -> String {
+        self.namespace.clone()
     }
 
     /// Returns a reference to the value of the given attribute, if it exists, else `None`.
@@ -229,7 +225,7 @@ impl Element {
     /// ```rust
     /// use minidom::Element;
     ///
-    /// let elm: Element = "<elem a=\"b\" />".parse().unwrap();
+    /// let elm: Element = "<elem xmlns=\"ns1\" a=\"b\" />".parse().unwrap();
     ///
     /// let mut iter = elm.attrs();
     ///
@@ -273,7 +269,7 @@ impl Element {
     /// ```rust
     /// use minidom::{Element, NSChoice};
     ///
-    /// let elem = Element::builder("name").ns("namespace").build();
+    /// let elem = Element::builder("name", "namespace").build();
     ///
     /// assert_eq!(elem.is("name", "namespace"), true);
     /// assert_eq!(elem.is("name", "wrong"), false);
@@ -284,13 +280,9 @@ impl Element {
     /// assert_eq!(elem.is("name", NSChoice::OneOf("foo")), false);
     /// assert_eq!(elem.is("name", NSChoice::AnyOf(&["foo", "namespace"])), true);
     /// assert_eq!(elem.is("name", NSChoice::Any), true);
-    ///
-    /// let elem2 = Element::builder("name").build();
-    ///
-    /// assert_eq!(elem2.is("name", NSChoice::Any), true);
     /// ```
     pub fn is<'a, N: AsRef<str>, NS: Into<NSChoice<'a>>>(&self, name: N, namespace: NS) -> bool {
-        self.name == name.as_ref() && self.has_ns(namespace)
+        self.name == name.as_ref() && namespace.into().compare(self.namespace.as_ref())
     }
 
     /// Returns whether the element has the given namespace.
@@ -300,7 +292,7 @@ impl Element {
     /// ```rust
     /// use minidom::{Element, NSChoice};
     ///
-    /// let elem = Element::builder("name").ns("namespace").build();
+    /// let elem = Element::builder("name", "namespace").build();
     ///
     /// assert_eq!(elem.has_ns("namespace"), true);
     /// assert_eq!(elem.has_ns("wrong"), false);
@@ -309,24 +301,21 @@ impl Element {
     /// assert_eq!(elem.has_ns(NSChoice::OneOf("foo")), false);
     /// assert_eq!(elem.has_ns(NSChoice::AnyOf(&["foo", "namespace"])), true);
     /// assert_eq!(elem.has_ns(NSChoice::Any), true);
-    ///
-    /// let elem2 = Element::builder("name").build();
-    ///
-    /// assert_eq!(elem2.has_ns(NSChoice::Any), true);
     /// ```
     pub fn has_ns<'a, NS: Into<NSChoice<'a>>>(&self, namespace: NS) -> bool {
-        self.namespaces.has(&self.prefix, namespace)
+        namespace.into().compare(self.namespace.as_ref())
     }
 
     /// Parse a document from an `EventReader`.
     pub fn from_reader<R: BufRead>(reader: &mut EventReader<R>) -> Result<Element> {
         let mut buf = Vec::new();
 
+        let mut prefixes = BTreeMap::new();
         let root: Element = loop {
             let e = reader.read_event(&mut buf)?;
             match e {
                 Event::Empty(ref e) | Event::Start(ref e) => {
-                    break build_element(reader, e)?;
+                    break build_element(reader, e, &mut prefixes)?;
                 }
                 Event::Eof => {
                     return Err(Error::EndOfDocument);
@@ -344,22 +333,27 @@ impl Element {
         };
 
         let mut stack = vec![root];
+        let mut prefix_stack = vec![prefixes];
 
         loop {
             match reader.read_event(&mut buf)? {
                 Event::Empty(ref e) => {
-                    let elem = build_element(reader, e)?;
+                    let mut prefixes = prefix_stack.last().unwrap().clone();
+                    let elem = build_element(reader, e, &mut prefixes)?;
                     // Since there is no Event::End after, directly append it to the current node
                     stack.last_mut().unwrap().append_child(elem);
                 }
                 Event::Start(ref e) => {
-                    let elem = build_element(reader, e)?;
+                    let mut prefixes = prefix_stack.last().unwrap().clone();
+                    let elem = build_element(reader, e, &mut prefixes)?;
                     stack.push(elem);
+                    prefix_stack.push(prefixes);
                 }
                 Event::End(ref e) => {
                     if stack.len() <= 1 {
                         break;
                     }
+                    prefix_stack.pop().unwrap();
                     let elem = stack.pop().unwrap();
                     if let Some(to) = stack.last_mut() {
                         // TODO: check whether this is correct, we are comparing &[u8]s, not &strs
@@ -368,13 +362,13 @@ impl Element {
                         let possible_prefix = split_iter.next().unwrap(); // Can't be empty.
                         match split_iter.next() {
                             Some(name) => {
-                                match elem.prefix() {
-                                    Some(prefix) => {
+                                match elem.prefixes.get(&elem.namespace) {
+                                    Some(Some(prefix)) => {
                                         if possible_prefix != prefix.as_bytes() {
                                             return Err(Error::InvalidElementClosed);
                                         }
                                     }
-                                    None => {
+                                    _ => {
                                         return Err(Error::InvalidElementClosed);
                                     }
                                 }
@@ -383,8 +377,9 @@ impl Element {
                                 }
                             }
                             None => {
-                                if elem.prefix().is_some() {
-                                    return Err(Error::InvalidElementClosed);
+                                match elem.prefixes.get(&elem.namespace) {
+                                    Some(Some(_)) => return Err(Error::InvalidElementClosed),
+                                    _ => (),
                                 }
                                 if possible_prefix != elem.name().as_bytes() {
                                     return Err(Error::InvalidElementClosed);
@@ -430,32 +425,93 @@ impl Element {
 
     /// Output the document to quick-xml `Writer`
     pub fn to_writer<W: Write>(&self, writer: &mut EventWriter<W>) -> Result<()> {
-        self.write_to_inner(writer)
+        self.write_to_inner(writer, &mut BTreeMap::new())
     }
 
     /// Output the document to quick-xml `Writer`
     pub fn to_writer_decl<W: Write>(&self, writer: &mut EventWriter<W>) -> Result<()> {
         writer.write_event(Event::Decl(BytesDecl::new(b"1.0", Some(b"utf-8"), None)))?;
-        self.write_to_inner(writer)
+        self.write_to_inner(writer, &mut BTreeMap::new())
     }
 
     /// Like `write_to()` but without the `<?xml?>` prelude
-    pub fn write_to_inner<W: Write>(&self, writer: &mut EventWriter<W>) -> Result<()> {
-        let name = match self.prefix {
-            None => Cow::Borrowed(&self.name),
-            Some(ref prefix) => Cow::Owned(format!("{}:{}", prefix, self.name)),
-        };
+    pub fn write_to_inner<W: Write>(&self, writer: &mut EventWriter<W>, all_prefixes: &mut BTreeMap<Option<String>, String>) -> Result<()> {
+        let local_prefixes = self.prefixes.declared_prefixes();
 
-        let mut start = BytesStart::borrowed(name.as_bytes(), name.len());
-        for (prefix, ns) in self.namespaces.declared_ns() {
-            match *prefix {
-                None => start.push_attribute(("xmlns", ns.as_ref())),
-                Some(ref prefix) => {
-                    let key = format!("xmlns:{}", prefix);
-                    start.push_attribute((key.as_bytes(), ns.as_bytes()))
+        // Element namespace
+        // If the element prefix hasn't been set yet via a custom prefix, add it.
+        let mut existing_self_prefix: Option<Option<String>> = None;
+        if let Some(prefix) = local_prefixes.get(&self.namespace) {
+            existing_self_prefix = Some(prefix.clone());
+        } else {
+            for (prefix, ns) in all_prefixes.iter() {
+                if ns == &self.namespace {
+                    existing_self_prefix = Some(prefix.clone());
                 }
             }
         }
+
+        let mut all_keys = all_prefixes.keys().cloned();
+        let mut local_keys = local_prefixes.values().cloned();
+        let self_prefix: (Option<String>, bool) = match existing_self_prefix {
+            // No prefix exists already for our namespace
+            None => {
+                if local_keys.find(|p| p == &None).is_none() {
+                    // Use the None prefix if available
+                    (None, true)
+                } else {
+                    // Otherwise generate one. Check if it isn't already used, if so increase the
+                    // number until we find a suitable one.
+                    let mut prefix_n = 0u8;
+                    while let Some(_) = all_keys.find(|p| p == &Some(format!("ns{}", prefix_n))) {
+                        prefix_n += 1;
+                    }
+                    (Some(format!("ns{}", prefix_n)), true)
+                }
+            },
+            // Some prefix has already been declared (or is going to be) for our namespace. We
+            // don't need to declare a new one. We do however need to remember which one to use in
+            // the tag name.
+            Some(prefix) => (prefix, false),
+        };
+
+        let name = match self_prefix {
+            (Some(ref prefix), _) => Cow::Owned(format!("{}:{}", prefix, self.name)),
+            _ => Cow::Borrowed(&self.name),
+        };
+        let mut start = BytesStart::borrowed(name.as_bytes(), name.len());
+
+        // Write self prefix if necessary
+        match self_prefix {
+            (Some(ref p), true) => {
+                let key = format!("xmlns:{}", p);
+                start.push_attribute((key.as_bytes(), self.namespace.as_bytes()));
+                all_prefixes.insert(self_prefix.0, self.namespace.clone());
+            }
+            (None, true) => {
+                let key = format!("xmlns");
+                start.push_attribute((key.as_bytes(), self.namespace.as_bytes()));
+                all_prefixes.insert(self_prefix.0, self.namespace.clone());
+            },
+            _ => (),
+        };
+
+        // Custom prefixes/namespace sets
+        for (ns, prefix) in local_prefixes {
+            match all_prefixes.get(prefix) {
+                p @ Some(_) if p == prefix.as_ref() => (),
+                _ => {
+                    let key = match prefix {
+                        None => String::from("xmlns"),
+                        Some(p) => format!("xmlns:{}", p),
+                    };
+
+                    start.push_attribute((key.as_bytes(), ns.as_ref()));
+                    all_prefixes.insert(prefix.clone(), ns.clone());
+                },
+            }
+        }
+
         for (key, value) in &self.attributes {
             start.push_attribute((key.as_bytes(), escape(value.as_bytes()).as_ref()));
         }
@@ -468,7 +524,7 @@ impl Element {
         writer.write_event(Event::Start(start))?;
 
         for child in &self.children {
-            child.write_to_inner(writer)?;
+            child.write_to_inner(writer, all_prefixes)?;
         }
 
         writer.write_event(Event::End(BytesEnd::borrowed(name.as_bytes())))?;
@@ -482,7 +538,7 @@ impl Element {
     /// ```rust
     /// use minidom::Element;
     ///
-    /// let elem: Element = "<root>a<c1 />b<c2 />c</root>".parse().unwrap();
+    /// let elem: Element = "<root xmlns=\"ns1\">a<c1 />b<c2 />c</root>".parse().unwrap();
     ///
     /// let mut iter = elem.nodes();
     ///
@@ -511,7 +567,7 @@ impl Element {
     /// ```rust
     /// use minidom::Element;
     ///
-    /// let elem: Element = "<root>hello<child1 />this<child2 />is<child3 />ignored</root>".parse().unwrap();
+    /// let elem: Element = "<root xmlns=\"ns1\">hello<child1 xmlns=\"ns1\"/>this<child2 xmlns=\"ns1\"/>is<child3 xmlns=\"ns1\"/>ignored</root>".parse().unwrap();
     ///
     /// let mut iter = elem.children();
     /// assert_eq!(iter.next().unwrap().name(), "child1");
@@ -541,7 +597,7 @@ impl Element {
     /// ```rust
     /// use minidom::Element;
     ///
-    /// let elem: Element = "<root>hello<c /> world!</root>".parse().unwrap();
+    /// let elem: Element = "<root xmlns=\"ns1\">hello<c /> world!</root>".parse().unwrap();
     ///
     /// let mut iter = elem.texts();
     /// assert_eq!(iter.next().unwrap(), "hello");
@@ -570,11 +626,11 @@ impl Element {
     /// ```rust
     /// use minidom::Element;
     ///
-    /// let mut elem = Element::bare("root");
+    /// let mut elem = Element::bare("root", "ns1");
     ///
     /// assert_eq!(elem.children().count(), 0);
     ///
-    /// elem.append_child(Element::bare("child"));
+    /// elem.append_child(Element::bare("child", "ns1"));
     ///
     /// {
     ///     let mut iter = elem.children();
@@ -582,13 +638,11 @@ impl Element {
     ///     assert_eq!(iter.next(), None);
     /// }
     ///
-    /// let child = elem.append_child(Element::bare("new"));
+    /// let child = elem.append_child(Element::bare("new", "ns1"));
     ///
     /// assert_eq!(child.name(), "new");
     /// ```
     pub fn append_child(&mut self, child: Element) -> &mut Element {
-        child.namespaces.set_parent(Rc::clone(&self.namespaces));
-
         self.children.push(Node::Element(child));
         if let Node::Element(ref mut cld) = *self.children.last_mut().unwrap() {
             cld
@@ -604,7 +658,7 @@ impl Element {
     /// ```rust
     /// use minidom::Element;
     ///
-    /// let mut elem = Element::bare("node");
+    /// let mut elem = Element::bare("node", "ns1");
     ///
     /// assert_eq!(elem.text(), "");
     ///
@@ -623,7 +677,7 @@ impl Element {
     /// ```rust
     /// use minidom::{Element, Node};
     ///
-    /// let mut elem = Element::bare("node");
+    /// let mut elem = Element::bare("node", "ns1");
     ///
     /// elem.append_node(Node::Text("hello".to_owned()));
     ///
@@ -640,7 +694,7 @@ impl Element {
     /// ```rust
     /// use minidom::Element;
     ///
-    /// let elem: Element = "<node>hello,<split /> world!</node>".parse().unwrap();
+    /// let elem: Element = "<node xmlns=\"ns1\">hello,<split /> world!</node>".parse().unwrap();
     ///
     /// assert_eq!(elem.text(), "hello, world!");
     /// ```
@@ -656,7 +710,7 @@ impl Element {
     /// ```rust
     /// use minidom::{Element, NSChoice};
     ///
-    /// let elem: Element = r#"<node xmlns="ns"><a /><a xmlns="other_ns" /><b /></node>"#.parse().unwrap();
+    /// let elem: Element = r#"<node xmlns="ns"><a/><a xmlns="other_ns" /><b/></node>"#.parse().unwrap();
     /// assert!(elem.get_child("a", "ns").unwrap().is("a", "ns"));
     /// assert!(elem.get_child("a", "other_ns").unwrap().is("a", "other_ns"));
     /// assert!(elem.get_child("b", "ns").unwrap().is("b", "ns"));
@@ -763,8 +817,10 @@ fn split_element_name<S: AsRef<str>>(s: S) -> Result<(Option<String>, String)> {
     }
 }
 
-fn build_element<R: BufRead>(reader: &EventReader<R>, event: &BytesStart) -> Result<Element> {
-    let mut namespaces = BTreeMap::new();
+fn build_element<R: BufRead>(reader: &EventReader<R>, event: &BytesStart, prefixes: &mut BTreeMap<String, Option<String>>) -> Result<Element> {
+    let (prefix, name) = split_element_name(str::from_utf8(event.name())?)?;
+    let mut local_prefixes = BTreeMap::new();
+
     let attributes = event
         .attributes()
         .map(|o| {
@@ -775,19 +831,33 @@ fn build_element<R: BufRead>(reader: &EventReader<R>, event: &BytesStart) -> Res
         })
         .filter(|o| match *o {
             Ok((ref key, ref value)) if key == "xmlns" => {
-                namespaces.insert(None, value.to_owned());
+                local_prefixes.insert(value.clone(), None);
+                prefixes.insert(value.clone(), None);
                 false
             }
             Ok((ref key, ref value)) if key.starts_with("xmlns:") => {
-                namespaces.insert(Some(key[6..].to_owned()), value.to_owned());
+                local_prefixes.insert(value.to_owned(), Some(key[6..].to_owned()));
+                prefixes.insert(value.to_owned(), Some(key[6..].to_owned()));
                 false
             }
             _ => true,
         })
         .collect::<Result<BTreeMap<String, String>>>()?;
 
-    let (prefix, name) = split_element_name(str::from_utf8(event.name())?)?;
-    let element = Element::new(name, prefix, namespaces, attributes, Vec::new());
+    let namespace: String = {
+        let mut tmp: Option<String> = None;
+
+        for (k, v) in local_prefixes.iter().chain(prefixes.iter()) {
+            if v == &prefix {
+                tmp = Some(k.clone());
+                break;
+            }
+        }
+
+        tmp.ok_or(Error::MissingNamespace)?
+    };
+
+    let element = Element::new(name, namespace, local_prefixes, attributes, Vec::new());
     Ok(element)
 }
 
@@ -898,14 +968,13 @@ impl<'a> Iterator for AttrsMut<'a> {
 /// A builder for `Element`s.
 pub struct ElementBuilder {
     root: Element,
-    namespaces: BTreeMap<Option<String>, String>,
+    prefixes: BTreeMap<String, Option<String>>,
 }
 
 impl ElementBuilder {
-    /// Sets the namespace.
-    pub fn ns<S: Into<String>>(mut self, namespace: S) -> ElementBuilder {
-        self.namespaces
-            .insert(self.root.prefix.clone(), namespace.into());
+    /// Sets a custom prefix.
+    pub fn prefix<S: Into<String>>(mut self, prefix: Option<String>, namespace: S) -> ElementBuilder {
+        self.prefixes.insert(namespace.into(), prefix);
         self
     }
 
@@ -940,13 +1009,7 @@ impl ElementBuilder {
     pub fn build(self) -> Element {
         let mut element = self.root;
         // Set namespaces
-        element.namespaces = Rc::new(NamespaceSet::from(self.namespaces));
-        // Propagate namespaces
-        for node in &element.children {
-            if let Node::Element(ref e) = *node {
-                e.namespaces.set_parent(Rc::clone(&element.namespaces));
-            }
-        }
+        element.prefixes = Rc::new(Prefixes::from(self.prefixes));
         element
     }
 }
@@ -961,49 +1024,49 @@ mod tests {
 
         let elem = Element::new(
             "name".to_owned(),
-            None,
-            Some("namespace".to_owned()),
+            "namespace".to_owned(),
+            (None, "namespace".to_owned()),
             BTreeMap::from_iter(vec![("name".to_string(), "value".to_string())].into_iter()),
             Vec::new(),
         );
 
         assert_eq!(elem.name(), "name");
-        assert_eq!(elem.ns(), Some("namespace".to_owned()));
+        assert_eq!(elem.ns(), "namespace".to_owned());
         assert_eq!(elem.attr("name"), Some("value"));
         assert_eq!(elem.attr("inexistent"), None);
     }
 
     #[test]
     fn test_from_reader_simple() {
-        let xml = "<foo></foo>";
+        let xml = "<foo xmlns='ns1'></foo>";
         let mut reader = EventReader::from_str(xml);
         let elem = Element::from_reader(&mut reader);
 
-        let elem2 = Element::builder("foo").build();
+        let elem2 = Element::builder("foo", "ns1").build();
 
         assert_eq!(elem.unwrap(), elem2);
     }
 
     #[test]
     fn test_from_reader_nested() {
-        let xml = "<foo><bar baz='qxx' /></foo>";
+        let xml = "<foo xmlns='ns1'><bar xmlns='ns1' baz='qxx' /></foo>";
         let mut reader = EventReader::from_str(xml);
         let elem = Element::from_reader(&mut reader);
 
-        let nested = Element::builder("bar").attr("baz", "qxx").build();
-        let elem2 = Element::builder("foo").append(nested).build();
+        let nested = Element::builder("bar", "ns1").attr("baz", "qxx").build();
+        let elem2 = Element::builder("foo", "ns1").append(nested).build();
 
         assert_eq!(elem.unwrap(), elem2);
     }
 
     #[test]
     fn test_from_reader_with_prefix() {
-        let xml = "<foo><prefix:bar baz='qxx' /></foo>";
+        let xml = "<foo xmlns='ns1'><prefix:bar xmlns:prefix='ns1' baz='qxx' /></foo>";
         let mut reader = EventReader::from_str(xml);
         let elem = Element::from_reader(&mut reader);
 
-        let nested = Element::builder("prefix:bar").attr("baz", "qxx").build();
-        let elem2 = Element::builder("foo").append(nested).build();
+        let nested = Element::builder("prefix:bar", "ns1").attr("baz", "qxx").build();
+        let elem2 = Element::builder("foo", "ns1").append(nested).build();
 
         assert_eq!(elem.unwrap(), elem2);
     }
@@ -1022,7 +1085,7 @@ mod tests {
 
     #[test]
     fn does_not_unescape_cdata() {
-        let xml = "<test><![CDATA[&apos;&gt;blah<blah>]]></test>";
+        let xml = "<test xmlns='test'><![CDATA[&apos;&gt;blah<blah>]]></test>";
         let mut reader = EventReader::from_str(xml);
         let elem = Element::from_reader(&mut reader).unwrap();
         assert_eq!(elem.text(), "&apos;&gt;blah<blah>");
@@ -1030,7 +1093,7 @@ mod tests {
 
     #[test]
     fn test_compare_all_ns() {
-        let xml = "<foo xmlns='foo' xmlns:bar='baz'><bar:meh/></foo>";
+        let xml = "<foo xmlns='foo' xmlns:bar='baz'><bar:meh xmlns:bar='baz' /></foo>";
         let mut reader = EventReader::from_str(xml);
         let elem = Element::from_reader(&mut reader).unwrap();
 

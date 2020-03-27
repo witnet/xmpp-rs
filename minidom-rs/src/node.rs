@@ -12,6 +12,7 @@ use crate::element::{Element, ElementBuilder};
 use crate::error::Result;
 
 use std::io::Write;
+use std::collections::BTreeMap;
 
 use quick_xml::events::{BytesText, Event};
 use quick_xml::Writer as EventWriter;
@@ -34,7 +35,7 @@ impl Node {
     /// ```rust
     /// use minidom::Node;
     ///
-    /// let elm = Node::Element("<meow />".parse().unwrap());
+    /// let elm = Node::Element("<meow xmlns=\"ns1\"/>".parse().unwrap());
     /// let txt = Node::Text("meow".to_owned());
     ///
     /// assert_eq!(elm.as_element().unwrap().name(), "meow");
@@ -55,7 +56,7 @@ impl Node {
     /// ```rust
     /// use minidom::Node;
     ///
-    /// let mut elm = Node::Element("<meow />".parse().unwrap());
+    /// let mut elm = Node::Element("<meow xmlns=\"ns1\"/>".parse().unwrap());
     /// let mut txt = Node::Text("meow".to_owned());
     ///
     /// assert_eq!(elm.as_element_mut().unwrap().name(), "meow");
@@ -76,7 +77,7 @@ impl Node {
     /// ```rust
     /// use minidom::Node;
     ///
-    /// let elm = Node::Element("<meow />".parse().unwrap());
+    /// let elm = Node::Element("<meow xmlns=\"ns1\"/>".parse().unwrap());
     /// let txt = Node::Text("meow".to_owned());
     ///
     /// assert_eq!(elm.into_element().unwrap().name(), "meow");
@@ -97,7 +98,7 @@ impl Node {
     /// ```rust
     /// use minidom::Node;
     ///
-    /// let elm = Node::Element("<meow />".parse().unwrap());
+    /// let elm = Node::Element("<meow xmlns=\"ns1\"/>".parse().unwrap());
     /// let txt = Node::Text("meow".to_owned());
     ///
     /// assert_eq!(elm.as_text(), None);
@@ -118,7 +119,7 @@ impl Node {
     /// ```rust
     /// use minidom::Node;
     ///
-    /// let mut elm = Node::Element("<meow />".parse().unwrap());
+    /// let mut elm = Node::Element("<meow xmlns=\"ns1\"/>".parse().unwrap());
     /// let mut txt = Node::Text("meow".to_owned());
     ///
     /// assert_eq!(elm.as_text_mut(), None);
@@ -145,7 +146,7 @@ impl Node {
     /// ```rust
     /// use minidom::Node;
     ///
-    /// let elm = Node::Element("<meow />".parse().unwrap());
+    /// let elm = Node::Element("<meow xmlns=\"ns1\"/>".parse().unwrap());
     /// let txt = Node::Text("meow".to_owned());
     ///
     /// assert_eq!(elm.into_text(), None);
@@ -159,9 +160,9 @@ impl Node {
     }
 
     #[doc(hidden)]
-    pub(crate) fn write_to_inner<W: Write>(&self, writer: &mut EventWriter<W>) -> Result<()> {
+    pub(crate) fn write_to_inner<W: Write>(&self, writer: &mut EventWriter<W>, prefixes: &mut BTreeMap<Option<String>, String>) -> Result<()> {
         match *self {
-            Node::Element(ref elmt) => elmt.write_to_inner(writer)?,
+            Node::Element(ref elmt) => elmt.write_to_inner(writer, prefixes)?,
             Node::Text(ref s) => {
                 writer.write_event(Event::Text(BytesText::from_plain_str(s)))?;
             }

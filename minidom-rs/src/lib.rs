@@ -79,7 +79,8 @@ pub use quick_xml;
 pub mod convert;
 pub mod element;
 pub mod error;
-mod namespace_set;
+mod namespaces;
+mod prefixes;
 pub mod node;
 
 #[cfg(test)]
@@ -88,5 +89,5 @@ mod tests;
 pub use convert::IntoAttributeValue;
 pub use element::{Children, ChildrenMut, Element, ElementBuilder};
 pub use error::{Error, Result};
-pub use namespace_set::NSChoice;
+pub use namespaces::NSChoice;
 pub use node::Node;

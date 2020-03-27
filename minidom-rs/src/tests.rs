@@ -18,16 +18,14 @@ use quick_xml::Reader;
 const TEST_STRING: &'static str = r#"<root xmlns="root_ns" a="b" xml:lang="en">meow<child c="d"/><child xmlns="child_ns" d="e" xml:lang="fr"/>nya</root>"#;
 
 fn build_test_tree() -> Element {
-    let mut root = Element::builder("root")
-        .ns("root_ns")
+    let mut root = Element::builder("root", "root_ns")
         .attr("xml:lang", "en")
         .attr("a", "b")
         .build();
     root.append_text_node("meow");
-    let child = Element::builder("child").attr("c", "d").build();
+    let child = Element::builder("child", "root_ns").attr("c", "d").build();
     root.append_child(child);
-    let other_child = Element::builder("child")
-        .ns("child_ns")
+    let other_child = Element::builder("child", "child_ns")
         .attr("d", "e")
         .attr("xml:lang", "fr")
         .build();
@@ -43,6 +41,80 @@ fn reader_works() {
         Element::from_reader(&mut reader).unwrap(),
         build_test_tree()
     );
+}
+
+#[test]
+fn reader_deduplicate_prefixes() {
+    // The reader shouldn't complain that "child" doesn't have a namespace. It should reuse the
+    // parent ns with the same prefix.
+    let _: Element = r#"<root xmlns="ns1"><child/></root>"#.parse().unwrap();
+    let _: Element = r#"<p1:root xmlns:p1="ns1"><p1:child/></p1:root>"#.parse().unwrap();
+    let _: Element = r#"<root xmlns="ns1"><child xmlns:p1="ns2"><p1:grandchild/></child></root>"#.parse().unwrap();
+
+    match r#"<p1:root xmlns:p1="ns1"><child/></p1:root>"#.parse::<Element>() {
+        Err(Error::MissingNamespace) => (),
+        Err(err) => panic!("No or wrong error: {:?}", err),
+        Ok(elem) => panic!("Got Element: {}; was expecting Error::MissingNamespace", String::from(&elem)),
+    }
+}
+
+#[test]
+fn reader_no_deduplicate_sibling_prefixes() {
+    // The reader shouldn't reuse the sibling's prefixes
+    match r#"<root xmlns="ns1"><p1:child1 xmlns:p1="ns2"/><p1:child2/></root>"#.parse::<Element>() {
+        Err(Error::MissingNamespace) => (),
+        Err(err) => panic!("No or wrong error: {:?}", err),
+        Ok(elem) => panic!("Got Element:\n{:?}\n{}\n; was expecting Error::MissingNamespace", elem, String::from(&elem)),
+    }
+}
+
+#[test]
+fn test_real_data() {
+    let correction = Element::builder("replace", "urn:xmpp:message-correct:0").build();
+    let body = Element::builder("body", "jabber:client").build();
+    let message = Element::builder("message", "jabber:client")
+        .append(body)
+        .append(correction)
+        .build();
+    let stream = Element::builder("stream", "http://etherx.jabber.org/streams")
+        .prefix(Some(String::from("stream")), "http://etherx.jabber.org/streams")
+        .prefix(None, "jabber:client")
+        .append(message)
+        .build();
+    println!("{}", String::from(&stream));
+
+    let jid = Element::builder("jid", "urn:xmpp:presence:0").build();
+    let nick = Element::builder("nick", "urn:xmpp:presence:0").build();
+    let mix = Element::builder("mix", "urn:xmpp:presence:0")
+        .append(jid)
+        .append(nick)
+        .build();
+    let show = Element::builder("show", "jabber:client").build();
+    let status = Element::builder("status", "jabber:client").build();
+    let presence = Element::builder("presence", "jabber:client")
+        .append(show)
+        .append(status)
+        .append(mix)
+        .build();
+    let item = Element::builder("item", "http://jabber.org/protocol/pubsub")
+        .append(presence)
+        .build();
+    let items = Element::builder("items", "http://jabber.org/protocol/pubsub")
+        .append(item)
+        .build();
+    let pubsub = Element::builder("pubsub", "http://jabber.org/protocol/pubsub")
+        .append(items)
+        .build();
+    let iq = Element::builder("iq", "jabber:client")
+        .append(pubsub)
+        .build();
+    let stream = Element::builder("stream", "http://etherx.jabber.org/streams")
+        .prefix(Some(String::from("stream")), "http://etherx.jabber.org/streams")
+        .prefix(None, "jabber:client")
+        .append(iq)
+        .build();
+
+    println!("{}", String::from(&stream));
 }
 
 #[test]
@@ -67,38 +139,114 @@ fn writer_with_decl_works() {
 }
 
 #[test]
+fn writer_with_prefix() {
+    let root = Element::builder("root", "ns1")
+        .prefix(Some(String::from("p1")), "ns1")
+        .prefix(None, "ns2")
+        .build();
+    assert_eq!(String::from(&root),
+        r#"<p1:root xmlns:p1="ns1" xmlns="ns2"/>"#,
+    );
+}
+
+#[test]
+fn writer_no_prefix_namespace() {
+    let root = Element::builder("root", "ns1").build();
+    // TODO: Note that this isn't exactly equal to a None prefix. it's just that the None prefix is
+    // the most obvious when it's not already used. Maybe fix tests so that it only checks that the
+    // prefix used equals the one declared for the namespace.
+    assert_eq!(String::from(&root), r#"<root xmlns="ns1"/>"#);
+}
+
+#[test]
+fn writer_no_prefix_namespace_child() {
+    let child = Element::builder("child", "ns1").build();
+    let root = Element::builder("root", "ns1")
+        .append(child)
+        .build();
+    // TODO: Same remark as `writer_no_prefix_namespace`.
+    assert_eq!(String::from(&root), r#"<root xmlns="ns1"><child/></root>"#);
+
+    let child = Element::builder("child", "ns2")
+        .prefix(None, "ns3")
+        .build();
+    let root = Element::builder("root", "ns1")
+        .append(child)
+        .build();
+    // TODO: Same remark as `writer_no_prefix_namespace`.
+    assert_eq!(String::from(&root), r#"<root xmlns="ns1"><ns0:child xmlns:ns0="ns2" xmlns="ns3"/></root>"#);
+}
+
+#[test]
+fn writer_prefix_namespace_child() {
+    let child = Element::builder("child", "ns1").build();
+    let root = Element::builder("root", "ns1")
+        .prefix(Some(String::from("p1")), "ns1")
+        .append(child)
+        .build();
+    assert_eq!(String::from(&root), r#"<p1:root xmlns:p1="ns1"><p1:child/></p1:root>"#);
+}
+
+#[test]
+fn writer_with_prefix_deduplicate() {
+    let child = Element::builder("child", "ns1")
+        // .prefix(Some(String::from("p1")), "ns1")
+        .build();
+    let root = Element::builder("root", "ns1")
+        .prefix(Some(String::from("p1")), "ns1")
+        .prefix(None, "ns2")
+        .append(child)
+        .build();
+    assert_eq!(String::from(&root),
+        r#"<p1:root xmlns:p1="ns1" xmlns="ns2"><p1:child/></p1:root>"#,
+    );
+
+    // Ensure descendants don't just reuse ancestors' prefixes that have been shadowed in between
+    let grandchild = Element::builder("grandchild", "ns1")
+        .build();
+    let child = Element::builder("child", "ns2")
+        .append(grandchild)
+        .build();
+    let root = Element::builder("root", "ns1")
+        .append(child)
+        .build();
+    assert_eq!(String::from(&root),
+        r#"<root xmlns="ns1"><child xmlns="ns2"><grandchild xmlns="ns1"/></child></root>"#,
+    );
+}
+
+#[test]
 fn writer_escapes_attributes() {
-    let root = Element::builder("root").attr("a", "\"Air\" quotes").build();
+    let root = Element::builder("root", "ns1").attr("a", "\"Air\" quotes").build();
     let mut writer = Vec::new();
     {
         root.write_to(&mut writer).unwrap();
     }
     assert_eq!(
         String::from_utf8(writer).unwrap(),
-        r#"<root a="&quot;Air&quot; quotes"/>"#
+        r#"<root xmlns="ns1" a="&quot;Air&quot; quotes"/>"#
     );
 }
 
 #[test]
 fn writer_escapes_text() {
-    let root = Element::builder("root").append("<3").build();
+    let root = Element::builder("root", "ns1").append("<3").build();
     let mut writer = Vec::new();
     {
         root.write_to(&mut writer).unwrap();
     }
-    assert_eq!(String::from_utf8(writer).unwrap(), r#"<root>&lt;3</root>"#);
+    assert_eq!(String::from_utf8(writer).unwrap(), r#"<root xmlns="ns1">&lt;3</root>"#);
 }
 
 #[test]
 fn builder_works() {
-    let elem = Element::builder("a")
-        .ns("b")
+    let elem = Element::builder("a", "b")
         .attr("c", "d")
-        .append(Element::builder("child"))
+        .append(Element::builder("child", "b"))
         .append("e")
         .build();
     assert_eq!(elem.name(), "a");
-    assert_eq!(elem.ns(), Some("b".to_owned()));
+    assert_eq!(elem.ns(), "b".to_owned());
     assert_eq!(elem.attr("c"), Some("d"));
     assert_eq!(elem.attr("x"), None);
     assert_eq!(elem.text(), "e");
@@ -140,9 +288,9 @@ fn get_child_works() {
 
 #[test]
 fn namespace_propagation_works() {
-    let mut root = Element::builder("root").ns("root_ns").build();
-    let mut child = Element::bare("child");
-    let grandchild = Element::bare("grandchild");
+    let mut root = Element::builder("root", "root_ns").build();
+    let mut child = Element::bare("child", "root_ns");
+    let grandchild = Element::bare("grandchild", "root_ns");
     child.append_child(grandchild);
     root.append_child(child);
 
@@ -159,12 +307,12 @@ fn namespace_propagation_works() {
 
 #[test]
 fn two_elements_with_same_arguments_different_order_are_equal() {
-    let elem1: Element = "<a b='a' c=''/>".parse().unwrap();
-    let elem2: Element = "<a c='' b='a'/>".parse().unwrap();
+    let elem1: Element = "<a b='a' c='' xmlns='ns1'/>".parse().unwrap();
+    let elem2: Element = "<a c='' b='a' xmlns='ns1'/>".parse().unwrap();
     assert_eq!(elem1, elem2);
 
-    let elem1: Element = "<a b='a' c=''/>".parse().unwrap();
-    let elem2: Element = "<a c='d' b='a'/>".parse().unwrap();
+    let elem1: Element = "<a b='a' c='' xmlns='ns1'/>".parse().unwrap();
+    let elem2: Element = "<a c='d' b='a' xmlns='ns1'/>".parse().unwrap();
     assert_ne!(elem1, elem2);
 }
 
@@ -184,11 +332,11 @@ fn namespace_attributes_works() {
 
 #[test]
 fn wrongly_closed_elements_error() {
-    let elem1 = "<a></b>".parse::<Element>();
+    let elem1 = "<a xmlns='ns1'></b>".parse::<Element>();
     assert!(elem1.is_err());
-    let elem1 = "<a></c></a>".parse::<Element>();
+    let elem1 = "<a xmlns='ns1'></c></a>".parse::<Element>();
     assert!(elem1.is_err());
-    let elem1 = "<a><c><d/></c></a>".parse::<Element>();
+    let elem1 = "<a xmlns='ns1'><c xmlns='ns1'><d xmlns='ns1'/></c></a>".parse::<Element>();
     assert!(elem1.is_ok());
 }
 
@@ -196,7 +344,7 @@ fn wrongly_closed_elements_error() {
 fn namespace_simple() {
     let elem: Element = "<message xmlns='jabber:client'/>".parse().unwrap();
     assert_eq!(elem.name(), "message");
-    assert_eq!(elem.ns(), Some("jabber:client".to_owned()));
+    assert_eq!(elem.ns(), "jabber:client".to_owned());
 }
 
 #[test]
@@ -207,53 +355,53 @@ fn namespace_prefixed() {
     assert_eq!(elem.name(), "features");
     assert_eq!(
         elem.ns(),
-        Some("http://etherx.jabber.org/streams".to_owned())
+        "http://etherx.jabber.org/streams".to_owned(),
     );
 }
 
 #[test]
 fn namespace_inherited_simple() {
-    let elem: Element = "<stream xmlns='jabber:client'><message/></stream>"
+    let elem: Element = "<stream xmlns='jabber:client'><message xmlns='jabber:client' /></stream>"
         .parse()
         .unwrap();
     assert_eq!(elem.name(), "stream");
-    assert_eq!(elem.ns(), Some("jabber:client".to_owned()));
+    assert_eq!(elem.ns(), "jabber:client".to_owned());
     let child = elem.children().next().unwrap();
     assert_eq!(child.name(), "message");
-    assert_eq!(child.ns(), Some("jabber:client".to_owned()));
+    assert_eq!(child.ns(), "jabber:client".to_owned());
 }
 
 #[test]
 fn namespace_inherited_prefixed1() {
-    let elem: Element = "<stream:features xmlns:stream='http://etherx.jabber.org/streams' xmlns='jabber:client'><message/></stream:features>"
+    let elem: Element = "<stream:features xmlns:stream='http://etherx.jabber.org/streams' xmlns='jabber:client'><message xmlns='jabber:client' /></stream:features>"
         .parse().unwrap();
     assert_eq!(elem.name(), "features");
     assert_eq!(
         elem.ns(),
-        Some("http://etherx.jabber.org/streams".to_owned())
+        "http://etherx.jabber.org/streams".to_owned(),
     );
     let child = elem.children().next().unwrap();
     assert_eq!(child.name(), "message");
-    assert_eq!(child.ns(), Some("jabber:client".to_owned()));
+    assert_eq!(child.ns(), "jabber:client".to_owned());
 }
 
 #[test]
 fn namespace_inherited_prefixed2() {
-    let elem: Element = "<stream xmlns='http://etherx.jabber.org/streams' xmlns:jabber='jabber:client'><jabber:message/></stream>"
+    let elem: Element = "<stream xmlns='http://etherx.jabber.org/streams' xmlns:jabber='jabber:client'><jabber:message xmlns:jabber='jabber:client' /></stream>"
         .parse().unwrap();
     assert_eq!(elem.name(), "stream");
     assert_eq!(
         elem.ns(),
-        Some("http://etherx.jabber.org/streams".to_owned())
+        "http://etherx.jabber.org/streams".to_owned(),
     );
     let child = elem.children().next().unwrap();
     assert_eq!(child.name(), "message");
-    assert_eq!(child.ns(), Some("jabber:client".to_owned()));
+    assert_eq!(child.ns(), "jabber:client".to_owned());
 }
 
 #[test]
 fn fail_comments() {
-    let elem: Result<Element, Error> = "<foo><!-- bar --></foo>".parse();
+    let elem: Result<Element, Error> = "<foo xmlns='ns1'><!-- bar --></foo>".parse();
     match elem {
         Err(Error::NoComments) => (),
         _ => panic!(),
@@ -262,12 +410,12 @@ fn fail_comments() {
 
 #[test]
 fn xml_error() {
-    match "<a></b>".parse::<Element>() {
+    match "<a xmlns='ns1'></b>".parse::<Element>() {
         Err(crate::error::Error::XmlError(_)) => (),
         err => panic!("No or wrong error: {:?}", err),
     }
 
-    match "<a></".parse::<Element>() {
+    match "<a xmlns='ns1'></".parse::<Element>() {
         Err(crate::error::Error::XmlError(_)) => (),
         err => panic!("No or wrong error: {:?}", err),
     }
@@ -277,6 +425,14 @@ fn xml_error() {
 fn invalid_element_error() {
     match "<a:b:c>".parse::<Element>() {
         Err(crate::error::Error::InvalidElement) => (),
+        err => panic!("No or wrong error: {:?}", err),
+    }
+}
+
+#[test]
+fn missing_namespace_error() {
+    match "<a/>".parse::<Element>() {
+        Err(crate::error::Error::MissingNamespace) => (),
         err => panic!("No or wrong error: {:?}", err),
     }
 }

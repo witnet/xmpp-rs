@@ -35,6 +35,9 @@ pub enum Error {
     /// An error which is returned when an elemet's name contains more than one colon
     InvalidElement,
 
+    /// An error which is returned when an element doesn't contain a namespace
+    MissingNamespace,
+
     /// An error which is returned when a comment is to be parsed by minidom
     NoComments,
 }
@@ -48,6 +51,7 @@ impl StdError for Error {
             Error::EndOfDocument => None,
             Error::InvalidElementClosed => None,
             Error::InvalidElement => None,
+            Error::MissingNamespace => None,
             Error::NoComments => None,
         }
     }
@@ -66,6 +70,10 @@ impl std::fmt::Display for Error {
                 write!(fmt, "the XML is invalid, an element was wrongly closed")
             }
             Error::InvalidElement => write!(fmt, "the XML element is invalid"),
+            Error::MissingNamespace => write!(
+                fmt,
+                "the XML element is missing a namespace",
+            ),
             Error::NoComments => write!(
                 fmt,
                 "a comment has been found even though comments are forbidden"
