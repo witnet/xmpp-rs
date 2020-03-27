@@ -17,6 +17,13 @@ generate_id!(
     ParticipantId
 );
 
+impl ParticipantId {
+    /// Create a new ParticipantId.
+    pub fn new<P: Into<String>>(participant: P) -> ParticipantId {
+        ParticipantId(participant.into())
+    }
+}
+
 generate_id!(
     /// A MIX channel identifier.
     ChannelId
@@ -38,6 +45,16 @@ generate_element!(
 
 impl PubSubPayload for Participant {}
 
+impl Participant {
+    /// Create a new MIX participant.
+    pub fn new<J: Into<String>, N: Into<String>>(jid: J, nick: N) -> Participant {
+        Participant {
+            nick: nick.into(),
+            jid: jid.into(),
+        }
+    }
+}
+
 generate_element!(
     /// A node to subscribe to.
     Subscribe, "subscribe", MIX_CORE,
@@ -46,6 +63,15 @@ generate_element!(
         node: Required<NodeName> = "node",
     ]
 );
+
+impl Subscribe {
+    /// Create a new Subscribe element.
+    pub fn new<N: Into<String>>(node: N) -> Subscribe {
+        Subscribe {
+            node: NodeName(node.into()),
+        }
+    }
+}
 
 generate_element!(
     /// A request from a user’s server to join a MIX channel.
@@ -66,6 +92,28 @@ generate_element!(
 impl IqSetPayload for Join {}
 impl IqResultPayload for Join {}
 
+impl Join {
+    /// Create a new Join element.
+    pub fn from_nick_and_nodes<N: Into<String>>(nick: N, nodes: &[&str]) -> Join {
+        let subscribes = nodes
+            .into_iter()
+            .cloned()
+            .map(|n| Subscribe::new(n))
+            .collect();
+        Join {
+            id: None,
+            nick: nick.into(),
+            subscribes,
+        }
+    }
+
+    /// Sets the JID on this update-subscription.
+    pub fn with_id<I: Into<String>>(mut self, id: I) -> Self {
+        self.id = Some(ParticipantId(id.into()));
+        self
+    }
+}
+
 generate_element!(
     /// Update a given subscription.
     UpdateSubscription, "update-subscription", MIX_CORE,
@@ -84,6 +132,27 @@ generate_element!(
 
 impl IqSetPayload for UpdateSubscription {}
 impl IqResultPayload for UpdateSubscription {}
+
+impl UpdateSubscription {
+    /// Create a new UpdateSubscription element.
+    pub fn from_nodes(nodes: &[&str]) -> UpdateSubscription {
+        let subscribes = nodes
+            .into_iter()
+            .cloned()
+            .map(|n| Subscribe::new(n))
+            .collect();
+        UpdateSubscription {
+            jid: None,
+            subscribes,
+        }
+    }
+
+    /// Sets the JID on this update-subscription.
+    pub fn with_jid(mut self, jid: BareJid) -> Self {
+        self.jid = Some(jid);
+        self
+    }
+}
 
 generate_empty_element!(
     /// Request to leave a given MIX channel.  It will automatically unsubscribe the user from all
@@ -108,6 +177,13 @@ generate_element!(
 impl IqSetPayload for SetNick {}
 impl IqResultPayload for SetNick {}
 
+impl SetNick {
+    /// Create a new SetNick element.
+    pub fn new<N: Into<String>>(nick: N) -> SetNick {
+        SetNick { nick: nick.into() }
+    }
+}
+
 generate_element!(
     /// Message payload describing who actually sent the message, since unlike in MUC, all messages
     /// are sent from the channel’s JID.
@@ -124,6 +200,16 @@ generate_element!(
 
 impl MessagePayload for Mix {}
 
+impl Mix {
+    /// Create a new Mix element.
+    pub fn new<N: Into<String>, J: Into<String>>(nick: N, jid: J) -> Mix {
+        Mix {
+            nick: nick.into(),
+            jid: jid.into(),
+        }
+    }
+}
+
 generate_element!(
     /// Create a new MIX channel.
     Create, "create", MIX_CORE,
@@ -135,6 +221,20 @@ generate_element!(
 
 impl IqSetPayload for Create {}
 impl IqResultPayload for Create {}
+
+impl Create {
+    /// Create a new ad-hoc Create element.
+    pub fn new() -> Create {
+        Create { channel: None }
+    }
+
+    /// Create a new Create element with a channel identifier.
+    pub fn from_channel_id<C: Into<String>>(channel: C) -> Create {
+        Create {
+            channel: Some(ChannelId(channel.into())),
+        }
+    }
+}
 
 generate_element!(
     /// Destroy a given MIX channel.
@@ -148,6 +248,15 @@ generate_element!(
 // TODO: section 7.3.4, example 33, doesn’t mirror the <destroy/> in the iq result unlike every
 // other section so far.
 impl IqSetPayload for Destroy {}
+
+impl Destroy {
+    /// Create a new Destroy element.
+    pub fn new<C: Into<String>>(channel: C) -> Destroy {
+        Destroy {
+            channel: ChannelId(channel.into()),
+        }
+    }
+}
 
 #[cfg(test)]
 mod tests {
