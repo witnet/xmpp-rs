@@ -1,13 +1,18 @@
+Version 0.18.0:
+UNRELEASED  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
+    * New parsers/serialisers:
+        - Mediated Information eXchange (MIX) (XEP-0369)
+
 Version 0.17.0:
 2020-02-15  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>, Maxime “pep” Buquet <pep@bouah.net>, Paul Fariello <paul@fariello.eu>
-  * Improvements:
-      - Add serialization tests where possible
-      - Use minidom's NSChoice API for Jingle parser
-      - Remove NamespaceAwareCompare. Move to minidom
-  * Breaking changes:
-      - Prevent generate_serializer macro from adding another layer of Node.
-        Fixes some serializers.
-      - ecaps2: Use the Error type instead of ()
+    * Improvements:
+        - Add serialization tests where possible
+        - Use minidom's NSChoice API for Jingle parser
+        - Remove NamespaceAwareCompare. Move to minidom
+    * Breaking changes:
+        - Prevent generate_serializer macro from adding another layer of Node.
+          Fixes some serializers.
+        - ecaps2: Use the Error type instead of ()
 
 Version 0.16.0:
 2019-10-15  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
