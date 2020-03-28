@@ -207,8 +207,7 @@ impl Element {
         )
     }
 
-    /// Returns a reference to the name of this element.
-    // TODO: rename local_name
+    /// Returns a reference to the local name of this element (that is, without a possible prefix).
     pub fn name(&self) -> &str {
         &self.name
     }
@@ -1077,6 +1076,18 @@ mod tests {
         let elem2 = Element::builder("foo", "ns1").append(nested).build();
 
         assert_eq!(elem.unwrap(), elem2);
+    }
+
+    #[test]
+    fn test_from_reader_split_prefix() {
+        let xml = "<foo:bar xmlns:foo='ns1'/>";
+        let mut reader = EventReader::from_str(xml);
+        let elem = Element::from_reader(&mut reader).unwrap();
+
+        assert_eq!(elem.name(), String::from("bar"));
+        assert_eq!(elem.ns(), String::from("ns1"));
+        // Ensure the prefix is properly added to the store
+        assert_eq!(elem.prefixes.get(&String::from("ns1")), Some(Some(String::from("foo"))));
     }
 
     #[test]
