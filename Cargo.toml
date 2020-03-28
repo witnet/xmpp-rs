@@ -5,6 +5,7 @@ members = [  # alphabetically sorted
   "tokio-xmpp",
   "xmpp-parsers",
   "xmpp-rs",
+  "interned-minidom",
 ]
 
 [patch.crates-io]
@@ -13,3 +14,4 @@ minidom = { path = "minidom-rs" }
 tokio-xmpp = { path = "tokio-xmpp" }
 xmpp-parsers = { path = "xmpp-parsers" }
 xmpp = { path = "xmpp-rs" }
+interned-minidom = { path = "interned-minidom" }

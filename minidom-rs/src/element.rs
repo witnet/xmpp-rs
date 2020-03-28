@@ -956,6 +956,11 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_size() {
+        assert_eq!(std::mem::size_of::<Element>(), 104);
+    }
+
+    #[test]
     fn test_element_new() {
         use std::iter::FromIterator;
 
