@@ -129,7 +129,16 @@ impl Element {
         attributes: BTreeMap<String, String>,
         children: Vec<Node>,
     ) -> Element {
-        // TODO split name and possible prefix.
+        let (prefix, name) = split_element_name(name).unwrap();
+        let namespace: String = namespace.into();
+        let prefixes: Prefixes = match prefix {
+            None => prefixes.into(),
+            Some(_) => {
+                let mut p = prefixes.into();
+                p.insert(namespace.clone(), prefix);
+                p
+            },
+        };
         Element {
             name,
             namespace,
@@ -189,14 +198,13 @@ impl Element {
     /// assert_eq!(bare.text(), "");
     /// ```
     pub fn bare<S: Into<String>, NS: Into<String>>(name: S, namespace: NS) -> Element {
-        // TODO split name and possible prefix.
-        Element {
-            name: name.into(),
-            namespace: namespace.into(),
-            prefixes: Rc::new(Prefixes::default()),
-            attributes: BTreeMap::new(),
-            children: Vec::new(),
-        }
+        Element::new(
+            name.into(),
+            namespace.into(),
+            BTreeMap::new(),
+            BTreeMap::new(),
+            Vec::new(),
+        )
     }
 
     /// Returns a reference to the name of this element.

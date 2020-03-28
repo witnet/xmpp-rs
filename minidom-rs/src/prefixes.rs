@@ -52,6 +52,10 @@ impl Prefixes {
             None => None,
         }
     }
+
+    pub(crate) fn insert<S: Into<String>>(&mut self, namespace: S, prefix: Option<String>) {
+        self.prefixes.insert(namespace.into(), prefix);
+    }
 }
 
 impl From<BTreeMap<String, Option<String>>> for Prefixes {
