@@ -353,11 +353,11 @@ mod tests {
     fn serialise() {
         let elem: Element = Join::from_nick_and_nodes("coucou", &["foo", "bar"]).into();
         let xml = String::from(&elem);
-        assert_eq!(xml, "<join xmlns=\"urn:xmpp:mix:core:1\"><nick xmlns=\"urn:xmpp:mix:core:1\">coucou</nick><subscribe xmlns=\"urn:xmpp:mix:core:1\" node=\"foo\"/><subscribe xmlns=\"urn:xmpp:mix:core:1\" node=\"bar\"/></join>");
+        assert_eq!(xml, "<join xmlns=\"urn:xmpp:mix:core:1\"><nick>coucou</nick><subscribe node=\"foo\"/><subscribe node=\"bar\"/></join>");
 
         let elem: Element = UpdateSubscription::from_nodes(&["foo", "bar"]).into();
         let xml = String::from(&elem);
-        assert_eq!(xml, "<update-subscription xmlns=\"urn:xmpp:mix:core:1\"><subscribe xmlns=\"urn:xmpp:mix:core:1\" node=\"foo\"/><subscribe xmlns=\"urn:xmpp:mix:core:1\" node=\"bar\"/></update-subscription>");
+        assert_eq!(xml, "<update-subscription xmlns=\"urn:xmpp:mix:core:1\"><subscribe node=\"foo\"/><subscribe node=\"bar\"/></update-subscription>");
 
         let elem: Element = Leave.into();
         let xml = String::from(&elem);
@@ -365,11 +365,11 @@ mod tests {
 
         let elem: Element = SetNick::new("coucou").into();
         let xml = String::from(&elem);
-        assert_eq!(xml, "<setnick xmlns=\"urn:xmpp:mix:core:1\"><nick xmlns=\"urn:xmpp:mix:core:1\">coucou</nick></setnick>");
+        assert_eq!(xml, "<setnick xmlns=\"urn:xmpp:mix:core:1\"><nick>coucou</nick></setnick>");
 
         let elem: Element = Mix::new("coucou", "coucou@example").into();
         let xml = String::from(&elem);
-        assert_eq!(xml, "<mix xmlns=\"urn:xmpp:mix:core:1\"><nick xmlns=\"urn:xmpp:mix:core:1\">coucou</nick><jid xmlns=\"urn:xmpp:mix:core:1\">coucou@example</jid></mix>");
+        assert_eq!(xml, "<mix xmlns=\"urn:xmpp:mix:core:1\"><nick>coucou</nick><jid>coucou@example</jid></mix>");
 
         let elem: Element = Create::new().into();
         let xml = String::from(&elem);

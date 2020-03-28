@@ -96,8 +96,7 @@ impl TryFrom<Element> for XhtmlIm {
 
 impl From<XhtmlIm> for Element {
     fn from(wrapper: XhtmlIm) -> Element {
-        Element::builder("html")
-            .ns(ns::XHTML_IM)
+        Element::builder("html", ns::XHTML_IM)
             .append_all(wrapper.bodies.into_iter().map(|(lang, body)| {
                 if lang.is_empty() {
                     assert!(body.xml_lang.is_none());
@@ -173,8 +172,7 @@ impl TryFrom<Element> for Body {
 
 impl From<Body> for Element {
     fn from(body: Body) -> Element {
-        Element::builder("body")
-            .ns(ns::XHTML)
+        Element::builder("body", ns::XHTML)
             .attr("style", get_style_string(body.style))
             .attr("xml:lang", body.xml_lang)
             .append_all(children_to_nodes(body.children))
@@ -456,8 +454,7 @@ impl From<Tag> for Element {
                 panic!("No unknown element should be present in XHTML-IM after parsing.")
             }
         };
-        let mut builder = Element::builder(name)
-            .ns(ns::XHTML)
+        let mut builder = Element::builder(name, ns::XHTML)
             .append_all(children_to_nodes(children));
         for (key, value) in attrs {
             builder = builder.attr(key, value);

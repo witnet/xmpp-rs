@@ -60,8 +60,7 @@ impl TryFrom<Element> for Caps {
 
 impl From<Caps> for Element {
     fn from(caps: Caps) -> Element {
-        Element::builder("c")
-            .ns(ns::CAPS)
+        Element::builder("c", ns::CAPS)
             .attr("ext", caps.ext)
             .attr("hash", caps.hash.algo)
             .attr("node", caps.node)

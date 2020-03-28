@@ -75,11 +75,10 @@ impl TryFrom<Element> for TimeResult {
 
 impl From<TimeResult> for Element {
     fn from(time: TimeResult) -> Element {
-        Element::builder("time")
-            .ns(ns::TIME)
-            .append(Element::builder("tzo").append(format!("{}", time.0.timezone())))
+        Element::builder("time", ns::TIME)
+            .append(Element::builder("tzo", ns::TIME).append(format!("{}", time.0.timezone())))
             .append(
-                Element::builder("utc")
+                Element::builder("utc", ns::TIME)
                     .append(time.0.with_timezone(FixedOffset::east(0)).format("%FT%TZ")),
             )
             .build()

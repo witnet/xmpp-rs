@@ -110,7 +110,7 @@ impl TryFrom<Element> for Actor {
 
 impl From<Actor> for Element {
     fn from(actor: Actor) -> Element {
-        let elem = Element::builder("actor").ns(ns::MUC_USER);
+        let elem = Element::builder("actor", ns::MUC_USER);
 
         (match actor {
             Actor::Jid(jid) => elem.attr("jid", jid),

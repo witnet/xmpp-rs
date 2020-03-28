@@ -85,21 +85,21 @@ impl TryFrom<Element> for JingleMI {
 impl From<JingleMI> for Element {
     fn from(jingle_mi: JingleMI) -> Element {
         match jingle_mi {
-            JingleMI::Propose { sid, description } => Element::builder("propose")
-                .ns(ns::JINGLE_MESSAGE)
+            JingleMI::Propose { sid, description } =>
+                Element::builder("propose", ns::JINGLE_MESSAGE)
                 .attr("id", sid)
                 .append(description),
-            JingleMI::Retract(sid) => Element::builder("retract")
-                .ns(ns::JINGLE_MESSAGE)
+            JingleMI::Retract(sid) =>
+                Element::builder("retract", ns::JINGLE_MESSAGE)
                 .attr("id", sid),
-            JingleMI::Accept(sid) => Element::builder("accept")
-                .ns(ns::JINGLE_MESSAGE)
+            JingleMI::Accept(sid) =>
+                Element::builder("accept", ns::JINGLE_MESSAGE)
                 .attr("id", sid),
-            JingleMI::Proceed(sid) => Element::builder("proceed")
-                .ns(ns::JINGLE_MESSAGE)
+            JingleMI::Proceed(sid) =>
+                Element::builder("proceed", ns::JINGLE_MESSAGE)
                 .attr("id", sid),
-            JingleMI::Reject(sid) => Element::builder("reject")
-                .ns(ns::JINGLE_MESSAGE)
+            JingleMI::Reject(sid) =>
+                Element::builder("reject", ns::JINGLE_MESSAGE)
                 .attr("id", sid),
         }
         .build()
@@ -119,7 +119,7 @@ mod tests {
     #[cfg(target_pointer_width = "64")]
     #[test]
     fn test_size() {
-        assert_size!(JingleMI, 136);
+        assert_size!(JingleMI, 184);
     }
 
     #[test]

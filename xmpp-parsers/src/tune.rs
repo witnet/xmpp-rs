@@ -161,8 +161,7 @@ impl TryFrom<Element> for Tune {
 
 impl From<Tune> for Element {
     fn from(tune: Tune) -> Element {
-        Element::builder("tune")
-            .ns(ns::TUNE)
+        Element::builder("tune", ns::TUNE)
             .append_all(tune.artist)
             .append_all(tune.length)
             .append_all(tune.rating)

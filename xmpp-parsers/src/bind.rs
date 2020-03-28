@@ -61,11 +61,10 @@ impl TryFrom<Element> for BindQuery {
 
 impl From<BindQuery> for Element {
     fn from(bind: BindQuery) -> Element {
-        Element::builder("bind")
-            .ns(ns::BIND)
+        Element::builder("bind", ns::BIND)
             .append_all(
                 bind.resource
-                    .map(|resource| Element::builder("resource").ns(ns::BIND).append(resource)),
+                    .map(|resource| Element::builder("resource", ns::BIND).append(resource)),
             )
             .build()
     }
@@ -130,9 +129,8 @@ impl TryFrom<Element> for BindResponse {
 
 impl From<BindResponse> for Element {
     fn from(bind: BindResponse) -> Element {
-        Element::builder("bind")
-            .ns(ns::BIND)
-            .append(Element::builder("jid").ns(ns::BIND).append(bind.jid))
+        Element::builder("bind", ns::BIND)
+            .append(Element::builder("jid", ns::BIND).append(bind.jid))
             .build()
     }
 }

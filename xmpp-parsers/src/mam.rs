@@ -166,11 +166,9 @@ fn serialise_jid_list(name: &str, jids: Vec<Jid>) -> ::std::option::IntoIter<Nod
         None.into_iter()
     } else {
         Some(
-            Element::builder(name)
-                .ns(ns::MAM)
+            Element::builder(name, ns::MAM)
                 .append_all(jids.into_iter().map(|jid| {
-                    Element::builder("jid")
-                        .ns(ns::MAM)
+                    Element::builder("jid", ns::MAM)
                         .append(String::from(jid))
                 }))
                 .into(),
@@ -181,8 +179,7 @@ fn serialise_jid_list(name: &str, jids: Vec<Jid>) -> ::std::option::IntoIter<Nod
 
 impl From<Prefs> for Element {
     fn from(prefs: Prefs) -> Element {
-        Element::builder("prefs")
-            .ns(ns::MAM)
+        Element::builder("prefs", ns::MAM)
             .attr("default", prefs.default_)
             .append_all(serialise_jid_list("always", prefs.always))
             .append_all(serialise_jid_list("never", prefs.never))

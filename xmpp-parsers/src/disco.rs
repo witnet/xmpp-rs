@@ -175,8 +175,7 @@ impl TryFrom<Element> for DiscoInfoResult {
 
 impl From<DiscoInfoResult> for Element {
     fn from(disco: DiscoInfoResult) -> Element {
-        Element::builder("query")
-            .ns(ns::DISCO_INFO)
+        Element::builder("query", ns::DISCO_INFO)
             .attr("node", disco.node)
             .append_all(disco.identities.into_iter())
             .append_all(disco.features.into_iter())

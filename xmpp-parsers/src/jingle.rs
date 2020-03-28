@@ -452,8 +452,7 @@ impl From<Reason> for Element {
             Reason::Timeout => "timeout",
             Reason::UnsupportedApplications => "unsupported-applications",
             Reason::UnsupportedTransports => "unsupported-transports",
-        })
-        .ns(ns::JINGLE)
+        }, ns::JINGLE)
         .build()
     }
 }
@@ -508,12 +507,10 @@ impl TryFrom<Element> for ReasonElement {
 
 impl From<ReasonElement> for Element {
     fn from(reason: ReasonElement) -> Element {
-        Element::builder("reason")
-            .ns(ns::JINGLE)
+        Element::builder("reason", ns::JINGLE)
             .append(Element::from(reason.reason))
             .append_all(reason.texts.into_iter().map(|(lang, text)| {
-                Element::builder("text")
-                    .ns(ns::JINGLE)
+                Element::builder("text", ns::JINGLE)
                     .attr("xml:lang", lang)
                     .append(text)
             }))
@@ -632,8 +629,7 @@ impl TryFrom<Element> for Jingle {
 
 impl From<Jingle> for Element {
     fn from(jingle: Jingle) -> Element {
-        Element::builder("jingle")
-            .ns(ns::JINGLE)
+        Element::builder("jingle", ns::JINGLE)
             .attr("action", jingle.action)
             .attr("initiator", jingle.initiator)
             .attr("responder", jingle.responder)
@@ -671,7 +667,7 @@ mod tests {
         assert_size!(Senders, 1);
         assert_size!(Disposition, 1);
         assert_size!(ContentId, 24);
-        assert_size!(Content, 408);
+        assert_size!(Content, 504);
         assert_size!(Reason, 1);
         assert_size!(ReasonElement, 32);
         assert_size!(SessionId, 24);
@@ -856,13 +852,11 @@ mod tests {
                 name: ContentId(String::from("this-is-a-stub")),
                 senders: Senders::default(),
                 description: Some(Description::Unknown(
-                    Element::builder("description")
-                        .ns("urn:xmpp:jingle:apps:stub:0")
+                    Element::builder("description", "urn:xmpp:jingle:apps:stub:0")
                         .build(),
                 )),
                 transport: Some(Transport::Unknown(
-                    Element::builder("transport")
-                        .ns("urn:xmpp:jingle:transports:stub:0")
+                    Element::builder("transport", "urn:xmpp:jingle:transports:stub:0")
                         .build(),
                 )),
                 security: None,

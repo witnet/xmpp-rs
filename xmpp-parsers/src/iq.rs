@@ -198,8 +198,7 @@ impl TryFrom<Element> for Iq {
 
 impl From<Iq> for Element {
     fn from(iq: Iq) -> Element {
-        let mut stanza = Element::builder("iq")
-            .ns(ns::DEFAULT_NS)
+        let mut stanza = Element::builder("iq", ns::DEFAULT_NS)
             .attr("from", iq.from)
             .attr("to", iq.to)
             .attr("id", iq.id)
@@ -231,8 +230,8 @@ mod tests {
     #[cfg(target_pointer_width = "64")]
     #[test]
     fn test_size() {
-        assert_size!(IqType, 224);
-        assert_size!(Iq, 408);
+        assert_size!(IqType, 272);
+        assert_size!(Iq, 456);
     }
 
     #[test]

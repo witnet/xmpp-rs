@@ -206,8 +206,7 @@ impl TryFrom<Element> for Message {
 
 impl From<Message> for Element {
     fn from(message: Message) -> Element {
-        Element::builder("message")
-            .ns(ns::DEFAULT_NS)
+        Element::builder("message", ns::DEFAULT_NS)
             .attr("from", message.from)
             .attr("to", message.to)
             .attr("id", message.id)

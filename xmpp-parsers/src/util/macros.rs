@@ -254,9 +254,9 @@ macro_rules! generate_element_enum {
                 crate::Element::builder(
                     match elem {
                         $($elem::$enum => $enum_name,)+
-                    }
+                    },
+                    crate::ns::$ns,
                 )
-                    .ns(crate::ns::$ns)
                     .build()
             }
         }
@@ -290,8 +290,7 @@ macro_rules! generate_attribute_enum {
         }
         impl From<$elem> for crate::Element {
             fn from(elem: $elem) -> crate::Element {
-                crate::Element::builder($name)
-                    .ns(crate::ns::$ns)
+                crate::Element::builder($name, crate::ns::$ns)
                     .attr($attr, match elem {
                          $($elem::$enum => $enum_name,)+
                      })
@@ -387,8 +386,7 @@ macro_rules! generate_empty_element {
 
         impl From<$elem> for crate::Element {
             fn from(_: $elem) -> crate::Element {
-                crate::Element::builder($name)
-                    .ns(crate::ns::$ns)
+                crate::Element::builder($name, crate::ns::$ns)
                     .build()
             }
         }
@@ -442,8 +440,7 @@ macro_rules! generate_elem_id {
         }
         impl From<$elem> for crate::Element {
             fn from(elem: $elem) -> crate::Element {
-                crate::Element::builder($name)
-                    .ns(crate::ns::$ns)
+                crate::Element::builder($name, crate::ns::$ns)
                     .append(elem.0.to_string())
                     .build()
             }
@@ -577,15 +574,13 @@ macro_rules! finish_parse_elem {
 macro_rules! generate_serialiser {
     ($builder:ident, $parent:ident, $elem:ident, Required, String, ($name:tt, $ns:ident)) => {
         $builder.append(
-            crate::Element::builder($name)
-                .ns(crate::ns::$ns)
+            crate::Element::builder($name, crate::ns::$ns)
                 .append(::minidom::Node::Text($parent.$elem)),
         )
     };
     ($builder:ident, $parent:ident, $elem:ident, Option, String, ($name:tt, $ns:ident)) => {
         $builder.append_all($parent.$elem.map(|elem| {
-            crate::Element::builder($name)
-                .ns(crate::ns::$ns)
+            crate::Element::builder($name, crate::ns::$ns)
                 .append(::minidom::Node::Text(elem))
         }))
     };
@@ -608,7 +603,7 @@ macro_rules! generate_serialiser {
     };
     ($builder:ident, $parent:ident, $elem:ident, Present, $constructor:ident, ($name:tt, $ns:ident)) => {
         $builder.append(::minidom::Node::Element(
-            crate::Element::builder($name).ns(crate::ns::$ns).build(),
+            crate::Element::builder($name, crate::ns::$ns).build(),
         ))
     };
     ($builder:ident, $parent:ident, $elem:ident, $_:ident, $constructor:ident, ($name:tt, $ns:ident)) => {
@@ -698,8 +693,7 @@ macro_rules! generate_element {
 
         impl From<$elem> for crate::Element {
             fn from(elem: $elem) -> crate::Element {
-                let mut builder = crate::Element::builder($name)
-                    .ns(crate::ns::$ns);
+                let mut builder = crate::Element::builder($name, crate::ns::$ns);
                 $(
                     builder = builder.attr($attr_name, elem.$attr);
                 )*
@@ -749,8 +743,7 @@ macro_rules! impl_pubsub_item {
 
         impl From<$item> for crate::Element {
             fn from(item: $item) -> crate::Element {
-                crate::Element::builder("item")
-                    .ns(ns::$ns)
+                crate::Element::builder("item", ns::$ns)
                     .attr("id", item.0.id)
                     .attr("publisher", item.0.publisher)
                     .append_all(item.0.payload)

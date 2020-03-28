@@ -50,7 +50,7 @@ impl FromStr for Show {
 
 impl Into<Node> for Show {
     fn into(self) -> Node {
-        Element::builder("show")
+        Element::builder("show", ns::DEFAULT_NS)
             .append(match self {
                 Show::Away => "away",
                 Show::Chat => "chat",
@@ -304,15 +304,14 @@ impl TryFrom<Element> for Presence {
 
 impl From<Presence> for Element {
     fn from(presence: Presence) -> Element {
-        Element::builder("presence")
-            .ns(ns::DEFAULT_NS)
+        Element::builder("presence", ns::DEFAULT_NS)
             .attr("from", presence.from)
             .attr("to", presence.to)
             .attr("id", presence.id)
             .attr("type", presence.type_)
             .append_all(presence.show.into_iter())
             .append_all(presence.statuses.into_iter().map(|(lang, status)| {
-                Element::builder("status")
+                Element::builder("status", ns::DEFAULT_NS)
                     .attr(
                         "xml:lang",
                         match lang.as_ref() {
@@ -325,7 +324,8 @@ impl From<Presence> for Element {
             .append_all(if presence.priority == 0 {
                 None
             } else {
-                Some(Element::builder("priority").append(format!("{}", presence.priority)))
+                Some(Element::builder("priority", ns::DEFAULT_NS)
+                    .append(format!("{}", presence.priority)))
             })
             .append_all(presence.payloads.into_iter())
             .build()

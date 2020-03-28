@@ -49,11 +49,9 @@ macro_rules! generate_blocking_element {
 
         impl From<$elem> for Element {
             fn from(elem: $elem) -> Element {
-                Element::builder($name)
-                        .ns(ns::BLOCKING)
+                Element::builder($name, ns::BLOCKING)
                         .append_all(elem.items.into_iter().map(|jid| {
-                             Element::builder("item")
-                                     .ns(ns::BLOCKING)
+                             Element::builder("item", ns::BLOCKING)
                                      .attr("jid", jid)
                          }))
                         .build()

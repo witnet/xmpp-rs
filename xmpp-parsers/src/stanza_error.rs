@@ -295,14 +295,12 @@ impl TryFrom<Element> for StanzaError {
 
 impl From<StanzaError> for Element {
     fn from(err: StanzaError) -> Element {
-        Element::builder("error")
-            .ns(ns::DEFAULT_NS)
+        Element::builder("error", ns::DEFAULT_NS)
             .attr("type", err.type_)
             .attr("by", err.by)
             .append(err.defined_condition)
             .append_all(err.texts.into_iter().map(|(lang, text)| {
-                Element::builder("text")
-                    .ns(ns::XMPP_STANZAS)
+                Element::builder("text", ns::XMPP_STANZAS)
                     .attr("xml:lang", lang)
                     .append(text)
             }))
@@ -328,7 +326,7 @@ mod tests {
     fn test_size() {
         assert_size!(ErrorType, 1);
         assert_size!(DefinedCondition, 1);
-        assert_size!(StanzaError, 216);
+        assert_size!(StanzaError, 264);
     }
 
     #[test]

@@ -195,49 +195,45 @@ impl TryFrom<Element> for PubSubEvent {
 impl From<PubSubEvent> for Element {
     fn from(event: PubSubEvent) -> Element {
         let payload = match event {
-            PubSubEvent::Configuration { node, form } => Element::builder("configuration")
-                .ns(ns::PUBSUB_EVENT)
-                .attr("node", node)
-                .append_all(form.map(Element::from)),
-            PubSubEvent::Delete { node, redirect } => Element::builder("purge")
-                .ns(ns::PUBSUB_EVENT)
+            PubSubEvent::Configuration { node, form } =>
+                Element::builder("configuration", ns::PUBSUB_EVENT)
+                    .attr("node", node)
+                    .append_all(form.map(Element::from)),
+            PubSubEvent::Delete { node, redirect } =>
+                Element::builder("purge", ns::PUBSUB_EVENT)
                 .attr("node", node)
                 .append_all(redirect.map(|redirect| {
-                    Element::builder("redirect")
-                        .ns(ns::PUBSUB_EVENT)
+                    Element::builder("redirect", ns::PUBSUB_EVENT)
                         .attr("uri", redirect)
                 })),
-            PubSubEvent::PublishedItems { node, items } => Element::builder("items")
-                .ns(ns::PUBSUB_EVENT)
-                .attr("node", node)
-                .append_all(items.into_iter()),
-            PubSubEvent::RetractedItems { node, items } => Element::builder("items")
-                .ns(ns::PUBSUB_EVENT)
-                .attr("node", node)
-                .append_all(items.into_iter().map(|id| {
-                    Element::builder("retract")
-                        .ns(ns::PUBSUB_EVENT)
-                        .attr("id", id)
-                })),
-            PubSubEvent::Purge { node } => Element::builder("purge")
-                .ns(ns::PUBSUB_EVENT)
-                .attr("node", node),
+            PubSubEvent::PublishedItems { node, items } =>
+                Element::builder("items", ns::PUBSUB_EVENT)
+                    .attr("node", node)
+                    .append_all(items.into_iter()),
+            PubSubEvent::RetractedItems { node, items } =>
+                Element::builder("items", ns::PUBSUB_EVENT)
+                    .attr("node", node)
+                    .append_all(items.into_iter().map(|id| {
+                        Element::builder("retract", ns::PUBSUB_EVENT)
+                            .attr("id", id)
+                    })),
+            PubSubEvent::Purge { node } =>
+                Element::builder("purge", ns::PUBSUB_EVENT)
+                    .attr("node", node),
             PubSubEvent::Subscription {
                 node,
                 expiry,
                 jid,
                 subid,
                 subscription,
-            } => Element::builder("subscription")
-                .ns(ns::PUBSUB_EVENT)
+            } => Element::builder("subscription", ns::PUBSUB_EVENT)
                 .attr("node", node)
                 .attr("expiry", expiry)
                 .attr("jid", jid)
                 .attr("subid", subid)
                 .attr("subscription", subscription),
         };
-        Element::builder("event")
-            .ns(ns::PUBSUB_EVENT)
+        Element::builder("event", ns::PUBSUB_EVENT)
             .append(payload)
             .build()
     }

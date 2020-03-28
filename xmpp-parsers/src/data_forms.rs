@@ -147,13 +147,12 @@ impl TryFrom<Element> for Field {
 
 impl From<Field> for Element {
     fn from(field: Field) -> Element {
-        Element::builder("field")
-            .ns(ns::DATA_FORMS)
+        Element::builder("field", ns::DATA_FORMS)
             .attr("var", field.var)
             .attr("type", field.type_)
             .attr("label", field.label)
             .append_all(if field.required {
-                Some(Element::builder("required").ns(ns::DATA_FORMS))
+                Some(Element::builder("required", ns::DATA_FORMS))
             } else {
                 None
             })
@@ -162,7 +161,7 @@ impl From<Field> for Element {
                 field
                     .values
                     .into_iter()
-                    .map(|value| Element::builder("value").ns(ns::DATA_FORMS).append(value)),
+                    .map(|value| Element::builder("value", ns::DATA_FORMS).append(value)),
             )
             .append_all(field.media.iter().cloned().map(Element::from))
             .build()
@@ -266,26 +265,22 @@ impl TryFrom<Element> for DataForm {
 
 impl From<DataForm> for Element {
     fn from(form: DataForm) -> Element {
-        Element::builder("x")
-            .ns(ns::DATA_FORMS)
+        Element::builder("x", ns::DATA_FORMS)
             .attr("type", form.type_)
             .append_all(
                 form.title
-                    .map(|title| Element::builder("title").ns(ns::DATA_FORMS).append(title)),
+                    .map(|title| Element::builder("title", ns::DATA_FORMS).append(title)),
             )
             .append_all(form.instructions.map(|text| {
-                Element::builder("instructions")
-                    .ns(ns::DATA_FORMS)
+                Element::builder("instructions", ns::DATA_FORMS)
                     .append(text)
             }))
             .append_all(form.form_type.map(|form_type| {
-                Element::builder("field")
-                    .ns(ns::DATA_FORMS)
+                Element::builder("field", ns::DATA_FORMS)
                     .attr("var", "FORM_TYPE")
                     .attr("type", "hidden")
                     .append(
-                        Element::builder("value")
-                            .ns(ns::DATA_FORMS)
+                        Element::builder("value", ns::DATA_FORMS)
                             .append(form_type),
                     )
             }))

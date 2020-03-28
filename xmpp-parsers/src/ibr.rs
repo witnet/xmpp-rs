@@ -47,7 +47,7 @@ impl TryFrom<Element> for Query {
             form: None,
         };
         for child in elem.children() {
-            let namespace = child.ns().unwrap();
+            let namespace = child.ns();
             if namespace == ns::REGISTER {
                 let name = child.name();
                 let fields = vec![
@@ -91,10 +91,9 @@ impl TryFrom<Element> for Query {
 
 impl From<Query> for Element {
     fn from(query: Query) -> Element {
-        Element::builder("query")
-            .ns(ns::REGISTER)
+        Element::builder("query", ns::REGISTER)
             .append_all(if query.registered {
-                Some(Element::builder("registered").ns(ns::REGISTER))
+                Some(Element::builder("registered", ns::REGISTER))
             } else {
                 None
             })
@@ -102,10 +101,10 @@ impl From<Query> for Element {
                 query
                     .fields
                     .into_iter()
-                    .map(|(name, value)| Element::builder(name).ns(ns::REGISTER).append(value)),
+                    .map(|(name, value)| Element::builder(name, ns::REGISTER).append(value)),
             )
             .append_all(if query.remove {
-                Some(Element::builder("remove").ns(ns::REGISTER))
+                Some(Element::builder("remove", ns::REGISTER))
             } else {
                 None
             })

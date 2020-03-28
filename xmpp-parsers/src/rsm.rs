@@ -70,24 +70,21 @@ impl TryFrom<Element> for SetQuery {
 
 impl From<SetQuery> for Element {
     fn from(set: SetQuery) -> Element {
-        Element::builder("set")
-            .ns(ns::RSM)
+        Element::builder("set", ns::RSM)
             .append_all(set.max.map(|max| {
-                Element::builder("max")
-                    .ns(ns::RSM)
+                Element::builder("max", ns::RSM)
                     .append(format!("{}", max))
             }))
             .append_all(
                 set.after
-                    .map(|after| Element::builder("after").ns(ns::RSM).append(after)),
+                    .map(|after| Element::builder("after", ns::RSM).append(after)),
             )
             .append_all(
                 set.before
-                    .map(|before| Element::builder("before").ns(ns::RSM).append(before)),
+                    .map(|before| Element::builder("before", ns::RSM).append(before)),
             )
             .append_all(set.index.map(|index| {
-                Element::builder("index")
-                    .ns(ns::RSM)
+                Element::builder("index", ns::RSM)
                     .append(format!("{}", index))
             }))
             .build()
@@ -150,21 +147,18 @@ impl TryFrom<Element> for SetResult {
 impl From<SetResult> for Element {
     fn from(set: SetResult) -> Element {
         let first = set.first.clone().map(|first| {
-            Element::builder("first")
-                .ns(ns::RSM)
+            Element::builder("first", ns::RSM)
                 .attr("index", set.first_index)
                 .append(first)
         });
-        Element::builder("set")
-            .ns(ns::RSM)
+        Element::builder("set", ns::RSM)
             .append_all(first)
             .append_all(
                 set.last
-                    .map(|last| Element::builder("last").ns(ns::RSM).append(last)),
+                    .map(|last| Element::builder("last", ns::RSM).append(last)),
             )
             .append_all(set.count.map(|count| {
-                Element::builder("count")
-                    .ns(ns::RSM)
+                Element::builder("count", ns::RSM)
                     .append(format!("{}", count))
             }))
             .build()

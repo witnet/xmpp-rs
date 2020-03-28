@@ -229,10 +229,9 @@ impl TryFrom<Element> for SubscribeOptions {
 
 impl From<SubscribeOptions> for Element {
     fn from(subscribe_options: SubscribeOptions) -> Element {
-        Element::builder("subscribe-options")
-            .ns(ns::PUBSUB)
+        Element::builder("subscribe-options", ns::PUBSUB)
             .append_all(if subscribe_options.required {
-                Some(Element::builder("required").ns(ns::PUBSUB))
+                Some(Element::builder("required", ns::PUBSUB))
             } else {
                 None
             })
@@ -483,8 +482,7 @@ impl TryFrom<Element> for PubSub {
 
 impl From<PubSub> for Element {
     fn from(pubsub: PubSub) -> Element {
-        Element::builder("pubsub")
-            .ns(ns::PUBSUB)
+        Element::builder("pubsub", ns::PUBSUB)
             .append_all(match pubsub {
                 PubSub::Create { create, configure } => {
                     let mut elems = vec![Element::from(create)];

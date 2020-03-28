@@ -200,12 +200,10 @@ impl TryFrom<Element> for Failure {
 
 impl From<Failure> for Element {
     fn from(failure: Failure) -> Element {
-        Element::builder("failure")
-            .ns(ns::SASL)
+        Element::builder("failure", ns::SASL)
             .append(failure.defined_condition)
             .append_all(failure.texts.into_iter().map(|(lang, text)| {
-                Element::builder("text")
-                    .ns(ns::SASL)
+                Element::builder("text", ns::SASL)
                     .attr("xml:lang", lang)
                     .append(text)
             }))
