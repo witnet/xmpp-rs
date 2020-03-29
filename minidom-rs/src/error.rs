@@ -44,6 +44,9 @@ pub enum Error {
 
     /// An error which is returned when a comment is to be parsed by minidom
     NoComments,
+
+    /// An error which is returned when a prefixed is defined twice
+    DuplicatePrefix,
 }
 
 impl StdError for Error {
@@ -58,6 +61,7 @@ impl StdError for Error {
             Error::InvalidPrefix => None,
             Error::MissingNamespace => None,
             Error::NoComments => None,
+            Error::DuplicatePrefix => None,
         }
     }
 }
@@ -84,6 +88,7 @@ impl std::fmt::Display for Error {
                 fmt,
                 "a comment has been found even though comments are forbidden"
             ),
+            Error::DuplicatePrefix => write!(fmt, "the prefix is already defined"),
         }
     }
 }

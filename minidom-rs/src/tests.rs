@@ -77,8 +77,8 @@ fn test_real_data() {
         .append(correction)
         .build();
     let stream = Element::builder("stream", "http://etherx.jabber.org/streams")
-        .prefix(Some(String::from("stream")), "http://etherx.jabber.org/streams")
-        .prefix(None, "jabber:client")
+        .prefix(Some(String::from("stream")), "http://etherx.jabber.org/streams").unwrap()
+        .prefix(None, "jabber:client").unwrap()
         .append(message)
         .build();
     println!("{}", String::from(&stream));
@@ -109,8 +109,8 @@ fn test_real_data() {
         .append(pubsub)
         .build();
     let stream = Element::builder("stream", "http://etherx.jabber.org/streams")
-        .prefix(Some(String::from("stream")), "http://etherx.jabber.org/streams")
-        .prefix(None, "jabber:client")
+        .prefix(Some(String::from("stream")), "http://etherx.jabber.org/streams").unwrap()
+        .prefix(None, "jabber:client").unwrap()
         .append(iq)
         .build();
 
@@ -141,8 +141,8 @@ fn writer_with_decl_works() {
 #[test]
 fn writer_with_prefix() {
     let root = Element::builder("root", "ns1")
-        .prefix(Some(String::from("p1")), "ns1")
-        .prefix(None, "ns2")
+        .prefix(Some(String::from("p1")), "ns1").unwrap()
+        .prefix(None, "ns2").unwrap()
         .build();
     assert_eq!(String::from(&root),
         r#"<p1:root xmlns="ns2" xmlns:p1="ns1"/>"#,
@@ -168,7 +168,7 @@ fn writer_no_prefix_namespace_child() {
     assert_eq!(String::from(&root), r#"<root xmlns="ns1"><child/></root>"#);
 
     let child = Element::builder("child", "ns2")
-        .prefix(None, "ns3")
+        .prefix(None, "ns3").unwrap()
         .build();
     let root = Element::builder("root", "ns1")
         .append(child)
@@ -181,7 +181,7 @@ fn writer_no_prefix_namespace_child() {
 fn writer_prefix_namespace_child() {
     let child = Element::builder("child", "ns1").build();
     let root = Element::builder("root", "ns1")
-        .prefix(Some(String::from("p1")), "ns1")
+        .prefix(Some(String::from("p1")), "ns1").unwrap()
         .append(child)
         .build();
     assert_eq!(String::from(&root), r#"<p1:root xmlns:p1="ns1"><p1:child/></p1:root>"#);
@@ -193,8 +193,8 @@ fn writer_with_prefix_deduplicate() {
         // .prefix(Some(String::from("p1")), "ns1")
         .build();
     let root = Element::builder("root", "ns1")
-        .prefix(Some(String::from("p1")), "ns1")
-        .prefix(None, "ns2")
+        .prefix(Some(String::from("p1")), "ns1").unwrap()
+        .prefix(None, "ns2").unwrap()
         .append(child)
         .build();
     assert_eq!(String::from(&root),

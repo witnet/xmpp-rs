@@ -194,7 +194,7 @@ impl Element {
             name.into(),
             namespace.into(),
             None,
-            BTreeMap::new(),
+            None,
             BTreeMap::new(),
             Vec::new(),
         )
@@ -987,10 +987,12 @@ pub struct ElementBuilder {
 
 impl ElementBuilder {
     /// Sets a custom prefix. It is not possible to set the same prefix twice.
-    pub fn prefix<S: Into<Namespace>>(mut self, prefix: Prefix, namespace: S) -> ElementBuilder {
-        // TODO: Make this actually send back an error when a duplicate prefix is added.
+    pub fn prefix<S: Into<Namespace>>(mut self, prefix: Prefix, namespace: S) -> Result<ElementBuilder> {
+        if let Some(_) = self.root.prefixes.get(&prefix) {
+            return Err(Error::DuplicatePrefix);
+        }
         self.root.prefixes.insert(prefix, namespace.into());
-        self
+        Ok(self)
     }
 
     /// Sets an attribute.
