@@ -145,7 +145,7 @@ fn writer_with_prefix() {
         .prefix(None, "ns2")
         .build();
     assert_eq!(String::from(&root),
-        r#"<p1:root xmlns:p1="ns1" xmlns="ns2"/>"#,
+        r#"<p1:root xmlns="ns2" xmlns:p1="ns1"/>"#,
     );
 }
 
@@ -198,7 +198,7 @@ fn writer_with_prefix_deduplicate() {
         .append(child)
         .build();
     assert_eq!(String::from(&root),
-        r#"<p1:root xmlns:p1="ns1" xmlns="ns2"><p1:child/></p1:root>"#,
+        r#"<p1:root xmlns="ns2" xmlns:p1="ns1"><p1:child/></p1:root>"#,
     );
 
     // Ensure descendants don't just reuse ancestors' prefixes that have been shadowed in between

@@ -35,6 +35,10 @@ pub enum Error {
     /// An error which is returned when an elemet's name contains more than one colon
     InvalidElement,
 
+    /// An error which is returned when an element being serialized doesn't contain a prefix
+    /// (be it None or Some(_)).
+    InvalidPrefix,
+
     /// An error which is returned when an element doesn't contain a namespace
     MissingNamespace,
 
@@ -51,6 +55,7 @@ impl StdError for Error {
             Error::EndOfDocument => None,
             Error::InvalidElementClosed => None,
             Error::InvalidElement => None,
+            Error::InvalidPrefix => None,
             Error::MissingNamespace => None,
             Error::NoComments => None,
         }
@@ -70,6 +75,7 @@ impl std::fmt::Display for Error {
                 write!(fmt, "the XML is invalid, an element was wrongly closed")
             }
             Error::InvalidElement => write!(fmt, "the XML element is invalid"),
+            Error::InvalidPrefix => write!(fmt, "the prefix is invalid"),
             Error::MissingNamespace => write!(
                 fmt,
                 "the XML element is missing a namespace",

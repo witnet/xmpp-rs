@@ -10,9 +10,12 @@
 use std::collections::BTreeMap;
 use std::fmt;
 
+pub type Prefix = Option<String>;
+pub type Namespace = String;
+
 #[derive(Clone, PartialEq, Eq)]
 pub struct Prefixes {
-    prefixes: BTreeMap<String, Option<String>>,
+    prefixes: BTreeMap<Prefix, Namespace>,
 }
 
 impl Default for Prefixes {
@@ -26,7 +29,7 @@ impl Default for Prefixes {
 impl fmt::Debug for Prefixes {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "Prefixes(")?;
-        for (namespace, prefix) in &self.prefixes {
+        for (prefix, namespace) in &self.prefixes {
             write!(
                 f,
                 "xmlns{}={:?} ",
@@ -42,24 +45,21 @@ impl fmt::Debug for Prefixes {
 }
 
 impl Prefixes {
-    pub fn declared_prefixes(&self) -> &BTreeMap<String, Option<String>> {
+    pub fn declared_prefixes(&self) -> &BTreeMap<Prefix, Namespace> {
         &self.prefixes
     }
 
-    pub fn get(&self, namespace: &String) -> Option<Option<String>> {
-        match self.prefixes.get(namespace) {
-            Some(ns) => Some(ns.clone()),
-            None => None,
-        }
+    pub fn get(&self, prefix: Prefix) -> Option<&Namespace> {
+        self.prefixes.get(&prefix)
     }
 
-    pub(crate) fn insert<S: Into<String>>(&mut self, namespace: S, prefix: Option<String>) {
-        self.prefixes.insert(namespace.into(), prefix);
+    pub(crate) fn insert<S: Into<Namespace>>(&mut self, prefix: Prefix, namespace: S) {
+        self.prefixes.insert(prefix, namespace.into());
     }
 }
 
-impl From<BTreeMap<String, Option<String>>> for Prefixes {
-    fn from(prefixes: BTreeMap<String, Option<String>>) -> Self {
+impl From<BTreeMap<Prefix, Namespace>> for Prefixes {
+    fn from(prefixes: BTreeMap<Prefix, Namespace>) -> Self {
         Prefixes { prefixes }
     }
 }
@@ -73,20 +73,20 @@ impl From<Option<String>> for Prefixes {
     }
 }
 
-impl From<String> for Prefixes {
-    fn from(namespace: String) -> Self {
+impl From<Namespace> for Prefixes {
+    fn from(namespace: Namespace) -> Self {
         let mut prefixes = BTreeMap::new();
-        prefixes.insert(namespace, None);
+        prefixes.insert(None, namespace);
 
         Prefixes { prefixes }
     }
 }
 
-impl From<(Option<String>, String)> for Prefixes {
-    fn from(prefix_namespace: (Option<String>, String)) -> Self {
+impl From<(Prefix, Namespace)> for Prefixes {
+    fn from(prefix_namespace: (Prefix, Namespace)) -> Self {
         let (prefix, namespace) = prefix_namespace;
         let mut prefixes = BTreeMap::new();
-        prefixes.insert(namespace, prefix);
+        prefixes.insert(prefix, namespace);
 
         Prefixes { prefixes }
     }
