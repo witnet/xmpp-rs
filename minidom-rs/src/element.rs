@@ -22,7 +22,6 @@ use std::collections::{btree_map, BTreeMap};
 use std::io::Write;
 
 use std::borrow::Cow;
-use std::rc::Rc;
 use std::str;
 
 use quick_xml::events::{BytesDecl, BytesEnd, BytesStart, Event};
@@ -86,7 +85,7 @@ pub fn escape(raw: &[u8]) -> Cow<[u8]> {
 pub struct Element {
     name: String,
     namespace: String,
-    prefixes: Rc<Prefixes>,
+    prefixes: Prefixes,
     attributes: BTreeMap<String, String>,
     children: Vec<Node>,
 }
