@@ -1093,7 +1093,7 @@ mod tests {
         assert_eq!(elem.name(), String::from("bar"));
         assert_eq!(elem.ns(), String::from("ns1"));
         // Ensure the prefix is properly added to the store
-        assert_eq!(elem.prefixes.get(Some(String::from("foo"))), Some(&String::from("ns1")));
+        assert_eq!(elem.prefixes.get(&Some(String::from("foo"))), Some(&String::from("ns1")));
     }
 
     #[test]

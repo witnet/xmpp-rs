@@ -49,8 +49,8 @@ impl Prefixes {
         &self.prefixes
     }
 
-    pub fn get(&self, prefix: Prefix) -> Option<&Namespace> {
-        self.prefixes.get(&prefix)
+    pub fn get(&self, prefix: &Prefix) -> Option<&Namespace> {
+        self.prefixes.get(prefix)
     }
 
     pub(crate) fn insert<S: Into<Namespace>>(&mut self, prefix: Prefix, namespace: S) {
