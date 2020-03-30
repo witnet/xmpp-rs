@@ -77,8 +77,13 @@ fn test_real_data() {
         .append(correction)
         .build();
     let stream = Element::builder("stream", "http://etherx.jabber.org/streams")
-        .prefix(Some(String::from("stream")), "http://etherx.jabber.org/streams").unwrap()
-        .prefix(None, "jabber:client").unwrap()
+        .prefix(
+            Some(String::from("stream")),
+            "http://etherx.jabber.org/streams",
+        )
+        .unwrap()
+        .prefix(None, "jabber:client")
+        .unwrap()
         .append(message)
         .build();
     println!("{}", String::from(&stream));
@@ -109,8 +114,13 @@ fn test_real_data() {
         .append(pubsub)
         .build();
     let stream = Element::builder("stream", "http://etherx.jabber.org/streams")
-        .prefix(Some(String::from("stream")), "http://etherx.jabber.org/streams").unwrap()
-        .prefix(None, "jabber:client").unwrap()
+        .prefix(
+            Some(String::from("stream")),
+            "http://etherx.jabber.org/streams",
+        )
+        .unwrap()
+        .prefix(None, "jabber:client")
+        .unwrap()
         .append(iq)
         .build();
 
@@ -141,8 +151,10 @@ fn writer_with_decl_works() {
 #[test]
 fn writer_with_prefix() {
     let root = Element::builder("root", "ns1")
-        .prefix(Some(String::from("p1")), "ns1").unwrap()
-        .prefix(None, "ns2").unwrap()
+        .prefix(Some(String::from("p1")), "ns1")
+        .unwrap()
+        .prefix(None, "ns2")
+        .unwrap()
         .build();
     assert_eq!(String::from(&root),
         r#"<p1:root xmlns="ns2" xmlns:p1="ns1"/>"#,
@@ -161,18 +173,15 @@ fn writer_no_prefix_namespace() {
 #[test]
 fn writer_no_prefix_namespace_child() {
     let child = Element::builder("child", "ns1").build();
-    let root = Element::builder("root", "ns1")
-        .append(child)
-        .build();
+    let root = Element::builder("root", "ns1").append(child).build();
     // TODO: Same remark as `writer_no_prefix_namespace`.
     assert_eq!(String::from(&root), r#"<root xmlns="ns1"><child/></root>"#);
 
     let child = Element::builder("child", "ns2")
-        .prefix(None, "ns3").unwrap()
+        .prefix(None, "ns3")
+        .unwrap()
         .build();
-    let root = Element::builder("root", "ns1")
-        .append(child)
-        .build();
+    let root = Element::builder("root", "ns1").append(child).build();
     // TODO: Same remark as `writer_no_prefix_namespace`.
     assert_eq!(String::from(&root), r#"<root xmlns="ns1"><ns0:child xmlns:ns0="ns2" xmlns="ns3"/></root>"#);
 }
@@ -181,7 +190,8 @@ fn writer_no_prefix_namespace_child() {
 fn writer_prefix_namespace_child() {
     let child = Element::builder("child", "ns1").build();
     let root = Element::builder("root", "ns1")
-        .prefix(Some(String::from("p1")), "ns1").unwrap()
+        .prefix(Some(String::from("p1")), "ns1")
+        .unwrap()
         .append(child)
         .build();
     assert_eq!(String::from(&root), r#"<p1:root xmlns:p1="ns1"><p1:child/></p1:root>"#);
@@ -193,8 +203,10 @@ fn writer_with_prefix_deduplicate() {
         // .prefix(Some(String::from("p1")), "ns1")
         .build();
     let root = Element::builder("root", "ns1")
-        .prefix(Some(String::from("p1")), "ns1").unwrap()
-        .prefix(None, "ns2").unwrap()
+        .prefix(Some(String::from("p1")), "ns1")
+        .unwrap()
+        .prefix(None, "ns2")
+        .unwrap()
         .append(child)
         .build();
     assert_eq!(String::from(&root),
@@ -202,22 +214,20 @@ fn writer_with_prefix_deduplicate() {
     );
 
     // Ensure descendants don't just reuse ancestors' prefixes that have been shadowed in between
-    let grandchild = Element::builder("grandchild", "ns1")
-        .build();
-    let child = Element::builder("child", "ns2")
-        .append(grandchild)
-        .build();
-    let root = Element::builder("root", "ns1")
-        .append(child)
-        .build();
-    assert_eq!(String::from(&root),
+    let grandchild = Element::builder("grandchild", "ns1").build();
+    let child = Element::builder("child", "ns2").append(grandchild).build();
+    let root = Element::builder("root", "ns1").append(child).build();
+    assert_eq!(
+        String::from(&root),
         r#"<root xmlns="ns1"><child xmlns="ns2"><grandchild xmlns="ns1"/></child></root>"#,
     );
 }
 
 #[test]
 fn writer_escapes_attributes() {
-    let root = Element::builder("root", "ns1").attr("a", "\"Air\" quotes").build();
+    let root = Element::builder("root", "ns1")
+        .attr("a", "\"Air\" quotes")
+        .build();
     let mut writer = Vec::new();
     {
         root.write_to(&mut writer).unwrap();

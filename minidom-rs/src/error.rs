@@ -32,7 +32,7 @@ pub enum Error {
     /// An error which is returned when an element is closed when it shouldn't be
     InvalidElementClosed,
 
-    /// An error which is returned when an elemet's name contains more than one colon
+    /// An error which is returned when an elemet's name contains more colons than permitted
     InvalidElement,
 
     /// An error which is returned when an element being serialized doesn't contain a prefix

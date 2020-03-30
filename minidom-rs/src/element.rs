@@ -123,6 +123,14 @@ impl PartialEq for Element {
     }
 }
 
+fn ensure_no_prefix<S: AsRef<str>>(s: &S) -> Result<()> {
+    let name_parts = s.as_ref().split(':').collect::<Vec<&str>>();
+    match name_parts.len() {
+        1 => Ok(()),
+        _ => Err(Error::InvalidElement),
+    }
+}
+
 impl Element {
     fn new<P: Into<Prefixes>>(
         name: String,
@@ -132,8 +140,8 @@ impl Element {
         attributes: BTreeMap<String, String>,
         children: Vec<Node>,
     ) -> Element {
-        // TODO: Check that "name" doesn't contain ":". We've stopped accepting the "prefix:local"
-        // format.
+        ensure_no_prefix(&name).unwrap();
+        // TODO: Return Result<Element> instead.
         Element {
             name,
             namespace,
@@ -863,7 +871,7 @@ fn build_element<R: BufRead>(reader: &EventReader<R>, event: &BytesStart, prefix
         }
     };
 
-    let element = Element::new(
+    Ok(Element::new(
         name,
         namespace.clone(),
         // Note that this will always be Some(_) as we can't distinguish between the None case and
@@ -872,8 +880,7 @@ fn build_element<R: BufRead>(reader: &EventReader<R>, event: &BytesStart, prefix
         local_prefixes,
         attributes,
         Vec::new()
-    );
-    Ok(element)
+    ))
 }
 
 /// An iterator over references to child elements of an `Element`.
