@@ -773,19 +773,19 @@ mod tests {
     #[cfg(feature = "minidom")]
     #[test]
     fn minidom() {
-        let elem: minidom::Element = "<message from='a@b/c'/>".parse().unwrap();
+        let elem: minidom::Element = "<message xmlns='ns1' from='a@b/c'/>".parse().unwrap();
         let to: Jid = elem.attr("from").unwrap().parse().unwrap();
         assert_eq!(to, Jid::Full(FullJid::new("a", "b", "c")));
 
-        let elem: minidom::Element = "<message from='a@b'/>".parse().unwrap();
+        let elem: minidom::Element = "<message xmlns='ns1' from='a@b'/>".parse().unwrap();
         let to: Jid = elem.attr("from").unwrap().parse().unwrap();
         assert_eq!(to, Jid::Bare(BareJid::new("a", "b")));
 
-        let elem: minidom::Element = "<message from='a@b/c'/>".parse().unwrap();
+        let elem: minidom::Element = "<message xmlns='ns1' from='a@b/c'/>".parse().unwrap();
         let to: FullJid = elem.attr("from").unwrap().parse().unwrap();
         assert_eq!(to, FullJid::new("a", "b", "c"));
 
-        let elem: minidom::Element = "<message from='a@b'/>".parse().unwrap();
+        let elem: minidom::Element = "<message xmlns='ns1' from='a@b'/>".parse().unwrap();
         let to: BareJid = elem.attr("from").unwrap().parse().unwrap();
         assert_eq!(to, BareJid::new("a", "b"));
     }
@@ -794,22 +794,19 @@ mod tests {
     #[test]
     fn minidom_into_attr() {
         let full = FullJid::new("a", "b", "c");
-        let elem = minidom::Element::builder("message")
-            .ns("jabber:client")
+        let elem = minidom::Element::builder("message", "jabber:client")
             .attr("from", full.clone())
             .build();
         assert_eq!(elem.attr("from"), Some(String::from(full).as_ref()));
 
         let bare = BareJid::new("a", "b");
-        let elem = minidom::Element::builder("message")
-            .ns("jabber:client")
+        let elem = minidom::Element::builder("message", "jabber:client")
             .attr("from", bare.clone())
             .build();
         assert_eq!(elem.attr("from"), Some(String::from(bare.clone()).as_ref()));
 
         let jid = Jid::Bare(bare.clone());
-        let _elem = minidom::Element::builder("message")
-            .ns("jabber:client")
+        let _elem = minidom::Element::builder("message", "jabber:client")
             .attr("from", jid)
             .build();
         assert_eq!(elem.attr("from"), Some(String::from(bare).as_ref()));
