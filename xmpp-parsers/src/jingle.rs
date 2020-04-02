@@ -434,25 +434,28 @@ impl FromStr for Reason {
 
 impl From<Reason> for Element {
     fn from(reason: Reason) -> Element {
-        Element::builder(match reason {
-            Reason::AlternativeSession => "alternative-session",
-            Reason::Busy => "busy",
-            Reason::Cancel => "cancel",
-            Reason::ConnectivityError => "connectivity-error",
-            Reason::Decline => "decline",
-            Reason::Expired => "expired",
-            Reason::FailedApplication => "failed-application",
-            Reason::FailedTransport => "failed-transport",
-            Reason::GeneralError => "general-error",
-            Reason::Gone => "gone",
-            Reason::IncompatibleParameters => "incompatible-parameters",
-            Reason::MediaError => "media-error",
-            Reason::SecurityError => "security-error",
-            Reason::Success => "success",
-            Reason::Timeout => "timeout",
-            Reason::UnsupportedApplications => "unsupported-applications",
-            Reason::UnsupportedTransports => "unsupported-transports",
-        }, ns::JINGLE)
+        Element::builder(
+            match reason {
+                Reason::AlternativeSession => "alternative-session",
+                Reason::Busy => "busy",
+                Reason::Cancel => "cancel",
+                Reason::ConnectivityError => "connectivity-error",
+                Reason::Decline => "decline",
+                Reason::Expired => "expired",
+                Reason::FailedApplication => "failed-application",
+                Reason::FailedTransport => "failed-transport",
+                Reason::GeneralError => "general-error",
+                Reason::Gone => "gone",
+                Reason::IncompatibleParameters => "incompatible-parameters",
+                Reason::MediaError => "media-error",
+                Reason::SecurityError => "security-error",
+                Reason::Success => "success",
+                Reason::Timeout => "timeout",
+                Reason::UnsupportedApplications => "unsupported-applications",
+                Reason::UnsupportedTransports => "unsupported-transports",
+            },
+            ns::JINGLE,
+        )
         .build()
     }
 }
@@ -852,12 +855,10 @@ mod tests {
                 name: ContentId(String::from("this-is-a-stub")),
                 senders: Senders::default(),
                 description: Some(Description::Unknown(
-                    Element::builder("description", "urn:xmpp:jingle:apps:stub:0")
-                        .build(),
+                    Element::builder("description", "urn:xmpp:jingle:apps:stub:0").build(),
                 )),
                 transport: Some(Transport::Unknown(
-                    Element::builder("transport", "urn:xmpp:jingle:transports:stub:0")
-                        .build(),
+                    Element::builder("transport", "urn:xmpp:jingle:transports:stub:0").build(),
                 )),
                 security: None,
             }],

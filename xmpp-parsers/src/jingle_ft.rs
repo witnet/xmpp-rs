@@ -194,20 +194,28 @@ impl TryFrom<Element> for File {
 impl From<File> for Element {
     fn from(file: File) -> Element {
         Element::builder("file", ns::JINGLE_FT)
-            .append_all(file.date.map(|date| Element::builder("date", ns::JINGLE_FT).append(date)))
             .append_all(
-                file.media_type
-                    .map(|media_type| Element::builder("media-type", ns::JINGLE_FT).append(media_type)),
+                file.date
+                    .map(|date| Element::builder("date", ns::JINGLE_FT).append(date)),
             )
-            .append_all(file.name.map(|name| Element::builder("name", ns::JINGLE_FT).append(name)))
+            .append_all(
+                file.media_type.map(|media_type| {
+                    Element::builder("media-type", ns::JINGLE_FT).append(media_type)
+                }),
+            )
+            .append_all(
+                file.name
+                    .map(|name| Element::builder("name", ns::JINGLE_FT).append(name)),
+            )
             .append_all(file.descs.into_iter().map(|(lang, desc)| {
                 Element::builder("desc", ns::JINGLE_FT)
                     .attr("xml:lang", lang)
                     .append(desc.0)
             }))
             .append_all(
-                file.size
-                    .map(|size| Element::builder("size", ns::JINGLE_FT).append(format!("{}", size))),
+                file.size.map(|size| {
+                    Element::builder("size", ns::JINGLE_FT).append(format!("{}", size))
+                }),
             )
             .append_all(file.range)
             .append_all(file.hashes)

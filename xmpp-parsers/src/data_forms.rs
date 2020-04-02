@@ -271,18 +271,15 @@ impl From<DataForm> for Element {
                 form.title
                     .map(|title| Element::builder("title", ns::DATA_FORMS).append(title)),
             )
-            .append_all(form.instructions.map(|text| {
-                Element::builder("instructions", ns::DATA_FORMS)
-                    .append(text)
-            }))
+            .append_all(
+                form.instructions
+                    .map(|text| Element::builder("instructions", ns::DATA_FORMS).append(text)),
+            )
             .append_all(form.form_type.map(|form_type| {
                 Element::builder("field", ns::DATA_FORMS)
                     .attr("var", "FORM_TYPE")
                     .attr("type", "hidden")
-                    .append(
-                        Element::builder("value", ns::DATA_FORMS)
-                            .append(form_type),
-                    )
+                    .append(Element::builder("value", ns::DATA_FORMS).append(form_type))
             }))
             .append_all(form.fields.iter().cloned().map(Element::from))
             .build()

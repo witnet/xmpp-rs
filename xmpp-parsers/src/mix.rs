@@ -365,11 +365,17 @@ mod tests {
 
         let elem: Element = SetNick::new("coucou").into();
         let xml = String::from(&elem);
-        assert_eq!(xml, "<setnick xmlns=\"urn:xmpp:mix:core:1\"><nick>coucou</nick></setnick>");
+        assert_eq!(
+            xml,
+            "<setnick xmlns=\"urn:xmpp:mix:core:1\"><nick>coucou</nick></setnick>"
+        );
 
         let elem: Element = Mix::new("coucou", "coucou@example").into();
         let xml = String::from(&elem);
-        assert_eq!(xml, "<mix xmlns=\"urn:xmpp:mix:core:1\"><nick>coucou</nick><jid>coucou@example</jid></mix>");
+        assert_eq!(
+            xml,
+            "<mix xmlns=\"urn:xmpp:mix:core:1\"><nick>coucou</nick><jid>coucou@example</jid></mix>"
+        );
 
         let elem: Element = Create::new().into();
         let xml = String::from(&elem);

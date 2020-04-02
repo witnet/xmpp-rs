@@ -71,10 +71,10 @@ impl TryFrom<Element> for SetQuery {
 impl From<SetQuery> for Element {
     fn from(set: SetQuery) -> Element {
         Element::builder("set", ns::RSM)
-            .append_all(set.max.map(|max| {
-                Element::builder("max", ns::RSM)
-                    .append(format!("{}", max))
-            }))
+            .append_all(
+                set.max
+                    .map(|max| Element::builder("max", ns::RSM).append(format!("{}", max))),
+            )
             .append_all(
                 set.after
                     .map(|after| Element::builder("after", ns::RSM).append(after)),
@@ -83,10 +83,10 @@ impl From<SetQuery> for Element {
                 set.before
                     .map(|before| Element::builder("before", ns::RSM).append(before)),
             )
-            .append_all(set.index.map(|index| {
-                Element::builder("index", ns::RSM)
-                    .append(format!("{}", index))
-            }))
+            .append_all(
+                set.index
+                    .map(|index| Element::builder("index", ns::RSM).append(format!("{}", index))),
+            )
             .build()
     }
 }
@@ -157,10 +157,10 @@ impl From<SetResult> for Element {
                 set.last
                     .map(|last| Element::builder("last", ns::RSM).append(last)),
             )
-            .append_all(set.count.map(|count| {
-                Element::builder("count", ns::RSM)
-                    .append(format!("{}", count))
-            }))
+            .append_all(
+                set.count
+                    .map(|count| Element::builder("count", ns::RSM).append(format!("{}", count))),
+            )
             .build()
     }
 }

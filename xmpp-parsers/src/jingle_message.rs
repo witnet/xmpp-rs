@@ -85,22 +85,19 @@ impl TryFrom<Element> for JingleMI {
 impl From<JingleMI> for Element {
     fn from(jingle_mi: JingleMI) -> Element {
         match jingle_mi {
-            JingleMI::Propose { sid, description } =>
+            JingleMI::Propose { sid, description } => {
                 Element::builder("propose", ns::JINGLE_MESSAGE)
-                .attr("id", sid)
-                .append(description),
-            JingleMI::Retract(sid) =>
-                Element::builder("retract", ns::JINGLE_MESSAGE)
-                .attr("id", sid),
-            JingleMI::Accept(sid) =>
-                Element::builder("accept", ns::JINGLE_MESSAGE)
-                .attr("id", sid),
-            JingleMI::Proceed(sid) =>
-                Element::builder("proceed", ns::JINGLE_MESSAGE)
-                .attr("id", sid),
-            JingleMI::Reject(sid) =>
-                Element::builder("reject", ns::JINGLE_MESSAGE)
-                .attr("id", sid),
+                    .attr("id", sid)
+                    .append(description)
+            }
+            JingleMI::Retract(sid) => {
+                Element::builder("retract", ns::JINGLE_MESSAGE).attr("id", sid)
+            }
+            JingleMI::Accept(sid) => Element::builder("accept", ns::JINGLE_MESSAGE).attr("id", sid),
+            JingleMI::Proceed(sid) => {
+                Element::builder("proceed", ns::JINGLE_MESSAGE).attr("id", sid)
+            }
+            JingleMI::Reject(sid) => Element::builder("reject", ns::JINGLE_MESSAGE).attr("id", sid),
         }
         .build()
     }

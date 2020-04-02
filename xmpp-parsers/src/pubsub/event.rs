@@ -195,31 +195,33 @@ impl TryFrom<Element> for PubSubEvent {
 impl From<PubSubEvent> for Element {
     fn from(event: PubSubEvent) -> Element {
         let payload = match event {
-            PubSubEvent::Configuration { node, form } =>
+            PubSubEvent::Configuration { node, form } => {
                 Element::builder("configuration", ns::PUBSUB_EVENT)
                     .attr("node", node)
-                    .append_all(form.map(Element::from)),
-            PubSubEvent::Delete { node, redirect } =>
-                Element::builder("purge", ns::PUBSUB_EVENT)
+                    .append_all(form.map(Element::from))
+            }
+            PubSubEvent::Delete { node, redirect } => Element::builder("purge", ns::PUBSUB_EVENT)
                 .attr("node", node)
                 .append_all(redirect.map(|redirect| {
-                    Element::builder("redirect", ns::PUBSUB_EVENT)
-                        .attr("uri", redirect)
+                    Element::builder("redirect", ns::PUBSUB_EVENT).attr("uri", redirect)
                 })),
-            PubSubEvent::PublishedItems { node, items } =>
+            PubSubEvent::PublishedItems { node, items } => {
                 Element::builder("items", ns::PUBSUB_EVENT)
                     .attr("node", node)
-                    .append_all(items.into_iter()),
-            PubSubEvent::RetractedItems { node, items } =>
+                    .append_all(items.into_iter())
+            }
+            PubSubEvent::RetractedItems { node, items } => {
                 Element::builder("items", ns::PUBSUB_EVENT)
                     .attr("node", node)
-                    .append_all(items.into_iter().map(|id| {
-                        Element::builder("retract", ns::PUBSUB_EVENT)
-                            .attr("id", id)
-                    })),
-            PubSubEvent::Purge { node } =>
-                Element::builder("purge", ns::PUBSUB_EVENT)
-                    .attr("node", node),
+                    .append_all(
+                        items
+                            .into_iter()
+                            .map(|id| Element::builder("retract", ns::PUBSUB_EVENT).attr("id", id)),
+                    )
+            }
+            PubSubEvent::Purge { node } => {
+                Element::builder("purge", ns::PUBSUB_EVENT).attr("node", node)
+            }
             PubSubEvent::Subscription {
                 node,
                 expiry,

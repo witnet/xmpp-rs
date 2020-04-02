@@ -580,8 +580,7 @@ macro_rules! generate_serialiser {
     };
     ($builder:ident, $parent:ident, $elem:ident, Option, String, ($name:tt, $ns:ident)) => {
         $builder.append_all($parent.$elem.map(|elem| {
-            crate::Element::builder($name, crate::ns::$ns)
-                .append(::minidom::Node::Text(elem))
+            crate::Element::builder($name, crate::ns::$ns).append(::minidom::Node::Text(elem))
         }))
     };
     ($builder:ident, $parent:ident, $elem:ident, Option, $constructor:ident, ($name:tt, *)) => {

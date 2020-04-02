@@ -167,10 +167,10 @@ fn serialise_jid_list(name: &str, jids: Vec<Jid>) -> ::std::option::IntoIter<Nod
     } else {
         Some(
             Element::builder(name, ns::MAM)
-                .append_all(jids.into_iter().map(|jid| {
-                    Element::builder("jid", ns::MAM)
-                        .append(String::from(jid))
-                }))
+                .append_all(
+                    jids.into_iter()
+                        .map(|jid| Element::builder("jid", ns::MAM).append(String::from(jid))),
+                )
                 .into(),
         )
         .into_iter()

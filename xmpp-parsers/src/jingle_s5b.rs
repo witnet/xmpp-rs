@@ -251,17 +251,19 @@ impl From<Transport> for Element {
                     .into_iter()
                     .map(Element::from)
                     .collect::<Vec<_>>(),
-                TransportPayload::Activated(cid) => vec![
-                    Element::builder("activated", ns::JINGLE_S5B)
+                TransportPayload::Activated(cid) => {
+                    vec![Element::builder("activated", ns::JINGLE_S5B)
                         .attr("cid", cid)
-                        .build()],
-                TransportPayload::CandidateError => vec![
-                    Element::builder("candidate-error", ns::JINGLE_S5B)
-                        .build()],
-                TransportPayload::CandidateUsed(cid) => vec![
-                    Element::builder("candidate-used", ns::JINGLE_S5B)
+                        .build()]
+                }
+                TransportPayload::CandidateError => {
+                    vec![Element::builder("candidate-error", ns::JINGLE_S5B).build()]
+                }
+                TransportPayload::CandidateUsed(cid) => {
+                    vec![Element::builder("candidate-used", ns::JINGLE_S5B)
                         .attr("cid", cid)
-                        .build()],
+                        .build()]
+                }
                 TransportPayload::ProxyError => {
                     vec![Element::builder("proxy-error", ns::JINGLE_S5B).build()]
                 }

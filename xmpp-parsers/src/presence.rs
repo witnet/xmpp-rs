@@ -324,8 +324,10 @@ impl From<Presence> for Element {
             .append_all(if presence.priority == 0 {
                 None
             } else {
-                Some(Element::builder("priority", ns::DEFAULT_NS)
-                    .append(format!("{}", presence.priority)))
+                Some(
+                    Element::builder("priority", ns::DEFAULT_NS)
+                        .append(format!("{}", presence.priority)),
+                )
             })
             .append_all(presence.payloads.into_iter())
             .build()

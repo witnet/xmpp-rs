@@ -454,8 +454,7 @@ impl From<Tag> for Element {
                 panic!("No unknown element should be present in XHTML-IM after parsing.")
             }
         };
-        let mut builder = Element::builder(name, ns::XHTML)
-            .append_all(children_to_nodes(children));
+        let mut builder = Element::builder(name, ns::XHTML).append_all(children_to_nodes(children));
         for (key, value) in attrs {
             builder = builder.attr(key, value);
         }
