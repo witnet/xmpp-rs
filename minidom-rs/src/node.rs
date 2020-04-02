@@ -11,8 +11,8 @@
 use crate::element::{Element, ElementBuilder};
 use crate::error::Result;
 
-use std::io::Write;
 use std::collections::BTreeMap;
+use std::io::Write;
 
 use quick_xml::events::{BytesText, Event};
 use quick_xml::Writer as EventWriter;
@@ -160,7 +160,11 @@ impl Node {
     }
 
     #[doc(hidden)]
-    pub(crate) fn write_to_inner<W: Write>(&self, writer: &mut EventWriter<W>, prefixes: &mut BTreeMap<Option<String>, String>) -> Result<()> {
+    pub(crate) fn write_to_inner<W: Write>(
+        &self,
+        writer: &mut EventWriter<W>,
+        prefixes: &mut BTreeMap<Option<String>, String>,
+    ) -> Result<()> {
         match *self {
             Node::Element(ref elmt) => elmt.write_to_inner(writer, prefixes)?,
             Node::Text(ref s) => {

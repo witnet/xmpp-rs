@@ -80,8 +80,8 @@ pub mod convert;
 pub mod element;
 pub mod error;
 mod namespaces;
-mod prefixes;
 pub mod node;
+mod prefixes;
 
 #[cfg(test)]
 mod tests;

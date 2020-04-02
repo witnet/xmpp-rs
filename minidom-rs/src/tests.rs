@@ -49,12 +49,17 @@ fn reader_deduplicate_prefixes() {
     // parent ns with the same prefix.
     let _: Element = r#"<root xmlns="ns1"><child/></root>"#.parse().unwrap();
     let _: Element = r#"<p1:root xmlns:p1="ns1"><p1:child/></p1:root>"#.parse().unwrap();
-    let _: Element = r#"<root xmlns="ns1"><child xmlns:p1="ns2"><p1:grandchild/></child></root>"#.parse().unwrap();
+    let _: Element = r#"<root xmlns="ns1"><child xmlns:p1="ns2"><p1:grandchild/></child></root>"#
+        .parse()
+        .unwrap();
 
     match r#"<p1:root xmlns:p1="ns1"><child/></p1:root>"#.parse::<Element>() {
         Err(Error::MissingNamespace) => (),
         Err(err) => panic!("No or wrong error: {:?}", err),
-        Ok(elem) => panic!("Got Element: {}; was expecting Error::MissingNamespace", String::from(&elem)),
+        Ok(elem) => panic!(
+            "Got Element: {}; was expecting Error::MissingNamespace",
+            String::from(&elem)
+        ),
     }
 }
 
@@ -64,7 +69,11 @@ fn reader_no_deduplicate_sibling_prefixes() {
     match r#"<root xmlns="ns1"><p1:child1 xmlns:p1="ns2"/><p1:child2/></root>"#.parse::<Element>() {
         Err(Error::MissingNamespace) => (),
         Err(err) => panic!("No or wrong error: {:?}", err),
-        Ok(elem) => panic!("Got Element:\n{:?}\n{}\n; was expecting Error::MissingNamespace", elem, String::from(&elem)),
+        Ok(elem) => panic!(
+            "Got Element:\n{:?}\n{}\n; was expecting Error::MissingNamespace",
+            elem,
+            String::from(&elem)
+        ),
     }
 }
 
@@ -156,7 +165,8 @@ fn writer_with_prefix() {
         .prefix(None, "ns2")
         .unwrap()
         .build();
-    assert_eq!(String::from(&root),
+    assert_eq!(
+        String::from(&root),
         r#"<p1:root xmlns="ns2" xmlns:p1="ns1"/>"#,
     );
 }
@@ -183,7 +193,10 @@ fn writer_no_prefix_namespace_child() {
         .build();
     let root = Element::builder("root", "ns1").append(child).build();
     // TODO: Same remark as `writer_no_prefix_namespace`.
-    assert_eq!(String::from(&root), r#"<root xmlns="ns1"><ns0:child xmlns:ns0="ns2" xmlns="ns3"/></root>"#);
+    assert_eq!(
+        String::from(&root),
+        r#"<root xmlns="ns1"><ns0:child xmlns:ns0="ns2" xmlns="ns3"/></root>"#
+    );
 }
 
 #[test]
@@ -194,7 +207,10 @@ fn writer_prefix_namespace_child() {
         .unwrap()
         .append(child)
         .build();
-    assert_eq!(String::from(&root), r#"<p1:root xmlns:p1="ns1"><p1:child/></p1:root>"#);
+    assert_eq!(
+        String::from(&root),
+        r#"<p1:root xmlns:p1="ns1"><p1:child/></p1:root>"#
+    );
 }
 
 #[test]
@@ -209,7 +225,8 @@ fn writer_with_prefix_deduplicate() {
         .unwrap()
         .append(child)
         .build();
-    assert_eq!(String::from(&root),
+    assert_eq!(
+        String::from(&root),
         r#"<p1:root xmlns="ns2" xmlns:p1="ns1"><p1:child/></p1:root>"#,
     );
 
@@ -245,7 +262,10 @@ fn writer_escapes_text() {
     {
         root.write_to(&mut writer).unwrap();
     }
-    assert_eq!(String::from_utf8(writer).unwrap(), r#"<root xmlns="ns1">&lt;3</root>"#);
+    assert_eq!(
+        String::from_utf8(writer).unwrap(),
+        r#"<root xmlns="ns1">&lt;3</root>"#
+    );
 }
 
 #[test]
@@ -363,10 +383,7 @@ fn namespace_prefixed() {
         .parse()
         .unwrap();
     assert_eq!(elem.name(), "features");
-    assert_eq!(
-        elem.ns(),
-        "http://etherx.jabber.org/streams".to_owned(),
-    );
+    assert_eq!(elem.ns(), "http://etherx.jabber.org/streams".to_owned(),);
 }
 
 #[test]
@@ -386,10 +403,7 @@ fn namespace_inherited_prefixed1() {
     let elem: Element = "<stream:features xmlns:stream='http://etherx.jabber.org/streams' xmlns='jabber:client'><message xmlns='jabber:client' /></stream:features>"
         .parse().unwrap();
     assert_eq!(elem.name(), "features");
-    assert_eq!(
-        elem.ns(),
-        "http://etherx.jabber.org/streams".to_owned(),
-    );
+    assert_eq!(elem.ns(), "http://etherx.jabber.org/streams".to_owned(),);
     let child = elem.children().next().unwrap();
     assert_eq!(child.name(), "message");
     assert_eq!(child.ns(), "jabber:client".to_owned());
@@ -400,10 +414,7 @@ fn namespace_inherited_prefixed2() {
     let elem: Element = "<stream xmlns='http://etherx.jabber.org/streams' xmlns:jabber='jabber:client'><jabber:message xmlns:jabber='jabber:client' /></stream>"
         .parse().unwrap();
     assert_eq!(elem.name(), "stream");
-    assert_eq!(
-        elem.ns(),
-        "http://etherx.jabber.org/streams".to_owned(),
-    );
+    assert_eq!(elem.ns(), "http://etherx.jabber.org/streams".to_owned(),);
     let child = elem.children().next().unwrap();
     assert_eq!(child.name(), "message");
     assert_eq!(child.ns(), "jabber:client".to_owned());

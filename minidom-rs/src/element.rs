@@ -15,8 +15,8 @@
 use crate::convert::IntoAttributeValue;
 use crate::error::{Error, Result};
 use crate::namespaces::NSChoice;
-use crate::prefixes::{Prefix, Namespace, Prefixes};
 use crate::node::Node;
+use crate::prefixes::{Namespace, Prefix, Prefixes};
 
 use std::collections::{btree_map, BTreeMap};
 use std::io::Write;
@@ -178,7 +178,7 @@ impl Element {
                 None,
                 None,
                 BTreeMap::new(),
-                Vec::new()
+                Vec::new(),
             ),
         }
     }
@@ -456,7 +456,11 @@ impl Element {
     }
 
     /// Like `write_to()` but without the `<?xml?>` prelude
-    pub fn write_to_inner<W: Write>(&self, writer: &mut EventWriter<W>, all_prefixes: &mut BTreeMap<Prefix, Namespace>) -> Result<()> {
+    pub fn write_to_inner<W: Write>(
+        &self,
+        writer: &mut EventWriter<W>,
+        all_prefixes: &mut BTreeMap<Prefix, Namespace>,
+    ) -> Result<()> {
         let local_prefixes: &BTreeMap<Option<String>, String> = self.prefixes.declared_prefixes();
 
         // Element namespace
@@ -485,7 +489,7 @@ impl Element {
                     }
                     (Some(format!("ns{}", prefix_n)), true)
                 }
-            },
+            }
             // Some prefix has already been declared (or is going to be) for our namespace. We
             // don't need to declare a new one. We do however need to remember which one to use in
             // the tag name.
@@ -509,7 +513,7 @@ impl Element {
                 let key = format!("xmlns");
                 start.push_attribute((key.as_bytes(), self.namespace.as_bytes()));
                 all_prefixes.insert(self_prefix.0, self.namespace.clone());
-            },
+            }
             _ => (),
         };
 
@@ -525,7 +529,7 @@ impl Element {
 
                     start.push_attribute((key.as_bytes(), ns.as_ref()));
                     all_prefixes.insert(prefix.clone(), ns.clone());
-                },
+                }
             }
         }
 
@@ -834,7 +838,11 @@ fn split_element_name<S: AsRef<str>>(s: S) -> Result<(Option<String>, String)> {
     }
 }
 
-fn build_element<R: BufRead>(reader: &EventReader<R>, event: &BytesStart, prefixes: &mut BTreeMap<Prefix, Namespace>) -> Result<Element> {
+fn build_element<R: BufRead>(
+    reader: &EventReader<R>,
+    event: &BytesStart,
+    prefixes: &mut BTreeMap<Prefix, Namespace>,
+) -> Result<Element> {
     let (prefix, name) = split_element_name(str::from_utf8(event.name())?)?;
     let mut local_prefixes = BTreeMap::new();
 
@@ -879,7 +887,7 @@ fn build_element<R: BufRead>(reader: &EventReader<R>, event: &BytesStart, prefix
         Some(prefix),
         local_prefixes,
         attributes,
-        Vec::new()
+        Vec::new(),
     ))
 }
 
@@ -994,7 +1002,11 @@ pub struct ElementBuilder {
 
 impl ElementBuilder {
     /// Sets a custom prefix. It is not possible to set the same prefix twice.
-    pub fn prefix<S: Into<Namespace>>(mut self, prefix: Prefix, namespace: S) -> Result<ElementBuilder> {
+    pub fn prefix<S: Into<Namespace>>(
+        mut self,
+        prefix: Prefix,
+        namespace: S,
+    ) -> Result<ElementBuilder> {
         if let Some(_) = self.root.prefixes.get(&prefix) {
             return Err(Error::DuplicatePrefix);
         }
@@ -1102,7 +1114,10 @@ mod tests {
         assert_eq!(elem.name(), String::from("bar"));
         assert_eq!(elem.ns(), String::from("ns1"));
         // Ensure the prefix is properly added to the store
-        assert_eq!(elem.prefixes.get(&Some(String::from("foo"))), Some(&String::from("ns1")));
+        assert_eq!(
+            elem.prefixes.get(&Some(String::from("foo"))),
+            Some(&String::from("ns1"))
+        );
     }
 
     #[test]

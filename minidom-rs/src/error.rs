@@ -80,10 +80,7 @@ impl std::fmt::Display for Error {
             }
             Error::InvalidElement => write!(fmt, "the XML element is invalid"),
             Error::InvalidPrefix => write!(fmt, "the prefix is invalid"),
-            Error::MissingNamespace => write!(
-                fmt,
-                "the XML element is missing a namespace",
-            ),
+            Error::MissingNamespace => write!(fmt, "the XML element is missing a namespace",),
             Error::NoComments => write!(
                 fmt,
                 "a comment has been found even though comments are forbidden"
