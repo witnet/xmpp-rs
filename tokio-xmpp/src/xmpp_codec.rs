@@ -95,12 +95,10 @@ impl ParserSink {
         self.ns_stack.push(nss);
 
         let el = {
-            let mut el_builder = Element::builder(tag.name.local.as_ref());
-            if let Some(el_ns) =
-                self.lookup_ns(&tag.name.prefix.map(|prefix| prefix.as_ref().to_owned()))
-            {
-                el_builder = el_builder.ns(el_ns);
-            }
+            let el_ns = self
+                .lookup_ns(&tag.name.prefix.map(|prefix| prefix.as_ref().to_owned()))
+                .unwrap();
+            let mut el_builder = Element::builder(tag.name.local.as_ref(), el_ns);
             for attr in &tag.attrs {
                 match attr.name.local.as_ref() {
                     "xmlns" => (),
@@ -490,13 +488,18 @@ mod tests {
         for _ in 0..2usize.pow(15) {
             text = text + "A";
         }
-        let stanza = Element::builder("message")
-            .append(Element::builder("body").append(text.as_ref()).build())
+        let stanza = Element::builder("message", "jabber:client")
+            .append(
+                Element::builder("body", "jabber:client")
+                    .append(text.as_ref())
+                    .build(),
+            )
             .build();
         block_on(framed.send(Packet::Stanza(stanza))).expect("send");
         assert_eq!(
             framed.get_ref().get_ref(),
-            &("<message><body>".to_owned() + &text + "</body></message>").as_bytes()
+            &("<message xmlns=\"jabber:client\"><body>".to_owned() + &text + "</body></message>")
+                .as_bytes()
         );
     }
 

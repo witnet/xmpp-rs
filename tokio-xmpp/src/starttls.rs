@@ -16,7 +16,7 @@ pub const NS_XMPP_TLS: &str = "urn:ietf:params:xml:ns:xmpp-tls";
 pub async fn starttls<S: AsyncRead + AsyncWrite + Unpin>(
     mut xmpp_stream: XMPPStream<S>,
 ) -> Result<TlsStream<S>, Error> {
-    let nonza = Element::builder("starttls").ns(NS_XMPP_TLS).build();
+    let nonza = Element::builder("starttls", NS_XMPP_TLS).build();
     let packet = Packet::Stanza(nonza);
     xmpp_stream.send(packet).await?;
 

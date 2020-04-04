@@ -70,7 +70,7 @@ pub async fn start<S: AsyncRead + AsyncWrite + Unpin>(
             stream,
             ns,
             stream_id.clone(),
-            Element::builder(stream_id).build(),
+            Element::builder(stream_id, NS_XMPP_STREAM).build(),
         )
     };
     Ok(stream)
