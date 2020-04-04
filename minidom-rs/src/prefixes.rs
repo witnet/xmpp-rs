@@ -27,6 +27,7 @@ impl Default for Prefixes {
 }
 
 impl fmt::Debug for Prefixes {
+    // TODO: Fix end character
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "Prefixes(")?;
         for (prefix, namespace) in &self.prefixes {
