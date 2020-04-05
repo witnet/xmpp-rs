@@ -1,6 +1,5 @@
 stages:
   - lint
-  - build
   - test
 
 variables:
@@ -14,11 +13,6 @@ variables:
   image: rustlang/rust:nightly
   allow_failure: true  # It's not often, but it happens nightly breaks, surprisingly.
 
-.build:
-  stage: build
-  script:
-    - cargo build --verbose
-
 .test:
   stage: test
   script:
@@ -31,16 +25,6 @@ rustfmt:
     - find -type f -iname '*.rs' -not -path './target/*' | xargs rustfmt --check --edition 2018
   extends:
     - .stable
-
-stable-build:
-  extends:
-    - .build
-    - .stable
-
-nightly-build:
-  extends:
-    - .build
-    - .nightly
 
 stable-test:
   extends:
