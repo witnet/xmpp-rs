@@ -13,6 +13,11 @@ variables:
   image: rustlang/rust:nightly
   allow_failure: true  # It's not often, but it happens nightly breaks, surprisingly.
 
+.armv7h:
+  image: arm32v7/rust:slim
+  tags:
+    - armv7h
+
 .test:
   stage: test
   script:
@@ -35,3 +40,9 @@ nightly-test:
   extends:
     - .test
     - .nightly
+
+stable-armv7h-test:
+  extends:
+    - .test
+    - .stable
+    - .armv7h
