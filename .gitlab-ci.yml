@@ -32,22 +32,22 @@ rustfmt:
   extends:
     - .stable
 
-rust-latest-build:
+stable-build:
   extends:
     - .build
     - .stable
 
-rust-nightly-build:
+nightly-build:
   extends:
     - .build
     - .nightly
 
-rust-latest-test:
+stable-test:
   extends:
     - .test
     - .stable
 
-rust-nightly-test:
+nightly-test:
   extends:
     - .test
     - .nightly
