@@ -45,8 +45,6 @@ impl Conference {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ns;
-    use crate::pubsub::event::PubSubEvent;
     use crate::pubsub::pubsub::Item as PubSubItem;
     use crate::Element;
     use std::convert::TryFrom;
