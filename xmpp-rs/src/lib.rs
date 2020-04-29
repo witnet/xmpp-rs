@@ -65,6 +65,8 @@ pub enum ClientFeature {
     JoinRooms,
 }
 
+pub type RoomNick = String;
+
 #[derive(Debug)]
 pub enum Event {
     Online,
@@ -74,11 +76,13 @@ pub enum Event {
     ContactChanged(RosterItem),
     #[cfg(feature = "avatars")]
     AvatarRetrieved(Jid, String),
+    ChatMessage(BareJid, Body),
     JoinRoom(BareJid, Conference),
     LeaveRoom(BareJid),
     LeaveAllRooms,
     RoomJoined(BareJid),
     RoomLeft(BareJid),
+    RoomMessage(BareJid, RoomNick, Body),
 }
 
 #[derive(Default)]
@@ -87,6 +91,7 @@ pub struct ClientBuilder<'a> {
     password: &'a str,
     website: String,
     default_nick: String,
+    lang: Vec<String>,
     disco: (ClientType, String),
     features: Vec<ClientFeature>,
 }
@@ -98,6 +103,7 @@ impl ClientBuilder<'_> {
             password,
             website: String::from("https://gitlab.com/xmpp-rs/tokio-xmpp"),
             default_nick: String::from("xmpp-rs"),
+            lang: vec![String::from("en")],
             disco: (ClientType::default(), String::from("tokio-xmpp")),
             features: vec![],
         }
@@ -115,6 +121,11 @@ impl ClientBuilder<'_> {
 
     pub fn set_default_nick(mut self, nick: &str) -> Self {
         self.default_nick = String::from(nick);
+        self
+    }
+
+    pub fn set_lang(mut self, lang: Vec<String>) -> Self {
+        self.lang = lang;
         self
     }
 
@@ -161,6 +172,7 @@ impl ClientBuilder<'_> {
         let agent = Agent {
             client,
             default_nick: Rc::new(RefCell::new(self.default_nick)),
+            lang: Rc::new(self.lang),
             disco,
             node,
         };
@@ -172,6 +184,7 @@ impl ClientBuilder<'_> {
 pub struct Agent {
     client: TokioXmppClient,
     default_nick: Rc<RefCell<String>>,
+    lang: Rc<Vec<String>>,
     disco: DiscoInfoResult,
     node: String,
 }
@@ -323,6 +336,26 @@ impl Agent {
                     } else if stanza.is("message", "jabber:client") {
                         let message = Message::try_from(stanza).unwrap();
                         let from = message.from.clone().unwrap();
+                        let langs: Vec<&str> = self.lang.iter().map(String::as_str).collect();
+                        match message.get_best_body(langs) {
+                            Some((_lang, body)) => match message.type_ {
+                                MessageType::Groupchat => {
+                                    let event = Event::RoomMessage(
+                                        from.clone().into(),
+                                        FullJid::try_from(from.clone()).unwrap().resource,
+                                        body.clone(),
+                                    );
+                                    events.push(event)
+                                }
+                                MessageType::Chat | MessageType::Normal => {
+                                    let event =
+                                        Event::ChatMessage(from.clone().into(), body.clone());
+                                    events.push(event)
+                                }
+                                _ => (),
+                            },
+                            None => (),
+                        }
                         for child in message.payloads {
                             if child.is("event", ns::PUBSUB_EVENT) {
                                 let new_events = pubsub::handle_event(&from, child, self).await;
