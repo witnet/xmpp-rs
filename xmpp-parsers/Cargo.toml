@@ -29,6 +29,7 @@ chrono = "0.4.5"
 component = []
 # Disable validation of unknown attributes.
 disable-validation = []
+serde = ["jid/serde"]
 
 [package.metadata.docs.rs]
 rustdoc-args = [ "--sort-modules-by-appearance", "-Zunstable-options" ]

@@ -19,6 +19,9 @@ use std::error::Error as StdError;
 use std::fmt;
 use std::str::FromStr;
 
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 /// An error that signifies that a `Jid` cannot be parsed from a string.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum JidParseError {
@@ -54,6 +57,7 @@ impl fmt::Display for JidParseError {
 }
 
 /// An enum representing a Jabber ID. It can be either a `FullJid` or a `BareJid`.
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Jid {
     /// Bare Jid
@@ -155,6 +159,7 @@ impl TryFrom<Jid> for FullJid {
 ///
 /// Unlike a `BareJid`, it always contains a resource, and should only be used when you are certain
 /// there is no case where a resource can be missing.  Otherwise, use a `Jid` enum.
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub struct FullJid {
     /// The node part of the Jabber ID, if it exists, else None.
@@ -174,6 +179,7 @@ pub struct FullJid {
 ///
 /// Unlike a `FullJid`, it can’t contain a resource, and should only be used when you are certain
 /// there is no case where a resource can be set.  Otherwise, use a `Jid` enum.
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub struct BareJid {
     /// The node part of the Jabber ID, if it exists, else None.

@@ -25,3 +25,6 @@ trust-dns-resolver = "0.19"
 trust-dns-proto = "0.19"
 xml5ever = "0.16"
 xmpp-parsers = "0.17"
+
+[features]
+serde = ["xmpp-parsers/serde"]

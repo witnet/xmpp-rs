@@ -26,3 +26,4 @@ env_logger = "0.7"
 [features]
 default = ["avatars"]
 avatars = []
+serde = ["tokio-xmpp/serde", "xmpp-parsers/serde"]
