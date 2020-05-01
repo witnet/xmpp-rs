@@ -20,7 +20,7 @@ use std::fmt;
 use std::str::FromStr;
 
 #[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
+use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 
 /// An error that signifies that a `Jid` cannot be parsed from a string.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -159,7 +159,6 @@ impl TryFrom<Jid> for FullJid {
 ///
 /// Unlike a `BareJid`, it always contains a resource, and should only be used when you are certain
 /// there is no case where a resource can be missing.  Otherwise, use a `Jid` enum.
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub struct FullJid {
     /// The node part of the Jabber ID, if it exists, else None.
@@ -179,7 +178,6 @@ pub struct FullJid {
 ///
 /// Unlike a `FullJid`, it can’t contain a resource, and should only be used when you are certain
 /// there is no case where a resource can be set.  Otherwise, use a `Jid` enum.
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub struct BareJid {
     /// The node part of the Jabber ID, if it exists, else None.
@@ -256,6 +254,26 @@ impl fmt::Display for FullJid {
 impl fmt::Display for BareJid {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         fmt.write_str(String::from(self.clone()).as_ref())
+    }
+}
+
+#[cfg(feature = "serde")]
+impl Serialize for FullJid {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_str(String::from(self).as_str())
+    }
+}
+
+#[cfg(feature = "serde")]
+impl Serialize for BareJid {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_str(String::from(self).as_str())
     }
 }
 
@@ -347,6 +365,28 @@ impl FromStr for FullJid {
             domain: ds,
             resource: rs.ok_or(JidParseError::NoResource)?,
         })
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<'de> Deserialize<'de> for FullJid {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        FullJid::from_str(&s).map_err(de::Error::custom)
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<'de> Deserialize<'de> for BareJid {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        BareJid::from_str(&s).map_err(de::Error::custom)
     }
 }
 
