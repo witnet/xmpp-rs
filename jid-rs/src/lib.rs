@@ -190,6 +190,12 @@ pub struct BareJid {
 
 impl From<FullJid> for String {
     fn from(jid: FullJid) -> String {
+        String::from(&jid)
+    }
+}
+
+impl From<&FullJid> for String {
+    fn from(jid: &FullJid) -> String {
         let mut string = String::new();
         if let Some(ref node) = jid.node {
             string.push_str(node);
@@ -204,6 +210,12 @@ impl From<FullJid> for String {
 
 impl From<BareJid> for String {
     fn from(jid: BareJid) -> String {
+        String::from(&jid)
+    }
+}
+
+impl From<&BareJid> for String {
+    fn from(jid: &BareJid) -> String {
         let mut string = String::new();
         if let Some(ref node) = jid.node {
             string.push_str(node);
