@@ -2,6 +2,8 @@ Version 0.18.0:
 UNRELEASED  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
     * New parsers/serialisers:
         - Mediated Information eXchange (MIX) (XEP-0369)
+    * Improvements:
+        - Add "serde" feature to enable "jid/serde"
 
 Version 0.17.0:
 2020-02-15  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>, Maxime “pep” Buquet <pep@bouah.net>, Paul Fariello <paul@fariello.eu>

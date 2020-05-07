@@ -1,3 +1,7 @@
+Version NEXT, release DATE:
+  * Updates
+    - Added serde support behind "serde" feature
+
 Version 0.9.0, release 2020-02-15:
   * Breaking
     - Update minidom dependency to 0.12
