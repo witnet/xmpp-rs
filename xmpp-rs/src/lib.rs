@@ -25,7 +25,7 @@ use xmpp_parsers::{
     ns,
     presence::{Presence, Type as PresenceType},
     pubsub::pubsub::{Items, PubSub},
-    roster::{Item as RosterItem, Roster},
+    roster::{Item as RosterItem, Roster, Subscription as RosterSubscription},
     stanza_error::{DefinedCondition, ErrorType, StanzaError},
     BareJid, FullJid, Jid,
 };
@@ -71,9 +71,13 @@ pub type RoomNick = String;
 pub enum Event {
     Online,
     Disconnected,
+    /// The server, another resource or the user have either added or modified a contact
     ContactAdded(RosterItem),
+    /// The server, another resource or the user have removed a contact
     ContactRemoved(RosterItem),
-    ContactChanged(RosterItem),
+    /// Another user has sent a subscription request
+    ContactSubscription(BareJid),
+    ContactUnsubscription(BareJid),
     #[cfg(feature = "avatars")]
     AvatarRetrieved(Jid, String),
     ChatMessage(BareJid, Body),
@@ -314,7 +318,11 @@ impl Agent {
                             if payload.is("query", ns::ROSTER) && iq.from.is_none() {
                                 let roster = Roster::try_from(payload).unwrap();
                                 for item in roster.items.into_iter() {
-                                    events.push(Event::ContactAdded(item));
+                                    if item.subscription == RosterSubscription::Remove {
+                                        events.push(Event::ContactRemoved(item));
+                                    } else {
+                                        events.push(Event::ContactAdded(item));
+                                    }
                                 }
                             } else if payload.is("pubsub", ns::PUBSUB) {
                                 let new_events = pubsub::handle_iq_result(&from, payload);
@@ -368,15 +376,21 @@ impl Agent {
                             Jid::Full(FullJid { node, domain, .. }) => BareJid { node, domain },
                             Jid::Bare(bare) => bare,
                         };
-                        for payload in presence.payloads.into_iter() {
-                            let muc_user = match MucUser::try_from(payload) {
-                                Ok(muc_user) => muc_user,
-                                _ => continue,
-                            };
-                            for status in muc_user.status.into_iter() {
-                                if status == Status::SelfPresence {
-                                    events.push(Event::RoomJoined(from.clone()));
-                                    break;
+                        if presence.type_ == PresenceType::Subscribe {
+                            events.push(Event::ContactSubscription(from.clone()));
+                        } else if presence.type_ == PresenceType::Unsubscribe {
+                            events.push(Event::ContactUnsubscription(from.clone()));
+                        } else {
+                            for payload in presence.payloads.into_iter() {
+                                let muc_user = match MucUser::try_from(payload) {
+                                    Ok(muc_user) => muc_user,
+                                    _ => continue,
+                                };
+                                for status in muc_user.status.into_iter() {
+                                    if status == Status::SelfPresence {
+                                        events.push(Event::RoomJoined(from.clone()));
+                                        break;
+                                    }
                                 }
                             }
                         }
