@@ -1,5 +1,5 @@
-use std::io::{Read, stdin};
 use std::env::args;
+use std::io::{stdin, Read};
 use std::process::exit;
 use std::str::FromStr;
 use tokio;

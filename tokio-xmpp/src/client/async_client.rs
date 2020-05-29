@@ -20,7 +20,6 @@ use crate::xmpp_codec::Packet;
 use crate::xmpp_stream;
 use crate::{Error, ProtocolError};
 
-
 /// XMPP client connection and state
 ///
 /// It is able to reconnect. TODO: implement session management.
@@ -86,13 +85,15 @@ impl Client {
 
         // Unencryped XMPPStream
         let xmpp_stream =
-            xmpp_stream::XMPPStream::start(tcp_stream, jid.clone(), NS_JABBER_CLIENT.to_owned()).await?;
+            xmpp_stream::XMPPStream::start(tcp_stream, jid.clone(), NS_JABBER_CLIENT.to_owned())
+                .await?;
 
         let xmpp_stream = if xmpp_stream.stream_features.can_starttls() {
             // TlsStream
             let tls_stream = starttls(xmpp_stream).await?;
             // Encrypted XMPPStream
-            xmpp_stream::XMPPStream::start(tls_stream, jid.clone(), NS_JABBER_CLIENT.to_owned()).await?
+            xmpp_stream::XMPPStream::start(tls_stream, jid.clone(), NS_JABBER_CLIENT.to_owned())
+                .await?
         } else {
             return Err(Error::Protocol(ProtocolError::NoTls));
         };
@@ -104,7 +105,8 @@ impl Client {
         // Authenticated (unspecified) stream
         let stream = auth(xmpp_stream, creds).await?;
         // Authenticated XMPPStream
-        let xmpp_stream = xmpp_stream::XMPPStream::start(stream, jid, NS_JABBER_CLIENT.to_owned()).await?;
+        let xmpp_stream =
+            xmpp_stream::XMPPStream::start(stream, jid, NS_JABBER_CLIENT.to_owned()).await?;
 
         // XMPPStream bound to user session
         let xmpp_stream = bind(xmpp_stream).await?;

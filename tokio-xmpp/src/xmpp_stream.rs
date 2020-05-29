@@ -10,8 +10,8 @@ use tokio::io::{AsyncRead, AsyncWrite};
 use tokio_util::codec::Framed;
 use xmpp_parsers::{Element, Jid};
 
-use crate::stream_start;
 use crate::stream_features::StreamFeatures;
+use crate::stream_start;
 use crate::xmpp_codec::{Packet, XMPPCodec};
 use crate::Error;
 

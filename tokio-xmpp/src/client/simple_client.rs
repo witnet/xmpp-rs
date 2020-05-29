@@ -8,13 +8,13 @@ use tokio::{net::TcpStream, stream::StreamExt};
 use tokio_tls::TlsStream;
 use xmpp_parsers::{Element, Jid};
 
+use super::auth::auth;
+use super::bind::bind;
 use crate::happy_eyeballs::connect;
 use crate::starttls::starttls;
 use crate::xmpp_codec::Packet;
 use crate::xmpp_stream;
 use crate::{Error, ProtocolError};
-use super::auth::auth;
-use super::bind::bind;
 
 /// A simple XMPP client connection
 ///
@@ -51,13 +51,15 @@ impl Client {
 
         // Unencryped XMPPStream
         let xmpp_stream =
-            xmpp_stream::XMPPStream::start(tcp_stream, jid.clone(), NS_JABBER_CLIENT.to_owned()).await?;
+            xmpp_stream::XMPPStream::start(tcp_stream, jid.clone(), NS_JABBER_CLIENT.to_owned())
+                .await?;
 
         let xmpp_stream = if xmpp_stream.stream_features.can_starttls() {
             // TlsStream
             let tls_stream = starttls(xmpp_stream).await?;
             // Encrypted XMPPStream
-            xmpp_stream::XMPPStream::start(tls_stream, jid.clone(), NS_JABBER_CLIENT.to_owned()).await?
+            xmpp_stream::XMPPStream::start(tls_stream, jid.clone(), NS_JABBER_CLIENT.to_owned())
+                .await?
         } else {
             return Err(Error::Protocol(ProtocolError::NoTls));
         };
@@ -69,7 +71,8 @@ impl Client {
         // Authenticated (unspecified) stream
         let stream = auth(xmpp_stream, creds).await?;
         // Authenticated XMPPStream
-        let xmpp_stream = xmpp_stream::XMPPStream::start(stream, jid, NS_JABBER_CLIENT.to_owned()).await?;
+        let xmpp_stream =
+            xmpp_stream::XMPPStream::start(stream, jid, NS_JABBER_CLIENT.to_owned()).await?;
 
         // XMPPStream bound to user session
         let xmpp_stream = bind(xmpp_stream).await?;
@@ -115,16 +118,18 @@ impl Stream for Client {
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context) -> Poll<Option<Self::Item>> {
         loop {
             match Pin::new(&mut self.stream).poll_next(cx) {
-                Poll::Pending =>
-                    return Poll::Pending,
-                Poll::Ready(Some(Ok(Packet::Stanza(stanza)))) =>
-                    return Poll::Ready(Some(Ok(stanza))),
+                Poll::Pending => return Poll::Pending,
+                Poll::Ready(Some(Ok(Packet::Stanza(stanza)))) => {
+                    return Poll::Ready(Some(Ok(stanza)))
+                }
                 Poll::Ready(Some(Ok(Packet::Text(_)))) => {
                     // Ignore, retry
                 }
                 Poll::Ready(_) =>
-                    // Unexpected and errors, just end
-                    return Poll::Ready(None),
+                // Unexpected and errors, just end
+                {
+                    return Poll::Ready(None)
+                }
             }
         }
     }
