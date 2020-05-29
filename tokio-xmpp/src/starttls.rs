@@ -2,21 +2,18 @@ use futures::{sink::SinkExt, stream::StreamExt};
 use native_tls::TlsConnector as NativeTlsConnector;
 use tokio::io::{AsyncRead, AsyncWrite};
 use tokio_tls::{TlsConnector, TlsStream};
-use xmpp_parsers::Element;
+use xmpp_parsers::{ns, Element};
 
 use crate::xmpp_codec::Packet;
 use crate::xmpp_stream::XMPPStream;
 use crate::{Error, ProtocolError};
-
-/// XMPP TLS XML namespace
-pub const NS_XMPP_TLS: &str = "urn:ietf:params:xml:ns:xmpp-tls";
 
 /// Performs `<starttls/>` on an XMPPStream and returns a binary
 /// TlsStream.
 pub async fn starttls<S: AsyncRead + AsyncWrite + Unpin>(
     mut xmpp_stream: XMPPStream<S>,
 ) -> Result<TlsStream<S>, Error> {
-    let nonza = Element::builder("starttls", NS_XMPP_TLS).build();
+    let nonza = Element::builder("starttls", ns::TLS).build();
     let packet = Packet::Stanza(nonza);
     xmpp_stream.send(packet).await?;
 

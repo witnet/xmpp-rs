@@ -6,7 +6,7 @@ use std::pin::Pin;
 use std::str::FromStr;
 use std::task::Context;
 use tokio::net::TcpStream;
-use xmpp_parsers::{Element, Jid};
+use xmpp_parsers::{ns, Element, Jid};
 
 use super::happy_eyeballs::connect;
 use super::xmpp_codec::Packet;
@@ -26,7 +26,6 @@ pub struct Component {
 }
 
 type XMPPStream = xmpp_stream::XMPPStream<TcpStream>;
-const NS_JABBER_COMPONENT_ACCEPT: &str = "jabber:component:accept";
 
 impl Component {
     /// Start a new XMPP component
@@ -46,7 +45,7 @@ impl Component {
         let password = password;
         let tcp_stream = connect(server, None, port).await?;
         let mut xmpp_stream =
-            xmpp_stream::XMPPStream::start(tcp_stream, jid, NS_JABBER_COMPONENT_ACCEPT.to_owned())
+            xmpp_stream::XMPPStream::start(tcp_stream, jid, ns::COMPONENT_ACCEPT.to_owned())
                 .await?;
         auth::auth(&mut xmpp_stream, password).await?;
         Ok(xmpp_stream)

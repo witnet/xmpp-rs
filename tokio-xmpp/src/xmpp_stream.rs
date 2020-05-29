@@ -15,9 +15,6 @@ use crate::stream_start;
 use crate::xmpp_codec::{Packet, XMPPCodec};
 use crate::Error;
 
-/// <stream:stream> namespace
-pub const NS_XMPP_STREAM: &str = "http://etherx.jabber.org/streams";
-
 /// Wraps a binary stream (tokio's `AsyncRead + AsyncWrite`) to decode
 /// and encode XMPP packets.
 ///

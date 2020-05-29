@@ -2,13 +2,11 @@ use futures::{sink::SinkExt, stream::StreamExt};
 use std::marker::Unpin;
 use tokio::io::{AsyncRead, AsyncWrite};
 use tokio_util::codec::Framed;
-use xmpp_parsers::{Element, Jid};
+use xmpp_parsers::{ns, Element, Jid};
 
 use crate::xmpp_codec::{Packet, XMPPCodec};
 use crate::xmpp_stream::XMPPStream;
 use crate::{Error, ProtocolError};
-
-const NS_XMPP_STREAM: &str = "http://etherx.jabber.org/streams";
 
 /// Sends a `<stream:stream>`, then wait for one from the server, and
 /// construct an XMPPStream.
@@ -21,7 +19,7 @@ pub async fn start<S: AsyncRead + AsyncWrite + Unpin>(
         ("to".to_owned(), jid.clone().domain()),
         ("version".to_owned(), "1.0".to_owned()),
         ("xmlns".to_owned(), ns.clone()),
-        ("xmlns:stream".to_owned(), NS_XMPP_STREAM.to_owned()),
+        ("xmlns:stream".to_owned(), ns::STREAM.to_owned()),
     ]
     .iter()
     .cloned()
@@ -53,7 +51,7 @@ pub async fn start<S: AsyncRead + AsyncWrite + Unpin>(
         let stream_features;
         loop {
             match stream.next().await {
-                Some(Ok(Packet::Stanza(stanza))) if stanza.is("features", NS_XMPP_STREAM) => {
+                Some(Ok(Packet::Stanza(stanza))) if stanza.is("features", ns::STREAM) => {
                     stream_features = stanza;
                     break;
                 }
@@ -70,7 +68,7 @@ pub async fn start<S: AsyncRead + AsyncWrite + Unpin>(
             stream,
             ns,
             stream_id.clone(),
-            Element::builder(stream_id, NS_XMPP_STREAM).build(),
+            Element::builder(stream_id, ns::STREAM).build(),
         )
     };
     Ok(stream)

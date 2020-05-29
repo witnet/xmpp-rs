@@ -6,7 +6,7 @@ use std::str::FromStr;
 use std::task::{Context, Poll};
 use tokio::{net::TcpStream, stream::StreamExt};
 use tokio_tls::TlsStream;
-use xmpp_parsers::{Element, Jid};
+use xmpp_parsers::{ns, Element, Jid};
 
 use super::auth::auth;
 use super::bind::bind;
@@ -25,7 +25,6 @@ pub struct Client {
 }
 
 type XMPPStream = xmpp_stream::XMPPStream<TlsStream<TcpStream>>;
-const NS_JABBER_CLIENT: &str = "jabber:client";
 
 impl Client {
     /// Start a new XMPP client and wait for a usable session
@@ -51,14 +50,14 @@ impl Client {
 
         // Unencryped XMPPStream
         let xmpp_stream =
-            xmpp_stream::XMPPStream::start(tcp_stream, jid.clone(), NS_JABBER_CLIENT.to_owned())
+            xmpp_stream::XMPPStream::start(tcp_stream, jid.clone(), ns::JABBER_CLIENT.to_owned())
                 .await?;
 
         let xmpp_stream = if xmpp_stream.stream_features.can_starttls() {
             // TlsStream
             let tls_stream = starttls(xmpp_stream).await?;
             // Encrypted XMPPStream
-            xmpp_stream::XMPPStream::start(tls_stream, jid.clone(), NS_JABBER_CLIENT.to_owned())
+            xmpp_stream::XMPPStream::start(tls_stream, jid.clone(), ns::JABBER_CLIENT.to_owned())
                 .await?
         } else {
             return Err(Error::Protocol(ProtocolError::NoTls));
@@ -72,7 +71,7 @@ impl Client {
         let stream = auth(xmpp_stream, creds).await?;
         // Authenticated XMPPStream
         let xmpp_stream =
-            xmpp_stream::XMPPStream::start(stream, jid, NS_JABBER_CLIENT.to_owned()).await?;
+            xmpp_stream::XMPPStream::start(stream, jid, ns::JABBER_CLIENT.to_owned()).await?;
 
         // XMPPStream bound to user session
         let xmpp_stream = bind(xmpp_stream).await?;
