@@ -16,7 +16,7 @@ use crate::{Error, ProtocolError};
 use super::auth::auth;
 use super::bind::bind;
 
-/// XMPP client connection and state
+/// A simple XMPP client connection
 ///
 /// This implements the `futures` crate's [`Stream`](#impl-Stream) and
 /// [`Sink`](#impl-Sink<Packet>) traits.
