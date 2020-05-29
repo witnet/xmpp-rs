@@ -6,7 +6,7 @@ use std::io::{self, Write};
 use std::process::exit;
 use std::str::FromStr;
 use tokio;
-use tokio_xmpp::Client;
+use tokio_xmpp::AsyncClient as Client;
 use xmpp_parsers::{
     avatar::{Data as AvatarData, Metadata as AvatarMetadata},
     caps::{compute_disco, hash_caps, Caps},

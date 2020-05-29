@@ -3,7 +3,7 @@ use std::convert::TryFrom;
 use std::env::args;
 use std::process::exit;
 use tokio;
-use tokio_xmpp::Client;
+use tokio_xmpp::AsyncClient as Client;
 use xmpp_parsers::message::{Body, Message, MessageType};
 use xmpp_parsers::presence::{Presence, Show as PresenceShow, Type as PresenceType};
 use xmpp_parsers::{Element, Jid};

@@ -2,7 +2,7 @@ use futures::stream::StreamExt;
 use std::convert::TryFrom;
 use std::env::args;
 use std::process::exit;
-use tokio_xmpp::Client;
+use tokio_xmpp::AsyncClient as Client;
 use xmpp_parsers::{
     disco::{DiscoInfoQuery, DiscoInfoResult},
     iq::{Iq, IqType},
