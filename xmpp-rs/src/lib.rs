@@ -10,7 +10,7 @@ use futures::stream::StreamExt;
 use std::cell::RefCell;
 use std::convert::TryFrom;
 use std::rc::Rc;
-use tokio_xmpp::{Client as TokioXmppClient, Event as TokioXmppEvent};
+use tokio_xmpp::{AsyncClient as TokioXmppClient, Event as TokioXmppEvent};
 use xmpp_parsers::{
     bookmarks2::Conference,
     caps::{compute_disco, hash_caps, Caps},
@@ -241,7 +241,7 @@ impl Agent {
             let mut events = Vec::new();
 
             match event {
-                TokioXmppEvent::Online(_) => {
+                TokioXmppEvent::Online { resumed: false, .. } => {
                     let presence = Self::make_initial_presence(&self.disco, &self.node).into();
                     let _ = self.client.send_stanza(presence).await;
                     events.push(Event::Online);
@@ -260,6 +260,7 @@ impl Agent {
                         Iq::from_get("bookmarks", PubSub::Items(Items::new(ns::BOOKMARKS2))).into();
                     let _ = self.client.send_stanza(iq).await;
                 }
+                TokioXmppEvent::Online { resumed: true, .. } => {}
                 TokioXmppEvent::Disconnected(_) => {
                     events.push(Event::Disconnected);
                 }
@@ -398,7 +399,7 @@ impl Agent {
 #[cfg(test)]
 mod tests {
     use super::{Agent, ClientBuilder, ClientFeature, ClientType, Event};
-    use tokio_xmpp::Client as TokioXmppClient;
+    use tokio_xmpp::AsyncClient as TokioXmppClient;
 
     #[tokio::test]
     async fn test_simple() {
