@@ -11,7 +11,7 @@ use crate::ns;
 use crate::presence::PresencePayload;
 use crate::util::error::Error;
 use blake2::VarBlake2b;
-use digest::{Digest, Input, VariableOutput};
+use digest::{Digest, Update, VariableOutput};
 use sha2::{Sha256, Sha512};
 use sha3::{Sha3_256, Sha3_512};
 
@@ -147,13 +147,17 @@ pub fn hash_ecaps2(data: &[u8], algo: Algo) -> Result<Hash, Error> {
             }
             Algo::Blake2b_256 => {
                 let mut hasher = VarBlake2b::new(32).unwrap();
-                hasher.input(data);
-                hasher.vec_result()
+                hasher.update(data);
+                let mut vec = Vec::with_capacity(32);
+                hasher.finalize_variable(|slice| vec.extend_from_slice(slice));
+                vec
             }
             Algo::Blake2b_512 => {
                 let mut hasher = VarBlake2b::new(64).unwrap();
-                hasher.input(data);
-                hasher.vec_result()
+                hasher.update(data);
+                let mut vec = Vec::with_capacity(64);
+                hasher.finalize_variable(|slice| vec.extend_from_slice(slice));
+                vec
             }
             Algo::Sha_1 => return Err(Error::ParseError("Disabled algorithm sha-1: unsafe.")),
             Algo::Unknown(_algo) => return Err(Error::ParseError("Unknown algorithm in ecaps2.")),
