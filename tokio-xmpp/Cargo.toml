@@ -19,7 +19,7 @@ log = "0.4"
 native-tls = "0.2"
 sasl = "0.4"
 tokio = { version = "0.2", features = ["net", "stream", "rt-util", "rt-threaded", "macros"] }
-tokio-util = { version = "0.2", features = ["codec"] }
+tokio-util = { version = "0.3", features = ["codec"] }
 tokio-tls = "0.3"
 trust-dns-resolver = "0.19"
 trust-dns-proto = "0.19"

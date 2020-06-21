@@ -272,11 +272,10 @@ impl Decoder for XMPPCodec {
     }
 }
 
-impl Encoder for XMPPCodec {
-    type Item = Packet;
+impl Encoder<Packet> for XMPPCodec {
     type Error = io::Error;
 
-    fn encode(&mut self, item: Self::Item, dst: &mut BytesMut) -> Result<(), Self::Error> {
+    fn encode(&mut self, item: Packet, dst: &mut BytesMut) -> Result<(), Self::Error> {
         let remaining = dst.capacity() - dst.len();
         let max_stanza_size: usize = 2usize.pow(16);
         if remaining < max_stanza_size {
