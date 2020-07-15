@@ -1,5 +1,5 @@
-xmpp-rs
-=======
+xmpp
+====
 
 What's this?
 ------------

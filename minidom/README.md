@@ -1,5 +1,5 @@
-minidom-rs
-==========
+minidom
+=======
 
 What's this?
 ------------

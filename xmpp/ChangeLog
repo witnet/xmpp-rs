@@ -1,4 +1,4 @@
-xmpp-rs (NEXT)
+xmpp (NEXT)
     [ Authors ]
     * Improvements:
         - Add "serde" feature to enable "jid/serde"
