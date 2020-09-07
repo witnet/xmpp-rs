@@ -236,7 +236,12 @@ impl Agent {
         presence
     }
 
-    async fn handle_iq(&mut self, iq: Iq) -> () {
+    async fn handle_iq(&mut self, iq: Iq) -> Vec<Event> {
+        let mut events = vec![];
+        let from = iq
+            .from
+            .clone()
+            .unwrap_or_else(|| self.client.bound_jid().unwrap().clone());
         if let IqType::Get(payload) = iq.payload {
             if payload.is("query", ns::DISCO_INFO) {
                 let query = DiscoInfoQuery::try_from(payload);
@@ -275,7 +280,33 @@ impl Agent {
                     .into();
                 let _ = self.client.send_stanza(iq).await;
             }
+        } else if let IqType::Result(Some(payload)) = iq.payload {
+            // TODO: move private iqs like this one somewhere else, for
+            // security reasons.
+            if payload.is("query", ns::ROSTER) && iq.from.is_none() {
+                let roster = Roster::try_from(payload).unwrap();
+                for item in roster.items.into_iter() {
+                    events.push(Event::ContactAdded(item));
+                }
+            } else if payload.is("pubsub", ns::PUBSUB) {
+                let new_events = pubsub::handle_iq_result(&from, payload);
+                events.extend(new_events);
+            }
+        } else if let IqType::Set(_) = iq.payload {
+            // We MUST answer unhandled set iqs with a service-unavailable error.
+            let error = StanzaError::new(
+                ErrorType::Cancel,
+                DefinedCondition::ServiceUnavailable,
+                "en",
+                "No handler defined for this kind of iq.",
+            );
+            let iq = Iq::from_error(iq.id, error)
+                .with_to(iq.from.unwrap())
+                .into();
+            let _ = self.client.send_stanza(iq).await;
         }
+
+        events
     }
 
     async fn handle_message(&mut self, message: Message) -> Vec<Event> {
@@ -363,7 +394,8 @@ impl Agent {
                 TokioXmppEvent::Stanza(elem) => {
                     if elem.is("iq", "jabber:client") {
                         let iq = Iq::try_from(elem).unwrap();
-                        self.handle_iq(iq).await;
+                        let new_events = self.handle_iq(iq).await;
+                        events.extend(new_events);
                     } else if elem.is("message", "jabber:client") {
                         let message = Message::try_from(elem).unwrap();
                         let new_events = self.handle_message(message).await;
