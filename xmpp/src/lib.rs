@@ -27,7 +27,7 @@ use xmpp_parsers::{
     pubsub::pubsub::{Items, PubSub},
     roster::{Item as RosterItem, Roster},
     stanza_error::{DefinedCondition, ErrorType, StanzaError},
-    BareJid, Element, FullJid, Jid,
+    BareJid, FullJid, Jid,
 };
 #[macro_use]
 extern crate log;
