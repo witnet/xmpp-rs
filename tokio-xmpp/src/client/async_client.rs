@@ -27,13 +27,18 @@ use crate::{Error, ProtocolError};
 /// This implements the `futures` crate's [`Stream`](#impl-Stream) and
 /// [`Sink`](#impl-Sink<Packet>) traits.
 pub struct Client {
+    config: Config,
     state: ClientState,
+    reconnect: bool,
+    // TODO: tls_required=true
+}
+
+/// XMMPP client configuration
+pub struct Config {
     jid: Jid,
     password: String,
-    reconnect: bool,
     server: String,
     port: u16,
-    // TODO: tls_required=true
 }
 
 type XMPPStream = xmpp_stream::XMPPStream<TlsStream<TcpStream>>;
@@ -52,27 +57,29 @@ impl Client {
     /// and yield events.
     pub fn new<P: Into<String>>(jid: &str, password: P) -> Result<Self, JidParseError> {
         let jid = Jid::from_str(jid)?;
-        let server = jid.clone().domain();
-        let client = Self::new_with_jid(jid, password.into(), server, 5222);
+        let config = Config {
+            jid: jid.clone(),
+            password: password.into(),
+            server: jid.clone().domain(),
+            port: 5222,
+        };
+        let client = Self::new_with_config(config);
         Ok(client)
     }
 
     /// Start a new client given that the JID is already parsed.
-    pub fn new_with_jid(jid: Jid, password: String, server: String, port: u16) -> Self {
+    pub fn new_with_config(config: Config) -> Self {
         let local = LocalSet::new();
         let connect = local.spawn_local(Self::connect(
-            server.clone(),
-            port,
-            jid.clone(),
-            password.clone(),
+            config.server.clone(),
+            config.port,
+            config.jid.clone(),
+            config.password.clone(),
         ));
         let client = Client {
-            jid,
-            password,
+            config: config,
             state: ClientState::Connecting(connect, local),
             reconnect: false,
-            server: server,
-            port: port,
         };
         client
     }
@@ -178,10 +185,10 @@ impl Stream for Client {
                 // TODO: add timeout
                 let mut local = LocalSet::new();
                 let connect = local.spawn_local(Self::connect(
-                    self.server.clone(),
-                    self.port,
-                    self.jid.clone(),
-                    self.password.clone(),
+                    self.config.server.clone(),
+                    self.config.port,
+                    self.config.jid.clone(),
+                    self.config.password.clone(),
                 ));
                 let _ = Pin::new(&mut local).poll(cx);
                 self.state = ClientState::Connecting(connect, local);
