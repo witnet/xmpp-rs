@@ -31,6 +31,8 @@ pub struct Client {
     jid: Jid,
     password: String,
     reconnect: bool,
+    server: String,
+    port: u16,
     // TODO: tls_required=true
 }
 
@@ -50,19 +52,27 @@ impl Client {
     /// and yield events.
     pub fn new<P: Into<String>>(jid: &str, password: P) -> Result<Self, JidParseError> {
         let jid = Jid::from_str(jid)?;
-        let client = Self::new_with_jid(jid, password.into());
+        let server = jid.clone().domain();
+        let client = Self::new_with_jid(jid, password.into(), server, 5222);
         Ok(client)
     }
 
     /// Start a new client given that the JID is already parsed.
-    pub fn new_with_jid(jid: Jid, password: String) -> Self {
+    pub fn new_with_jid(jid: Jid, password: String, server: String, port: u16) -> Self {
         let local = LocalSet::new();
-        let connect = local.spawn_local(Self::connect(jid.clone(), password.clone()));
+        let connect = local.spawn_local(Self::connect(
+            server.clone(),
+            port,
+            jid.clone(),
+            password.clone(),
+        ));
         let client = Client {
             jid,
             password,
             state: ClientState::Connecting(connect, local),
             reconnect: false,
+            server: server,
+            port: port,
         };
         client
     }
@@ -74,13 +84,18 @@ impl Client {
         self
     }
 
-    async fn connect(jid: Jid, password: String) -> Result<XMPPStream, Error> {
+    async fn connect(
+        server: String,
+        port: u16,
+        jid: Jid,
+        password: String,
+    ) -> Result<XMPPStream, Error> {
         let username = jid.clone().node().unwrap();
         let password = password;
-        let domain = idna::domain_to_ascii(&jid.clone().domain()).map_err(|_| Error::Idna)?;
+        let domain = idna::domain_to_ascii(&server).map_err(|_| Error::Idna)?;
 
         // TCP connection
-        let tcp_stream = connect(&domain, Some("_xmpp-client._tcp"), 5222).await?;
+        let tcp_stream = connect(&domain, Some("_xmpp-client._tcp"), port).await?;
 
         // Unencryped XMPPStream
         let xmpp_stream =
@@ -162,8 +177,12 @@ impl Stream for Client {
             ClientState::Disconnected if self.reconnect => {
                 // TODO: add timeout
                 let mut local = LocalSet::new();
-                let connect =
-                    local.spawn_local(Self::connect(self.jid.clone(), self.password.clone()));
+                let connect = local.spawn_local(Self::connect(
+                    self.server.clone(),
+                    self.port,
+                    self.jid.clone(),
+                    self.password.clone(),
+                ));
                 let _ = Pin::new(&mut local).poll(cx);
                 self.state = ClientState::Connecting(connect, local);
                 self.poll_next(cx)
