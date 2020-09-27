@@ -7,10 +7,14 @@
 /// The `http://jabber.org/protocol/pubsub#event` protocol.
 pub mod event;
 
+/// The `http://jabber.org/protocol/pubsub#owner` protocol.
+pub mod owner;
+
 /// The `http://jabber.org/protocol/pubsub` protocol.
 pub mod pubsub;
 
 pub use self::event::PubSubEvent;
+pub use self::owner::PubSubOwner;
 pub use self::pubsub::PubSub;
 
 use crate::{Element, Jid};
