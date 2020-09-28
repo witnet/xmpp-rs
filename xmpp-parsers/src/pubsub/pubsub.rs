@@ -7,7 +7,9 @@
 use crate::data_forms::DataForm;
 use crate::iq::{IqGetPayload, IqResultPayload, IqSetPayload};
 use crate::ns;
-use crate::pubsub::{Item as PubSubItem, NodeName, Subscription, SubscriptionId};
+use crate::pubsub::{
+    AffiliationAttribute, Item as PubSubItem, NodeName, Subscription, SubscriptionId,
+};
 use crate::util::error::Error;
 use crate::Element;
 use jid::Jid;
@@ -26,29 +28,6 @@ generate_element!(
         /// The actual list of affiliation elements.
         affiliations: Vec<Affiliation> = ("affiliation", PUBSUB) => Affiliation
     ]
-);
-
-generate_attribute!(
-    /// A list of possible affiliations to a node.
-    AffiliationAttribute, "affiliation", {
-        /// You are a member of this node, you can subscribe and retrieve items.
-        Member => "member",
-
-        /// You don’t have a specific affiliation with this node, you can only subscribe to it.
-        None => "none",
-
-        /// You are banned from this node.
-        Outcast => "outcast",
-
-        /// You are an owner of this node, and can do anything with it.
-        Owner => "owner",
-
-        /// You are a publisher on this node, you can publish and retract items to it.
-        Publisher => "publisher",
-
-        /// You can publish and retract items on this node, but not subscribe or retrieve items.
-        PublishOnly => "publish-only",
-    }
 );
 
 generate_element!(

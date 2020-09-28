@@ -52,6 +52,29 @@ generate_attribute!(
     }, Default = None
 );
 
+generate_attribute!(
+    /// A list of possible affiliations to a node.
+    AffiliationAttribute, "affiliation", {
+        /// You are a member of this node, you can subscribe and retrieve items.
+        Member => "member",
+
+        /// You don’t have a specific affiliation with this node, you can only subscribe to it.
+        None => "none",
+
+        /// You are banned from this node.
+        Outcast => "outcast",
+
+        /// You are an owner of this node, and can do anything with it.
+        Owner => "owner",
+
+        /// You are a publisher on this node, you can publish and retract items to it.
+        Publisher => "publisher",
+
+        /// You can publish and retract items on this node, but not subscribe or retrieve items.
+        PublishOnly => "publish-only",
+    }
+);
+
 /// An item from a PubSub node.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Item {
