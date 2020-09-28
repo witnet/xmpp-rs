@@ -69,7 +69,7 @@ generate_element!(
     ],
     children: [
         /// Redirection to replace the deleted node.
-        redirect: Vec<Redirect> = ("redirect", PUBSUB_OWNER) => Redirect
+        redirect: Option<Redirect> = ("redirect", PUBSUB_OWNER) => Redirect
     ]
 );
 
@@ -300,9 +300,9 @@ mod tests {
 
         let pubsub = PubSubOwner::Delete(Delete {
             node: NodeName(String::from("foo")),
-            redirect: vec![Redirect {
+            redirect: Some(Redirect {
                 uri: String::from("xmpp:hamlet@denmark.lit?;node=blog"),
-            }],
+            }),
         });
 
         let elem2 = Element::from(pubsub);
