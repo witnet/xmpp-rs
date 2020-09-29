@@ -63,7 +63,7 @@ mod tests {
 
     #[test]
     fn simple() {
-        let elem: Element = "<conference xmlns='urn:xmpp:bookmarks:0'/>"
+        let elem: Element = "<conference xmlns='urn:xmpp:bookmarks:1'/>"
             .parse()
             .unwrap();
         let elem1 = elem.clone();
@@ -79,7 +79,7 @@ mod tests {
 
     #[test]
     fn complete() {
-        let elem: Element = "<conference xmlns='urn:xmpp:bookmarks:0' autojoin='true' name='Test MUC'><nick>Coucou</nick><password>secret</password></conference>".parse().unwrap();
+        let elem: Element = "<conference xmlns='urn:xmpp:bookmarks:1' autojoin='true' name='Test MUC'><nick>Coucou</nick><password>secret</password></conference>".parse().unwrap();
         let conference = Conference::try_from(elem).unwrap();
         assert_eq!(conference.autojoin, Autojoin::True);
         assert_eq!(conference.name, Some(String::from("Test MUC")));
@@ -89,7 +89,7 @@ mod tests {
 
     #[test]
     fn wrapped() {
-        let elem: Element = "<item xmlns='http://jabber.org/protocol/pubsub' id='test-muc@muc.localhost'><conference xmlns='urn:xmpp:bookmarks:0' autojoin='true' name='Test MUC'><nick>Coucou</nick><password>secret</password></conference></item>".parse().unwrap();
+        let elem: Element = "<item xmlns='http://jabber.org/protocol/pubsub' id='test-muc@muc.localhost'><conference xmlns='urn:xmpp:bookmarks:1' autojoin='true' name='Test MUC'><nick>Coucou</nick><password>secret</password></conference></item>".parse().unwrap();
         let item = PubSubItem::try_from(elem).unwrap();
         let payload = item.payload.clone().unwrap();
         println!("FOO: payload: {:?}", payload);
@@ -102,7 +102,7 @@ mod tests {
         assert_eq!(conference.clone().nick.unwrap(), "Coucou");
         assert_eq!(conference.clone().password.unwrap(), "secret");
 
-        let elem: Element = "<event xmlns='http://jabber.org/protocol/pubsub#event'><items node='urn:xmpp:bookmarks:0'><item xmlns='http://jabber.org/protocol/pubsub#event' id='test-muc@muc.localhost'><conference xmlns='urn:xmpp:bookmarks:0' autojoin='true' name='Test MUC'><nick>Coucou</nick><password>secret</password></conference></item></items></event>".parse().unwrap();
+        let elem: Element = "<event xmlns='http://jabber.org/protocol/pubsub#event'><items node='urn:xmpp:bookmarks:1'><item xmlns='http://jabber.org/protocol/pubsub#event' id='test-muc@muc.localhost'><conference xmlns='urn:xmpp:bookmarks:1' autojoin='true' name='Test MUC'><nick>Coucou</nick><password>secret</password></conference></item></items></event>".parse().unwrap();
         let mut items = match PubSubEvent::try_from(elem) {
             Ok(PubSubEvent::PublishedItems { node, items }) => {
                 assert_eq!(&node.0, ns::BOOKMARKS2);

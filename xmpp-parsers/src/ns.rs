@@ -238,7 +238,7 @@ pub const ECAPS2: &str = "urn:xmpp:caps";
 pub const ECAPS2_OPTIMIZE: &str = "urn:xmpp:caps:optimize";
 
 /// XEP-0402: Bookmarks 2 (This Time it's Serious)
-pub const BOOKMARKS2: &str = "urn:xmpp:bookmarks:0";
+pub const BOOKMARKS2: &str = "urn:xmpp:bookmarks:1";
 /// XEP-0402: Bookmarks 2 (This Time it's Serious)
 pub const BOOKMARKS2_COMPAT: &str = "urn:xmpp:bookmarks:0#compat";
 
