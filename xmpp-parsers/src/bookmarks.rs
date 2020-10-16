@@ -24,7 +24,7 @@ generate_element!(
         jid: Required<BareJid> = "jid",
 
         /// A user-defined name for this conference.
-        name: Required<String> = "name",
+        name: Option<String> = "name",
     ],
     children: [
         /// The nick the user will use to join this conference.
@@ -40,7 +40,7 @@ generate_element!(
     Url, "url", BOOKMARKS,
     attributes: [
         /// A user-defined name for this URL.
-        name: Required<String> = "name",
+        name: Option<String> = "name",
 
         /// The URL of this bookmark.
         url: Required<String> = "url",
@@ -106,7 +106,7 @@ mod tests {
         let elem: Element = "<storage xmlns='storage:bookmarks'><url name='Example' url='https://example.org/'/><conference autojoin='true' jid='test-muc@muc.localhost' name='Test MUC'><nick>Coucou</nick><password>secret</password></conference></storage>".parse().unwrap();
         let storage = Storage::try_from(elem).unwrap();
         assert_eq!(storage.urls.len(), 1);
-        assert_eq!(storage.urls[0].name, "Example");
+        assert_eq!(storage.urls[0].clone().name.unwrap(), "Example");
         assert_eq!(storage.urls[0].url, "https://example.org/");
         assert_eq!(storage.conferences.len(), 1);
         assert_eq!(storage.conferences[0].autojoin, Autojoin::True);
@@ -114,7 +114,7 @@ mod tests {
             storage.conferences[0].jid,
             BareJid::new("test-muc", "muc.localhost")
         );
-        assert_eq!(storage.conferences[0].name, "Test MUC");
+        assert_eq!(storage.conferences[0].clone().name.unwrap(), "Test MUC");
         assert_eq!(storage.conferences[0].clone().nick.unwrap(), "Coucou");
         assert_eq!(storage.conferences[0].clone().password.unwrap(), "secret");
     }
