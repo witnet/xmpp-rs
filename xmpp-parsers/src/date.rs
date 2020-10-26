@@ -13,7 +13,7 @@ use std::str::FromStr;
 /// non-recurring moment in time, with an accuracy of seconds or fraction of
 /// seconds, and includes a timezone.
 #[derive(Debug, Clone, PartialEq)]
-pub struct DateTime(ChronoDateTime<FixedOffset>);
+pub struct DateTime(pub ChronoDateTime<FixedOffset>);
 
 impl DateTime {
     /// Retrieves the associated timezone.
