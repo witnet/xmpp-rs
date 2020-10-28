@@ -294,6 +294,15 @@ pub enum PubSub {
         configure: Option<Configure>,
     },
 
+    /// A subcribe request.
+    Subscribe {
+        /// The subscribe request.
+        subscribe: Subscribe,
+
+        /// The options related to this subscribe request.
+        options: Option<Options>,
+    },
+
     /// Request to publish items to a node, with optional options.
     Publish {
         /// The publish request.
@@ -320,9 +329,6 @@ pub enum PubSub {
 
     /// A request for current subscriptions.
     Subscriptions(Subscriptions),
-
-    /// A subcribe request.
-    Subscribe(Subscribe),
 
     /// An unsubscribe request.
     Unsubscribe(Unsubscribe),
