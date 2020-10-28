@@ -297,7 +297,7 @@ pub enum PubSub {
     /// A subcribe request.
     Subscribe {
         /// The subscribe request.
-        subscribe: Subscribe,
+        subscribe: Option<Subscribe>,
 
         /// The options related to this subscribe request.
         options: Option<Options>,
@@ -358,6 +358,37 @@ impl TryFrom<Element> for PubSub {
                     create,
                     configure: None,
                 });
+            } else if child.is("subscribe", ns::PUBSUB) {
+                if payload.is_some() {
+                    return Err(Error::ParseError(
+                        "Payload is already defined in pubsub element.",
+                    ));
+                }
+                let subscribe = Subscribe::try_from(child.clone())?;
+                payload = Some(PubSub::Subscribe {
+                    subscribe: Some(subscribe),
+                    options: None,
+                });
+            } else if child.is("options", ns::PUBSUB) {
+                if let Some(PubSub::Subscribe { subscribe, options }) = payload {
+                    if options.is_some() {
+                        return Err(Error::ParseError(
+                            "Options is already defined in pubsub element.",
+                        ));
+                    }
+                    let options = Some(Options::try_from(child.clone())?);
+                    payload = Some(PubSub::Subscribe { subscribe, options });
+                } else if payload.is_none() {
+                    let options = Options::try_from(child.clone())?;
+                    payload = Some(PubSub::Subscribe {
+                        subscribe: None,
+                        options: Some(options),
+                    });
+                } else {
+                    return Err(Error::ParseError(
+                        "Payload is already defined in pubsub element.",
+                    ));
+                }
             } else if child.is("configure", ns::PUBSUB) {
                 if let Some(PubSub::Create { create, configure }) = payload {
                     if configure.is_some() {
@@ -479,6 +510,16 @@ impl From<PubSub> for Element {
                     }
                     elems
                 }
+                PubSub::Subscribe { subscribe, options } => {
+                    let mut elems = vec![];
+                    if let Some(subscribe) = subscribe {
+                        elems.push(Element::from(subscribe));
+                    }
+                    if let Some(options) = options {
+                        elems.push(Element::from(options));
+                    }
+                    elems
+                }
                 PubSub::Publish {
                     publish,
                     publish_options,
@@ -495,7 +536,6 @@ impl From<PubSub> for Element {
                 PubSub::Retract(retract) => vec![Element::from(retract)],
                 PubSub::Subscription(subscription) => vec![Element::from(subscription)],
                 PubSub::Subscriptions(subscriptions) => vec![Element::from(subscriptions)],
-                PubSub::Subscribe(subscribe) => vec![Element::from(subscribe)],
                 PubSub::Unsubscribe(unsubscribe) => vec![Element::from(unsubscribe)],
             })
             .build()
@@ -676,6 +716,23 @@ mod tests {
         let elem2: Element = "<subscribe-options xmlns='http://jabber.org/protocol/pubsub'><required/></subscribe-options>".parse().unwrap();
         let subscribe_options2 = SubscribeOptions::try_from(elem2).unwrap();
         assert_eq!(subscribe_options2.required, true);
+    }
+
+    #[test]
+    fn test_options_without_subscribe() {
+        let elem: Element = "<pubsub xmlns='http://jabber.org/protocol/pubsub'><options xmlns='http://jabber.org/protocol/pubsub' jid='juliet@capulet.lit/balcony'><x xmlns='jabber:x:data' type='submit'/></options></pubsub>".parse().unwrap();
+        let elem1 = elem.clone();
+        let pubsub = PubSub::try_from(elem).unwrap();
+        match pubsub.clone() {
+            PubSub::Subscribe { subscribe, options } => {
+                assert!(subscribe.is_none());
+                assert!(options.is_some());
+            }
+            _ => panic!(),
+        }
+
+        let elem2 = Element::from(pubsub);
+        assert_eq!(elem1, elem2);
     }
 
     #[test]
