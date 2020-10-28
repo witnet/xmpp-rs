@@ -321,6 +321,9 @@ pub enum PubSub {
     /// A request for current subscriptions.
     Subscriptions(Subscriptions),
 
+    /// A subcribe request.
+    Subscribe(Subscribe),
+
     /// An unsubscribe request.
     Unsubscribe(Unsubscribe),
 }
@@ -486,6 +489,7 @@ impl From<PubSub> for Element {
                 PubSub::Retract(retract) => vec![Element::from(retract)],
                 PubSub::Subscription(subscription) => vec![Element::from(subscription)],
                 PubSub::Subscriptions(subscriptions) => vec![Element::from(subscriptions)],
+                PubSub::Subscribe(subscribe) => vec![Element::from(subscribe)],
                 PubSub::Unsubscribe(unsubscribe) => vec![Element::from(unsubscribe)],
             })
             .build()
