@@ -126,7 +126,7 @@ mod tests {
     #[cfg(target_pointer_width = "64")]
     #[test]
     fn test_size() {
-        assert_size!(Query, 168);
+        assert_size!(Query, 160);
     }
 
     #[test]
