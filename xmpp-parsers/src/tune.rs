@@ -180,9 +180,8 @@ mod tests {
 
     #[cfg(target_pointer_width = "32")]
     #[test]
-    #[ignore]
     fn test_size() {
-        assert_size!(Tune, 64);
+        assert_size!(Tune, 68);
         assert_size!(Artist, 12);
         assert_size!(Length, 2);
         assert_size!(Rating, 1);

@@ -507,11 +507,10 @@ mod tests {
 
     #[cfg(target_pointer_width = "32")]
     #[test]
-    #[ignore]
     fn test_size() {
-        assert_size!(XhtmlIm, 0);
-        assert_size!(Child, 0);
-        assert_size!(Tag, 0);
+        assert_size!(XhtmlIm, 32);
+        assert_size!(Child, 56);
+        assert_size!(Tag, 52);
     }
 
     #[cfg(target_pointer_width = "64")]
