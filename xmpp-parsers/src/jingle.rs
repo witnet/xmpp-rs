@@ -15,6 +15,7 @@ use crate::Element;
 use jid::Jid;
 use std::collections::BTreeMap;
 use std::convert::TryFrom;
+use std::fmt;
 use std::str::FromStr;
 
 generate_attribute!(
@@ -470,6 +471,18 @@ pub struct ReasonElement {
 
     /// A human-readable description of this reason.
     pub texts: BTreeMap<Lang, String>,
+}
+
+impl fmt::Display for ReasonElement {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        write!(fmt, "{}", Element::from(self.reason.clone()).name())?;
+        if let Some(text) = self.texts.get("en") {
+            write!(fmt, ": {}", text)?;
+        } else if let Some(text) = self.texts.get("") {
+            write!(fmt, ": {}", text)?;
+        }
+        Ok(())
+    }
 }
 
 impl TryFrom<Element> for ReasonElement {
