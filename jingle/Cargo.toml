@@ -10,3 +10,12 @@ edition = "2018"
 lazy_static = "1.4"
 log = "0.4"
 xmpp-parsers = "*"
+
+[dev-dependencies]
+gst = { package = "gstreamer", version = "0.16" }
+gst-webrtc = { package = "gstreamer-webrtc", version = "0.16" }
+anyhow = "1.0.34"
+futures = "0.3.8"
+xmpp = "*"
+tokio = "*"
+env_logger = "*"
