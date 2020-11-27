@@ -5,6 +5,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use crate::iq::IqSetPayload;
+use crate::jingle_grouping::Group;
 use crate::jingle_ibb::Transport as IbbTransport;
 use crate::jingle_ice_udp::Transport as IceUdpTransport;
 use crate::jingle_rtp::Description as RtpDescription;
@@ -560,6 +561,9 @@ pub struct Jingle {
     /// An optional reason.
     pub reason: Option<ReasonElement>,
 
+    /// An optional grouping.
+    pub group: Option<Group>,
+
     /// Payloads to be included.
     pub other: Vec<Element>,
 }
@@ -576,6 +580,7 @@ impl Jingle {
             responder: None,
             contents: Vec::new(),
             reason: None,
+            group: None,
             other: Vec::new(),
         }
     }
@@ -603,6 +608,12 @@ impl Jingle {
         self.reason = Some(reason);
         self
     }
+
+    /// Set the grouping in this Jingle container.
+    pub fn set_group(mut self, group: Group) -> Jingle {
+        self.group = Some(group);
+        self
+    }
 }
 
 impl TryFrom<Element> for Jingle {
@@ -619,6 +630,7 @@ impl TryFrom<Element> for Jingle {
             sid: get_attr!(root, "sid", Required),
             contents: vec![],
             reason: None,
+            group: None,
             other: vec![],
         };
 
@@ -634,6 +646,14 @@ impl TryFrom<Element> for Jingle {
                 }
                 let reason = ReasonElement::try_from(child)?;
                 jingle.reason = Some(reason);
+            } else if child.is("group", ns::JINGLE_GROUPING) {
+                if jingle.group.is_some() {
+                    return Err(Error::ParseError(
+                        "Jingle must not have more than one grouping.",
+                    ));
+                }
+                let group = Group::try_from(child)?;
+                jingle.group = Some(group);
             } else {
                 jingle.other.push(child);
             }
@@ -652,6 +672,7 @@ impl From<Jingle> for Element {
             .attr("sid", jingle.sid)
             .append_all(jingle.contents)
             .append_all(jingle.reason.map(Element::from))
+            .append_all(jingle.group.map(Element::from))
             .build()
     }
 }
@@ -672,7 +693,7 @@ mod tests {
         assert_size!(Reason, 1);
         assert_size!(ReasonElement, 16);
         assert_size!(SessionId, 12);
-        assert_size!(Jingle, 136);
+        assert_size!(Jingle, 152);
     }
 
     #[cfg(target_pointer_width = "64")]
@@ -687,7 +708,7 @@ mod tests {
         assert_size!(Reason, 1);
         assert_size!(ReasonElement, 32);
         assert_size!(SessionId, 24);
-        assert_size!(Jingle, 272);
+        assert_size!(Jingle, 304);
     }
 
     #[test]
@@ -876,6 +897,7 @@ mod tests {
                 security: None,
             }],
             reason: None,
+            group: None,
             other: vec![],
         };
         let serialized: Element = jingle.into();
