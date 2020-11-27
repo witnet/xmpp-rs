@@ -5,6 +5,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use crate::jingle_rtcp_fb::RtcpFb;
+use crate::jingle_rtp_hdrext::RtpHdrext;
 use crate::jingle_ssma::{Group, Source};
 
 generate_empty_element!(
@@ -39,7 +40,10 @@ generate_element!(
         ssrc_groups: Vec<Group> = ("ssrc-group", JINGLE_SSMA) => Group,
 
         /// List of ssrc.
-        ssrcs: Vec<Source> = ("source", JINGLE_SSMA) => Source
+        ssrcs: Vec<Source> = ("source", JINGLE_SSMA) => Source,
+
+        /// List of header extensions.
+        hdrexts: Vec<RtpHdrext> = ("rtp-hdrext", JINGLE_RTP_HDREXT) => RtpHdrext
 
         // TODO: Add support for <encryption/> and <bandwidth/>.
     ]
@@ -55,6 +59,7 @@ impl Description {
             rtcp_mux: None,
             ssrc_groups: Vec::new(),
             ssrcs: Vec::new(),
+            hdrexts: Vec::new(),
         }
     }
 }
@@ -138,7 +143,7 @@ mod tests {
     #[cfg(target_pointer_width = "32")]
     #[test]
     fn test_size() {
-        assert_size!(Description, 60);
+        assert_size!(Description, 76);
         assert_size!(Channels, 1);
         assert_size!(PayloadType, 64);
         assert_size!(Parameter, 24);
@@ -147,7 +152,7 @@ mod tests {
     #[cfg(target_pointer_width = "64")]
     #[test]
     fn test_size() {
-        assert_size!(Description, 120);
+        assert_size!(Description, 152);
         assert_size!(Channels, 1);
         assert_size!(PayloadType, 104);
         assert_size!(Parameter, 48);
