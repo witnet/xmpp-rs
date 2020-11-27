@@ -189,6 +189,9 @@ pub mod jingle_dtls_srtp;
 /// XEP-0328: JID Prep
 pub mod jid_prep;
 
+/// XEP-0338: Jingle Grouping Framework
+pub mod jingle_grouping;
+
 /// XEP-0339: Source-Specific Media Attributes in Jingle
 pub mod jingle_ssma;
 
