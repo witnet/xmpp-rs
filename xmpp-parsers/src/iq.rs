@@ -90,6 +90,16 @@ impl Iq {
         }
     }
 
+    /// Creates an empty `<iq type="result"/>` stanza.
+    pub fn empty_result<S: Into<String>>(to: Jid, id: S) -> Iq {
+        Iq {
+            from: None,
+            to: Some(to),
+            id: id.into(),
+            payload: IqType::Result(None),
+        }
+    }
+
     /// Creates an `<iq/>` stanza containing a result.
     pub fn from_result<S: Into<String>>(id: S, payload: Option<impl IqResultPayload>) -> Iq {
         Iq {
