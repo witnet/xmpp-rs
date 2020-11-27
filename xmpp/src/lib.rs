@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
+// Copyright (c) 2019-2020 Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -31,6 +31,10 @@ use xmpp_parsers::{
 };
 #[macro_use]
 extern crate log;
+#[cfg(feature = "jingle")]
+use jingle::{jingle_to_jsep, jingle_to_sdp};
+#[cfg(feature = "jingle")]
+use xmpp_parsers::jingle::{Action, Jingle};
 
 mod pubsub;
 
@@ -61,6 +65,8 @@ impl ToString for ClientType {
 pub enum ClientFeature {
     #[cfg(feature = "avatars")]
     Avatars,
+    #[cfg(feature = "jingle")]
+    Jingle,
     ContactList,
     JoinRooms,
 }
@@ -83,6 +89,12 @@ pub enum Event {
     RoomJoined(BareJid),
     RoomLeft(BareJid),
     RoomMessage(BareJid, RoomNick, Body),
+    #[cfg(feature = "jingle")]
+    JingleCallSessionInitiate(FullJid, String),
+    #[cfg(feature = "jingle")]
+    JingleCallIceCandidate(FullJid, String),
+    #[cfg(feature = "jingle")]
+    JingleCallEnding(FullJid, String),
 }
 
 #[derive(Default)]
@@ -146,6 +158,20 @@ impl ClientBuilder<'_> {
         {
             if self.features.contains(&ClientFeature::Avatars) {
                 features.push(Feature::new(format!("{}+notify", ns::AVATAR_METADATA)));
+            }
+        }
+        #[cfg(feature = "jingle")]
+        {
+            if self.features.contains(&ClientFeature::Jingle) {
+                features.extend(vec![
+                    Feature::new(ns::JINGLE),
+                    Feature::new(ns::JINGLE_ICE_UDP),
+                    Feature::new(ns::JINGLE_RTP),
+                    Feature::new(ns::JINGLE_DTLS),
+                    Feature::new(ns::JINGLE_RTP_AUDIO),
+                    Feature::new(ns::JINGLE_RTP_VIDEO),
+                    //Feature::new(ns::JINGLE_MESSAGE),
+                ]);
             }
         }
         if self.features.contains(&ClientFeature::JoinRooms) {
@@ -292,18 +318,89 @@ impl Agent {
                 let new_events = pubsub::handle_iq_result(&from, payload);
                 events.extend(new_events);
             }
-        } else if let IqType::Set(_) = iq.payload {
-            // We MUST answer unhandled set iqs with a service-unavailable error.
-            let error = StanzaError::new(
-                ErrorType::Cancel,
-                DefinedCondition::ServiceUnavailable,
-                "en",
-                "No handler defined for this kind of iq.",
-            );
-            let iq = Iq::from_error(iq.id, error)
-                .with_to(iq.from.unwrap())
-                .into();
-            let _ = self.client.send_stanza(iq).await;
+        } else if let IqType::Set(payload) = iq.payload {
+            if payload.is("jingle", ns::JINGLE) {
+                match Jingle::try_from(payload) {
+                    Ok(jingle) => {
+                        let action = jingle.action.clone();
+                        if action == Action::SessionTerminate {
+                            let from = FullJid::try_from(from).unwrap();
+                            events.push(Event::JingleCallEnding(
+                                from,
+                                format!("{}", jingle.reason.unwrap()),
+                            ));
+                            let iq = Iq::empty_result(iq.from.unwrap(), iq.id).into();
+                            let _ = self.client.send_stanza(iq).await;
+                        } else if action == Action::TransportInfo {
+                            let jsep = jingle_to_jsep(jingle).unwrap();
+                            println!("jsep: {}", jsep);
+                            let from = FullJid::try_from(from).unwrap();
+                            events.push(Event::JingleCallIceCandidate(from, jsep));
+                            let iq = Iq::empty_result(iq.from.unwrap(), iq.id).into();
+                            let _ = self.client.send_stanza(iq).await;
+                        } else if action == Action::SessionInitiate {
+                            match jingle_to_sdp(jingle) {
+                                Ok(sdp) => {
+                                    let from = FullJid::try_from(from).unwrap();
+                                    events.push(Event::JingleCallSessionInitiate(from, sdp));
+                                    let iq = Iq::empty_result(iq.from.unwrap(), iq.id).into();
+                                    let _ = self.client.send_stanza(iq).await;
+                                }
+                                Err(err) => {
+                                    println!("{:?}", err);
+                                    let error = StanzaError::new(
+                                        ErrorType::Modify,
+                                        DefinedCondition::BadRequest,
+                                        "en",
+                                        &format!("Jingle error: {:?}", err),
+                                    );
+                                    let iq = Iq::from_error(iq.id, error)
+                                        .with_to(iq.from.unwrap())
+                                        .into();
+                                    let _ = self.client.send_stanza(iq).await;
+                                }
+                            }
+                        } else {
+                            println!("Unsupported action: {}", action);
+                            let error = StanzaError::new(
+                                ErrorType::Modify,
+                                DefinedCondition::BadRequest,
+                                "en",
+                                &format!("Jingle error: unsupported action: {}", action),
+                            );
+                            let iq = Iq::from_error(iq.id, error)
+                                .with_to(iq.from.unwrap())
+                                .into();
+                            let _ = self.client.send_stanza(iq).await;
+                        }
+                    }
+                    Err(err) => {
+                        println!("{}", err);
+                        let error = StanzaError::new(
+                            ErrorType::Modify,
+                            DefinedCondition::BadRequest,
+                            "en",
+                            &format!("Jingle error: {}", err),
+                        );
+                        let iq = Iq::from_error(iq.id, error)
+                            .with_to(iq.from.unwrap())
+                            .into();
+                        let _ = self.client.send_stanza(iq).await;
+                    }
+                }
+            } else {
+                // We MUST answer unhandled set iqs with a service-unavailable error.
+                let error = StanzaError::new(
+                    ErrorType::Cancel,
+                    DefinedCondition::ServiceUnavailable,
+                    "en",
+                    "No handler defined for this kind of iq.",
+                );
+                let iq = Iq::from_error(iq.id, error)
+                    .with_to(iq.from.unwrap())
+                    .into();
+                let _ = self.client.send_stanza(iq).await;
+            }
         }
 
         events
