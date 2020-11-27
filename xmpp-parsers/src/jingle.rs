@@ -586,8 +586,8 @@ impl Jingle {
     }
 
     /// Set the reason in this Jingle container.
-    pub fn set_reason(mut self, content: Content) -> Jingle {
-        self.contents.push(content);
+    pub fn set_reason(mut self, reason: ReasonElement) -> Jingle {
+        self.reason = Some(reason);
         self
     }
 }
