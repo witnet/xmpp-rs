@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
+// Copyright (c) 2019-2020 Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -6,6 +6,14 @@
 
 use crate::jingle_rtcp_fb::RtcpFb;
 use crate::jingle_ssma::{Group, Source};
+
+generate_empty_element!(
+    /// Specifies the ability to multiplex RTP Data and Control Packets on a single port as
+    /// described in RFC 5761.
+    RtcpMux,
+    "rtcp-mux",
+    JINGLE_RTP
+);
 
 generate_element!(
     /// Wrapper element describing an RTP session.
@@ -22,6 +30,10 @@ generate_element!(
     children: [
         /// List of encodings that can be used for this RTP stream.
         payload_types: Vec<PayloadType> = ("payload-type", JINGLE_RTP) => PayloadType,
+
+        /// Specifies the ability to multiplex RTP Data and Control Packets on a single port as
+        /// described in RFC 5761.
+        rtcp_mux: Option<RtcpMux> = ("rtcp-mux", JINGLE_RTP) => RtcpMux,
 
         /// List of ssrc-group.
         ssrc_groups: Vec<Group> = ("ssrc-group", JINGLE_SSMA) => Group,
@@ -40,6 +52,7 @@ impl Description {
             media,
             ssrc: None,
             payload_types: Vec::new(),
+            rtcp_mux: None,
             ssrc_groups: Vec::new(),
             ssrcs: Vec::new(),
         }
