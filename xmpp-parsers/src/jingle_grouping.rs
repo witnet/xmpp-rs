@@ -18,7 +18,6 @@ generate_attribute!(
 );
 
 generate_element!(
-    #[derive(PartialEq)]
     /// Describes a content that should be grouped with other ones.
     Content, "content", JINGLE_GROUPING,
     attributes: [

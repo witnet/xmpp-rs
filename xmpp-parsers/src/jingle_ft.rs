@@ -16,7 +16,7 @@ use std::str::FromStr;
 
 generate_element!(
     /// Represents a range in a file.
-    #[derive(PartialEq, Default)]
+    #[derive(Default)]
     Range, "range", JINGLE_FT,
     attributes: [
         /// The offset in bytes from the beginning of the file.

@@ -14,7 +14,7 @@ use std::str::FromStr;
 ///
 /// The text value SHOULD be of the form algo+hash@bob.xmpp.org, this struct
 /// enforces that format.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct ContentId {
     hash: Hash,
 }

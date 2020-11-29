@@ -126,7 +126,7 @@ impl Items {
 }
 
 /// Response wrapper for a PubSub `<item/>`.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Item(pub PubSubItem);
 
 impl_pubsub_item!(Item, PUBSUB);
@@ -196,7 +196,7 @@ generate_element!(
 );
 
 /// Indicate that the subscription can be configured.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct SubscribeOptions {
     /// If `true`, the configuration is actually required.
     required: bool,
@@ -304,7 +304,7 @@ generate_element!(
 /// Main payload used to communicate with a PubSub service.
 ///
 /// `<pubsub xmlns="http://jabber.org/protocol/pubsub"/>`
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum PubSub {
     /// Request to create a new node, with optional suggested name and suggested configuration.
     Create {

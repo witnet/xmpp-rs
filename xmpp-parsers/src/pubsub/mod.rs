@@ -49,7 +49,7 @@ generate_attribute!(
 );
 
 /// An item from a PubSub node.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Item {
     /// The identifier for this item, unique per node.
     pub id: Option<ItemId>,
