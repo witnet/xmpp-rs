@@ -11,7 +11,7 @@ use std::convert::TryFrom;
 
 /// Requests paging through a potentially big set of items (represented by an
 /// UID).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct SetQuery {
     /// Limit the number of items, or use the recipient’s defaults if None.
     pub max: Option<usize>,
@@ -92,7 +92,7 @@ impl From<SetQuery> for Element {
 }
 
 /// Describes the paging result of a [query](struct.SetQuery.html).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct SetResult {
     /// The UID of the first item of the page.
     pub first: Option<String>,

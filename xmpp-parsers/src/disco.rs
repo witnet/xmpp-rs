@@ -27,7 +27,6 @@ impl IqGetPayload for DiscoInfoQuery {}
 
 generate_element!(
 /// Structure representing a `<feature xmlns='http://jabber.org/protocol/disco#info'/>` element.
-#[derive(PartialEq)]
 Feature, "feature", DISCO_INFO,
 attributes: [
     /// Namespace of the feature we want to represent.

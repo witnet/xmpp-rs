@@ -46,7 +46,6 @@ generate_attribute!(
 
 generate_element!(
     /// Contact from the user’s contact list.
-    #[derive(PartialEq)]
     Item, "item", ROSTER,
     attributes: [
         /// JID of this contact.

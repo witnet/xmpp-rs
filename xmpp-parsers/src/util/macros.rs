@@ -370,7 +370,7 @@ macro_rules! check_no_unknown_attributes {
 macro_rules! generate_empty_element {
     ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident) => (
         $(#[$meta])*
-        #[derive(Debug, Clone)]
+        #[derive(Debug, Clone, PartialEq)]
         pub struct $elem;
 
         impl ::std::convert::TryFrom<crate::Element> for $elem {
@@ -642,7 +642,7 @@ macro_rules! generate_element {
     );
     ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident, attributes: [$($(#[$attr_meta:meta])* $attr:ident: $attr_action:tt<$attr_type:ty> = $attr_name:tt),*], children: [$($(#[$child_meta:meta])* $child_ident:ident: $coucou:tt<$child_type:ty> = ($child_name:tt, $child_ns:tt) => $child_constructor:ident),*] $(, text: ($(#[$text_meta:meta])* $text_ident:ident: $codec:ident < $text_type:ty >))*) => (
         $(#[$meta])*
-        #[derive(Debug, Clone)]
+        #[derive(Debug, Clone, PartialEq)]
         pub struct $elem {
             $(
                 $(#[$attr_meta])*

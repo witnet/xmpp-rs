@@ -69,7 +69,7 @@ generate_attribute!(
 );
 
 /// Represents a field in a [data form](struct.DataForm.html).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Field {
     /// The unique identifier for this field, in the form.
     pub var: String,
@@ -187,7 +187,7 @@ generate_attribute!(
 );
 
 /// This is a form to be sent to another entity for filling.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct DataForm {
     /// The type of this form, telling the other party which action to execute.
     pub type_: DataFormType,

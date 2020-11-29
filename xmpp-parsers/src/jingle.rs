@@ -171,7 +171,7 @@ generate_id!(
 );
 
 /// Enum wrapping all of the various supported descriptions of a Content.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Description {
     /// Jingle RTP Sessions (XEP-0167) description.
     Rtp(RtpDescription),
@@ -208,7 +208,7 @@ impl From<Description> for Element {
 }
 
 /// Enum wrapping all of the various supported transports of a Content.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Transport {
     /// Jingle ICE-UDP Bytestreams (XEP-0176) transport.
     IceUdp(IceUdpTransport),
@@ -465,7 +465,7 @@ impl From<Reason> for Element {
 type Lang = String;
 
 /// Informs the recipient of something.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ReasonElement {
     /// The list of possible reasons to be included in a Jingle iq.
     pub reason: Reason,
@@ -541,7 +541,7 @@ generate_id!(
 );
 
 /// The main Jingle container, to be included in an iq stanza.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Jingle {
     /// The action to execute on both ends.
     pub action: Action,

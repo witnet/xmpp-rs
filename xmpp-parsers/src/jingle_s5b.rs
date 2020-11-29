@@ -102,7 +102,7 @@ impl Candidate {
 }
 
 /// The payload of a transport.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum TransportPayload {
     /// The responder informs the initiator that the bytestream pointed by this
     /// candidate has been activated.
@@ -126,7 +126,7 @@ pub enum TransportPayload {
 }
 
 /// Describes a Jingle transport using a direct or proxied connection.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Transport {
     /// The stream identifier for this transport.
     pub sid: StreamId,

@@ -61,7 +61,7 @@ generate_elem_id!(
 );
 
 /// The main structure representing the `<message/>` stanza.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Message {
     /// The JID emitting this stanza.
     pub from: Option<Jid>,

@@ -97,7 +97,6 @@ impl IntoAttributeValue for Algo {
 generate_element!(
     /// This element represents a hash of some data, defined by the hash
     /// algorithm used and the computed value.
-    #[derive(PartialEq)]
     Hash, "hash", HASHES,
     attributes: [
         /// The algorithm used to create this hash.
