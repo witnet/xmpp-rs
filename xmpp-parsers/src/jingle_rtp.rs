@@ -107,7 +107,22 @@ generate_element!(
 
 impl PayloadType {
     /// Create a new RTP payload-type.
-    pub fn new(id: u8, name: String) -> PayloadType {
+    pub fn new(id: u8, name: String, clockrate: u32, channels: u8) -> PayloadType {
+        PayloadType {
+            channels: Channels(channels),
+            clockrate: Some(clockrate),
+            id,
+            maxptime: None,
+            name: Some(name),
+            ptime: None,
+            parameters: Vec::new(),
+            rtcp_fbs: Vec::new(),
+        }
+    }
+
+    /// Create a new RTP payload-type without a clockrate.  Warning: this is invalid as per
+    /// RFC 4566!
+    pub fn without_clockrate(id: u8, name: String) -> PayloadType {
         PayloadType {
             channels: Default::default(),
             clockrate: None,
