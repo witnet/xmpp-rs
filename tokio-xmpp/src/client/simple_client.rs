@@ -4,7 +4,8 @@ use sasl::common::{ChannelBinding, Credentials};
 use std::pin::Pin;
 use std::str::FromStr;
 use std::task::{Context, Poll};
-use tokio::{net::TcpStream, stream::StreamExt};
+use tokio::net::TcpStream;
+use tokio_stream::StreamExt;
 use tokio_tls::TlsStream;
 use xmpp_parsers::{ns, Element, Jid};
 

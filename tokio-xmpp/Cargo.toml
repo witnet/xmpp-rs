@@ -12,15 +12,16 @@ keywords = ["xmpp", "tokio"]
 edition = "2018"
 
 [dependencies]
-bytes = "0.5"
+bytes = "1"
 futures = "0.3"
 idna = "0.2"
 log = "0.4"
 native-tls = "0.2"
 sasl = "0.4"
-tokio = { version = "0.2", features = ["net", "stream", "rt-util", "rt-threaded", "macros"] }
-tokio-util = { version = "0.3", features = ["codec"] }
-tokio-tls = "0.3"
+tokio = { version = "1", features = ["net", "rt", "rt-multi-thread", "macros"] }
+tokio-util = { version = "0.6", features = ["codec"] }
+tokio-stream = { version = "0.1", features = [] }
+tokio-tls = { package = "tokio-native-tls", version = "0.3" }
 trust-dns-resolver = "0.19"
 trust-dns-proto = "0.19"
 xml5ever = "0.16"
