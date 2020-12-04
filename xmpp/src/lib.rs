@@ -6,12 +6,14 @@
 
 #![deny(bare_trait_objects)]
 
-use futures::stream::StreamExt;
+use futures::{future::{Either, join_all, select}, pin_mut, stream::StreamExt, sink::SinkExt};
 use std::cell::RefCell;
 use std::convert::TryFrom;
 use std::rc::Rc;
+use tokio::sync::mpsc;
 use tokio_xmpp::{AsyncClient as TokioXmppClient, Event as TokioXmppEvent};
 use xmpp_parsers::{
+    Element,
     bookmarks2::Conference,
     caps::{compute_disco, hash_caps, Caps},
     disco::{DiscoInfoQuery, DiscoInfoResult, Feature, Identity},
@@ -32,68 +34,14 @@ use xmpp_parsers::{
 #[macro_use]
 extern crate log;
 
-mod pubsub;
+//mod pubsub;
 
 pub type Error = tokio_xmpp::Error;
-
-#[derive(Debug)]
-pub enum ClientType {
-    Bot,
-    Pc,
-}
-
-impl Default for ClientType {
-    fn default() -> Self {
-        ClientType::Bot
-    }
-}
-
-impl ToString for ClientType {
-    fn to_string(&self) -> String {
-        String::from(match self {
-            ClientType::Bot => "bot",
-            ClientType::Pc => "pc",
-        })
-    }
-}
-
-#[derive(PartialEq)]
-pub enum ClientFeature {
-    #[cfg(feature = "avatars")]
-    Avatars,
-    ContactList,
-    JoinRooms,
-}
-
-pub type RoomNick = String;
-
-#[derive(Debug)]
-pub enum Event {
-    Online,
-    Disconnected,
-    ContactAdded(RosterItem),
-    ContactRemoved(RosterItem),
-    ContactChanged(RosterItem),
-    #[cfg(feature = "avatars")]
-    AvatarRetrieved(Jid, String),
-    ChatMessage(BareJid, Body),
-    JoinRoom(BareJid, Conference),
-    LeaveRoom(BareJid),
-    LeaveAllRooms,
-    RoomJoined(BareJid),
-    RoomLeft(BareJid),
-    RoomMessage(BareJid, RoomNick, Body),
-}
 
 #[derive(Default)]
 pub struct ClientBuilder<'a> {
     jid: &'a str,
     password: &'a str,
-    website: String,
-    default_nick: String,
-    lang: Vec<String>,
-    disco: (ClientType, String),
-    features: Vec<ClientFeature>,
 }
 
 impl ClientBuilder<'_> {
@@ -101,61 +49,6 @@ impl ClientBuilder<'_> {
         ClientBuilder {
             jid,
             password,
-            website: String::from("https://gitlab.com/xmpp-rs/tokio-xmpp"),
-            default_nick: String::from("xmpp-rs"),
-            lang: vec![String::from("en")],
-            disco: (ClientType::default(), String::from("tokio-xmpp")),
-            features: vec![],
-        }
-    }
-
-    pub fn set_client(mut self, type_: ClientType, name: &str) -> Self {
-        self.disco = (type_, String::from(name));
-        self
-    }
-
-    pub fn set_website(mut self, url: &str) -> Self {
-        self.website = String::from(url);
-        self
-    }
-
-    pub fn set_default_nick(mut self, nick: &str) -> Self {
-        self.default_nick = String::from(nick);
-        self
-    }
-
-    pub fn set_lang(mut self, lang: Vec<String>) -> Self {
-        self.lang = lang;
-        self
-    }
-
-    pub fn enable_feature(mut self, feature: ClientFeature) -> Self {
-        self.features.push(feature);
-        self
-    }
-
-    fn make_disco(&self) -> DiscoInfoResult {
-        let identities = vec![Identity::new(
-            "client",
-            self.disco.0.to_string(),
-            "en",
-            self.disco.1.to_string(),
-        )];
-        let mut features = vec![Feature::new(ns::DISCO_INFO)];
-        #[cfg(feature = "avatars")]
-        {
-            if self.features.contains(&ClientFeature::Avatars) {
-                features.push(Feature::new(format!("{}+notify", ns::AVATAR_METADATA)));
-            }
-        }
-        if self.features.contains(&ClientFeature::JoinRooms) {
-            features.push(Feature::new(format!("{}+notify", ns::BOOKMARKS2)));
-        }
-        DiscoInfoResult {
-            node: None,
-            identities,
-            features,
-            extensions: vec![],
         }
     }
 
@@ -166,255 +59,103 @@ impl ClientBuilder<'_> {
 
     // This function is meant to be used for testing build
     pub(crate) fn build_impl(self, client: TokioXmppClient) -> Result<Agent, Error> {
-        let disco = self.make_disco();
-        let node = self.website;
-
+        let (req_tx, req_rx) = mpsc::channel(1);
         let agent = Agent {
             client,
-            default_nick: Rc::new(RefCell::new(self.default_nick)),
-            lang: Rc::new(self.lang),
-            disco,
-            node,
+            req_rx,
+            req_tx,
         };
 
         Ok(agent)
     }
 }
 
+#[derive(Debug, Clone)]
+pub enum AgentEvent {
+    Online,
+    Disconnected,
+    Stanza(Element),
+}
+
+enum AgentReq {
+    SendStanza(Element),
+    RecvStanzas(mpsc::Sender<AgentEvent>),
+}
+
+#[derive(Clone)]
+pub struct AgentHandle {
+    req_tx: mpsc::Sender<AgentReq>,
+}
+
+impl AgentHandle {
+    /// create a channel that gets all the stanzas
+    ///
+    /// there is no handling of dynamic removal of listeners!
+    pub async fn events(&mut self) -> mpsc::Receiver<AgentEvent> {
+        let (stanzas_tx, stanzas_rx) = mpsc::channel(1);
+        self.req_tx.send(AgentReq::RecvStanzas(stanzas_tx)).await;
+        stanzas_rx
+    }
+
+    pub async fn send_stanza(&mut self, stanza: Element) {
+        self.req_tx.send(AgentReq::SendStanza(stanza)).await;
+    }
+}
+
 pub struct Agent {
     client: TokioXmppClient,
-    default_nick: Rc<RefCell<String>>,
-    lang: Rc<Vec<String>>,
-    disco: DiscoInfoResult,
-    node: String,
+    req_rx: mpsc::Receiver<AgentReq>,
+    req_tx: mpsc::Sender<AgentReq>,
 }
 
 impl Agent {
-    pub async fn join_room(
-        &mut self,
-        room: BareJid,
-        nick: Option<String>,
-        password: Option<String>,
-        lang: &str,
-        status: &str,
-    ) {
-        let mut muc = Muc::new();
-        if let Some(password) = password {
-            muc = muc.with_password(password);
+    pub fn handle(&self) -> AgentHandle {
+        AgentHandle {
+            req_tx: self.req_tx.clone(),
         }
-
-        let nick = nick.unwrap_or_else(|| self.default_nick.borrow().clone());
-        let room_jid = room.with_resource(nick);
-        let mut presence = Presence::new(PresenceType::None).with_to(Jid::Full(room_jid));
-        presence.add_payload(muc);
-        presence.set_status(String::from(lang), String::from(status));
-        let _ = self.client.send_stanza(presence.into()).await;
     }
 
-    pub async fn send_message(
-        &mut self,
-        recipient: Jid,
-        type_: MessageType,
-        lang: &str,
-        text: &str,
-    ) {
-        let mut message = Message::new(Some(recipient));
-        message.type_ = type_;
-        message
-            .bodies
-            .insert(String::from(lang), Body(String::from(text)));
-        let _ = self.client.send_stanza(message.into()).await;
-    }
-
-    fn make_initial_presence(disco: &DiscoInfoResult, node: &str) -> Presence {
-        let caps_data = compute_disco(disco);
-        let hash = hash_caps(&caps_data, Algo::Sha_1).unwrap();
-        let caps = Caps::new(node, hash);
-
-        let mut presence = Presence::new(PresenceType::None);
-        presence.add_payload(caps);
-        presence
-    }
-
-    async fn handle_iq(&mut self, iq: Iq) -> Vec<Event> {
-        let mut events = vec![];
-        let from = iq
-            .from
-            .clone()
-            .unwrap_or_else(|| self.client.bound_jid().unwrap().clone());
-        if let IqType::Get(payload) = iq.payload {
-            if payload.is("query", ns::DISCO_INFO) {
-                let query = DiscoInfoQuery::try_from(payload);
-                match query {
-                    Ok(query) => {
-                        let mut disco_info = self.disco.clone();
-                        disco_info.node = query.node;
-                        let iq = Iq::from_result(iq.id, Some(disco_info))
-                            .with_to(iq.from.unwrap())
-                            .into();
-                        let _ = self.client.send_stanza(iq).await;
-                    }
-                    Err(err) => {
-                        let error = StanzaError::new(
-                            ErrorType::Modify,
-                            DefinedCondition::BadRequest,
-                            "en",
-                            &format!("{}", err),
-                        );
-                        let iq = Iq::from_error(iq.id, error)
-                            .with_to(iq.from.unwrap())
-                            .into();
-                        let _ = self.client.send_stanza(iq).await;
-                    }
+    pub async fn run(self) {
+        let (mut sink, mut stream) = self.client.split();
+        let stream_txs1: Rc<RefCell<Vec<mpsc::Sender<AgentEvent>>>> = Rc::new(RefCell::new(vec![]));
+        let stream_txs2 = stream_txs1.clone();
+        let recv_future = async move {
+            while let Some(xmpp_event) = stream.next().await {
+                let event = match xmpp_event {
+                    tokio_xmpp::Event::Online { resumed: false, .. } =>
+                        Some(AgentEvent::Online),
+                    tokio_xmpp::Event::Disconnected(_) =>
+                        Some(AgentEvent::Disconnected),
+                    tokio_xmpp::Event::Stanza(e) =>
+                        Some(AgentEvent::Stanza(e)),
+                    _ =>
+                        None,
+                };
+                if let Some(event) = event {
+                    join_all(stream_txs1
+                             .borrow_mut()
+                             .iter_mut()
+                             .map(|stream_tx| stream_tx.send(event.clone()))
+                    ).await;
                 }
-            } else {
-                // We MUST answer unhandled get iqs with a service-unavailable error.
-                let error = StanzaError::new(
-                    ErrorType::Cancel,
-                    DefinedCondition::ServiceUnavailable,
-                    "en",
-                    "No handler defined for this kind of iq.",
-                );
-                let iq = Iq::from_error(iq.id, error)
-                    .with_to(iq.from.unwrap())
-                    .into();
-                let _ = self.client.send_stanza(iq).await;
             }
-        } else if let IqType::Result(Some(payload)) = iq.payload {
-            // TODO: move private iqs like this one somewhere else, for
-            // security reasons.
-            if payload.is("query", ns::ROSTER) && iq.from.is_none() {
-                let roster = Roster::try_from(payload).unwrap();
-                for item in roster.items.into_iter() {
-                    events.push(Event::ContactAdded(item));
-                }
-            } else if payload.is("pubsub", ns::PUBSUB) {
-                let new_events = pubsub::handle_iq_result(&from, payload);
-                events.extend(new_events);
-            }
-        } else if let IqType::Set(_) = iq.payload {
-            // We MUST answer unhandled set iqs with a service-unavailable error.
-            let error = StanzaError::new(
-                ErrorType::Cancel,
-                DefinedCondition::ServiceUnavailable,
-                "en",
-                "No handler defined for this kind of iq.",
-            );
-            let iq = Iq::from_error(iq.id, error)
-                .with_to(iq.from.unwrap())
-                .into();
-            let _ = self.client.send_stanza(iq).await;
-        }
-
-        events
-    }
-
-    async fn handle_message(&mut self, message: Message) -> Vec<Event> {
-        let mut events = vec![];
-        let from = message.from.clone().unwrap();
-        let langs: Vec<&str> = self.lang.iter().map(String::as_str).collect();
-        match message.get_best_body(langs) {
-            Some((_lang, body)) => match message.type_ {
-                MessageType::Groupchat => {
-                    let event = Event::RoomMessage(
-                        from.clone().into(),
-                        FullJid::try_from(from.clone()).unwrap().resource,
-                        body.clone(),
-                    );
-                    events.push(event)
-                }
-                MessageType::Chat | MessageType::Normal => {
-                    let event = Event::ChatMessage(from.clone().into(), body.clone());
-                    events.push(event)
-                }
-                _ => (),
-            },
-            None => (),
-        }
-        for child in message.payloads {
-            if child.is("event", ns::PUBSUB_EVENT) {
-                let new_events = pubsub::handle_event(&from, child, self).await;
-                events.extend(new_events);
-            }
-        }
-
-        events
-    }
-
-    async fn handle_presence(&mut self, presence: Presence) -> Vec<Event> {
-        let mut events = vec![];
-        let from: BareJid = match presence.from.clone().unwrap() {
-            Jid::Full(FullJid { node, domain, .. }) => BareJid { node, domain },
-            Jid::Bare(bare) => bare,
         };
-        for payload in presence.payloads.into_iter() {
-            let muc_user = match MucUser::try_from(payload) {
-                Ok(muc_user) => muc_user,
-                _ => continue,
-            };
-            for status in muc_user.status.into_iter() {
-                if status == Status::SelfPresence {
-                    events.push(Event::RoomJoined(from.clone()));
-                    break;
+        let mut req_rx = self.req_rx;
+        let req_future = async move {
+            while let Some(req) = req_rx.recv().await {
+                match req {
+                    AgentReq::RecvStanzas(stanzas_tx) =>
+                        stream_txs2.borrow_mut().push(stanzas_tx),
+                    AgentReq::SendStanza(stanza) =>
+                        sink.send(tokio_xmpp::Packet::Stanza(stanza)).await.unwrap(),
                 }
             }
-        }
-
-        events
-    }
-
-    pub async fn wait_for_events(&mut self) -> Option<Vec<Event>> {
-        if let Some(event) = self.client.next().await {
-            let mut events = Vec::new();
-
-            match event {
-                TokioXmppEvent::Online { resumed: false, .. } => {
-                    let presence = Self::make_initial_presence(&self.disco, &self.node).into();
-                    let _ = self.client.send_stanza(presence).await;
-                    events.push(Event::Online);
-                    // TODO: only send this when the ContactList feature is enabled.
-                    let iq = Iq::from_get(
-                        "roster",
-                        Roster {
-                            ver: None,
-                            items: vec![],
-                        },
-                    )
-                    .into();
-                    let _ = self.client.send_stanza(iq).await;
-                    // TODO: only send this when the JoinRooms feature is enabled.
-                    let iq =
-                        Iq::from_get("bookmarks", PubSub::Items(Items::new(ns::BOOKMARKS2))).into();
-                    let _ = self.client.send_stanza(iq).await;
-                }
-                TokioXmppEvent::Online { resumed: true, .. } => {}
-                TokioXmppEvent::Disconnected(_) => {
-                    events.push(Event::Disconnected);
-                }
-                TokioXmppEvent::Stanza(elem) => {
-                    if elem.is("iq", "jabber:client") {
-                        let iq = Iq::try_from(elem).unwrap();
-                        let new_events = self.handle_iq(iq).await;
-                        events.extend(new_events);
-                    } else if elem.is("message", "jabber:client") {
-                        let message = Message::try_from(elem).unwrap();
-                        let new_events = self.handle_message(message).await;
-                        events.extend(new_events);
-                    } else if elem.is("presence", "jabber:client") {
-                        let presence = Presence::try_from(elem).unwrap();
-                        let new_events = self.handle_presence(presence).await;
-                        events.extend(new_events);
-                    } else if elem.is("error", "http://etherx.jabber.org/streams") {
-                        println!("Received a fatal stream error: {}", String::from(&elem));
-                    } else {
-                        panic!("Unknown stanza: {}", String::from(&elem));
-                    }
-                }
-            }
-
-            Some(events)
-        } else {
-            None
+        };
+        pin_mut!(recv_future);
+        pin_mut!(req_future);
+        match select(recv_future, req_future).await {
+            Either::Left(((), _)) => {}
+            Either::Right(((), _)) => {}
         }
     }
 }
