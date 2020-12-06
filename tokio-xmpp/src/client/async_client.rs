@@ -77,7 +77,7 @@ impl Client {
             config.password.clone(),
         ));
         let client = Client {
-            config: config,
+            config,
             state: ClientState::Connecting(connect, local),
             reconnect: false,
         };
