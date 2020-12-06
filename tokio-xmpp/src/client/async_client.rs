@@ -1,5 +1,4 @@
 use futures::{sink::SinkExt, task::Poll, Future, Sink, Stream};
-use idna;
 use sasl::common::{ChannelBinding, Credentials};
 use std::mem::replace;
 use std::pin::Pin;
@@ -14,7 +13,7 @@ use xmpp_parsers::{ns, Element, Jid, JidParseError};
 use super::auth::auth;
 use super::bind::bind;
 use crate::event::Event;
-use crate::happy_eyeballs::connect;
+use crate::happy_eyeballs::{connect_to_host, connect_with_srv};
 use crate::starttls::starttls;
 use crate::xmpp_codec::Packet;
 use crate::xmpp_stream;
@@ -33,12 +32,22 @@ pub struct Client {
     // TODO: tls_required=true
 }
 
+/// XMPP server connection configuration
+#[derive(Clone)]
+pub enum ServerConfig {
+    UseSrv,
+    #[allow(unused)]
+    Manual {
+        host: String,
+        port: u16,
+    },
+}
+
 /// XMMPP client configuration
 pub struct Config {
     jid: Jid,
     password: String,
-    server: String,
-    port: u16,
+    server: ServerConfig,
 }
 
 type XMPPStream = xmpp_stream::XMPPStream<TlsStream<TcpStream>>;
@@ -60,8 +69,7 @@ impl Client {
         let config = Config {
             jid: jid.clone(),
             password: password.into(),
-            server: jid.clone().domain(),
-            port: 5222,
+            server: ServerConfig::UseSrv,
         };
         let client = Self::new_with_config(config);
         Ok(client)
@@ -72,7 +80,6 @@ impl Client {
         let local = LocalSet::new();
         let connect = local.spawn_local(Self::connect(
             config.server.clone(),
-            config.port,
             config.jid.clone(),
             config.password.clone(),
         ));
@@ -92,17 +99,20 @@ impl Client {
     }
 
     async fn connect(
-        server: String,
-        port: u16,
+        server: ServerConfig,
         jid: Jid,
         password: String,
     ) -> Result<XMPPStream, Error> {
         let username = jid.clone().node().unwrap();
         let password = password;
-        let domain = idna::domain_to_ascii(&server).map_err(|_| Error::Idna)?;
 
         // TCP connection
-        let tcp_stream = connect(&domain, Some("_xmpp-client._tcp"), port).await?;
+        let tcp_stream = match server {
+            ServerConfig::UseSrv => {
+                connect_with_srv(&jid.clone().domain(), Some("_xmpp-client._tcp"), 5222).await?
+            }
+            ServerConfig::Manual { host, port } => connect_to_host(host.as_str(), port).await?,
+        };
 
         // Unencryped XMPPStream
         let xmpp_stream =
@@ -186,7 +196,6 @@ impl Stream for Client {
                 let mut local = LocalSet::new();
                 let connect = local.spawn_local(Self::connect(
                     self.config.server.clone(),
-                    self.config.port,
                     self.config.jid.clone(),
                     self.config.password.clone(),
                 ));

@@ -11,7 +11,7 @@ use xmpp_parsers::{ns, Element, Jid};
 
 use super::auth::auth;
 use super::bind::bind;
-use crate::happy_eyeballs::connect;
+use crate::happy_eyeballs::connect_with_srv;
 use crate::starttls::starttls;
 use crate::xmpp_codec::Packet;
 use crate::xmpp_stream;
@@ -47,7 +47,7 @@ impl Client {
         let domain = idna::domain_to_ascii(&jid.clone().domain()).map_err(|_| Error::Idna)?;
 
         // TCP connection
-        let tcp_stream = connect(&domain, Some("_xmpp-client._tcp"), 5222).await?;
+        let tcp_stream = connect_with_srv(&domain, Some("_xmpp-client._tcp"), 5222).await?;
 
         // Unencryped XMPPStream
         let xmpp_stream =

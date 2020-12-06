@@ -8,7 +8,7 @@ use std::task::Context;
 use tokio::net::TcpStream;
 use xmpp_parsers::{ns, Element, Jid};
 
-use super::happy_eyeballs::connect;
+use super::happy_eyeballs::connect_to_host;
 use super::xmpp_codec::Packet;
 use super::xmpp_stream;
 use super::Error;
@@ -43,7 +43,7 @@ impl Component {
         port: u16,
     ) -> Result<XMPPStream, Error> {
         let password = password;
-        let tcp_stream = connect(server, None, port).await?;
+        let tcp_stream = connect_to_host(server, port).await?;
         let mut xmpp_stream =
             xmpp_stream::XMPPStream::start(tcp_stream, jid, ns::COMPONENT_ACCEPT.to_owned())
                 .await?;

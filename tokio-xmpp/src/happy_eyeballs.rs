@@ -1,15 +1,20 @@
 use crate::{ConnecterError, Error};
+use idna;
 use std::net::SocketAddr;
 use tokio::net::TcpStream;
 use trust_dns_resolver::{IntoName, TokioAsyncResolver};
 
-async fn connect_to_host(
-    resolver: &TokioAsyncResolver,
-    host: &str,
-    port: u16,
-) -> Result<TcpStream, Error> {
+pub async fn connect_to_host(domain: &str, port: u16) -> Result<TcpStream, Error> {
+    let ascii_domain = idna::domain_to_ascii(&domain).map_err(|_| Error::Idna)?;
+
+    if let Ok(ip) = ascii_domain.parse() {
+        return Ok(TcpStream::connect(&SocketAddr::new(ip, port)).await?);
+    }
+
+    let resolver = TokioAsyncResolver::tokio_from_system_conf().map_err(ConnecterError::Resolve)?;
+
     let ips = resolver
-        .lookup_ip(host)
+        .lookup_ip(ascii_domain)
         .await
         .map_err(ConnecterError::Resolve)?;
     for ip in ips.iter() {
@@ -21,12 +26,14 @@ async fn connect_to_host(
     Err(Error::Disconnected)
 }
 
-pub async fn connect(
+pub async fn connect_with_srv(
     domain: &str,
     srv: Option<&str>,
     fallback_port: u16,
 ) -> Result<TcpStream, Error> {
-    if let Ok(ip) = domain.parse() {
+    let ascii_domain = idna::domain_to_ascii(&domain).map_err(|_| Error::Idna)?;
+
+    if let Ok(ip) = ascii_domain.parse() {
         return Ok(TcpStream::connect(&SocketAddr::new(ip, fallback_port)).await?);
     }
 
@@ -34,7 +41,7 @@ pub async fn connect(
 
     let srv_records = match srv {
         Some(srv) => {
-            let srv_domain = format!("{}.{}.", srv, domain)
+            let srv_domain = format!("{}.{}.", srv, ascii_domain)
                 .into_name()
                 .map_err(ConnecterError::Dns)?;
             resolver.srv_lookup(srv_domain).await.ok()
@@ -46,7 +53,7 @@ pub async fn connect(
         Some(lookup) => {
             // TODO: sort lookup records by priority/weight
             for srv in lookup.iter() {
-                match connect_to_host(&resolver, &srv.target().to_ascii(), srv.port()).await {
+                match connect_to_host(&srv.target().to_ascii(), srv.port()).await {
                     Ok(stream) => return Ok(stream),
                     Err(_) => {}
                 }
@@ -55,7 +62,7 @@ pub async fn connect(
         }
         None => {
             // SRV lookup error, retry with hostname
-            connect_to_host(&resolver, domain, fallback_port).await
+            connect_to_host(domain, fallback_port).await
         }
     }
 }
