@@ -31,7 +31,7 @@ pub struct Conference {
     pub password: Option<String>,
 
     /// Extensions elements.
-    pub extensions: Vec<Element>,
+    pub extensions: Option<Vec<Element>>,
 }
 
 impl Conference {
@@ -42,7 +42,7 @@ impl Conference {
             name: None,
             nick: None,
             password: None,
-            extensions: vec![],
+            extensions: None,
         }
     }
 }
@@ -59,17 +59,17 @@ impl TryFrom<Element> for Conference {
             name: get_attr!(root, "name", Option),
             nick: None,
             password: None,
-            extensions: vec![],
+            extensions: None,
         };
 
         for child in root.children().cloned() {
             if child.is("extensions", ns::BOOKMARKS2) {
-                if conference.extensions.len() > 0 {
+                if conference.extensions.is_some() {
                     return Err(Error::ParseError(
                         "Conference must not have more than one extensions element.",
                     ));
                 }
-                conference.extensions.extend(child.children().cloned());
+                conference.extensions = Some(child.children().cloned().collect());
             } else if child.is("nick", ns::BOOKMARKS2) {
                 if conference.nick.is_some() {
                     return Err(Error::ParseError(
@@ -108,7 +108,10 @@ impl From<Conference> for Element {
                     .password
                     .map(|password| Element::builder("password", ns::BOOKMARKS2).append(password)),
             )
-            .append_all(conference.extensions)
+            .append_all(match conference.extensions {
+                Some(extensions) => extensions,
+                None => vec![],
+            })
             .build()
     }
 }
@@ -156,11 +159,8 @@ mod tests {
         assert_eq!(conference.name, Some(String::from("Test MUC")));
         assert_eq!(conference.clone().nick.unwrap(), "Coucou");
         assert_eq!(conference.clone().password.unwrap(), "secret");
-        assert_eq!(conference.clone().extensions.len(), 1);
-        assert_eq!(
-            conference.clone().extensions[0],
-            Element::builder("test", "urn:xmpp:unknown").build()
-        );
+        assert_eq!(conference.clone().extensions.unwrap().len(), 1);
+        assert!(conference.clone().extensions.unwrap()[0].is("test", "urn:xmpp:unknown"));
     }
 
     #[test]
