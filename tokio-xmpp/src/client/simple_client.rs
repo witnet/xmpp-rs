@@ -47,7 +47,7 @@ impl Client {
         let domain = idna::domain_to_ascii(&jid.clone().domain()).map_err(|_| Error::Idna)?;
 
         // TCP connection
-        let tcp_stream = connect_with_srv(&domain, Some("_xmpp-client._tcp"), 5222).await?;
+        let tcp_stream = connect_with_srv(&domain, "_xmpp-client._tcp", 5222).await?;
 
         // Unencryped XMPPStream
         let xmpp_stream =

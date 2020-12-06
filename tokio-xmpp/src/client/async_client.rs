@@ -109,7 +109,7 @@ impl Client {
         // TCP connection
         let tcp_stream = match server {
             ServerConfig::UseSrv => {
-                connect_with_srv(&jid.clone().domain(), Some("_xmpp-client._tcp"), 5222).await?
+                connect_with_srv(&jid.clone().domain(), "_xmpp-client._tcp", 5222).await?
             }
             ServerConfig::Manual { host, port } => connect_to_host(host.as_str(), port).await?,
         };

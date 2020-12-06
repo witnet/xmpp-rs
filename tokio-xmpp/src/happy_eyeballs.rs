@@ -28,7 +28,7 @@ pub async fn connect_to_host(domain: &str, port: u16) -> Result<TcpStream, Error
 
 pub async fn connect_with_srv(
     domain: &str,
-    srv: Option<&str>,
+    srv: &str,
     fallback_port: u16,
 ) -> Result<TcpStream, Error> {
     let ascii_domain = idna::domain_to_ascii(&domain).map_err(|_| Error::Idna)?;
@@ -39,15 +39,10 @@ pub async fn connect_with_srv(
 
     let resolver = TokioAsyncResolver::tokio_from_system_conf().map_err(ConnecterError::Resolve)?;
 
-    let srv_records = match srv {
-        Some(srv) => {
-            let srv_domain = format!("{}.{}.", srv, ascii_domain)
-                .into_name()
-                .map_err(ConnecterError::Dns)?;
-            resolver.srv_lookup(srv_domain).await.ok()
-        }
-        None => None,
-    };
+    let srv_domain = format!("{}.{}.", srv, ascii_domain)
+        .into_name()
+        .map_err(ConnecterError::Dns)?;
+    let srv_records = resolver.srv_lookup(srv_domain).await.ok();
 
     match srv_records {
         Some(lookup) => {
