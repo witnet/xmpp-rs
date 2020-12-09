@@ -75,7 +75,7 @@ generate_element!(
         component: Required<u8> = "component",
 
         /// A Foundation as defined in ICE-CORE.
-        foundation: Required<u8> = "foundation",
+        foundation: Required<String> = "foundation",
 
         /// An index, starting at 0, that enables the parties to keep track of updates to the
         /// candidate throughout the life of the session.
@@ -87,10 +87,6 @@ generate_element!(
         /// The Internet Protocol (IP) address for the candidate transport mechanism; this can be
         /// either an IPv4 address or an IPv6 address.
         ip: Required<IpAddr> = "ip",
-
-        /// An index, starting at 0, referencing which network this candidate is on for a given
-        /// peer.
-        network: Required<u8> = "network",
 
         /// The port at the candidate IP address.
         port: Required<u16> = "port",
@@ -106,6 +102,10 @@ generate_element!(
 
         /// A related port as defined in ICE-CORE.
         rel_port: Option<u16> = "rel-port",
+
+        /// An index, starting at 0, referencing which network this candidate is on for a given
+        /// peer.
+        network: Option<u8> = "network",
 
         /// A Candidate Type as defined in ICE-CORE.
         type_: Required<Type> = "type",
@@ -125,7 +125,7 @@ mod tests {
     fn test_size() {
         assert_size!(Transport, 68);
         assert_size!(Type, 1);
-        assert_size!(Candidate, 80);
+        assert_size!(Candidate, 92);
     }
 
     #[cfg(target_pointer_width = "64")]
@@ -133,7 +133,7 @@ mod tests {
     fn test_size() {
         assert_size!(Transport, 136);
         assert_size!(Type, 1);
-        assert_size!(Candidate, 104);
+        assert_size!(Candidate, 128);
     }
 
     #[test]
