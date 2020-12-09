@@ -110,6 +110,9 @@ pub const NICK: &str = "http://jabber.org/protocol/nick";
 /// XEP-0176: Jingle ICE-UDP Transport Method
 pub const JINGLE_ICE_UDP: &str = "urn:xmpp:jingle:transports:ice-udp:1";
 
+/// XEP-0177: Jingle Raw UDP Transport Method
+pub const JINGLE_RAW_UDP: &str = "urn:xmpp:jingle:transports:raw-udp:1";
+
 /// XEP-0184: Message Delivery Receipts
 pub const RECEIPTS: &str = "urn:xmpp:receipts";
 

@@ -120,6 +120,9 @@ pub mod nick;
 /// XEP-0176: Jingle ICE-UDP Transport Method
 pub mod jingle_ice_udp;
 
+/// XEP-0177: Jingle Raw UDP Transport Method
+pub mod jingle_raw_udp;
+
 /// XEP-0184: Message Delivery Receipts
 pub mod receipts;
 
