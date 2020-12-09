@@ -17,11 +17,11 @@ edition = "2018"
 tokio-xmpp = "2.0.0"
 xmpp-parsers = "0.17"
 futures = "0.3"
-tokio = "0.2"
+tokio = "1"
 log = "0.4"
 
 [dev-dependencies]
-env_logger = "0.7"
+env_logger = "0.8"
 
 [features]
 default = ["avatars"]
