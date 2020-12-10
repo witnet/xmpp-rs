@@ -126,15 +126,15 @@ mod tests {
 
         let result_elem = elem.clone();
         let result = BlocklistResult::try_from(result_elem).unwrap();
-        assert_eq!(result.items, vec!());
+        assert!(result.items.is_empty());
 
         let elem: Element = "<block xmlns='urn:xmpp:blocking'/>".parse().unwrap();
         let block = Block::try_from(elem).unwrap();
-        assert_eq!(block.items, vec!());
+        assert!(block.items.is_empty());
 
         let elem: Element = "<unblock xmlns='urn:xmpp:blocking'/>".parse().unwrap();
         let unblock = Unblock::try_from(elem).unwrap();
-        assert_eq!(unblock.items, vec!());
+        assert!(unblock.items.is_empty());
     }
 
     #[test]
