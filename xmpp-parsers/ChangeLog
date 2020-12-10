@@ -1,9 +1,24 @@
 Version 0.18.0:
 UNRELEASED  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
     * New parsers/serialisers:
-        - Mediated Information eXchange (MIX) (XEP-0369)
+        - Jingle Raw UDP Transport Method (XEP-0177).
+        - Jingle RTP Header Extensions Negotiation (XEP-0294).
+        - Jingle Grouping Framework (XEP-0338).
+        - Mediated Information eXchange (MIX) (XEP-0369).
     * Improvements:
-        - Add "serde" feature to enable "jid/serde"
+        - Everything is now PartialEq!
+        - Add "serde" feature to enable "jid/serde".
+        - Implement more of XEP-0060.
+        - Bump XEP-0167 to version 1.2.0, adding rtcp-mux.
+        - Bump XEP-0176 to version 1.1, fixing interoperability with other
+          clients.
+        - Bump all dependencies to their latest version.
+        - Some more helper constructors.
+        - Make public some stuff that should have been public from the very
+          beginning.
+    * Bugfixes:
+        - Jingle::set_reason() does what it says now (copy/paste error).
+        - Bookmarks’ names are now optional like they should.
 
 Version 0.17.0:
 2020-02-15  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>, Maxime “pep” Buquet <pep@bouah.net>, Paul Fariello <paul@fariello.eu>
