@@ -39,8 +39,8 @@ mod tests {
     use super::*;
     use crate::util::error::Error;
     use crate::Element;
+    use jid::BareJid;
     use std::convert::TryFrom;
-    use std::str::FromStr;
 
     #[cfg(target_pointer_width = "32")]
     #[test]
@@ -63,7 +63,7 @@ mod tests {
             .unwrap();
         let stanza_id = StanzaId::try_from(elem).unwrap();
         assert_eq!(stanza_id.id, String::from("coucou"));
-        assert_eq!(stanza_id.by, Jid::from_str("coucou@coucou").unwrap());
+        assert_eq!(stanza_id.by, BareJid::new("coucou", "coucou"));
 
         let elem: Element = "<origin-id xmlns='urn:xmpp:sid:0' id='coucou'/>"
             .parse()
@@ -116,7 +116,7 @@ mod tests {
             .unwrap();
         let stanza_id = StanzaId {
             id: String::from("coucou"),
-            by: Jid::from_str("coucou@coucou").unwrap(),
+            by: Jid::Bare(BareJid::new("coucou", "coucou")),
         };
         let elem2 = stanza_id.into();
         assert_eq!(elem, elem2);

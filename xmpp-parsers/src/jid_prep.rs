@@ -41,8 +41,8 @@ impl IqResultPayload for JidPrepResponse {}
 mod tests {
     use super::*;
     use crate::Element;
+    use jid::FullJid;
     use std::convert::TryFrom;
-    use std::str::FromStr;
 
     #[cfg(target_pointer_width = "32")]
     #[test]
@@ -72,7 +72,7 @@ mod tests {
         let response = JidPrepResponse::try_from(elem).unwrap();
         assert_eq!(
             response.jid,
-            Jid::from_str("romeo@montague.lit/orchard").unwrap()
+            FullJid::new("romeo", "montague.lit", "orchard")
         );
     }
 }

@@ -518,7 +518,6 @@ mod tests {
     use super::*;
     use crate::data_forms::{DataForm, DataFormType, Field, FieldType};
     use jid::FullJid;
-    use std::str::FromStr;
 
     #[test]
     fn create() {
@@ -701,7 +700,7 @@ mod tests {
         let form = DataForm::try_from(elem).unwrap();
 
         let options = Options {
-            jid: Jid::Full(FullJid::from_str("juliet@capulet.lit/balcony").unwrap()),
+            jid: Jid::Full(FullJid::new("juliet", "capulet.lit", "balcony")),
             node: None,
             subid: None,
             form: Some(form),

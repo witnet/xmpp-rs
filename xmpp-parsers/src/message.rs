@@ -95,10 +95,10 @@ pub struct Message {
 
 impl Message {
     /// Creates a new `<message/>` stanza for the given recipient.
-    pub fn new(to: Option<Jid>) -> Message {
+    pub fn new<J: Into<Option<Jid>>>(to: J) -> Message {
         Message {
             from: None,
-            to,
+            to: to.into(),
             id: None,
             type_: MessageType::Chat,
             bodies: BTreeMap::new(),
@@ -241,6 +241,7 @@ impl From<Message> for Element {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use jid::BareJid;
     use std::str::FromStr;
 
     #[cfg(target_pointer_width = "32")]
@@ -319,7 +320,7 @@ mod tests {
         let elem: Element = "<message xmlns='jabber:client' to='coucou@example.org' type='chat'><body>Hello world!</body></message>".parse().unwrap();
         #[cfg(feature = "component")]
         let elem: Element = "<message xmlns='jabber:component:accept' to='coucou@example.org' type='chat'><body>Hello world!</body></message>".parse().unwrap();
-        let mut message = Message::new(Some(Jid::from_str("coucou@example.org").unwrap()));
+        let mut message = Message::new(Jid::Bare(BareJid::new("coucou", "example.org")));
         message
             .bodies
             .insert(String::from(""), Body::from_str("Hello world!").unwrap());

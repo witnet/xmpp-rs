@@ -190,7 +190,7 @@ impl From<Prefs> for Element {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::str::FromStr;
+    use jid::BareJid;
 
     #[cfg(target_pointer_width = "32")]
     #[test]
@@ -344,14 +344,8 @@ mod tests {
         .parse()
         .unwrap();
         let prefs = Prefs::try_from(elem).unwrap();
-        assert_eq!(
-            prefs.always,
-            vec!(Jid::from_str("romeo@montague.lit").unwrap())
-        );
-        assert_eq!(
-            prefs.never,
-            vec!(Jid::from_str("montague@montague.lit").unwrap())
-        );
+        assert_eq!(prefs.always, [BareJid::new("romeo", "montague.lit")]);
+        assert_eq!(prefs.never, [BareJid::new("montague", "montague.lit")]);
 
         let elem2 = Element::from(prefs.clone());
         println!("{:?}", elem2);

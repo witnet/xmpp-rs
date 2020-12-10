@@ -231,7 +231,7 @@ impl IqResultPayload for DiscoItemsResult {}
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::str::FromStr;
+    use jid::BareJid;
 
     #[cfg(target_pointer_width = "32")]
     #[test]
@@ -442,10 +442,10 @@ mod tests {
         let elem2 = Element::from(query);
         let query = DiscoItemsResult::try_from(elem2).unwrap();
         assert_eq!(query.items.len(), 2);
-        assert_eq!(query.items[0].jid, Jid::from_str("component").unwrap());
+        assert_eq!(query.items[0].jid, BareJid::domain("component"));
         assert_eq!(query.items[0].node, None);
         assert_eq!(query.items[0].name, None);
-        assert_eq!(query.items[1].jid, Jid::from_str("component2").unwrap());
+        assert_eq!(query.items[1].jid, BareJid::domain("component2"));
         assert_eq!(query.items[1].node, Some(String::from("test")));
         assert_eq!(query.items[1].name, Some(String::from("A component")));
     }
