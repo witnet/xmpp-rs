@@ -313,8 +313,8 @@ mod tests {
             .parse()
             .unwrap();
         let prefs = Prefs::try_from(elem).unwrap();
-        assert_eq!(prefs.always, vec!());
-        assert_eq!(prefs.never, vec!());
+        assert!(prefs.always.is_empty());
+        assert!(prefs.never.is_empty());
 
         let elem: Element = r#"
 <prefs xmlns='urn:xmpp:mam:2' default='roster'>
@@ -325,8 +325,8 @@ mod tests {
         .parse()
         .unwrap();
         let prefs = Prefs::try_from(elem).unwrap();
-        assert_eq!(prefs.always, vec!());
-        assert_eq!(prefs.never, vec!());
+        assert!(prefs.always.is_empty());
+        assert!(prefs.never.is_empty());
     }
 
     #[test]
