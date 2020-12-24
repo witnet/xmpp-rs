@@ -158,9 +158,7 @@ pub fn compute_disco(disco: &DiscoInfoResult) -> Vec<u8> {
 }
 
 fn get_hash_vec(hash: &[u8]) -> Vec<u8> {
-    let mut vec = Vec::with_capacity(hash.len());
-    vec.extend_from_slice(hash);
-    vec
+    hash.to_vec()
 }
 
 /// Hashes the result of [compute_disco()] with one of the supported [hash
