@@ -151,20 +151,20 @@ impl Hash {
 
     /// Formats this hash into hexadecimal.
     pub fn to_hex(&self) -> String {
-        let mut bytes = vec![];
-        for byte in self.hash.iter() {
-            bytes.push(format!("{:02x}", byte));
-        }
-        bytes.join("")
+        self.hash
+            .iter()
+            .map(|byte| format!("{:02x}", byte))
+            .collect::<Vec<_>>()
+            .join("")
     }
 
     /// Formats this hash into colon-separated hexadecimal.
     pub fn to_colon_separated_hex(&self) -> String {
-        let mut bytes = vec![];
-        for byte in self.hash.iter() {
-            bytes.push(format!("{:02x}", byte));
-        }
-        bytes.join(":")
+        self.hash
+            .iter()
+            .map(|byte| format!("{:02x}", byte))
+            .collect::<Vec<_>>()
+            .join(":")
     }
 }
 
