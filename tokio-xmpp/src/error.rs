@@ -1,4 +1,5 @@
 use native_tls::Error as TlsError;
+use sasl::client::MechanismError as SaslMechanismError;
 use std::borrow::Cow;
 use std::error::Error as StdError;
 use std::fmt;
@@ -199,7 +200,7 @@ pub enum AuthError {
     /// No matching SASL mechanism available
     NoMechanism,
     /// Local SASL implementation error
-    Sasl(String),
+    Sasl(SaslMechanismError),
     /// Failure from server
     Fail(SaslDefinedCondition),
     /// Component authentication failure

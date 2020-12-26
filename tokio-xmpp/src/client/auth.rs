@@ -29,7 +29,7 @@ pub async fn auth<S: AsyncRead + AsyncWrite + Unpin>(
     for local_mech in local_mechs {
         let mut mechanism = local_mech();
         if remote_mechs.contains(mechanism.name()) {
-            let initial = mechanism.initial().map_err(AuthError::Sasl)?;
+            let initial = mechanism.initial();
             let mechanism_name =
                 XMPPMechanism::from_str(mechanism.name()).map_err(ProtocolError::Parsers)?;
 
