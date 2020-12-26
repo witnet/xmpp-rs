@@ -54,9 +54,14 @@ pub async fn auth<S: AsyncRead + AsyncWrite + Unpin>(
                             return Ok(stream.into_inner());
                         } else if let Ok(failure) = Failure::try_from(stanza.clone()) {
                             return Err(Error::Auth(AuthError::Fail(failure.defined_condition)));
+                        // TODO: This code was needed for compatibility with some broken server,
+                        // but it’s been forgotten which.  It is currently commented out so that we
+                        // can find it and fix the server software instead.
+                        /*
                         } else if stanza.name() == "failure" {
                             // Workaround for https://gitlab.com/xmpp-rs/xmpp-parsers/merge_requests/1
                             return Err(Error::Auth(AuthError::Sasl("failure".to_string())));
+                        */
                         } else {
                             // ignore and loop
                         }
