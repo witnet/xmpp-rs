@@ -30,9 +30,7 @@ pub async fn connect(
         return Ok(TcpStream::connect(&SocketAddr::new(ip, fallback_port)).await?);
     }
 
-    let resolver = TokioAsyncResolver::tokio_from_system_conf()
-        .await
-        .map_err(ConnecterError::Resolve)?;
+    let resolver = TokioAsyncResolver::tokio_from_system_conf().map_err(ConnecterError::Resolve)?;
 
     let srv_records = match srv {
         Some(srv) => {
