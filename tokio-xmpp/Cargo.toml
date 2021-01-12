@@ -25,7 +25,7 @@ tokio-tls = { package = "tokio-native-tls", version = "0.3" }
 trust-dns-resolver = "0.20"
 trust-dns-proto = "0.20"
 xml5ever = "0.16"
-xmpp-parsers = "0.17"
+xmpp-parsers = "0.18"
 
 [build-dependencies]
 rustc_version = "0.3"
