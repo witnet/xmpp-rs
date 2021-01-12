@@ -1,6 +1,7 @@
-Version NEXT, release DATE:
+Version 0.9.1, release 2021-01-13:
   * Updates
     - Added serde support behind "serde" feature
+    - Added equality operators between Jid, BareJid and FullJid.
 
 Version 0.9.0, release 2020-02-15:
   * Breaking
