@@ -77,6 +77,7 @@ impl TryFrom<Element> for Conference {
                     ));
                 }
                 check_no_children!(child, "nick");
+                check_no_attributes!(child, "nick");
                 conference.nick = Some(child.text());
             } else if child.is("password", ns::BOOKMARKS2) {
                 if conference.password.is_some() {
@@ -85,6 +86,7 @@ impl TryFrom<Element> for Conference {
                     ));
                 }
                 check_no_children!(child, "password");
+                check_no_attributes!(child, "password");
                 conference.password = Some(child.text());
             }
         }
