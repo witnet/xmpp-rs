@@ -1,3 +1,6 @@
+Version 0.12.1, released 2021-01-13:
+  * Changes
+    * Bump quick-xml dependency.
 Version 0.12, released 2020-02-15:
   * Breaking
     * `Element.write_to` doesn't prepand xml prelude anymore. Use `write_to_decl` when necessary.
