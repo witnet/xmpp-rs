@@ -1,7 +1,7 @@
 [package]
 name = "tokio-xmpp"
 version = "2.0.0"
-authors = ["Astro <astro@spaceboyz.net>", "Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>", "pep <pep+code@bouah.net>", "O01eg <o01eg@yandex.ru>"]
+authors = ["Astro <astro@spaceboyz.net>", "Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>", "pep <pep+code@bouah.net>", "O01eg <o01eg@yandex.ru>", "SonnyX <randy@vonderweide.nl>", "Paul Fariello <paul@fariello.eu>"]
 description = "Asynchronous XMPP for Rust with tokio"
 license = "MPL-2.0"
 homepage = "https://gitlab.com/xmpp-rs/xmpp-rs"
