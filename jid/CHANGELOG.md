@@ -1,3 +1,7 @@
+Version 0.9.2, release 2021-01-13:
+  * Updates
+    - Bumped minidom to 0.13
+
 Version 0.9.1, release 2021-01-13:
   * Updates
     - Added serde support behind "serde" feature
