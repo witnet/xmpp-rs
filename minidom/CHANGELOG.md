@@ -1,4 +1,7 @@
-Version 0.12.1, released 2021-01-13:
+Version 0.13.0, released 2021-01-13:
+  * Changes
+    * Force namespaces on Element, which was a breaking change.
+Version 0.12.1, released 2021-01-13, yanked:
   * Changes
     * Bump quick-xml dependency.
 Version 0.12, released 2020-02-15:
