@@ -1,5 +1,10 @@
 Version 0.18.0:
-UNRELEASED  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
+2021-01-13  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
+    * Bugfixes:
+        - Bump minidom to 0.13, as 0.12.1 got yanked.
+
+Version 0.18.0:
+2021-01-13  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
     * New parsers/serialisers:
         - Jingle Raw UDP Transport Method (XEP-0177).
         - Jingle RTP Header Extensions Negotiation (XEP-0294).
