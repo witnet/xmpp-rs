@@ -6,6 +6,7 @@
 
 use crate::data_forms::DataForm;
 use crate::date::DateTime;
+use crate::message::MessagePayload;
 use crate::ns;
 use crate::pubsub::{Item as PubSubItem, ItemId, NodeName, Subscription, SubscriptionId};
 use crate::util::error::Error;
@@ -240,6 +241,8 @@ impl From<PubSubEvent> for Element {
             .build()
     }
 }
+
+impl MessagePayload for PubSubEvent {}
 
 #[cfg(test)]
 mod tests {
