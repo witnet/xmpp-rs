@@ -28,12 +28,13 @@ trust-dns-resolver = "0.20"
 xml5ever = "0.16"
 xmpp-parsers = "0.18"
 webpki = { version = "0.21", optional = true }
+webpki-roots = { version = "0.21", optional = true }
 
 [build-dependencies]
 rustc_version = "0.3"
 
 [features]
 default = ["tls-native"]
-tls-rust = ["tokio-rustls", "webpki"]
+tls-rust = ["tokio-rustls", "webpki", "webpki-roots"]
 tls-native = ["tokio-native-tls", "native-tls"]
 serde = ["xmpp-parsers/serde"]

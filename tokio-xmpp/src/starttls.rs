@@ -1,17 +1,21 @@
 use futures::{sink::SinkExt, stream::StreamExt};
+
 #[cfg(feature = "tls-rust")]
-use idna;
+use {
+    idna,
+    std::sync::Arc,
+    tokio_rustls::{client::TlsStream, rustls::ClientConfig, TlsConnector},
+    webpki::DNSNameRef,
+    webpki_roots,
+};
+
 #[cfg(feature = "tls-native")]
-use native_tls::TlsConnector as NativeTlsConnector;
-#[cfg(feature = "tls-rust")]
-use std::sync::Arc;
+use {
+    native_tls::TlsConnector as NativeTlsConnector,
+    tokio_native_tls::{TlsConnector, TlsStream},
+};
+
 use tokio::io::{AsyncRead, AsyncWrite};
-#[cfg(feature = "tls-native")]
-use tokio_native_tls::{TlsConnector, TlsStream};
-#[cfg(feature = "tls-rust")]
-use tokio_rustls::{client::TlsStream, rustls::ClientConfig, TlsConnector};
-#[cfg(feature = "tls-rust")]
-use webpki::DNSNameRef;
 use xmpp_parsers::{ns, Element};
 
 use crate::xmpp_codec::Packet;
@@ -38,7 +42,11 @@ async fn get_tls_stream<S: AsyncRead + AsyncWrite + Unpin>(
     let ascii_domain = idna::domain_to_ascii(domain).map_err(|_| Error::Idna)?;
     let domain = DNSNameRef::try_from_ascii_str(&ascii_domain).unwrap();
     let stream = xmpp_stream.into_inner();
-    let tls_stream = TlsConnector::from(Arc::new(ClientConfig::new()))
+    let mut config = ClientConfig::new();
+    config
+        .root_store
+        .add_server_trust_anchors(&webpki_roots::TLS_SERVER_ROOTS);
+    let tls_stream = TlsConnector::from(Arc::new(config))
         .connect(domain, stream)
         .await?;
     Ok(tls_stream)
