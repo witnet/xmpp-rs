@@ -89,7 +89,7 @@ impl<S: AsyncRead + AsyncWrite + Unpin> Sink<Packet> for XMPPStream<S> {
     }
 
     fn start_send(
-        #[cfg_attr(rustc_least_1_48, allow(unused_mut))] mut self: Pin<&mut Self>,
+        #[cfg_attr(rustc_least_1_46, allow(unused_mut))] mut self: Pin<&mut Self>,
         item: Packet,
     ) -> Result<(), Self::Error> {
         Pin::new(&mut self.stream.lock().unwrap().deref_mut())
@@ -98,7 +98,7 @@ impl<S: AsyncRead + AsyncWrite + Unpin> Sink<Packet> for XMPPStream<S> {
     }
 
     fn poll_flush(
-        #[cfg_attr(rustc_least_1_48, allow(unused_mut))] mut self: Pin<&mut Self>,
+        #[cfg_attr(rustc_least_1_46, allow(unused_mut))] mut self: Pin<&mut Self>,
         cx: &mut Context,
     ) -> Poll<Result<(), Self::Error>> {
         Pin::new(&mut self.stream.lock().unwrap().deref_mut())
@@ -107,7 +107,7 @@ impl<S: AsyncRead + AsyncWrite + Unpin> Sink<Packet> for XMPPStream<S> {
     }
 
     fn poll_close(
-        #[cfg_attr(rustc_least_1_48, allow(unused_mut))] mut self: Pin<&mut Self>,
+        #[cfg_attr(rustc_least_1_46, allow(unused_mut))] mut self: Pin<&mut Self>,
         cx: &mut Context,
     ) -> Poll<Result<(), Self::Error>> {
         Pin::new(&mut self.stream.lock().unwrap().deref_mut())
@@ -121,7 +121,7 @@ impl<S: AsyncRead + AsyncWrite + Unpin> Stream for XMPPStream<S> {
     type Item = Result<Packet, crate::Error>;
 
     fn poll_next(
-        #[cfg_attr(rustc_least_1_48, allow(unused_mut))] mut self: Pin<&mut Self>,
+        #[cfg_attr(rustc_least_1_46, allow(unused_mut))] mut self: Pin<&mut Self>,
         cx: &mut Context,
     ) -> Poll<Option<Self::Item>> {
         Pin::new(&mut self.stream.lock().unwrap().deref_mut())
