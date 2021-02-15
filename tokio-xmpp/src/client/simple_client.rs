@@ -5,8 +5,11 @@ use std::pin::Pin;
 use std::str::FromStr;
 use std::task::{Context, Poll};
 use tokio::net::TcpStream;
+#[cfg(feature = "tls-native")]
+use tokio_native_tls::TlsStream;
+#[cfg(feature = "tls-rust")]
+use tokio_rustls::client::TlsStream;
 use tokio_stream::StreamExt;
-use tokio_tls::TlsStream;
 use xmpp_parsers::{ns, Element, Jid};
 
 use super::auth::auth;

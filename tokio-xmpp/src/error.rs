@@ -1,3 +1,4 @@
+#[cfg(feature = "tls-native")]
 use native_tls::Error as TlsError;
 use sasl::client::MechanismError as SaslMechanismError;
 use std::borrow::Cow;
@@ -5,6 +6,8 @@ use std::error::Error as StdError;
 use std::fmt;
 use std::io::Error as IoError;
 use std::str::Utf8Error;
+#[cfg(feature = "tls-rust")]
+use tokio_rustls::rustls::TLSError as TlsError;
 use trust_dns_proto::error::ProtoError;
 use trust_dns_resolver::error::ResolveError;
 

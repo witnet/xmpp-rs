@@ -7,7 +7,10 @@ use std::task::Context;
 use tokio::net::TcpStream;
 use tokio::task::JoinHandle;
 use tokio::task::LocalSet;
-use tokio_tls::TlsStream;
+#[cfg(feature = "tls-native")]
+use tokio_native_tls::TlsStream;
+#[cfg(feature = "tls-rust")]
+use tokio_rustls::client::TlsStream;
 use xmpp_parsers::{ns, Element, Jid, JidParseError};
 
 use super::auth::auth;
