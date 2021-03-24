@@ -44,6 +44,11 @@ impl Client {
         Ok(Client { stream })
     }
 
+    /// Get direct access to inner XMPP Stream
+    pub fn into_inner(self) -> XMPPStream {
+        self.stream
+    }
+
     async fn connect(jid: Jid, password: String) -> Result<XMPPStream, Error> {
         let username = jid.clone().node().unwrap();
         let password = password;
