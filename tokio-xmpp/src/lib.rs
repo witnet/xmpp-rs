@@ -1,6 +1,6 @@
 //! XMPP implementation with asynchronous I/O using Tokio.
 
-#![deny(unsafe_code, unused, missing_docs, bare_trait_objects)]
+#![deny(unsafe_code, missing_docs, bare_trait_objects)]
 
 mod starttls;
 mod stream_start;
