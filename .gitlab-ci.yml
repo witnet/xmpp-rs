@@ -7,10 +7,12 @@ variables:
   RUST_BACKTRACE: "full"
 
 .stable:
-  image: rust:latest
+  # Alpine is only used for its smaller size. libc certainly gets tested
+  # locally quite often anyway
+  image: rust:alpine
 
 .nightly:
-  image: rustlang/rust:nightly
+  image: rustlang/rust:nightly-slim
   allow_failure: true  # It's not often, but it happens nightly breaks, surprisingly.
 
 .test:
