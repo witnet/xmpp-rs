@@ -224,3 +224,6 @@ pub mod bookmarks2;
 
 /// XEP-0421: Anonymous unique occupant identifiers for MUCs
 pub mod occupant_id;
+
+/// XEP-0441: Message Archive Management Preferences
+pub mod mam_prefs;
