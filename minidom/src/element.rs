@@ -213,7 +213,7 @@ impl Element {
         &self.name
     }
 
-    /// Returns a reference to the namespace of this element, if it has one, else `None`.
+    /// Returns a reference to the namespace of this element.
     pub fn ns(&self) -> String {
         self.namespace.clone()
     }
