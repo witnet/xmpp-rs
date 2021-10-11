@@ -133,6 +133,9 @@ pub const TIME: &str = "urn:xmpp:time";
 /// XEP-0203: Delayed Delivery
 pub const DELAY: &str = "urn:xmpp:delay";
 
+/// XEP-0215: External Service Discovery
+pub const EXT_DISCO: &str = "urn:xmpp:extdisco:2";
+
 /// XEP-0221: Data Forms Media Element
 pub const MEDIA_ELEMENT: &str = "urn:xmpp:media-element";
 

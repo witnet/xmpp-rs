@@ -141,6 +141,9 @@ pub mod time;
 /// XEP-0203: Delayed Delivery
 pub mod delay;
 
+/// XEP-0215: External Service Discovery
+pub mod extdisco;
+
 /// XEP-0221: Data Forms Media Element
 pub mod media_element;
 
