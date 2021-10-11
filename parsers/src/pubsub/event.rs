@@ -189,7 +189,7 @@ impl TryFrom<Element> for PubSubEvent {
                 return Err(Error::ParseError("Unknown child in event element."));
             }
         }
-        Ok(payload.ok_or(Error::ParseError("No payload in event element."))?)
+        payload.ok_or(Error::ParseError("No payload in event element."))
     }
 }
 

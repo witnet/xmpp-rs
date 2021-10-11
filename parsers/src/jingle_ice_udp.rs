@@ -9,6 +9,7 @@ use std::net::IpAddr;
 
 generate_element!(
     /// Wrapper element for an ICE-UDP transport.
+    #[derive(Default)]
     Transport, "transport", JINGLE_ICE_UDP,
     attributes: [
         /// A Password as defined in ICE-CORE.
@@ -29,12 +30,7 @@ generate_element!(
 impl Transport {
     /// Create a new ICE-UDP transport.
     pub fn new() -> Transport {
-        Transport {
-            pwd: None,
-            ufrag: None,
-            candidates: Vec::new(),
-            fingerprint: None,
-        }
+        Transport::default()
     }
 
     /// Add a candidate to this transport.

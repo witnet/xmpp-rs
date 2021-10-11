@@ -8,7 +8,7 @@
 use crate::ns;
 use crate::util::error::Error;
 use jid::Jid;
-use minidom::{Element, IntoAttributeValue, Node};
+use minidom::{Element, IntoAttributeValue};
 use std::collections::BTreeMap;
 use std::convert::TryFrom;
 use std::str::FromStr;
@@ -48,17 +48,16 @@ impl FromStr for Show {
     }
 }
 
-impl Into<Node> for Show {
-    fn into(self) -> Node {
+impl From<Show> for Element {
+    fn from(show: Show) -> Element {
         Element::builder("show", ns::DEFAULT_NS)
-            .append(match self {
+            .append(match show {
                 Show::Away => "away",
                 Show::Chat => "chat",
                 Show::Dnd => "dnd",
                 Show::Xa => "xa",
             })
             .build()
-            .into()
     }
 }
 

@@ -9,6 +9,7 @@ use std::net::IpAddr;
 
 generate_element!(
     /// Wrapper element for an raw UDP transport.
+    #[derive(Default)]
     Transport, "transport", JINGLE_RAW_UDP,
     children: [
         /// List of candidates for this raw UDP session.
@@ -19,9 +20,7 @@ generate_element!(
 impl Transport {
     /// Create a new ICE-UDP transport.
     pub fn new() -> Transport {
-        Transport {
-            candidates: Vec::new(),
-        }
+        Transport::default()
     }
 
     /// Add a candidate to this transport.

@@ -16,7 +16,7 @@ generate_attribute!(
 );
 
 /// A conference bookmark.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct Conference {
     /// Whether a conference bookmark should be joined automatically.
     pub autojoin: Autojoin,
@@ -37,13 +37,7 @@ pub struct Conference {
 impl Conference {
     /// Create a new conference.
     pub fn new() -> Conference {
-        Conference {
-            autojoin: Autojoin::False,
-            name: None,
-            nick: None,
-            password: None,
-            extensions: None,
-        }
+        Conference::default()
     }
 }
 

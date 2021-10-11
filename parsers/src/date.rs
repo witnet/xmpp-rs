@@ -46,9 +46,9 @@ impl IntoAttributeValue for DateTime {
     }
 }
 
-impl Into<Node> for DateTime {
-    fn into(self) -> Node {
-        Node::Text(self.0.to_rfc3339())
+impl From<DateTime> for Node {
+    fn from(date: DateTime) -> Node {
+        Node::Text(date.0.to_rfc3339())
     }
 }
 

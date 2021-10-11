@@ -164,7 +164,7 @@ impl TryFrom<Element> for PubSubOwner {
                 return Err(Error::ParseError("Unknown child in pubsub element."));
             }
         }
-        Ok(payload.ok_or(Error::ParseError("No payload in pubsub element."))?)
+        payload.ok_or(Error::ParseError("No payload in pubsub element."))
     }
 }
 

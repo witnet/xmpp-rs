@@ -95,11 +95,7 @@ impl IqResultPayload for Join {}
 impl Join {
     /// Create a new Join element.
     pub fn from_nick_and_nodes<N: Into<String>>(nick: N, nodes: &[&str]) -> Join {
-        let subscribes = nodes
-            .into_iter()
-            .cloned()
-            .map(|n| Subscribe::new(n))
-            .collect();
+        let subscribes = nodes.iter().cloned().map(Subscribe::new).collect();
         Join {
             id: None,
             nick: nick.into(),
@@ -136,11 +132,7 @@ impl IqResultPayload for UpdateSubscription {}
 impl UpdateSubscription {
     /// Create a new UpdateSubscription element.
     pub fn from_nodes(nodes: &[&str]) -> UpdateSubscription {
-        let subscribes = nodes
-            .into_iter()
-            .cloned()
-            .map(|n| Subscribe::new(n))
-            .collect();
+        let subscribes = nodes.iter().cloned().map(Subscribe::new).collect();
         UpdateSubscription {
             jid: None,
             subscribes,
@@ -212,6 +204,7 @@ impl Mix {
 
 generate_element!(
     /// Create a new MIX channel.
+    #[derive(Default)]
     Create, "create", MIX_CORE,
     attributes: [
         /// The requested channel identifier.
@@ -225,7 +218,7 @@ impl IqResultPayload for Create {}
 impl Create {
     /// Create a new ad-hoc Create element.
     pub fn new() -> Create {
-        Create { channel: None }
+        Create::default()
     }
 
     /// Create a new Create element with a channel identifier.

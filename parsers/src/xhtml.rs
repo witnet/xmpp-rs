@@ -71,11 +71,7 @@ impl TryFrom<Element> for XhtmlIm {
         for child in elem.children() {
             if child.is("body", ns::XHTML) {
                 let child = child.clone();
-                let lang = match child.attr("xml:lang") {
-                    Some(lang) => lang,
-                    None => "",
-                }
-                .to_string();
+                let lang = child.attr("xml:lang").unwrap_or("").to_string();
                 let body = Body::try_from(child)?;
                 match bodies.insert(lang, body) {
                     None => (),
@@ -488,9 +484,9 @@ fn parse_css(style: Option<&str>) -> Css {
     let mut properties = vec![];
     if let Some(style) = style {
         // TODO: make that parser a bit more resilient to things.
-        for part in style.split(";") {
+        for part in style.split(';') {
             let mut part = part
-                .splitn(2, ":")
+                .splitn(2, ':')
                 .map(|a| a.to_string())
                 .collect::<Vec<_>>();
             let key = part.pop().unwrap();
