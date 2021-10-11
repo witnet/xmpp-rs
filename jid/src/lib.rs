@@ -260,11 +260,11 @@ impl From<&BareJid> for String {
     }
 }
 
-impl Into<BareJid> for FullJid {
-    fn into(self) -> BareJid {
+impl From<FullJid> for BareJid {
+    fn from(full: FullJid) -> BareJid {
         BareJid {
-            node: self.node,
-            domain: self.domain,
+            node: full.node,
+            domain: full.domain,
         }
     }
 }
@@ -333,7 +333,7 @@ fn _from_str(s: &str) -> Result<StringJid, JidParseError> {
             ParserState::Node => {
                 match c {
                     '@' => {
-                        if buf == "" {
+                        if buf.is_empty() {
                             return Err(JidParseError::EmptyNode);
                         }
                         state = ParserState::Domain;
@@ -341,7 +341,7 @@ fn _from_str(s: &str) -> Result<StringJid, JidParseError> {
                         buf.clear();
                     }
                     '/' => {
-                        if buf == "" {
+                        if buf.is_empty() {
                             return Err(JidParseError::NoDomain);
                         }
                         state = ParserState::Resource;
@@ -356,7 +356,7 @@ fn _from_str(s: &str) -> Result<StringJid, JidParseError> {
             ParserState::Domain => {
                 match c {
                     '/' => {
-                        if buf == "" {
+                        if buf.is_empty() {
                             return Err(JidParseError::NoDomain);
                         }
                         state = ParserState::Resource;
@@ -683,9 +683,9 @@ impl IntoAttributeValue for Jid {
 }
 
 #[cfg(feature = "minidom")]
-impl Into<Node> for Jid {
-    fn into(self) -> Node {
-        Node::Text(String::from(self))
+impl From<Jid> for Node {
+    fn from(jid: Jid) -> Node {
+        Node::Text(String::from(jid))
     }
 }
 
@@ -697,9 +697,9 @@ impl IntoAttributeValue for FullJid {
 }
 
 #[cfg(feature = "minidom")]
-impl Into<Node> for FullJid {
-    fn into(self) -> Node {
-        Node::Text(String::from(self))
+impl From<FullJid> for Node {
+    fn from(jid: FullJid) -> Node {
+        Node::Text(String::from(jid))
     }
 }
 
@@ -711,9 +711,9 @@ impl IntoAttributeValue for BareJid {
 }
 
 #[cfg(feature = "minidom")]
-impl Into<Node> for BareJid {
-    fn into(self) -> Node {
-        Node::Text(String::from(self))
+impl From<BareJid> for Node {
+    fn from(jid: BareJid) -> Node {
+        Node::Text(String::from(jid))
     }
 }
 
