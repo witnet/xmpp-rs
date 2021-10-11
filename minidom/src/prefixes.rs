@@ -13,17 +13,9 @@ use std::fmt;
 pub type Prefix = Option<String>;
 pub type Namespace = String;
 
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, Default, PartialEq, Eq)]
 pub struct Prefixes {
     prefixes: BTreeMap<Prefix, Namespace>,
-}
-
-impl Default for Prefixes {
-    fn default() -> Self {
-        Prefixes {
-            prefixes: BTreeMap::new(),
-        }
-    }
 }
 
 impl fmt::Debug for Prefixes {

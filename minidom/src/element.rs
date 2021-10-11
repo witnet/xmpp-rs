@@ -41,10 +41,7 @@ pub fn escape(raw: &[u8]) -> Cow<[u8]> {
     let mut escapes: Vec<(usize, &'static [u8])> = Vec::new();
     let mut bytes = raw.iter();
     fn to_escape(b: u8) -> bool {
-        match b {
-            b'<' | b'>' | b'\'' | b'&' | b'"' => true,
-            _ => false,
-        }
+        matches!(b, b'<' | b'>' | b'\'' | b'&' | b'"')
     }
 
     let mut loc = 0;
@@ -124,8 +121,7 @@ impl PartialEq for Element {
 }
 
 fn ensure_no_prefix<S: AsRef<str>>(s: &S) -> Result<()> {
-    let name_parts = s.as_ref().split(':').collect::<Vec<&str>>();
-    match name_parts.len() {
+    match s.as_ref().split(':').count() {
         1 => Ok(()),
         _ => Err(Error::InvalidElement),
     }
@@ -397,9 +393,8 @@ impl Element {
                             // There was no prefix on the closing tag
                             None => {
                                 // Is there a prefix on the opening tag?
-                                match opening_prefix {
-                                    Some(_) => return Err(Error::InvalidElementClosed),
-                                    _ => (),
+                                if opening_prefix.is_some() {
+                                    return Err(Error::InvalidElementClosed);
                                 }
                                 // Does the opening tag name match the closing one?
                                 if possible_prefix != elem.name().as_bytes() {
@@ -412,14 +407,14 @@ impl Element {
                 }
                 Event::Text(s) => {
                     let text = s.unescape_and_decode(reader)?;
-                    if text != "" {
+                    if !text.is_empty() {
                         let current_elem = stack.last_mut().unwrap();
                         current_elem.append_text_node(text);
                     }
                 }
                 Event::CData(s) => {
                     let text = reader.decode(&s)?.to_owned();
-                    if text != "" {
+                    if !text.is_empty() {
                         let current_elem = stack.last_mut().unwrap();
                         current_elem.append_text_node(text);
                     }
@@ -477,14 +472,14 @@ impl Element {
         let self_prefix: (Option<String>, bool) = match existing_self_prefix {
             // No prefix exists already for our namespace
             None => {
-                if local_keys.find(|p| p == &None).is_none() {
+                if !local_keys.any(|p| p.is_none()) {
                     // Use the None prefix if available
                     (None, true)
                 } else {
                     // Otherwise generate one. Check if it isn't already used, if so increase the
                     // number until we find a suitable one.
                     let mut prefix_n = 0u8;
-                    while let Some(_) = all_keys.find(|p| p == &Some(format!("ns{}", prefix_n))) {
+                    while all_keys.any(|p| p == Some(format!("ns{}", prefix_n))) {
                         prefix_n += 1;
                     }
                     (Some(format!("ns{}", prefix_n)), true)
@@ -510,7 +505,7 @@ impl Element {
                 all_prefixes.insert(self_prefix.0, self.namespace.clone());
             }
             (None, true) => {
-                let key = format!("xmlns");
+                let key = String::from("xmlns");
                 start.push_attribute((key.as_bytes(), self.namespace.as_bytes()));
                 all_prefixes.insert(self_prefix.0, self.namespace.clone());
             }
@@ -1007,7 +1002,7 @@ impl ElementBuilder {
         prefix: Prefix,
         namespace: S,
     ) -> Result<ElementBuilder> {
-        if let Some(_) = self.root.prefixes.get(&prefix) {
+        if self.root.prefixes.get(&prefix).is_some() {
             return Err(Error::DuplicatePrefix);
         }
         self.root.prefixes.insert(prefix, namespace.into());
