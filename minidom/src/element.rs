@@ -545,7 +545,7 @@ impl Element {
         writer.write_event(Event::Start(start))?;
 
         for child in &self.children {
-            child.write_to_inner(writer, all_prefixes)?;
+            child.write_to_inner(writer, &mut all_prefixes.clone())?;
         }
 
         writer.write_event(Event::End(BytesEnd::borrowed(name.as_bytes())))?;
