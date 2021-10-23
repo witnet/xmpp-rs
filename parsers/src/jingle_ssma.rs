@@ -39,12 +39,35 @@ generate_element!(
     ]
 );
 
+generate_attribute!(
+    /// From RFC5888, the list of allowed semantics.
+    Semantics, "semantics", {
+        /// Lip Synchronization, defined in RFC5888.
+        Ls => "LS",
+
+        /// Flow Identification, defined in RFC5888.
+        Fid => "FID",
+
+        /// Single Reservation Flow, defined in RFC3524.
+        Srf => "SRF",
+
+        /// Alternative Network Address Types, defined in RFC4091.
+        Anat => "ANAT",
+
+        /// Forward Error Correction, defined in RFC4756.
+        Fec => "FEC",
+
+        /// Decoding Dependency, defined in RFC5583.
+        Ddp => "DDP",
+    }
+);
+
 generate_element!(
     /// Element grouping multiple ssrc.
     Group, "ssrc-group", JINGLE_SSMA,
     attributes: [
         /// The semantics of this group.
-        semantics: Required<String> = "semantics",
+        semantics: Required<Semantics> = "semantics",
     ],
     children: [
         /// The various ssrc concerned by this group.
@@ -63,7 +86,8 @@ mod tests {
     fn test_size() {
         assert_size!(Source, 16);
         assert_size!(Parameter, 24);
-        assert_size!(Group, 24);
+        assert_size!(Semantics, 1);
+        assert_size!(Group, 16);
     }
 
     #[cfg(target_pointer_width = "64")]
@@ -71,7 +95,8 @@ mod tests {
     fn test_size() {
         assert_size!(Source, 32);
         assert_size!(Parameter, 48);
-        assert_size!(Group, 48);
+        assert_size!(Semantics, 1);
+        assert_size!(Group, 32);
     }
 
     #[test]
@@ -107,7 +132,7 @@ mod tests {
             .parse()
             .unwrap();
         let mut group = Group::try_from(elem).unwrap();
-        assert_eq!(group.semantics, "FID");
+        assert_eq!(group.semantics, Semantics::Fid);
         assert_eq!(group.sources.len(), 2);
         let source = group.sources.pop().unwrap();
         assert_eq!(source.id, 386328120);
