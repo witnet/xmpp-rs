@@ -22,8 +22,10 @@ generate_element!(
     /// Header extensions to be used in a RTP description.
     RtpHdrext, "rtp-hdrext", JINGLE_RTP_HDREXT,
     attributes: [
-        /// The ID of the extensions.
-        id: Required<String> = "id",
+        /// The ID of the extensions.  The allowed values are only in the 1-256, 4096-4351 ranges,
+        /// this isn’t enforced by xmpp-parsers yet!
+        // TODO: make it so.
+        id: Required<u16> = "id",
 
         /// The URI that defines the extension.
         uri: Required<String> = "uri",
@@ -35,7 +37,7 @@ generate_element!(
 
 impl RtpHdrext {
     /// Create a new RTP header extension element.
-    pub fn new(id: String, uri: String) -> RtpHdrext {
+    pub fn new(id: u16, uri: String) -> RtpHdrext {
         RtpHdrext {
             id,
             uri,
@@ -60,14 +62,14 @@ mod tests {
     #[test]
     fn test_size() {
         assert_size!(Senders, 1);
-        assert_size!(RtpHdrext, 28);
+        assert_size!(RtpHdrext, 16);
     }
 
     #[cfg(target_pointer_width = "64")]
     #[test]
     fn test_size() {
         assert_size!(Senders, 1);
-        assert_size!(RtpHdrext, 56);
+        assert_size!(RtpHdrext, 32);
     }
 
     #[test]
@@ -79,7 +81,7 @@ mod tests {
             .parse()
             .unwrap();
         let rtp_hdrext = RtpHdrext::try_from(elem).unwrap();
-        assert_eq!(rtp_hdrext.id, "1");
+        assert_eq!(rtp_hdrext.id, 1);
         assert_eq!(rtp_hdrext.uri, "urn:ietf:params:rtp-hdrext:toffset");
         assert_eq!(rtp_hdrext.senders, Senders::Both);
     }
