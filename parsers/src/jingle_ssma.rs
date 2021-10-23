@@ -9,7 +9,7 @@ generate_element!(
     Source, "source", JINGLE_SSMA,
     attributes: [
         /// Maps to the ssrc-id parameter.
-        id: Required<String> = "ssrc",
+        id: Required<u32> = "ssrc",
     ],
     children: [
         /// List of attributes for this source.
@@ -19,7 +19,7 @@ generate_element!(
 
 impl Source {
     /// Create a new SSMA Source element.
-    pub fn new(id: String) -> Source {
+    pub fn new(id: u32) -> Source {
         Source {
             id,
             parameters: Vec::new(),
@@ -61,7 +61,7 @@ mod tests {
     #[cfg(target_pointer_width = "32")]
     #[test]
     fn test_size() {
-        assert_size!(Source, 24);
+        assert_size!(Source, 16);
         assert_size!(Parameter, 24);
         assert_size!(Group, 24);
     }
@@ -69,7 +69,7 @@ mod tests {
     #[cfg(target_pointer_width = "64")]
     #[test]
     fn test_size() {
-        assert_size!(Source, 48);
+        assert_size!(Source, 32);
         assert_size!(Parameter, 48);
         assert_size!(Group, 48);
     }
@@ -84,7 +84,7 @@ mod tests {
                 .parse()
                 .unwrap();
         let mut ssrc = Source::try_from(elem).unwrap();
-        assert_eq!(ssrc.id, "1656081975");
+        assert_eq!(ssrc.id, 1656081975);
         assert_eq!(ssrc.parameters.len(), 2);
         let parameter = ssrc.parameters.pop().unwrap();
         assert_eq!(parameter.name, "msid");
@@ -110,8 +110,8 @@ mod tests {
         assert_eq!(group.semantics, "FID");
         assert_eq!(group.sources.len(), 2);
         let source = group.sources.pop().unwrap();
-        assert_eq!(source.id, "386328120");
+        assert_eq!(source.id, 386328120);
         let source = group.sources.pop().unwrap();
-        assert_eq!(source.id, "2301230316");
+        assert_eq!(source.id, 2301230316);
     }
 }
