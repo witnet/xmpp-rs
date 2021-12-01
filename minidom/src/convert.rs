@@ -84,11 +84,11 @@ mod tests {
         assert_eq!(18i32.into_attribute_value().unwrap(), "18");
         assert_eq!((-19i64).into_attribute_value().unwrap(), "-19");
         assert_eq!(
-            IpAddr::from_str("127.000.0.1")
+            IpAddr::from_str("0000:0::1")
                 .unwrap()
                 .into_attribute_value()
                 .unwrap(),
-            "127.0.0.1"
+            "::1"
         );
     }
 }
