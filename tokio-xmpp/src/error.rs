@@ -7,7 +7,7 @@ use std::fmt;
 use std::io::Error as IoError;
 use std::str::Utf8Error;
 #[cfg(feature = "tls-rust")]
-use tokio_rustls::rustls::TLSError as TlsError;
+use tokio_rustls::rustls::Error as TlsError;
 use trust_dns_proto::error::ProtoError;
 use trust_dns_resolver::error::ResolveError;
 

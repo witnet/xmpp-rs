@@ -2,10 +2,13 @@ use futures::{sink::SinkExt, stream::StreamExt};
 
 #[cfg(feature = "tls-rust")]
 use {
-    idna,
+    std::convert::TryFrom,
     std::sync::Arc,
-    tokio_rustls::{client::TlsStream, rustls::ClientConfig, TlsConnector},
-    webpki::DNSNameRef,
+    tokio_rustls::{
+        client::TlsStream,
+        rustls::{ClientConfig, OwnedTrustAnchor, RootCertStore, ServerName},
+        TlsConnector,
+    },
     webpki_roots,
 };
 
@@ -39,13 +42,20 @@ async fn get_tls_stream<S: AsyncRead + AsyncWrite + Unpin>(
     xmpp_stream: XMPPStream<S>,
 ) -> Result<TlsStream<S>, Error> {
     let domain = &xmpp_stream.jid.clone().domain();
-    let ascii_domain = idna::domain_to_ascii(domain).map_err(|_| Error::Idna)?;
-    let domain = DNSNameRef::try_from_ascii_str(&ascii_domain).unwrap();
+    let domain = ServerName::try_from(domain.as_str()).unwrap();
     let stream = xmpp_stream.into_inner();
-    let mut config = ClientConfig::new();
-    config
-        .root_store
-        .add_server_trust_anchors(&webpki_roots::TLS_SERVER_ROOTS);
+    let mut root_store = RootCertStore::empty();
+    root_store.add_server_trust_anchors(webpki_roots::TLS_SERVER_ROOTS.0.iter().map(|ta| {
+        OwnedTrustAnchor::from_subject_spki_name_constraints(
+            ta.subject,
+            ta.spki,
+            ta.name_constraints,
+        )
+    }));
+    let config = ClientConfig::builder()
+        .with_safe_defaults()
+        .with_root_certificates(root_store)
+        .with_no_client_auth();
     let tls_stream = TlsConnector::from(Arc::new(config))
         .connect(domain, stream)
         .await?;

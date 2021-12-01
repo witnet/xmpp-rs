@@ -20,21 +20,20 @@ native-tls = { version = "0.2", optional = true }
 sasl = "0.5"
 tokio = { version = "1", features = ["net", "rt", "rt-multi-thread", "macros"] }
 tokio-native-tls = { version = "0.3", optional = true }
-tokio-rustls = { version = "0.22", optional = true }
+tokio-rustls = { version = "0.23", optional = true }
 tokio-stream = { version = "0.1", features = [] }
 tokio-util = { version = "0.6", features = ["codec"] }
 trust-dns-proto = "0.20"
 trust-dns-resolver = "0.20"
 xml5ever = "0.16"
 xmpp-parsers = "0.18"
-webpki = { version = "0.21", optional = true }
-webpki-roots = { version = "0.21", optional = true }
+webpki-roots = { version = "0.22", optional = true }
 
 [build-dependencies]
-rustc_version = "0.3"
+rustc_version = "0.4"
 
 [features]
 default = ["tls-native"]
-tls-rust = ["tokio-rustls", "webpki", "webpki-roots"]
+tls-rust = ["tokio-rustls", "webpki-roots"]
 tls-native = ["tokio-native-tls", "native-tls"]
 serde = ["xmpp-parsers/serde"]
