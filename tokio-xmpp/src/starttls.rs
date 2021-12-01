@@ -42,7 +42,7 @@ async fn get_tls_stream<S: AsyncRead + AsyncWrite + Unpin>(
     xmpp_stream: XMPPStream<S>,
 ) -> Result<TlsStream<S>, Error> {
     let domain = &xmpp_stream.jid.clone().domain();
-    let domain = ServerName::try_from(domain.as_str()).unwrap();
+    let domain = ServerName::try_from(domain.as_str())?;
     let stream = xmpp_stream.into_inner();
     let mut root_store = RootCertStore::empty();
     root_store.add_server_trust_anchors(webpki_roots::TLS_SERVER_ROOTS.0.iter().map(|ta| {
