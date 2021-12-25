@@ -210,6 +210,9 @@ pub mod jingle_message;
 /// XEP-0359: Unique and Stable Stanza IDs
 pub mod stanza_id;
 
+/// XEP-0363: HTTP File Upload
+pub mod http_upload;
+
 /// XEP-0369: Mediated Information eXchange (MIX)
 pub mod mix;
 

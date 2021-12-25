@@ -219,6 +219,9 @@ pub const JINGLE_MESSAGE: &str = "urn:xmpp:jingle-message:0";
 /// XEP-0359: Unique and Stable Stanza IDs
 pub const SID: &str = "urn:xmpp:sid:0";
 
+/// XEP-0363: HTTP File Upload
+pub const HTTP_UPLOAD: &str = "urn:xmpp:http:upload:0";
+
 /// XEP-0369: Mediated Information eXchange (MIX)
 pub const MIX_CORE: &str = "urn:xmpp:mix:core:1";
 /// XEP-0369: Mediated Information eXchange (MIX)
