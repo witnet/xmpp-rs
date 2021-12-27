@@ -156,4 +156,31 @@ mod tests {
         );
         assert_eq!(slot.get.url, String::from("https://download.montague.tld/4a771ac1-f0b2-4a4a-9700-f2a26fa2bb67/tr%C3%A8s%20cool.jpg"));
     }
+
+    #[test]
+    fn test_result_no_header() {
+        let elem: Element = "<slot xmlns='urn:xmpp:http:upload:0'>
+            <put url='https://URL' />
+            <get url='https://URL' />
+          </slot>"
+            .parse()
+            .unwrap();
+        let slot = SlotResult::try_from(elem).unwrap();
+        assert_eq!(slot.put.url, String::from("https://URL"));
+        assert_eq!(slot.put.headers.len(), 0);
+        assert_eq!(slot.get.url, String::from("https://URL"));
+    }
+
+    #[test]
+    fn test_result_bad_header() {
+        let elem: Element = "<slot xmlns='urn:xmpp:http:upload:0'>
+            <put url='https://URL'>
+              <header name='EvilHeader'>EvilValue</header>
+            </put>
+            <get url='https://URL' />
+          </slot>"
+            .parse()
+            .unwrap();
+        SlotResult::try_from(elem).unwrap_err();
+    }
 }
