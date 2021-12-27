@@ -24,18 +24,18 @@ generate_attribute!(
 );
 
 generate_attribute!(
-    /// TODO
+    /// The underlying transport protocol to be used when communicating with the service.
     Transport, "transport", {
-        /// TODO
+        /// Use TCP as a transport protocol.
         Tcp => "tcp",
 
-        /// TODO
+        /// Use UDP as a transport protocol.
         Udp => "udp",
     }
 );
 
 generate_attribute!(
-    /// TODO
+    /// The service type as registered with the XMPP Registrar.
     Type, "type", {
         /// A server that provides Session Traversal Utilities for NAT (STUN).
         Stun => "stun",
@@ -46,7 +46,8 @@ generate_attribute!(
 );
 
 generate_attribute!(
-    /// TODO
+    /// Username and password credentials are required and will need to be requested if not already
+    /// provided.
     Restricted,
     "restricted",
     bool
