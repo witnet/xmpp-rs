@@ -4,8 +4,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+use std::convert::TryFrom;
+
 use crate::iq::{IqGetPayload, IqResultPayload};
-use crate::util::helpers::Text;
+use crate::ns;
+use crate::util::error::Error;
+use crate::Element;
 
 generate_element!(
     /// Requesting a slot
@@ -24,18 +28,55 @@ generate_element!(
 
 impl IqGetPayload for SlotRequest {}
 
-generate_element!(
-    /// Slot header
-    Header, "header", HTTP_UPLOAD,
-    attributes: [
-        /// Name of the header
-        name: Required<String> = "name"
-    ],
-    text: (
-        /// Content of the header
-        data: Text<String>
-    )
-);
+/// Slot header
+#[derive(Debug, Clone, PartialEq)]
+pub enum Header {
+    /// Authorization header
+    Authorization(String),
+
+    /// Cookie header
+    Cookie(String),
+
+    /// Expires header
+    Expires(String),
+}
+
+impl TryFrom<Element> for Header {
+    type Error = Error;
+    fn try_from(elem: Element) -> Result<Header, Error> {
+        check_self!(elem, "header", HTTP_UPLOAD);
+        check_no_children!(elem, "header");
+        check_no_unknown_attributes!(elem, "header", ["name"]);
+        let name: String = get_attr!(elem, "name", Required);
+        let text = String::from(elem.text());
+
+        Ok(match name.as_str() {
+            "Authorization" => Header::Authorization(text),
+            "Cookie" => Header::Cookie(text),
+            "Expires" => Header::Expires(text),
+            _ => {
+                return Err(Error::ParseError(
+                    "Header name must be either 'Authorization', 'Cookie', or 'Expires'.",
+                ))
+            }
+        })
+    }
+}
+
+impl From<Header> for Element {
+    fn from(elem: Header) -> Element {
+        let (attr, val) = match elem {
+            Header::Authorization(val) => ("Authorization", val),
+            Header::Cookie(val) => ("Cookie", val),
+            Header::Expires(val) => ("Expires", val),
+        };
+
+        Element::builder("header", ns::HTTP_UPLOAD)
+            .attr("name", attr)
+            .append(val)
+            .build()
+    }
+}
 
 generate_element!(
     /// Put URL
@@ -105,15 +146,13 @@ mod tests {
             .unwrap();
         let slot = SlotResult::try_from(elem).unwrap();
         assert_eq!(slot.put.url, String::from("https://upload.montague.tld/4a771ac1-f0b2-4a4a-9700-f2a26fa2bb67/tr%C3%A8s%20cool.jpg"));
-        assert_eq!(slot.put.headers[0].name, String::from("Authorization"));
         assert_eq!(
-            slot.put.headers[0].data,
-            String::from("Basic Base64String==")
+            slot.put.headers[0],
+            Header::Authorization(String::from("Basic Base64String=="))
         );
-        assert_eq!(slot.put.headers[1].name, String::from("Cookie"));
         assert_eq!(
-            slot.put.headers[1].data,
-            String::from("foo=bar; user=romeo")
+            slot.put.headers[1],
+            Header::Cookie(String::from("foo=bar; user=romeo"))
         );
         assert_eq!(slot.get.url, String::from("https://download.montague.tld/4a771ac1-f0b2-4a4a-9700-f2a26fa2bb67/tr%C3%A8s%20cool.jpg"));
     }
