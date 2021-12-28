@@ -50,10 +50,10 @@ impl TryFrom<Element> for Header {
         let name: String = get_attr!(elem, "name", Required);
         let text = String::from(elem.text());
 
-        Ok(match name.as_str() {
-            "Authorization" => Header::Authorization(text),
-            "Cookie" => Header::Cookie(text),
-            "Expires" => Header::Expires(text),
+        Ok(match name.to_lowercase().as_str() {
+            "authorization" => Header::Authorization(text),
+            "cookie" => Header::Cookie(text),
+            "expires" => Header::Expires(text),
             _ => {
                 return Err(Error::ParseError(
                     "Header name must be either 'Authorization', 'Cookie', or 'Expires'.",
