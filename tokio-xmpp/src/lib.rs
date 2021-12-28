@@ -17,3 +17,4 @@ mod component;
 pub use crate::component::Component;
 mod error;
 pub use crate::error::{AuthError, ConnecterError, Error, ParseError, ParserError, ProtocolError};
+pub use starttls::starttls;
