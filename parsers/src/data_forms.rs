@@ -94,6 +94,30 @@ pub struct Field {
 }
 
 impl Field {
+    /// Create a new Field, of the given var and type.
+    pub fn new(var: &str, type_: FieldType) -> Field {
+        Field {
+            var: String::from(var),
+            type_,
+            label: None,
+            required: false,
+            options: Vec::new(),
+            media: Vec::new(),
+            values: Vec::new(),
+        }
+    }
+
+    /// Set only one value in this Field.
+    pub fn with_value(mut self, value: &str) -> Field {
+        self.values.push(String::from(value));
+        self
+    }
+
+    /// Create a text-single Field with the given var and unique value.
+    pub fn text_single(var: &str, value: &str) -> Field {
+        Field::new(var, FieldType::TextSingle).with_value(value)
+    }
+
     fn is_list(&self) -> bool {
         self.type_ == FieldType::ListSingle || self.type_ == FieldType::ListMulti
     }
@@ -205,6 +229,19 @@ pub struct DataForm {
 
     /// A list of fields comprising this form.
     pub fields: Vec<Field>,
+}
+
+impl DataForm {
+    /// Create a new DataForm.
+    pub fn new(type_: DataFormType, form_type: &str, fields: Vec<Field>) -> DataForm {
+        DataForm {
+            type_,
+            form_type: Some(String::from(form_type)),
+            title: None,
+            instructions: None,
+            fields,
+        }
+    }
 }
 
 impl TryFrom<Element> for DataForm {
