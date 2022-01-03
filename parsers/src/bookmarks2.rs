@@ -31,7 +31,7 @@ pub struct Conference {
     pub password: Option<String>,
 
     /// Extensions elements.
-    pub extensions: Option<Vec<Element>>,
+    pub extensions: Vec<Element>,
 }
 
 impl Conference {
@@ -53,18 +53,11 @@ impl TryFrom<Element> for Conference {
             name: get_attr!(root, "name", Option),
             nick: None,
             password: None,
-            extensions: None,
+            extensions: Vec::new(),
         };
 
         for child in root.children().cloned() {
-            if child.is("extensions", ns::BOOKMARKS2) {
-                if conference.extensions.is_some() {
-                    return Err(Error::ParseError(
-                        "Conference must not have more than one extensions element.",
-                    ));
-                }
-                conference.extensions = Some(child.children().cloned().collect());
-            } else if child.is("nick", ns::BOOKMARKS2) {
+            if child.is("nick", ns::BOOKMARKS2) {
                 if conference.nick.is_some() {
                     return Err(Error::ParseError(
                         "Conference must not have more than one nick.",
@@ -82,6 +75,17 @@ impl TryFrom<Element> for Conference {
                 check_no_children!(child, "password");
                 check_no_attributes!(child, "password");
                 conference.password = Some(child.text());
+            } else if child.is("extensions", ns::BOOKMARKS2) {
+                if !conference.extensions.is_empty() {
+                    return Err(Error::ParseError(
+                        "Conference must not have more than one extensions element.",
+                    ));
+                }
+                conference.extensions.extend(child.children().cloned());
+            } else {
+                return Err(Error::ParseError(
+                    "Unknown element in bookmarks2 conference",
+                ));
             }
         }
 
@@ -105,8 +109,10 @@ impl From<Conference> for Element {
                     .map(|password| Element::builder("password", ns::BOOKMARKS2).append(password)),
             )
             .append_all(match conference.extensions {
-                Some(extensions) => extensions,
-                None => vec![],
+                empty if empty.is_empty() => None,
+                extensions => {
+                    Some(Element::builder("extensions", ns::BOOKMARKS2).append_all(extensions))
+                }
             })
             .build()
     }
@@ -155,8 +161,8 @@ mod tests {
         assert_eq!(conference.name, Some(String::from("Test MUC")));
         assert_eq!(conference.clone().nick.unwrap(), "Coucou");
         assert_eq!(conference.clone().password.unwrap(), "secret");
-        assert_eq!(conference.clone().extensions.unwrap().len(), 1);
-        assert!(conference.clone().extensions.unwrap()[0].is("test", "urn:xmpp:unknown"));
+        assert_eq!(conference.clone().extensions.len(), 1);
+        assert!(conference.clone().extensions[0].is("test", "urn:xmpp:unknown"));
     }
 
     #[test]

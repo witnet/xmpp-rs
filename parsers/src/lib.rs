@@ -225,7 +225,7 @@ pub mod eme;
 /// XEP-0390: Entity Capabilities 2.0
 pub mod ecaps2;
 
-/// XEP-0402: Bookmarks 2 (This Time it's Serious)
+/// XEP-0402: PEP Native Bookmarks
 pub mod bookmarks2;
 
 /// XEP-0421: Anonymous unique occupant identifiers for MUCs
