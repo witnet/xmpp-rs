@@ -150,7 +150,7 @@ mod tests {
         assert_size!(Transport, 1);
         assert_size!(Restricted, 1);
         assert_size!(Type, 1);
-        assert_size!(Service, 100); // XXX
+        assert_size!(Service, 88);
         assert_size!(ServicesQuery, 1);
         assert_size!(ServicesResult, 16);
         assert_size!(Credentials, 12);
