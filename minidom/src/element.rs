@@ -357,7 +357,15 @@ impl Element {
                     if stack.len() <= 1 {
                         break;
                     }
-                    let prefixes = prefix_stack.pop().unwrap();
+                    let prefixes = match prefix_stack.pop().unwrap() {
+                        x if x.is_empty() => {
+                            let mut aux: BTreeMap<Prefix, Namespace> = BTreeMap::new();
+                            aux.insert(None, "no namespace".to_string());
+                            aux
+                        }
+                        x => x,
+                    };
+
                     let elem = stack.pop().unwrap();
                     if let Some(to) = stack.last_mut() {
                         // TODO: check whether this is correct, we are comparing &[u8]s, not &strs
@@ -864,19 +872,20 @@ fn build_element<R: BufRead>(
         })
         .collect::<Result<BTreeMap<String, String>>>()?;
 
-    let namespace: &String = {
+    let namespace: String = {
         if let Some(namespace) = local_prefixes.get(&prefix) {
-            namespace
+            namespace.clone()
         } else if let Some(namespace) = prefixes.get(&prefix) {
-            namespace
+            namespace.clone()
         } else {
-            return Err(Error::MissingNamespace);
+            //return Err(Error::MissingNamespace);
+            "no namespace".to_string()
         }
     };
 
     Ok(Element::new(
         name,
-        namespace.clone(),
+        namespace,
         // Note that this will always be Some(_) as we can't distinguish between the None case and
         // Some(None). At least we make sure the prefix has a namespace associated.
         Some(prefix),
