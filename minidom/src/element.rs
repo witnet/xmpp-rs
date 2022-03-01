@@ -864,8 +864,8 @@ fn build_element<R: BufRead>(
                 false
             }
             Ok((ref key, ref value)) if key.starts_with("xmlns:") => {
-                local_prefixes.insert(Some(key[6..].to_owned()), value.to_owned());
-                prefixes.insert(Some(key[6..].to_owned()), value.to_owned());
+                local_prefixes.insert(None, value.to_owned());
+                prefixes.insert(None, value.to_owned());
                 false
             }
             _ => true,
